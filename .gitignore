@@ -1,0 +1,9 @@
+node_modules/
+dist/
+data/
+.env*
+yarn-error.log
+cookies.json
+scrapeData.json
+secrets/
+.DS_Store
