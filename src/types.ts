@@ -3,7 +3,7 @@ export type Stage =
     "downloading-video" |
     "segmenting-video" |
     "transcribing" |
-    "uploading-video" |
+    "uploading-audio" |
     "finished";
 
 export interface TranscribeRequest {

@@ -32,6 +32,15 @@ const combineTranscripts = (transcripts: Transcript[]): Transcript => {
 
     return combinedTranscript;
 }
+const alphabeticNumber = (num: number): string => {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = '';
+    do {
+        result = alphabet[num % 26] + result;
+        num = Math.floor(num / 26);
+    } while (num > 0);
+    return result;
+}
 
 export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, customVocabulary, customPrompt }, onProgress) => {
     let completedSegments = 0;
@@ -47,7 +56,7 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
 
     const results = await Promise.all(transcriptPromises);
 
-    const startIndexedResults = results.map((transcript) => {
+    const startIndexedResults = results.map((transcript, index) => {
         return {
             ...transcript,
             transcription: {
@@ -57,6 +66,7 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
                         ...utterance,
                         start: utterance.start + transcript.start,
                         end: utterance.end + transcript.start,
+                        speaker: utterance.speaker + 1000 * index,
                         words: utterance.words.map((word) => {
                             return {
                                 ...word,

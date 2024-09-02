@@ -58,7 +58,7 @@ class GladiaTranscriber {
             const pollResponse = await this.makeFetchRequest(resultUrl, { headers });
 
             if (pollResponse.status === "done") {
-                return JSON.parse(pollResponse.result) as Transcript;
+                return pollResponse.result as Transcript;
             } else {
                 await new Promise((resolve) => setTimeout(resolve, 3000));
             }

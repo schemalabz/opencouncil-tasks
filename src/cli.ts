@@ -7,6 +7,8 @@ import { downloadYTV } from './tasks/downloadYTV';
 import { uploadToSpaces } from './tasks/uploadToSpaces';
 import { transcribe } from './tasks/transcribe';
 import fs from 'fs';
+import { diarize } from './tasks/diarize';
+import { callbackServer } from './lib/CallbackServer';
 
 const program = new Command();
 
@@ -97,6 +99,30 @@ program
         console.log(result);
     });
 
+program
+    .command('diarize <url>')
+    .description('Diarize an audio url')
+    .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
+    .action(async (url, options) => {
+        const result = await diarize({ url }, (progress) => {
+            process.stdout.write(`\rDiarizing audio... ${progress.toFixed(2)}%`);
+        });
+
+        fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+        console.log('Diarized audio saved to', options.outputFile);
+    });
+
+
+program
+    .command('test-callback-server')
+    .description('Test the callback server')
+    .action(async () => {
+        const { callbackPromise, url } = await callbackServer.getCallback({ timeoutMinutes: 1 });
+        console.log(`Call ${url} within 1 minute to test the callback server`);
+        const result = await callbackPromise;
+        console.log('Callback called with: ', result);
+        await callbackServer.stopServer();
+    });
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {

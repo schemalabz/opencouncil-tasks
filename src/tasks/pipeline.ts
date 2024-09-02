@@ -13,45 +13,48 @@ export const pipeline: Task<TranscribeRequest, TranscribeResponse> = async (requ
 }
 
 export const pipelineWithStatus = async (request: TranscribeRequest, onProgress: (status: { stage: Stage, progressPercent: number }) => void) => {
-    let currentStatus: Stage = "downloading-video";
-    const throttledOnProgress = _.throttle((perc: number) => onProgress({ stage: currentStatus, progressPercent: perc }), 10000, { leading: false, trailing: true });
+    const createProgressHandler = (stage: Stage) => {
+        return _.throttle((perc: number) => onProgress({ stage, progressPercent: perc }), 10000, { leading: true, trailing: false });
+    };
 
-    const { audioOnly, combined } = await downloadYTV(request.youtubeUrl, throttledOnProgress);
+    const { audioOnly, combined } = await downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
     const combinedVideoUploadPromise = uploadToSpaces({
         files: [combined],
         spacesPath: "council-meeting-videos"
     }, () => { });
 
-    currentStatus = "segmenting-video";
-    const audioSegments = await splitAudio({ file: audioOnly, maxDuration: 60 * 60 }, throttledOnProgress);
+    const audioSegments = await splitAudio({ file: audioOnly, maxDuration: 60 * 60 }, createProgressHandler("segmenting-video"));
 
     const audioUrls = await uploadToSpaces({
         files: audioSegments.map((segment) => segment.path),
         spacesPath: "audio"
-    }, throttledOnProgress);
+    }, createProgressHandler("uploading-audio"));
 
     const segments = audioSegments.map((segment, index) => ({
         url: audioUrls[index],
         start: segment.startTime
     }));
 
-    currentStatus = "transcribing";
     const transcript = await transcribe({
         segments,
         customVocabulary: request.customVocabulary,
         customPrompt: request.customPrompt
-    }, throttledOnProgress);
+    }, createProgressHandler("transcribing"));
 
-    currentStatus = "uploading-video";
     const combinedVideoUrls = await combinedVideoUploadPromise;
     if (combinedVideoUrls.length !== 1) {
         throw new Error("Expected a single video URL");
     }
 
-    currentStatus = "finished";
+    let videoUrl = combinedVideoUrls[0];
+    if (!videoUrl.startsWith("http")) {
+        videoUrl = `https://${process.env.DO_SPACES_ENDPOINT}/${videoUrl}`;
+    }
+
+    onProgress({ stage: "finished", progressPercent: 100 });
     return {
-        videoUrl: combinedVideoUrls[0],
+        videoUrl,
         transcript
     };
 };

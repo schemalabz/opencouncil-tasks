@@ -22,10 +22,9 @@ interface SilentSegment {
 
 const minSilenceDuration = 0.5;
 
-const modelPromise = loadModel();
 // Helper function to find silences between two timestamps
 async function findSilences(audio: Float32Array, sampleRate: number, start: number, end: number): Promise<SilentSegment[]> {
-    const model = await modelPromise;
+    const model = await loadModel();
     const silences: SilentSegment[] = [];
     let lastSpeechEnd = start;
 
@@ -188,9 +187,15 @@ export const splitAudio: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, m
     return audioSegments;
 };
 
+let model: NonRealTimeVAD | null = null;
+const STANDARD_FRAME_SAMPLES = 1536;
 async function loadModel() {
+    if (model) {
+        return model;
+    }
     const options: Partial<NonRealTimeVADOptions> = {
-        frameSamples: 1536 * 4
+        frameSamples: STANDARD_FRAME_SAMPLES
     };
-    return await NonRealTimeVAD.new(options);
+    model = await NonRealTimeVAD.new(options);
+    return model;
 }
