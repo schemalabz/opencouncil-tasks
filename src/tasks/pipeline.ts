@@ -1,20 +1,15 @@
-import { Stage, TranscribeRequest, TranscribeResponse, TranscribeUpdate, Transcript } from "../types";
+import { TaskUpdate, TranscribeRequest, TranscribeResult } from "../types";
 import { downloadYTV } from "./downloadYTV";
 import { splitAudio } from "./splitAudio";
 import { transcribe } from "./transcribe";
 import { uploadToSpaces } from "./uploadToSpaces";
 import _ from 'underscore';
 
-export type Task<Args, Ret> = (args: Args, onProgress: (perc: number) => void) => Promise<Ret>;
+export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
-
-export const pipeline: Task<TranscribeRequest, TranscribeResponse> = async (request: TranscribeRequest, onProgress) => {
-    return pipelineWithStatus(request, (status) => onProgress(status.progressPercent));
-}
-
-export const pipelineWithStatus = async (request: TranscribeRequest, onProgress: (status: { stage: Stage, progressPercent: number }) => void) => {
-    const createProgressHandler = (stage: Stage) => {
-        return _.throttle((perc: number) => onProgress({ stage, progressPercent: perc }), 10000, { leading: true, trailing: false });
+export const pipeline: Task<TranscribeRequest, TranscribeResult> = async (request: TranscribeRequest, onProgress: (stage: string, perc: number) => void) => {
+    const createProgressHandler = (stage: string) => {
+        return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
     };
 
     const { audioOnly, combined } = await downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
@@ -52,7 +47,7 @@ export const pipelineWithStatus = async (request: TranscribeRequest, onProgress:
         videoUrl = `https://${process.env.DO_SPACES_ENDPOINT}/${videoUrl}`;
     }
 
-    onProgress({ stage: "finished", progressPercent: 100 });
+    onProgress("finished", 100);
     return {
         videoUrl,
         transcript

@@ -63,7 +63,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
         const audioProgress = tracker.audio.downloaded / tracker.audio.total;
         const videoProgress = tracker.video.downloaded / tracker.video.total;
         const totalProgress = (0.25 * audioProgress) + (0.75 * videoProgress);
-        onProgress(totalProgress * 100);
+        onProgress("downloading-video", totalProgress * 100);
     }
 
     await Promise.all([

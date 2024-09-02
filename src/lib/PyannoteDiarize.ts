@@ -1,15 +1,9 @@
 import dotenv from 'dotenv';
 import { callbackServer } from './CallbackServer';
 import fetch from 'node-fetch';
+import { Diarization } from '../types';
 
 dotenv.config();
-
-export type Diarization = {
-    start: number;
-    end: number;
-    speaker: string;
-}[];
-
 export type DiarizeResponse = {
     jobId: string;
     status: string;

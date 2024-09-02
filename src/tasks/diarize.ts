@@ -1,11 +1,10 @@
 import { Task } from "../tasks/pipeline";
-import { callbackServer } from "../lib/CallbackServer";
-import fetch from 'node-fetch';
 import dotenv from 'dotenv';
-import { Diarization, pyannoteDiarizer } from "../lib/PyannoteDiarize";
+import { pyannoteDiarizer } from "../lib/PyannoteDiarize";
+import { Diarization } from "../types";
 
 dotenv.config();
 
-export const diarize: Task<{ url: string, start: number }[], Diarization> = async (segments, onProgress) => {
-    return pyannoteDiarizer.diarize(segments);
+export const diarize: Task<string, Diarization> = async (audioUrl, onProgress) => {
+    return pyannoteDiarizer.diarize([{ url: audioUrl, start: 0 }]);
 };

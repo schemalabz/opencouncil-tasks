@@ -50,7 +50,7 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
         const transcript = await gladiaTranscriber.transcribe({ audioUrl: fullUrl, customVocabulary, customPrompt });
         completedSegments++;
-        onProgress(completedSegments / totalSegments);
+        onProgress("transcribing", (completedSegments / totalSegments) * 100);
         return { ...transcript, start };
     });
 

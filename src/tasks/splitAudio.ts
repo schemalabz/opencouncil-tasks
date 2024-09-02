@@ -165,7 +165,7 @@ export const splitAudio: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, m
         segments.push({ start: currentStart, end: splitPoint });
         currentStart = splitPoint;
 
-        onProgress((currentStart / duration) * 100);
+        onProgress("splitting", (currentStart / duration) * 100);
     }
 
     console.log(`Got ${segments.length} segments, all under ${maxDuration} seconds`);

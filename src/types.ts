@@ -1,29 +1,57 @@
 
-export type Stage =
-    "downloading-video" |
-    "segmenting-video" |
-    "transcribing" |
-    "uploading-audio" |
-    "finished";
+/*
+ * Generic task types 
+ */
 
-export interface TranscribeRequest {
-    youtubeUrl: string;
+export interface TaskUpdate<T> {
+    status: "processing" | "success" | "error";
+    stage: string;
+    progressPercent: number;
+    result?: T;
+    error?: string;
+}
+
+export interface TaskRequest {
     callbackUrl: string;
+}
+
+/*
+ * Task: Transcribe
+ */
+
+export interface TranscribeRequest extends TaskRequest {
+    youtubeUrl: string;
     customVocabulary?: string[];
     customPrompt?: string;
 }
 
-export interface TranscribeResponse {
+export interface TranscribeResult {
     videoUrl: string;
     transcript: Transcript;
 }
 
-export interface TranscribeUpdate {
-    status: "processing" | "success" | "error";
-    stage: Stage;
-    progressPercent: number;
-    response?: TranscribeResponse;
+/*
+ * Task: Diarize
+ */
+
+export interface DiarizeRequest extends TaskRequest {
+    audioUrl: string;
 }
+
+export interface DiarizeResult {
+    diarization: Diarization;
+}
+
+export type Diarization = {
+    start: number;
+    end: number;
+    speaker: string;
+}[];
+
+
+/*
+ * Transcript
+ */
 
 export interface Transcript {
     metadata: {

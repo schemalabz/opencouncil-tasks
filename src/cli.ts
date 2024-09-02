@@ -2,7 +2,7 @@
 
 import { Command } from 'commander';
 import { splitAudio } from './tasks/splitAudio';
-import { pipeline, pipelineWithStatus } from './tasks/pipeline';
+import { pipeline } from './tasks/pipeline';
 import { downloadYTV } from './tasks/downloadYTV';
 import { uploadToSpaces } from './tasks/uploadToSpaces';
 import { transcribe } from './tasks/transcribe';
@@ -24,8 +24,8 @@ program
         console.log('Splitting audio...');
         const result = await splitAudio(
             { file, maxDuration: parseInt(options.maxDuration) },
-            (progress) => {
-                process.stdout.write(`\rSplitting audio... ${progress.toFixed(2)}%`);
+            (stage, progressPercent) => {
+                process.stdout.write(`\rSplitting audio... [${stage}] ${progressPercent.toFixed(2)}%`);
             }
         );
         console.log(`Audio split into ${result.length} segments`);
@@ -37,9 +37,9 @@ program
     .requiredOption('-O, --output-file <file>', 'Output file for the pipeline')
     .action(async (youtubeUrl, options) => {
         console.log('Running pipeline, output to', options.outputFile);
-        const result = await pipelineWithStatus(
+        const result = await pipeline(
             { youtubeUrl, callbackUrl: '' },
-            ({ stage, progressPercent }) => {
+            (stage, progressPercent) => {
                 process.stdout.write(`\rRunning pipeline... [${stage}] ${progressPercent.toFixed(2)}%`);
             }
         );
@@ -51,8 +51,8 @@ program
     .command('download-ytv <youtubeUrl>')
     .description('Download a YouTube video')
     .action(async (youtubeUrl) => {
-        const result = await downloadYTV(youtubeUrl, (progress) => {
-            process.stdout.write(`\rDownloading YouTube video... ${progress.toFixed(2)}%`);
+        const result = await downloadYTV(youtubeUrl, (stage, progressPercent) => {
+            process.stdout.write(`\rDownloading YouTube video... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
         console.log('\nYouTube video downloaded');
         console.log(result);
@@ -63,8 +63,8 @@ program
     .description('Upload a file to DigitalOcean Spaces')
     .option('-p, --spaces-path <path>', 'Path in DigitalOcean Spaces')
     .action(async (file, options) => {
-        const result = await uploadToSpaces({ files: [file], spacesPath: options.spacesPath || "test" }, (progress) => {
-            process.stdout.write(`\rUploading to DigitalOcean Spaces... ${progress.toFixed(2)}%`);
+        const result = await uploadToSpaces({ files: [file], spacesPath: options.spacesPath || "test" }, (stage, progressPercent) => {
+            process.stdout.write(`\rUploading to DigitalOcean Spaces... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
         console.log('Uploaded to DigitalOcean Spaces');
         console.log(result);
@@ -74,8 +74,8 @@ program
     .command('transcribe <url>')
     .description('Transcribe an audio url')
     .action(async (url) => {
-        const result = await transcribe({ segments: [{ url, start: 0 }] }, (progress) => {
-            process.stdout.write(`\rTranscribing audio... ${progress.toFixed(2)}%`);
+        const result = await transcribe({ segments: [{ url, start: 0 }] }, (stage, progressPercent) => {
+            process.stdout.write(`\rTranscribing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
         console.log('Transcribed audio');
@@ -87,12 +87,12 @@ program
     .description('Upload a file to DigitalOcean Spaces and transcribe it')
     .option('-p, --spaces-path <path>', 'Path in DigitalOcean Spaces')
     .action(async (file, options) => {
-        const uploadedUrls = await uploadToSpaces({ files: [file], spacesPath: options.spacesPath || "test" }, (progress) => {
-            process.stdout.write(`\rUploading to DigitalOcean Spaces... ${progress.toFixed(2)}%`);
+        const uploadedUrls = await uploadToSpaces({ files: [file], spacesPath: options.spacesPath || "test" }, (stage, progressPercent) => {
+            process.stdout.write(`\rUploading to DigitalOcean Spaces... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
-        const result = await transcribe({ segments: uploadedUrls.map((url, index) => ({ url, start: index * 3600 })) }, (progress) => {
-            process.stdout.write(`\rTranscribing audio... ${progress.toFixed(2)}%`);
+        const result = await transcribe({ segments: uploadedUrls.map((url, index) => ({ url, start: index * 3600 })) }, (stage, progressPercent) => {
+            process.stdout.write(`\rTranscribing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
         console.log('Transcribed audio');
@@ -104,8 +104,8 @@ program
     .description('Diarize an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
     .action(async (url, options) => {
-        const result = await diarize({ url }, (progress) => {
-            process.stdout.write(`\rDiarizing audio... ${progress.toFixed(2)}%`);
+        const result = await diarize(url, (stage, progressPercent) => {
+            process.stdout.write(`\rDiarizing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
