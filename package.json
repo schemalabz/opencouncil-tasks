@@ -1,5 +1,5 @@
 {
-  "name": "opencouncil-api",
+  "name": "opencouncil-tasks",
   "version": "1.0.0",
   "main": "dist/server.js",
   "scripts": {
