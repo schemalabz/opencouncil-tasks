@@ -22,10 +22,6 @@ FROM node:20-alpine AS final
 # Install Chromium and other necessary packages
 RUN apk add --no-cache chromium ca-certificates
 
-# Set Puppeteer environment variables
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
-ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/chromium-browser
-
 # Set the working directory
 WORKDIR /app
 
