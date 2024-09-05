@@ -5,6 +5,7 @@ import fs from "fs";
 import ytdl from "@ybd-project/ytdl-core";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
+import { getFromEnvOrFile } from "../utils";
 
 dotenv.config();
 
@@ -26,8 +27,9 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
         video: { downloaded: 0, total: Infinity },
     };
 
-    const cookies = JSON.parse(fs.readFileSync('./secrets/cookies.json', 'utf8'));
-    const scrapeData = JSON.parse(fs.readFileSync('./secrets/scrapeData.json', 'utf8'));
+    let cookies = getFromEnvOrFile('COOKIES', './secrets/cookies.json');
+    let scrapeData = getFromEnvOrFile('SCRAPE_DATA', './secrets/scrapeData.json');
+
     const poToken = scrapeData.poToken;
     const visitorData = scrapeData.visitorData;
     if (!poToken || !visitorData) {

@@ -8,9 +8,10 @@ import { taskManager } from './lib/TaskManager';
 import fs from 'fs';
 import path from 'path';
 import chalk from 'chalk';
+import { getFromEnvOrFile } from './utils';
 
 const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
-const apiTokens: string[] = JSON.parse(fs.readFileSync(apiTokensPath, 'utf-8'));
+const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
 const app = express();
 const port = process.env.PORT || 3000;
 
