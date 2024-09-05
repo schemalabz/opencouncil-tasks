@@ -29,7 +29,7 @@ program
     .command('split-audio <file>')
     .description('Split an audio file into segments')
     .option('-d, --max-duration <seconds>', 'Maximum duration of each segment in seconds', '3600')
-    .option('-m, --method <method>', 'Method to use for splitting', 'vad')
+    .option('-m, --method <method>', 'Method to use for splitting', 'diarization')
     .option('-D, --diarization-file <file>', 'Diarization file')
     .action(async (file: string, options: { maxDuration: string, method: string, diarizationFile?: string }) => {
         let result: Awaited<ReturnType<typeof splitAudioVAD>> = [];
