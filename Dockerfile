@@ -37,9 +37,6 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 # Install production dependencies
 RUN npm ci --only=production
 
-# Copy the .env file (make sure to use .env instead of .env.example if you have a specific .env file)
-COPY .env ./
-
 # Expose the port the app runs on
 EXPOSE ${PORT}
 
