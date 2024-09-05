@@ -11,7 +11,7 @@ import _ from 'underscore';
 
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
-export const pipeline: Task<TranscribeRequest, TranscribeResult> = async (request, onProgress) => {
+export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeResult> = async (request, onProgress) => {
     const createProgressHandler = (stage: string) => {
         return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
     };

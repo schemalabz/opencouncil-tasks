@@ -17,10 +17,7 @@ COPY . .
 RUN npm run build
 
 # Create the production image
-FROM node:20-alpine AS final
-
-# Install Chromium and other necessary packages
-RUN apk add --no-cache chromium ca-certificates
+FROM satantime/puppeteer-node:20.9.0-bookworm AS final
 
 # Set the working directory
 WORKDIR /app

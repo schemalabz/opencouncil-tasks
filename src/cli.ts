@@ -68,7 +68,7 @@ program
     .action(async (youtubeUrl: string, options: { outputFile: string }) => {
         console.log('Running pipeline, output to', options.outputFile);
         const result = await pipeline(
-            { youtubeUrl, callbackUrl: '' },
+            { youtubeUrl },
             (stage: string, progressPercent: number) => {
                 process.stdout.write(`\rRunning pipeline... [${stage}] ${progressPercent.toFixed(2)}%`);
             }

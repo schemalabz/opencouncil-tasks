@@ -57,6 +57,18 @@ app.post('/transcribe', (
     next();
 }, taskManager.serveTask(pipeline));
 
+const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
+
+app.post('/test', async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+) => {
+
+    const resultPromise = pipeline({ youtubeUrl: testVideo }, () => { });
+    res.status(200).json(await resultPromise);
+}, taskManager.serveTask(pipeline));
+
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('SIGTERM received. Shutting down gracefully...');
