@@ -23,21 +23,24 @@ app.use(cors(corsOptions));
 
 const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
 const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'No token provided' });
-    }
+if (process.env.NO_AUTH !== 'true') {
+    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+        const authHeader = req.headers.authorization;
 
-    const token = authHeader.split(' ')[1].trim();
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
 
-    if (!apiTokens.includes(token)) {
-        return res.status(403).json({ error: 'Invalid token' });
-    }
+        const token = authHeader.split(' ')[1].trim();
 
-    next();
-});
+        if (!apiTokens.includes(token)) {
+            return res.status(403).json({ error: 'Invalid token' });
+        }
+
+        next();
+    });
+}
 
 app.post('/transcribe', (
     req: express.Request<{}, {}, TranscribeRequest & { callbackUrl: string }>,

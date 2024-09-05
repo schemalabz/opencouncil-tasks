@@ -10,6 +10,9 @@ services:
     volumes:
       - ./secrets:/app/secrets
       - ./data:/app/data
-    environment:
-      - PORT=${PORT:-3000}
+    env_file:
+      - .env
     restart: unless-stopped
+
+x-buildkit:
+  enabled: true
