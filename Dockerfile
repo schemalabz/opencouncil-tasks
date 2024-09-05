@@ -16,11 +16,14 @@ COPY . .
 # Build the application
 RUN npm run build
 
+
 # Create the production image
 FROM satantime/puppeteer-node:20.9.0-bookworm AS final
 
 # Install Chromium and other necessary packages
 RUN apt-get update && apt-get install -y chromium
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Set the working directory
 WORKDIR /app
