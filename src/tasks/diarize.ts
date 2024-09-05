@@ -1,10 +1,11 @@
 import { Task } from "../tasks/pipeline";
 import dotenv from 'dotenv';
-import { pyannoteDiarizer } from "../lib/PyannoteDiarize";
+import PyannoteDiarizer from "../lib/PyannoteDiarize";
 import { Diarization } from "../types";
 
 dotenv.config();
 
 export const diarize: Task<string, Diarization> = async (audioUrl, onProgress) => {
-    return pyannoteDiarizer.diarize([{ url: audioUrl, start: 0 }]);
+    const diarizer = PyannoteDiarizer.getInstance();
+    return diarizer.diarize([{ url: audioUrl, start: 0 }]);
 };

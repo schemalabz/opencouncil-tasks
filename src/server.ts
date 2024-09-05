@@ -1,19 +1,17 @@
-import express from 'express';
+import express, { Router } from 'express';
 import dotenv from 'dotenv';
 import { pipeline, Task } from './tasks/pipeline';
-import { diarize } from './tasks/diarize';
 import cors from 'cors';
-dotenv.config();
 import { taskManager } from './lib/TaskManager';
-import fs from 'fs';
 import path from 'path';
-import chalk from 'chalk';
-import { getFromEnvOrFile } from './utils';
+import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYoutubeUrl } from './utils';
+import { TranscribeRequest } from './types';
 
-const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
-const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
-const app = express();
-const port = process.env.PORT || 3000;
+dotenv.config();
+
+
+const app = getExpressAppWithCallbacks();
+
 
 const corsOptions = {
     origin: process.env.CORS_ORIGINS_ALLOWED?.split(',') || "https://opencouncil.gr",
@@ -22,8 +20,9 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
 
+const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
+const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
     const authHeader = req.headers.authorization;
 
@@ -40,10 +39,11 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
     next();
 });
 
-const validateUrl = (url: string) => /^(https?:\/\/)?([\da-z\.-]+\.([a-z\.]{2,6})|localhost)(:\d+)?(\/[\w\.-]*)*\/?$/.test(url);
-const validateYoutubeUrl = (url: string) => /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(url);
-
-app.post('/transcribe', (req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.post('/transcribe', (
+    req: express.Request<{}, {}, TranscribeRequest & { callbackUrl: string }>,
+    res: express.Response,
+    next: express.NextFunction
+) => {
     const { youtubeUrl, callbackUrl } = req.body;
 
     if (!validateYoutubeUrl(youtubeUrl)) {
@@ -56,44 +56,6 @@ app.post('/transcribe', (req: express.Request, res: express.Response, next: expr
 
     next();
 }, taskManager.serveTask(pipeline));
-
-app.post('/diarize', (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const { audioUrl, callbackUrl } = req.body;
-
-    if (!validateUrl(audioUrl)) {
-        return res.status(400).json({ error: 'Invalid audio URL' });
-    }
-
-    if (!validateUrl(callbackUrl)) {
-        return res.status(400).json({ error: 'Invalid callback URL' });
-    }
-
-    next();
-}, taskManager.serveTask(diarize));
-
-async function printTaskUpdates() {
-    console.clear();
-    console.log(chalk.bold.underline('Currently Running Tasks:'));
-
-    const tasks = taskManager.getTaskUpdates();
-
-    if (tasks.length === 0) {
-        console.log(chalk.italic.yellow('No tasks.'));
-    } else {
-        tasks.forEach((task, index) => {
-            const lastUpdatedSeconds = Math.round((new Date().getTime() - task.lastUpdatedAt.getTime()) / 1000);
-            console.log(
-                chalk.bold.white(`[${index + 1}]`),
-                chalk.bold.cyan(`${task.taskType.toUpperCase()}`),
-                `${chalk.green(task.status)} | ${chalk.blue(task.stage)} | ${chalk.magenta(task.progressPercent.toFixed(2))}%`,
-                `| Last Updated: ${chalk.yellow(`${lastUpdatedSeconds} seconds ago`)}`,
-                `| Running for: ${chalk.red(Math.round((new Date().getTime() - task.createdAt.getTime()) / 1000))}s`
-            );
-        });
-    }
-
-    console.log(chalk.dim('\n(Updates every 5 seconds)'));
-}
 
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
@@ -118,12 +80,11 @@ process.on('SIGTERM', async () => {
     }
 });
 
-// Create the server separately so we can close it
+const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 });
 
-
 if (process.argv.includes('--console')) {
-    setInterval(printTaskUpdates, 5000);
+    setInterval(taskManager.printTaskUpdates, 5000);
 }

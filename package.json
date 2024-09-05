@@ -15,7 +15,7 @@
     "@types/node": "^22.5.4",
     "@types/node-wav": "^0.0.3",
     "@types/underscore": "^1.11.15",
-    "@ybd-project/ytdl-core": "^5.0.12",
+    "@ybd-project/ytdl-core": "^5.0.14",
     "aws-sdk": "^2.1687.0",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
@@ -27,9 +27,11 @@
     "node-wav": "^0.0.2",
     "onnxruntime-node": "^1.19.0",
     "ora": "^8.1.0",
+    "puppeteer": "^23.3.0",
     "typescript": "^5.5.4",
     "underscore": "^1.13.7",
-    "vad": "^0.0.1"
+    "vad": "^0.0.1",
+    "youtube-scraper-data": "^1.1.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.21"

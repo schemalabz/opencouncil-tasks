@@ -1,59 +1,51 @@
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { parse } from 'url';
+import { Router, Request, Response } from 'express';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-class CallbackServer {
-    private server: any;
+export class CallbackServer {
     private callbacks: Map<string, (data: any) => void> = new Map();
-    private port: number = parseInt(process.env.CALLBACK_SERVER_PORT || '3009', 10);
     private methods = ['POST', 'GET', 'PUT'];
 
-    constructor() {
-        this.server = null;
+    public static instance: CallbackServer | null = null;
+
+    public static getInstance(router?: Router, path?: string): CallbackServer {
+        if (!CallbackServer.instance) {
+            if (!router || !path) {
+                throw new Error('Router and path are required');
+            }
+            CallbackServer.instance = new CallbackServer(router, path);
+        }
+        return CallbackServer.instance;
     }
 
-    private startServer() {
-        if (this.server) {
-            return;
-        }
-        this.server = createServer((req: IncomingMessage, res: ServerResponse) => {
-            const url = parse(req.url || '', true);
-            const callbackId = url.pathname?.substring(1);
 
-            if (req.method && this.methods.includes(req.method) && callbackId && this.callbacks.has(callbackId)) {
-                let body = '';
-                req.on('data', chunk => {
-                    body += chunk.toString();
-                });
-                req.on('end', () => {
-                    try {
-                        const data = JSON.parse(body);
-                        this.callbacks.get(callbackId)?.(data);
-                        res.writeHead(200, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ status: 'success' }));
-                    } catch (error) {
-                        res.writeHead(400, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ status: 'error', message: 'Invalid JSON' }));
-                    }
-                });
+    private constructor(private router: Router, private path: string) {
+        this.setupRoutes();
+    }
+
+    private setupRoutes() {
+        this.router.all(`/:callbackId`, (req: Request, res: Response) => {
+            const { callbackId } = req.params;
+
+            if (this.methods.includes(req.method) && this.callbacks.has(callbackId)) {
+                try {
+                    const data = req.method === 'GET' ? req.query : req.body;
+                    this.callbacks.get(callbackId)?.(data);
+                    res.status(200).json({ status: 'success' });
+                } catch (error) {
+                    res.status(400).json({ status: 'error', message: 'Invalid data' });
+                }
             } else {
-                res.writeHead(404, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ status: 'error', message: 'Not Found' }));
+                res.status(404).json({ status: 'error', message: 'Not Found' });
             }
         });
-
-        this.server.listen(this.port, () => {
-            console.log(`Callback server is listening on port ${this.port}`);
-        });
     }
-    public async getCallback<T>({ timeoutMinutes }: { timeoutMinutes: number }): Promise<{ callbackPromise: Promise<T>, url: string }> {
-        this.startServer();
 
+    public async getCallback<T>({ timeoutMinutes }: { timeoutMinutes: number }): Promise<{ callbackPromise: Promise<T>, url: string }> {
         const callbackId = Math.random().toString(36).substring(2);
-        const publicUrl = process.env.CALLBACK_SERVER_PUBLIC_URL || `http://localhost:${this.port}`;
-        const url = `${publicUrl}/${callbackId}`;
+        const publicUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || '3000'}`;
+        const url = `${publicUrl}${this.path}/${callbackId}`;
 
         const callbackPromise = new Promise<T>((resolve, reject) => {
             const timeout = setTimeout(() => {
@@ -70,14 +62,4 @@ class CallbackServer {
 
         return { callbackPromise, url };
     }
-
-    public async stopServer() {
-        if (this.server) {
-            this.server.close();
-            this.server = null;
-        }
-    }
 }
-
-const callbackServer = new CallbackServer();
-export { callbackServer };

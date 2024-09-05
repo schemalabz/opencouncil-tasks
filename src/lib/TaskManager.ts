@@ -1,6 +1,7 @@
 import express from 'express';
 import { Task } from '../tasks/pipeline';
 import { TaskUpdate } from '../types';
+import chalk from 'chalk';
 
 type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {
     createdAt: Date,
@@ -109,6 +110,30 @@ class TaskManager {
         } catch (error) {
             console.error('Error sending callback:', error);
         }
+    }
+
+    public printTaskUpdates() {
+        console.clear();
+        console.log(chalk.bold.underline('Currently Running Tasks:'));
+
+        const tasks = this.getTaskUpdates();
+
+        if (tasks.length === 0) {
+            console.log(chalk.italic.yellow('No tasks.'));
+        } else {
+            tasks.forEach((task, index) => {
+                const lastUpdatedSeconds = Math.round((new Date().getTime() - task.lastUpdatedAt.getTime()) / 1000);
+                console.log(
+                    chalk.bold.white(`[${index + 1}]`),
+                    chalk.bold.cyan(`${task.taskType.toUpperCase()}`),
+                    `${chalk.green(task.status)} | ${chalk.blue(task.stage)} | ${chalk.magenta(task.progressPercent.toFixed(2))}%`,
+                    `| Last Updated: ${chalk.yellow(`${lastUpdatedSeconds} seconds ago`)}`,
+                    `| Running for: ${chalk.red(Math.round((new Date().getTime() - task.createdAt.getTime()) / 1000))}s`
+                );
+            });
+        }
+
+        console.log(chalk.dim('\n(Updates every 5 seconds)'));
     }
 }
 

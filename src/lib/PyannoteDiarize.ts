@@ -1,7 +1,8 @@
 import dotenv from 'dotenv';
-import { callbackServer } from './CallbackServer';
+import { CallbackServer } from './CallbackServer';
 import fetch from 'node-fetch';
 import { Diarization } from '../types';
+import { Router } from 'express';
 
 dotenv.config();
 export type DiarizeResponse = {
@@ -22,9 +23,24 @@ const PYANNOTE_MAX_CONCURRENT_DIARIZATIONS = parseInt(process.env.PYANNOTE_MAX_C
 const apiUrl = process.env.PYANNOTE_DIARIZE_API_URL;
 const apiToken = process.env.PYANNOTE_API_TOKEN;
 
-class PyannoteDiarizer {
+export default class PyannoteDiarizer {
     private queue: DiarizeRequest[] = [];
     private activeDiarizations = 0;
+    private static callbackServer: CallbackServer;
+    private static instance: PyannoteDiarizer;
+
+    public static getInstance(): PyannoteDiarizer {
+        if (!PyannoteDiarizer.instance) {
+            PyannoteDiarizer.instance = new PyannoteDiarizer();
+        }
+        return PyannoteDiarizer.instance;
+    }
+
+    constructor() {
+        if (!PyannoteDiarizer.callbackServer) {
+            PyannoteDiarizer.callbackServer = CallbackServer.getInstance();
+        }
+    }
 
     async diarize(audioSegments: { url: string, start: number }[]): Promise<Diarization> {
         if (!apiUrl || !apiToken) {
@@ -67,7 +83,7 @@ class PyannoteDiarizer {
     }
 
     private async diarizeSegment(audioUrl: string): Promise<DiarizeResponse['output']['diarization']> {
-        const { callbackPromise, url: webhookUrl } = await callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 60 });
+        const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 30 });
 
         const options = {
             method: 'POST',
@@ -109,5 +125,3 @@ class PyannoteDiarizer {
         return f.flat();
     }
 }
-
-export const pyannoteDiarizer = new PyannoteDiarizer();

@@ -6,6 +6,7 @@ import ytdl from "@ybd-project/ytdl-core";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
 import { getFromEnvOrFile } from "../utils";
+import { YouTubeDataScraper } from "../lib/YouTubeDataScraper";
 
 dotenv.config();
 
@@ -28,12 +29,12 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     };
 
     let cookies = getFromEnvOrFile('COOKIES', './secrets/cookies.json');
-    let scrapeData = getFromEnvOrFile('SCRAPE_DATA', './secrets/scrapeData.json');
 
-    const poToken = scrapeData.poToken;
-    const visitorData = scrapeData.visitorData;
-    if (!poToken || !visitorData) {
-        throw new Error('Missing poToken or visitorData. Please ensure scrapeData.json contains valid data.');
+    const scraper = YouTubeDataScraper.getInstance();
+    const youtubeVideoId = ytdl.getURLVideoID(youtubeUrl);
+    const { poToken, visitorData } = await scraper.getYouTubeData(youtubeVideoId);
+    if (!poToken || !visitorData || poToken === "" || visitorData === "") {
+        throw new Error('Missing poToken or visitorData.');
     }
 
     const agent = ytdl.createAgent(cookies);

@@ -8,10 +8,16 @@ import { uploadToSpaces } from './tasks/uploadToSpaces';
 import { transcribe } from './tasks/transcribe';
 import fs from 'fs';
 import { diarize } from './tasks/diarize';
-import { callbackServer } from './lib/CallbackServer';
 import { applyDiarization } from './tasks/applyDiarization';
+import { getExpressAppWithCallbacks } from './utils';
+import { CallbackServer } from './lib/CallbackServer';
 
 const program = new Command();
+const app = getExpressAppWithCallbacks();
+const port = process.env.PORT || 3000;
+const server = app.listen(port, () => {
+    console.log(`Callback server listening on port ${port}`);
+});
 
 program
     .version('1.0.0')
@@ -31,7 +37,9 @@ program
         );
         console.log(`Audio split into ${result.length} segments`);
         console.log(result);
+        server.close();
     });
+
 program
     .command('pipeline <youtubeUrl>')
     .description('Run the full pipeline on a YouTube video')
@@ -46,6 +54,7 @@ program
         );
         console.log('Pipeline completed');
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+        server.close();
     });
 
 program
@@ -57,6 +66,7 @@ program
         });
         console.log('\nYouTube video downloaded');
         console.log(result);
+        server.close();
     });
 
 program
@@ -70,6 +80,7 @@ program
         });
         console.log('Uploaded to DigitalOcean Spaces');
         console.log(result);
+        server.close();
     });
 
 program
@@ -84,6 +95,7 @@ program
         console.log('Transcribed audio');
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Transcription saved to', options.outputFile);
+        server.close();
     });
 
 program
@@ -101,6 +113,7 @@ program
 
         console.log('Transcribed audio');
         console.log(result);
+        server.close();
     });
 
 program
@@ -114,6 +127,7 @@ program
 
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Diarized audio saved to', options.outputFile);
+        server.close();
     });
 
 program
@@ -129,17 +143,20 @@ program
         });
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Diarization applied to transcript saved to', options.outputFile);
+        server.close();
     });
 program
     .command('test-callback-server')
     .description('Test the callback server')
     .action(async () => {
+        const callbackServer = CallbackServer.getInstance();
         const { callbackPromise, url } = await callbackServer.getCallback<unknown>({ timeoutMinutes: 1 });
         console.log(`Call ${url} within 1 minute to test the callback server`);
         const result = await callbackPromise;
         console.log('Callback called with: ', result);
-        await callbackServer.stopServer();
+        server.close();
     });
+
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {
