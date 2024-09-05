@@ -1,13 +1,16 @@
 import fs from 'fs';
 import express, { Router } from 'express';
 import { CallbackServer } from './lib/CallbackServer';
-import chalk from 'chalk';
 
 export const getFromEnvOrFile = (key: string, path: string) => {
     if (process.env[key]) {
         return process.env[key];
     }
-    return JSON.parse(fs.readFileSync(path, 'utf8'))[key];
+    if (fs.existsSync(path)) {
+        return JSON.parse(fs.readFileSync(path, 'utf8'))[key];
+    }
+
+    throw new Error(`Missing ${key} in environment or file ${path}`);
 }
 
 export const validateUrl = (url: string) => /^(https?:\/\/)?([\da-z\.-]+\.([a-z\.]{2,6})|localhost)(:\d+)?(\/[\w\.-]*)*\/?$/.test(url);
