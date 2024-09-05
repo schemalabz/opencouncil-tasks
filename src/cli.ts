@@ -9,6 +9,7 @@ import { transcribe } from './tasks/transcribe';
 import fs from 'fs';
 import { diarize } from './tasks/diarize';
 import { callbackServer } from './lib/CallbackServer';
+import { applyDiarization } from './tasks/applyDiarization';
 
 const program = new Command();
 
@@ -60,6 +61,7 @@ program
 
 program
     .command('upload-to-spaces <file>')
+    .alias('upload')
     .description('Upload a file to DigitalOcean Spaces')
     .option('-p, --spaces-path <path>', 'Path in DigitalOcean Spaces')
     .action(async (file, options) => {
@@ -73,13 +75,15 @@ program
 program
     .command('transcribe <url>')
     .description('Transcribe an audio url')
-    .action(async (url) => {
+    .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
+    .action(async (url, options) => {
         const result = await transcribe({ segments: [{ url, start: 0 }] }, (stage, progressPercent) => {
             process.stdout.write(`\rTranscribing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
         console.log('Transcribed audio');
-        console.log(result);
+        fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+        console.log('Transcription saved to', options.outputFile);
     });
 
 program
@@ -112,7 +116,20 @@ program
         console.log('Diarized audio saved to', options.outputFile);
     });
 
-
+program
+    .command('apply-diarization')
+    .requiredOption('-D, --diarization-file <file>', 'Diarization file')
+    .requiredOption('-T, --transcript-file <file>', 'Transcript file')
+    .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
+    .action(async (options) => {
+        const diarization = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
+        const transcript = JSON.parse(fs.readFileSync(options.transcriptFile, 'utf8'));
+        const result = await applyDiarization({ diarization, transcript }, (stage, progressPercent) => {
+            process.stdout.write(`\rApplying diarization... [${stage}] ${progressPercent.toFixed(2)}%`);
+        });
+        fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+        console.log('Diarization applied to transcript saved to', options.outputFile);
+    });
 program
     .command('test-callback-server')
     .description('Test the callback server')

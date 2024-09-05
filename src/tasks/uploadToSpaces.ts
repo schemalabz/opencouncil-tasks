@@ -49,7 +49,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
 
         try {
             const result = await spacesEndpoint.upload(params).promise();
-            uploadedUrls.push(result.Location);
+            uploadedUrls.push(`${process.env.CDN_BASE_URL}/${spacesPath}/${fileName}`);
             onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
         } catch (error) {
             console.error(`Error uploading file ${fileName}:`, error);

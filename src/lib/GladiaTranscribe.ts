@@ -72,7 +72,7 @@ class GladiaTranscriber {
             language: "el",
             enable_code_switching: false,
             diarization: true,
-            custom_prompt: customPrompt,
+            context_prompt: customPrompt,
             custom_vocabulary: customVocabulary,
         };
         const gladiaUrl = "https://api.gladia.io/v2/transcription/";
@@ -90,7 +90,8 @@ class GladiaTranscriber {
         if (initialResponse.result_url) {
             return await this.pollForResult(initialResponse.result_url, headers);
         } else {
-            throw new Error("Failed to get result URL from Gladia API");
+            console.log(`Failed to get result URL from Gladia API by polling`, initialResponse);
+            throw new Error(`Failed to get result URL from Gladia API by polling`);
         }
     }
 

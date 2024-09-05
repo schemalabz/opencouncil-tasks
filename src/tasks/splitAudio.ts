@@ -117,7 +117,6 @@ const formatTime = (time: number): string => {
     const seconds = Math.floor(time % 60);
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
-
 const longSilenceThreshold = 5;
 
 export const splitAudio: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, maxDuration }, onProgress) => {
@@ -134,6 +133,14 @@ export const splitAudio: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, m
 
     console.log(`File duration: ${duration} seconds`);
 
+    // If the audio is already shorter than maxDuration, return it as a single segment
+    if (duration <= maxDuration) {
+        console.log(`Audio duration (${duration}s) is already shorter than or equal to maxDuration (${maxDuration}s). No splitting needed.`);
+        const outputPath = path.join(outputDir, `${fileName}_full.mp3`);
+        await ffmpegPromise(file, outputPath);
+        return [{ path: outputPath, startTime: 0 }];
+    }
+
     let segments: { start: number; end: number }[] = [];
     let currentStart = 0;
 
@@ -146,21 +153,14 @@ export const splitAudio: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, m
             silences = await searchForSilences(audio, sampleRate, currentStart, intervalEnd, minSilenceDuration);
         }
 
-
         if (silences.length === 0) {
             throw new Error(`No suitable silent segments found for splitting between ${currentStart} and ${intervalEnd}`);
         }
 
-        let splitPoint: number;
         const longSilence = silences.reverse().find(s => s.end - s.start >= longSilenceThreshold);
+        const splitPoint = longSilence ? longSilence.end : silences.reduce((max, silence) => silence.end > max.end ? silence : max).end;
 
-        if (longSilence) {
-            splitPoint = longSilence.end;
-            console.log(`-> Splitting at the end of a long silence at ${splitPoint}`);
-        } else {
-            splitPoint = silences.reduce((max, silence) => silence.end > max.end ? silence : max).end;
-            console.log(`-> Splitting at the end of a short silence at ${splitPoint}`);
-        }
+        console.log(`-> Splitting at the end of a ${longSilence ? 'long' : 'short'} silence at ${splitPoint}`);
 
         segments.push({ start: currentStart, end: splitPoint });
         currentStart = splitPoint;
@@ -172,19 +172,20 @@ export const splitAudio: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, m
 
     const audioSegments: AudioSegment[] = await Promise.all(segments.map(async (segment, index) => {
         const outputPath = path.join(outputDir, `${fileName}_segment_${index}.mp3`);
-        await new Promise<void>((resolve, reject) => {
-            ffmpeg(file)
-                .setStartTime(segment.start)
-                .setDuration(segment.end - segment.start)
-                .output(outputPath)
-                .on('end', () => resolve())
-                .on('error', reject)
-                .run();
-        });
+        await ffmpegPromise(file, outputPath, segment.start, segment.end - segment.start);
         return { path: outputPath, startTime: segment.start };
     }));
 
     return audioSegments;
+};
+// Helper function to promisify ffmpeg operations
+const ffmpegPromise = (input: string, output: string, startTime?: number, duration?: number): Promise<void> => {
+    return new Promise((resolve, reject) => {
+        let command = ffmpeg(input).output(output);
+        if (startTime !== undefined) command = command.setStartTime(startTime);
+        if (duration !== undefined) command = command.setDuration(duration);
+        command.on('end', () => resolve()).on('error', (err) => reject(err)).run();
+    });
 };
 
 let model: NonRealTimeVAD | null = null;

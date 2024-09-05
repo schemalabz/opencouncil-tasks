@@ -27,6 +27,7 @@ export interface TranscribeRequest extends TaskRequest {
 
 export interface TranscribeResult {
     videoUrl: string;
+    audioUrl: string;
     transcript: Transcript;
 }
 
@@ -67,7 +68,7 @@ export interface Transcript {
     };
 }
 
-interface Utterance {
+export interface Utterance {
     text: string;
     language: string;
     start: number;
@@ -78,7 +79,7 @@ interface Utterance {
     words: Word[];
 }
 
-interface Word {
+export interface Word {
     word: string;
     start: number;
     end: number;

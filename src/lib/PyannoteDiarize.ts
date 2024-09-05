@@ -67,7 +67,7 @@ class PyannoteDiarizer {
     }
 
     private async diarizeSegment(audioUrl: string): Promise<DiarizeResponse['output']['diarization']> {
-        const { callbackPromise, url: webhookUrl } = await callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 30 });
+        const { callbackPromise, url: webhookUrl } = await callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 60 });
 
         const options = {
             method: 'POST',
