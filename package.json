@@ -18,6 +18,7 @@
     "@ybd-project/ytdl-core": "^5.0.12",
     "aws-sdk": "^2.1687.0",
     "chalk": "^4.1.2",
+    "commander": "^12.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
