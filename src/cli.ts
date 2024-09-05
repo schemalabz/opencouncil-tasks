@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { splitAudio } from './tasks/splitAudio';
+import { splitAudioDiarization } from './tasks/splitAudioDiarization';
+import { splitAudioVAD } from './tasks/splitAudioVAD';
 import { pipeline } from './tasks/pipeline';
 import { downloadYTV } from './tasks/downloadYTV';
 import { uploadToSpaces } from './tasks/uploadToSpaces';
@@ -11,6 +12,7 @@ import { diarize } from './tasks/diarize';
 import { applyDiarization } from './tasks/applyDiarization';
 import { getExpressAppWithCallbacks } from './utils';
 import { CallbackServer } from './lib/CallbackServer';
+import { AudioOnlyHlsSegmentType } from 'aws-sdk/clients/medialive';
 
 const program = new Command();
 const app = getExpressAppWithCallbacks();
@@ -27,14 +29,33 @@ program
     .command('split-audio <file>')
     .description('Split an audio file into segments')
     .option('-d, --max-duration <seconds>', 'Maximum duration of each segment in seconds', '3600')
-    .action(async (file: string, options: { maxDuration: string }) => {
-        console.log('Splitting audio...');
-        const result = await splitAudio(
-            { file, maxDuration: parseInt(options.maxDuration) },
-            (stage: string, progressPercent: number) => {
-                process.stdout.write(`\rSplitting audio... [${stage}] ${progressPercent.toFixed(2)}%`);
+    .option('-m, --method <method>', 'Method to use for splitting', 'vad')
+    .option('-D, --diarization-file <file>', 'Diarization file')
+    .action(async (file: string, options: { maxDuration: string, method: string, diarizationFile?: string }) => {
+        let result: Awaited<ReturnType<typeof splitAudioVAD>> = [];
+        if (options.method === 'vad') {
+            result = await splitAudioVAD(
+                { file, maxDuration: parseInt(options.maxDuration) },
+                (stage: string, progressPercent: number) => {
+                    process.stdout.write(`\rSplitting audio... [${stage}] ${progressPercent.toFixed(2)}%`);
+                }
+            );
+        } else if (options.method === 'diarization') {
+            if (!options.diarizationFile) {
+                console.error('Diarization file is required for diarization method');
+                process.exit(1);
             }
-        );
+            const diarization = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
+            result = await splitAudioDiarization(
+                { file, diarization, maxDuration: parseInt(options.maxDuration) },
+                (stage: string, progressPercent: number) => {
+                    process.stdout.write(`\rSplitting audio... [${stage}] ${progressPercent.toFixed(2)}%`);
+                }
+            );
+        } else {
+            console.error('Invalid method, vad or diarization are supported');
+            process.exit(1);
+        }
         console.log(`Audio split into ${result.length} segments`);
         console.log(result);
         server.close();

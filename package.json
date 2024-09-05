@@ -4,7 +4,8 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "tsc && node dist/server.js",
+    "dev": "tsc && node dist/server.js",
+    "start": "node dist/server.js",
     "cli": "tsc && node dist/cli.js"
   },
   "dependencies": {
