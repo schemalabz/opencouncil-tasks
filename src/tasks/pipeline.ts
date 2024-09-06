@@ -32,7 +32,9 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
         return { audioUrl, diarization };
     });
 
-    const transcriptPromise =
+    console.log("Uploaded audio to spaces and diarized");
+
+    const transcript =
         await splitAudioDiarization({ file: audioOnly, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-video"))
             .then(async (audioSegments) => {
                 const audioUrls = await uploadToSpaces({
@@ -52,9 +54,11 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
                 }, createProgressHandler("transcribing"));
             });
 
-    const transcript = await transcriptPromise;
+    console.log("Split audio and transcribed");
 
     const diarizedTranscript = await applyDiarization({ diarization, transcript }, createProgressHandler("diarizing-transcript"));
+
+    console.log("Applied diarization");
 
     const combinedVideoUrls = await combinedVideoUploadPromise; // wait for 2A
     if (combinedVideoUrls.length !== 1) {
@@ -62,8 +66,10 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
     }
     let videoUrl = combinedVideoUrls[0];
 
-
+    console.log("Uploaded combined video");
     onProgress("finished", 100); //lfgggg
+
+    console.log("All done");
     return {
         videoUrl,
         audioUrl,
