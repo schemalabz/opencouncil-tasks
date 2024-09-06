@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { CallbackServer } from './CallbackServer';
-import fetch from 'node-fetch';
+import axios from 'axios';
 import { Diarization } from '../types';
 import { Router } from 'express';
 
@@ -86,31 +86,31 @@ export default class PyannoteDiarizer {
         const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 30 });
 
         const options = {
-            method: 'POST',
             headers: {
                 Authorization: `Bearer ${apiToken}`,
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                url: audioUrl,
-                webhook: webhookUrl
-            })
+            }
         };
 
-        const response = await fetch(apiUrl!, options);
-        const body = await response.json();
+        try {
+            const response = await axios.post(apiUrl!, {
+                url: audioUrl,
+                webhook: webhookUrl
+            }, options);
 
-        if (!response.ok) {
-            throw new Error(`Failed to start diarization job: ${response.statusText}`);
+            const result = await callbackPromise;
+
+            if (result.status !== 'succeeded') {
+                throw new Error(`Diarization job failed with status: ${result.status}`);
+            }
+
+            return result.output.diarization;
+        } catch (error) {
+            if (isAxiosError(error)) {
+                throw new Error(`Failed to start diarization job: ${error.response?.statusText || error.message}`);
+            }
+            throw error;
         }
-
-        const result = await callbackPromise;
-
-        if (result.status !== 'succeeded') {
-            throw new Error(`Diarization job failed with status: ${result.status}`);
-        }
-
-        return result.output.diarization;
     }
 
     private combineDiarizations(segments: { start: number, diarization: Diarization }[]): Diarization {
@@ -125,3 +125,7 @@ export default class PyannoteDiarizer {
         return f.flat();
     }
 }
+
+const isAxiosError = (error: unknown): error is { response: any, message: any } => {
+    return axios.isAxiosError(error);
+};

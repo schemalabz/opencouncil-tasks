@@ -2,7 +2,6 @@
 
 import { Command } from 'commander';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization';
-import { splitAudioVAD } from './tasks/splitAudioVAD';
 import { pipeline } from './tasks/pipeline';
 import { downloadYTV } from './tasks/downloadYTV';
 import { uploadToSpaces } from './tasks/uploadToSpaces';
@@ -32,15 +31,8 @@ program
     .option('-m, --method <method>', 'Method to use for splitting', 'diarization')
     .option('-D, --diarization-file <file>', 'Diarization file')
     .action(async (file: string, options: { maxDuration: string, method: string, diarizationFile?: string }) => {
-        let result: Awaited<ReturnType<typeof splitAudioVAD>> = [];
-        if (options.method === 'vad') {
-            result = await splitAudioVAD(
-                { file, maxDuration: parseInt(options.maxDuration) },
-                (stage: string, progressPercent: number) => {
-                    process.stdout.write(`\rSplitting audio... [${stage}] ${progressPercent.toFixed(2)}%`);
-                }
-            );
-        } else if (options.method === 'diarization') {
+        let result: Awaited<ReturnType<typeof splitAudioDiarization>> = [];
+        if (options.method === 'diarization') {
             if (!options.diarizationFile) {
                 console.error('Diarization file is required for diarization method');
                 process.exit(1);
@@ -53,7 +45,7 @@ program
                 }
             );
         } else {
-            console.error('Invalid method, vad or diarization are supported');
+            console.error('Invalid method, only diarization is supported');
             process.exit(1);
         }
         console.log(`Audio split into ${result.length} segments`);

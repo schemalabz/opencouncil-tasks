@@ -9,30 +9,27 @@
     "cli": "tsc && node dist/cli.js"
   },
   "dependencies": {
-    "@ricky0123/vad-node": "^0.0.3",
-    "@tensorflow/tfjs-node": "^4.20.0",
-    "@types/cors": "^2.8.17",
-    "@types/node": "^22.5.4",
-    "@types/node-wav": "^0.0.3",
-    "@types/underscore": "^1.11.15",
-    "@ybd-project/ytdl-core": "^5.0.14",
+    "@ybd-project/ytdl-core": "^5.0.16",
     "aws-sdk": "^2.1687.0",
+    "axios": "^1.7.7",
     "chalk": "^4.1.2",
     "commander": "^12.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "ffmpeg-static": "^5.2.0",
+    "mime": "^4.0.4",
+    "node-fetch": "^3.3.2",
     "node-wav": "^0.0.2",
-    "onnxruntime-node": "^1.19.0",
-    "ora": "^8.1.0",
     "puppeteer": "^23.3.0",
     "typescript": "^5.5.4",
-    "underscore": "^1.13.7",
-    "vad": "^0.0.1",
-    "youtube-scraper-data": "^1.1.2"
+    "underscore": "^1.13.7"
   },
   "devDependencies": {
-    "@types/express": "^4.17.21"
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.5.4",
+    "@types/node-wav": "^0.0.3",
+    "@types/underscore": "^1.11.15"
   }
 }

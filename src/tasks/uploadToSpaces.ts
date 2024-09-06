@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
 import { Task } from './pipeline';
-
+let mime: any;
 dotenv.config();
 
 interface UploadFilesArgs {
@@ -27,7 +27,8 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
 
     const filesToUpload = Array.isArray(files) ? files : [files];
     const uploadedUrls: string[] = [];
-    // Ensure spacesPath exists
+
+
     await spacesEndpoint.putObject({
         Bucket: bucketName,
         Key: `${spacesPath}/`,
@@ -40,10 +41,20 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
         const fileName = path.basename(file);
         const fileContent = fs.readFileSync(file);
 
+        if (!mime) {
+            mime = await import('mime/lite');
+        }
+
+        const contentType = mime.lookup(file);
+        if (!contentType) {
+            throw new Error(`Content type for file ${file} not found`);
+        }
+
         const params = {
             Bucket: bucketName,
             Key: `${spacesPath}/${fileName}`,
             Body: fileContent,
+            ContentType: contentType,
             ACL: 'public-read',
         };
 

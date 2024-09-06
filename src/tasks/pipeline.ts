@@ -35,7 +35,7 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
     console.log("Uploaded audio to spaces and diarized");
 
     const transcript =
-        await splitAudioDiarization({ file: audioOnly, maxDuration: 40 * 60, diarization }, createProgressHandler("segmenting-video"))
+        await splitAudioDiarization({ file: audioOnly, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-video"))
             .then(async (audioSegments) => {
                 const audioUrls = await uploadToSpaces({
                     files: audioSegments.map((segment) => segment.path),
