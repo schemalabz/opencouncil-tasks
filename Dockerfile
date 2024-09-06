@@ -17,9 +17,9 @@ COPY . .
 RUN npm run build
 
 FROM node:20.11.1
-# Install the latest Chrome dev package and necessary fonts and libraries
+# Install the latest Chrome dev package, necessary fonts and libraries, and ffmpeg
 RUN apt-get update \
-    && apt-get install -y wget gnupg \
+    && apt-get install -y wget gnupg ffmpeg \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] https://dl-ssl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
     && apt-get update \
@@ -53,4 +53,3 @@ EXPOSE ${PORT}
 
 # Start the application
 CMD ["npm", "start"]
-
