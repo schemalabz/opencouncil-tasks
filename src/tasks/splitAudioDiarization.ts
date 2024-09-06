@@ -179,7 +179,7 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
         const segment = segments[i];
         const outputPath = path.join(outputDir, `${fileName}_segment_${i}.mp3`);
         console.log(`Splitting segment ${i + 1} of ${segments.length}: ${segment.start} to ${segment.end}`);
-        await ffmpegPromise(file, outputPath, segment.start, segment.end - segment.start);
+        await retryFfmpeg(file, outputPath, segment.start, segment.end - segment.start);
         console.log(`DONE splitting segment ${i + 1} of ${segments.length}: ${segment.start} to ${segment.end}`);
         audioSegments.push({ path: outputPath, startTime: segment.start });
     }
@@ -191,15 +191,22 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
 // Helper function to promisify ffmpeg operations
 const ffmpegPromise = (input: string, output: string, startTime?: number, duration?: number): Promise<void> => {
     return new Promise((resolve, reject) => {
+        // Ensure absolute paths
+        const absoluteInput = path.resolve(input);
+        const absoluteOutput = path.resolve(output);
+
         const args = [
-            '-i', input,
+            '-i', absoluteInput,
             '-y'  // Overwrite output file if it exists
         ];
 
-        if (startTime !== undefined) args.push('-ss', startTime.toString());
-        if (duration !== undefined) args.push('-t', duration.toString());
+        if (startTime !== undefined) args.push('-ss', startTime.toFixed(3));
+        if (duration !== undefined) args.push('-t', duration.toFixed(3));
 
-        args.push(output);
+        // Add some ffmpeg optimizations
+        args.push('-acodec', 'libmp3lame', '-b:a', '128k');
+
+        args.push(absoluteOutput);
 
         console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
 
@@ -221,7 +228,7 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
 
         ffmpegProcess.on('close', (code) => {
             if (code === 0) {
-                console.log(`FFmpeg process completed successfully for output: ${output}`);
+                console.log(`FFmpeg process completed successfully for output: ${absoluteOutput}`);
                 resolve();
             } else {
                 console.error(`FFmpeg process failed with code ${code}`);
@@ -237,3 +244,19 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
         });
     });
 };
+
+async function retryFfmpeg(input: string, output: string, startTime?: number, duration?: number, maxRetries = 3): Promise<void> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            await ffmpegPromise(input, output, startTime, duration);
+            return;
+        } catch (error) {
+            console.error(`FFmpeg attempt ${attempt} failed:`, error);
+            if (attempt === maxRetries) {
+                throw error;
+            }
+            // Wait before retrying (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, attempt)));
+        }
+    }
+}
