@@ -1,5 +1,5 @@
 # Use Node.js 20 as the base image
-FROM node:20-alpine AS builder
+FROM --platform=linux/amd64 node:20-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -16,7 +16,7 @@ COPY . .
 # Build the application
 RUN npm run build
 
-FROM node:20.11.1
+FROM --platform=linux/amd64 node:20.11.1
 # Install the latest Chrome dev package, necessary fonts and libraries, and ffmpeg
 RUN apt-get update \
     && apt-get install -y wget gnupg ffmpeg \
