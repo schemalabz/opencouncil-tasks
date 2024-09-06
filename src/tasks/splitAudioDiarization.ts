@@ -178,7 +178,9 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
         const outputPath = path.join(outputDir, `${fileName}_segment_${i}.mp3`);
+        console.log(`Splitting segment ${i} of ${segments.length}: ${segment.start} to ${segment.end}`);
         await ffmpegPromise(file, outputPath, segment.start, segment.end - segment.start);
+        console.log(`DONE splitting segment ${i} of ${segments.length}: ${segment.start} to ${segment.end}`);
         audioSegments.push({ path: outputPath, startTime: segment.start });
     }
     console.log(`Split ${segments.length} segments`);
