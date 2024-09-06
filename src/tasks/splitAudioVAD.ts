@@ -4,7 +4,8 @@
 import { Task } from "./pipeline";
 import fs from "fs";
 import path from "path";
-import ffmpeg from "fluent-ffmpeg";
+import cp from "child_process";
+import ffmpeg from 'ffmpeg-static';
 import wav from 'node-wav';
 import { NonRealTimeVAD, NonRealTimeVADOptions } from "@ricky0123/vad-node";
 import { formatTime } from "../utils";
@@ -57,7 +58,6 @@ async function findSilences(audio: Float32Array, sampleRate: number, start: numb
     return silences;
 }
 
-
 // Convert MP3 to WAV and cache the result
 async function convertMP3ToWAV(inputFile: string): Promise<{ buffer: Buffer; sampleRate: number }> {
     const cacheDir = path.join('./data', 'wavCache');
@@ -76,20 +76,29 @@ async function convertMP3ToWAV(inputFile: string): Promise<{ buffer: Buffer; sam
     }
 
     return new Promise((resolve, reject) => {
-        ffmpeg(inputFile)
-            .toFormat('wav')
-            .audioChannels(1)
-            .audioFrequency(16000)
-            .on('error', reject)
-            .output(cachedWavFile)
-            .on('end', () => {
+        const ffmpegProcess = cp.spawn(ffmpeg || '', [
+            '-i', inputFile,
+            '-acodec', 'pcm_s16le',
+            '-ac', '1',
+            '-ar', '16000',
+            cachedWavFile
+        ], {
+            windowsHide: true,
+            stdio: ['pipe', 'inherit', 'inherit']
+        });
+
+        ffmpegProcess.on('close', (code) => {
+            if (code === 0) {
                 const buffer = fs.readFileSync(cachedWavFile);
                 const wavHeader = wav.decode(buffer);
                 resolve({ buffer, sampleRate: wavHeader.sampleRate });
-            })
-            .run();
+            } else {
+                reject(new Error(`FFmpeg process exited with code ${code}`));
+            }
+        });
     });
 }
+
 async function searchForSilences(audio: Float32Array, sampleRate: number, start: number, end: number, minSilenceDuration: number): Promise<SilentSegment[]> {
     const sectionDuration = Math.min(minSilenceDuration * 20, end - start);
     let currentEnd = end;
@@ -114,7 +123,6 @@ async function searchForSilences(audio: Float32Array, sampleRate: number, start:
     console.log(`No suitable silences found after ${iterations} iterations`);
     return [];
 }
-
 
 const longSilenceThreshold = 5;
 
@@ -177,13 +185,32 @@ export const splitAudioVAD: Task<SplitAudioArgs, AudioSegment[]> = async ({ file
 
     return audioSegments;
 };
+
 // Helper function to promisify ffmpeg operations
 const ffmpegPromise = (input: string, output: string, startTime?: number, duration?: number): Promise<void> => {
     return new Promise((resolve, reject) => {
-        let command = ffmpeg(input).output(output);
-        if (startTime !== undefined) command = command.setStartTime(startTime);
-        if (duration !== undefined) command = command.setDuration(duration);
-        command.on('end', () => resolve()).on('error', (err) => reject(err)).run();
+        const args = [
+            '-i', input,
+            '-y'  // Overwrite output file if it exists
+        ];
+
+        if (startTime !== undefined) args.push('-ss', startTime.toString());
+        if (duration !== undefined) args.push('-t', duration.toString());
+
+        args.push(output);
+
+        const ffmpegProcess = cp.spawn(ffmpeg || '', args, {
+            windowsHide: true,
+            stdio: ['pipe', 'inherit', 'inherit']
+        });
+
+        ffmpegProcess.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`FFmpeg process exited with code ${code}`));
+            }
+        });
     });
 };
 
