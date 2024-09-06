@@ -102,4 +102,24 @@ const server = app.listen(port, () => {
 
 if (process.argv.includes('--console')) {
     setInterval(taskManager.printTaskUpdates, 5000);
+} else {
+    setInterval(() => {
+        const taskUpdates = taskManager.getTaskUpdates();
+        const tasksRunning = taskUpdates.length;
+
+        let longestRunningTaskDuration = 0;
+        if (tasksRunning > 0) {
+            const oldestTask = taskUpdates.reduce((oldest, current) =>
+                oldest.createdAt < current.createdAt ? oldest : current
+            );
+            const durationSeconds = Math.floor((Date.now() - new Date(oldestTask.createdAt).getTime()) / 1000);
+            longestRunningTaskDuration = durationSeconds;
+        }
+
+        console.log({
+            type: 'task-updates',
+            tasksRunning,
+            longestRunningTaskDuration
+        });
+    }, 5000);
 }

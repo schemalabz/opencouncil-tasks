@@ -178,9 +178,9 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
         const outputPath = path.join(outputDir, `${fileName}_segment_${i}.mp3`);
-        console.log(`Splitting segment ${i} of ${segments.length}: ${segment.start} to ${segment.end}`);
+        console.log(`Splitting segment ${i + 1} of ${segments.length}: ${segment.start} to ${segment.end}`);
         await ffmpegPromise(file, outputPath, segment.start, segment.end - segment.start);
-        console.log(`DONE splitting segment ${i} of ${segments.length}: ${segment.start} to ${segment.end}`);
+        console.log(`DONE splitting segment ${i + 1} of ${segments.length}: ${segment.start} to ${segment.end}`);
         audioSegments.push({ path: outputPath, startTime: segment.start });
     }
     console.log(`Split ${segments.length} segments`);
@@ -201,17 +201,39 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
 
         args.push(output);
 
+        console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
+
         const ffmpegProcess = cp.spawn(ffmpeg || '', args, {
             windowsHide: true,
-            stdio: ['pipe', 'inherit', 'inherit']
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let stdoutData = '';
+        let stderrData = '';
+
+        ffmpegProcess.stdout.on('data', (data) => {
+            stdoutData += data.toString();
+        });
+
+        ffmpegProcess.stderr.on('data', (data) => {
+            stderrData += data.toString();
         });
 
         ffmpegProcess.on('close', (code) => {
             if (code === 0) {
+                console.log(`FFmpeg process completed successfully for output: ${output}`);
                 resolve();
             } else {
+                console.error(`FFmpeg process failed with code ${code}`);
+                console.error(`FFmpeg stdout: ${stdoutData}`);
+                console.error(`FFmpeg stderr: ${stderrData}`);
                 reject(new Error(`FFmpeg process exited with code ${code}`));
             }
+        });
+
+        ffmpegProcess.on('error', (err) => {
+            console.error(`FFmpeg process error: ${err.message}`);
+            reject(err);
         });
     });
 };
