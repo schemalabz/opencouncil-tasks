@@ -4,7 +4,7 @@ import { CallbackServer } from './lib/CallbackServer';
 
 export const getFromEnvOrFile = (key: string, path: string) => {
     if (process.env[key]) {
-        return process.env[key];
+        return JSON.parse(process.env[key] as string);
     }
     if (fs.existsSync(path)) {
         return JSON.parse(fs.readFileSync(path, 'utf8'))[key];
