@@ -1,4 +1,10 @@
 import puppeteer from 'puppeteer';
+import dotenv from 'dotenv';
+import { getFromEnvOrFile } from '../utils';
+
+dotenv.config();
+
+const PROXY_SERVER = process.env.PROXY_SERVER;
 
 export class YouTubeDataScraper {
     private static instance: YouTubeDataScraper;
@@ -14,12 +20,21 @@ export class YouTubeDataScraper {
     }
 
     public async getYouTubeData(videoId: string): Promise<{ poToken: string, visitorData: string }> {
+        const savedData = getFromEnvOrFile('SCRAPE_DATA', './secrets/scrapeData.json');
+        if (savedData) {
+            console.log("Using saved YouTube data:", savedData);
+            return savedData;
+        }
+
         if (this.youtubeData) {
             return this.youtubeData;
         }
 
-        console.log("Launching browser to get YouTube data");
-        const browser = await puppeteer.launch({ headless: true });
+        console.log("Launching browser to get YouTube data, with proxy server:", PROXY_SERVER);
+        const browser = await puppeteer.launch({
+            headless: true,
+            args: PROXY_SERVER ? [`--proxy-server=${PROXY_SERVER}`] : []
+        });
 
         try {
             const page = await browser.newPage();

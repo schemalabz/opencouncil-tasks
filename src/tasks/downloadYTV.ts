@@ -10,6 +10,8 @@ import { YouTubeDataScraper } from "../lib/YouTubeDataScraper";
 
 dotenv.config();
 
+const PROXY_SERVER = process.env.PROXY_SERVER;
+
 export const downloadYTV: Task<string, { audioOnly: string, combined: string }> = async (youtubeUrl, onProgress) => {
     const randomFileName = Array.from({ length: 12 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
     const outputDir = process.env.DATA_DIR || "./data";
@@ -37,7 +39,14 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
         throw new Error('Missing poToken or visitorData.');
     }
 
-    const agent = ytdl.createAgent(cookies);
+    let agent;
+    if (PROXY_SERVER) {
+        console.log(`Using proxy server: ${PROXY_SERVER}, and cookies length is ${cookies.length}`);
+        agent = ytdl.createProxyAgent({ uri: `http://${PROXY_SERVER}` }, cookies);
+    } else {
+        agent = ytdl.createAgent(cookies);
+    }
+
     const options = { agent, poToken, visitorData };
 
     const formats = await (await ytdl.getInfo(youtubeUrl, options))

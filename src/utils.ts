@@ -4,10 +4,12 @@ import { CallbackServer } from './lib/CallbackServer';
 
 export const getFromEnvOrFile = (key: string, path: string) => {
     if (process.env[key]) {
+        console.log(`Using ${key} from environment: ${process.env[key]}`);
         return JSON.parse(process.env[key] as string);
     }
     if (fs.existsSync(path)) {
-        return JSON.parse(fs.readFileSync(path, 'utf8'))[key];
+        console.log(`Using ${key} from file: ${path}`);
+        return JSON.parse(fs.readFileSync(path, 'utf8'));
     }
 
     throw new Error(`Missing ${key} in environment or file ${path}`);
