@@ -1,7 +1,7 @@
-import { Task } from "./pipeline";
-import { Diarization, Transcript, Word } from "../types";
-import { Utterance } from "../types";
-import { DiarizationManager } from "../lib/DiarizationManager";
+import { Task } from "./pipeline.js";
+import { Diarization, Transcript, Word } from "../types.js";
+import { Utterance } from "../types.js";
+import { DiarizationManager } from "../lib/DiarizationManager.js";
 
 
 export const applyDiarization: Task<{ diarization: Diarization, transcript: Transcript }, Transcript> = async ({ diarization, transcript }, onProgress) => {

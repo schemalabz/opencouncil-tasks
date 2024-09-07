@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { Transcript } from "../types";
+import { Transcript } from "../types.js";
 
 dotenv.config();
 

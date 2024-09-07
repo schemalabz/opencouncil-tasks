@@ -1,17 +1,16 @@
 #!/usr/bin/env node
 
 import { Command } from 'commander';
-import { splitAudioDiarization } from './tasks/splitAudioDiarization';
-import { pipeline } from './tasks/pipeline';
-import { downloadYTV } from './tasks/downloadYTV';
-import { uploadToSpaces } from './tasks/uploadToSpaces';
-import { transcribe } from './tasks/transcribe';
+import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
+import { pipeline } from './tasks/pipeline.js';
+import { downloadYTV } from './tasks/downloadYTV.js';
+import { uploadToSpaces } from './tasks/uploadToSpaces.js';
+import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
-import { diarize } from './tasks/diarize';
-import { applyDiarization } from './tasks/applyDiarization';
-import { getExpressAppWithCallbacks } from './utils';
-import { CallbackServer } from './lib/CallbackServer';
-import { AudioOnlyHlsSegmentType } from 'aws-sdk/clients/medialive';
+import { diarize } from './tasks/diarize.js';
+import { applyDiarization } from './tasks/applyDiarization.js';
+import { getExpressAppWithCallbacks } from './utils.js';
+import { CallbackServer } from './lib/CallbackServer.js';
 
 const program = new Command();
 const app = getExpressAppWithCallbacks();

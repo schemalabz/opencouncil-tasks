@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
-import { getFromEnvOrFile } from '../utils';
+import { getFromEnvOrFile } from '../utils.js';
 
 dotenv.config();
 

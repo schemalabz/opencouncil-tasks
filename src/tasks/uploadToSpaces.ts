@@ -1,9 +1,10 @@
-import { S3 } from 'aws-sdk';
+import aws from 'aws-sdk';
+const S3 = aws.S3;
 import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { Task } from './pipeline';
-let mime: any;
+import { Task } from './pipeline.js';
+import mime from 'mime/lite';
 dotenv.config();
 
 interface UploadFilesArgs {
@@ -41,11 +42,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
         const fileName = path.basename(file);
         const fileContent = fs.readFileSync(file);
 
-        if (!mime) {
-            mime = await import('mime/lite');
-        }
-
-        const contentType = mime.lookup(file);
+        const contentType = mime.getType(file);
         if (!contentType) {
             throw new Error(`Content type for file ${file} not found`);
         }

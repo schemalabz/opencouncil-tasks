@@ -1,12 +1,12 @@
-import { Task } from "./pipeline";
+import { Task } from "./pipeline.js";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import ytdl from "@ybd-project/ytdl-core";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
-import { getFromEnvOrFile } from "../utils";
-import { YouTubeDataScraper } from "../lib/YouTubeDataScraper";
+import { getFromEnvOrFile } from "../utils.js";
+import { YouTubeDataScraper } from "../lib/YouTubeDataScraper.js";
 
 dotenv.config();
 
@@ -59,12 +59,14 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     }, undefined) || formats[0];
     console.log(`Picked video quality: ${pickedVideoQuality?.itag} (${pickedVideoQuality?.quality})`);
 
+    // @ts-ignore
     const audio = ytdl(youtubeUrl, { quality: 'highestaudio', ...options })
         .on('progress', (_, downloaded, total) => {
             tracker.audio = { downloaded, total };
             updateProgress();
         });
 
+    // @ts-ignore
     const video = ytdl(youtubeUrl, { quality: pickedVideoQuality?.itag, ...options })
         .on('progress', (_, downloaded, total) => {
             tracker.video = { downloaded, total };
@@ -87,8 +89,8 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
         })
     ]);
 
-    await new Promise<void>((resolve) => {
-        const combineProcess = cp.spawn(ffmpeg || '', [
+    await new Promise<void>((resolve, reject) => {
+        const combineProcess = cp.spawn(ffmpeg as any as string, [
             '-i', videoOutputPath,
             '-i', audioOutputPath,
             '-c', 'copy',
@@ -98,8 +100,16 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
             stdio: ['pipe', 'inherit', 'inherit']
         });
 
-        combineProcess.on('close', () => {
-            resolve();
+        combineProcess.on('close', (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`FFmpeg process exited with code ${code}`));
+            }
+        });
+
+        combineProcess.on('error', (err) => {
+            reject(err);
         });
     });
 

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import express, { Router } from 'express';
-import { CallbackServer } from './lib/CallbackServer';
+import { CallbackServer } from './lib/CallbackServer.js';
 
 export const getFromEnvOrFile = (key: string, path: string) => {
     if (process.env[key]) {

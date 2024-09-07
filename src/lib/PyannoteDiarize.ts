@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
-import { CallbackServer } from './CallbackServer';
+import { CallbackServer } from './CallbackServer.js';
 import axios from 'axios';
-import { Diarization } from '../types';
+import { Diarization } from '../types.js';
 import { Router } from 'express';
 
 dotenv.config();

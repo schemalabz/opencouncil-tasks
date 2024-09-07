@@ -1,6 +1,6 @@
 import express from 'express';
-import { Task } from '../tasks/pipeline';
-import { TaskUpdate } from '../types';
+import { Task } from '../tasks/pipeline.js';
+import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 
 type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {

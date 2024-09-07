@@ -1,11 +1,11 @@
-import { Task } from "./pipeline";
+import { Task } from "./pipeline.js";
 import fs from "fs";
 import path from "path";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
 import wav from 'node-wav';
-import { Diarization } from "../types";
-import { formatTime } from "../utils";
+import { Diarization } from "../types.js";
+import { formatTime } from "../utils.js";
 
 interface SplitAudioArgs {
     file: string;
@@ -73,7 +73,8 @@ async function convertMP3ToWAV(inputFile: string): Promise<{ buffer: Buffer; sam
     }
 
     return new Promise((resolve, reject) => {
-        const ffmpegProcess = cp.spawn(ffmpeg || '', [
+        // @ts-ignore
+        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, [ // @ts-ignore
             '-i', inputFile,
             '-acodec', 'pcm_s16le',
             '-ac', '1',
@@ -210,7 +211,7 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
 
         console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
 
-        const ffmpegProcess = cp.spawn(ffmpeg || '', args, {
+        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, args, {
             windowsHide: true,
             stdio: ['pipe', 'pipe', 'pipe']
         });

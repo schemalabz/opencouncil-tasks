@@ -1,4 +1,4 @@
-import { Diarization, Utterance, Word } from "../types";
+import { Diarization, Utterance, Word } from "../types.js";
 
 
 export class DiarizationManager {

@@ -1,7 +1,8 @@
 {
   "name": "opencouncil-tasks",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "exports": "./dist/server.js",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "dev": "tsc && node dist/server.js",
@@ -31,5 +32,8 @@
     "@types/node": "^22.5.4",
     "@types/node-wav": "^0.0.3",
     "@types/underscore": "^1.11.15"
+  },
+  "engines": {
+    "node": "^20.11.1"
   }
 }

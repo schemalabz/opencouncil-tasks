@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { CallbackServer } from "../lib/CallbackServer";
-import { Diarization, TaskUpdate, TranscribeRequest, TranscribeResult } from "../types";
-import { applyDiarization } from "./applyDiarization";
-import { diarize } from "./diarize";
-import { downloadYTV } from "./downloadYTV";
-import { splitAudioDiarization } from "./splitAudioDiarization";
-import { transcribe } from "./transcribe";
-import { uploadToSpaces } from "./uploadToSpaces";
+import { CallbackServer } from "../lib/CallbackServer.js";
+import { Diarization, TaskUpdate, TranscribeRequest, TranscribeResult } from "../types.js";
+import { applyDiarization } from "./applyDiarization.js";
+import { diarize } from "./diarize.js";
+import { downloadYTV } from "./downloadYTV.js";
+import { splitAudioDiarization } from "./splitAudioDiarization.js";
+import { transcribe } from "./transcribe.js";
+import { uploadToSpaces } from "./uploadToSpaces.js";
 import _ from 'underscore';
 
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;

@@ -1,7 +1,7 @@
-import { Task } from "./pipeline";
+import { Task } from "./pipeline.js";
 import dotenv from 'dotenv';
-import { Transcript } from "../types";
-import { gladiaTranscriber } from "../lib/GladiaTranscribe";
+import { Transcript } from "../types.js";
+import { gladiaTranscriber } from "../lib/GladiaTranscribe.js";
 
 dotenv.config();
 

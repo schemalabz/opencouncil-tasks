@@ -1,11 +1,11 @@
 import express, { Router } from 'express';
 import dotenv from 'dotenv';
-import { pipeline, Task } from './tasks/pipeline';
+import { pipeline } from './tasks/pipeline.js';
 import cors from 'cors';
-import { taskManager } from './lib/TaskManager';
+import { taskManager } from './lib/TaskManager.js';
 import path from 'path';
-import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYoutubeUrl } from './utils';
-import { TranscribeRequest } from './types';
+import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYoutubeUrl } from './utils.js';
+import { TranscribeRequest } from './types.js';
 
 dotenv.config();
 
@@ -116,10 +116,10 @@ if (process.argv.includes('--console')) {
             longestRunningTaskDuration = durationSeconds;
         }
 
-        console.log({
+        console.log(JSON.stringify({
             type: 'task-updates',
             tasksRunning,
             longestRunningTaskDuration
-        });
+        }));
     }, 5000);
 }

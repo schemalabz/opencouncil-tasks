@@ -1,7 +1,7 @@
-import { Task } from "../tasks/pipeline";
+import { Task } from "../tasks/pipeline.js";
 import dotenv from 'dotenv';
-import PyannoteDiarizer from "../lib/PyannoteDiarize";
-import { Diarization } from "../types";
+import PyannoteDiarizer from "../lib/PyannoteDiarize.js";
+import { Diarization } from "../types.js";
 
 dotenv.config();
 

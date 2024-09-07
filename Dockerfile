@@ -8,13 +8,15 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --prefer-offline
 
 # Copy the rest of the application code
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN --mount=type=cache,target=/root/.npm \
+    npm run build
 
 FROM --platform=linux/amd64 node:20.11.1
 # Install the latest Chrome dev package, necessary fonts and libraries, and ffmpeg
@@ -45,7 +47,8 @@ COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 
 # Install production dependencies
-RUN npm ci --only=production
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production
 
 # Expose the port the app runs on
 EXPOSE ${PORT}
