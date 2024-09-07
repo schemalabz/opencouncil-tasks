@@ -76,7 +76,7 @@ class TaskManager {
                 taskType,
             };
             await this.sendCallback(callbackUrl, errorUpdate);
-            console.error('Error in pipeline:', error);
+            console.error('Error in task:', error);
         } finally {
             this.runningTasks.delete(taskId);
         }

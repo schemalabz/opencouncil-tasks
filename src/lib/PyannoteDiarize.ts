@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import { CallbackServer } from './CallbackServer.js';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { Diarization } from '../types.js';
 import { Router } from 'express';
 
@@ -20,7 +20,7 @@ type DiarizeRequest = {
 }
 
 const PYANNOTE_MAX_CONCURRENT_DIARIZATIONS = parseInt(process.env.PYANNOTE_MAX_CONCURRENT_DIARIZATIONS || '5', 10);
-const apiUrl = process.env.PYANNOTE_DIARIZE_API_URL;
+const baseUrl = process.env.PYANNOTE_DIARIZE_API_URL;
 const apiToken = process.env.PYANNOTE_API_TOKEN;
 
 export default class PyannoteDiarizer {
@@ -43,7 +43,7 @@ export default class PyannoteDiarizer {
     }
 
     async diarize(audioSegments: { url: string, start: number }[]): Promise<Diarization> {
-        if (!apiUrl || !apiToken) {
+        if (!baseUrl || !apiToken) {
             throw new Error("PYANNOTE_DIARIZE_API_URL and PYANNOTE_API_TOKEN must be set in environment variables");
         }
 
@@ -82,35 +82,66 @@ export default class PyannoteDiarizer {
         }
     }
 
+    private axiosOptions = {
+        headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+        }
+    };
+
+    private async getJobStatus(jobId: string): Promise<any> {
+        const response = await axios.get(`${baseUrl}/jobs/${jobId}`, this.axiosOptions);
+        return response.data;
+    }
+
     private async diarizeSegment(audioUrl: string): Promise<DiarizeResponse['output']['diarization']> {
         const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 30 });
 
-        const options = {
-            headers: {
-                Authorization: `Bearer ${apiToken}`,
-                'Content-Type': 'application/json'
-            }
-        };
-
+        const diarizeUrl = `${baseUrl}/diarize`;
+        let response: AxiosResponse<DiarizeResponse>;
         try {
-            const response = await axios.post(apiUrl!, {
+            response = await axios.post(diarizeUrl, {
                 url: audioUrl,
                 webhook: webhookUrl
-            }, options);
-
-            const result = await callbackPromise;
-
-            if (result.status !== 'succeeded') {
-                throw new Error(`Diarization job failed with status: ${result.status}`);
-            }
-
-            return result.output.diarization;
+            }, this.axiosOptions);
         } catch (error) {
+            console.error(`Error with request to ${diarizeUrl}, passed url: ${audioUrl} and webhook: ${webhookUrl}.`);
             if (isAxiosError(error)) {
+                console.error(`Response was ${error.response?.status}: ${JSON.stringify(error.response?.data)}`);
                 throw new Error(`Failed to start diarization job: ${error.response?.statusText || error.message}`);
+            } else {
+                console.log(`Non axios error:`, error);
             }
             throw error;
         }
+
+        const jobId = response.data.jobId;
+        console.log(`Awaiting diarization callback: ${webhookUrl}. Response was ${response.status}: ${JSON.stringify(response.data)}`);
+
+        const statusCheckInterval = setInterval(async () => {
+            try {
+                const status = await this.getJobStatus(jobId);
+                console.log(`Diarize job status: ${JSON.stringify(status)}`);
+            } catch (error) {
+                console.error('Error checking diarize job status:', error);
+            }
+        }, 20000);
+
+        let result: DiarizeResponse;
+        try {
+            result = await callbackPromise;
+        } catch (e) {
+            throw e;
+        } finally {
+            clearInterval(statusCheckInterval);
+        }
+
+        if (result.status !== 'succeeded') {
+            throw new Error(`Diarization job failed with status: ${result.status}`);
+        }
+
+        return result.output.diarization;
+
     }
 
     private combineDiarizations(segments: { start: number, diarization: Diarization }[]): Diarization {

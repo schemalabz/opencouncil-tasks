@@ -18,31 +18,25 @@ COPY . .
 RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
-FROM --platform=linux/amd64 node:20.11.1
-# Install the latest Chrome dev package, necessary fonts and libraries, and ffmpeg
+FROM --platform=linux/amd64 node:20.11.1 AS runner
+# Install the latest Chrome dev package, necessary fonts and libraries
 RUN apt-get update \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] https://dl-ssl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
     && apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 \
       --no-install-recommends \
+    && apt-get install -y tini \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r apify && useradd -rm -g apify -G audio,video apify
 
 # Determine the path of the installed Google Chrome
 RUN which google-chrome-stable || true
 
-# Switch to the non-root user
-USER apify
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-
 # Set the working directory
 WORKDIR /app
 
-# Copy built assets and package files from the builder stage
-COPY --from=builder /app/dist ./dist
+# Copy package files first
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/package-lock.json ./package-lock.json
 
@@ -50,8 +44,20 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --only=production
 
+# Copy built assets
+COPY --from=builder /app/dist ./dist
+
+# Switch to the non-root user
+USER apify
+
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+
 # Expose the port the app runs on
 EXPOSE ${PORT}
 
-# Start the application
-CMD ["npm", "start"]
+# Use tini as the entrypoint
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Start the application with Node.js
+CMD ["node", "dist/server.js"]

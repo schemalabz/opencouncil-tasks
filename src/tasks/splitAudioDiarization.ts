@@ -3,9 +3,9 @@ import fs from "fs";
 import path from "path";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
-import wav from 'node-wav';
 import { Diarization } from "../types.js";
 import { formatTime } from "../utils.js";
+
 
 interface SplitAudioArgs {
     file: string;
@@ -55,47 +55,6 @@ async function findSilences(diarization: Diarization, start: number, end: number
     return silences.filter(silence => silence.end - silence.start >= minSilenceDuration);
 }
 
-// Convert MP3 to WAV and cache the result
-async function convertMP3ToWAV(inputFile: string): Promise<{ buffer: Buffer; sampleRate: number }> {
-    const cacheDir = path.join('./data', 'wavCache');
-    if (!fs.existsSync(cacheDir)) {
-        fs.mkdirSync(cacheDir, { recursive: true });
-    }
-
-    const inputFileName = path.basename(inputFile, '.mp3');
-    const cachedWavFile = path.join(cacheDir, `${inputFileName}.wav`);
-
-    if (fs.existsSync(cachedWavFile)) {
-        console.log('Using cached WAV file');
-        const buffer = fs.readFileSync(cachedWavFile);
-        const wavHeader = wav.decode(buffer);
-        return { buffer, sampleRate: wavHeader.sampleRate };
-    }
-
-    return new Promise((resolve, reject) => {
-        // @ts-ignore
-        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, [ // @ts-ignore
-            '-i', inputFile,
-            '-acodec', 'pcm_s16le',
-            '-ac', '1',
-            '-ar', '16000',
-            cachedWavFile
-        ], {
-            windowsHide: true,
-            stdio: ['pipe', 'inherit', 'inherit']
-        });
-
-        ffmpegProcess.on('close', (code) => {
-            if (code === 0) {
-                const buffer = fs.readFileSync(cachedWavFile);
-                const wavHeader = wav.decode(buffer);
-                resolve({ buffer, sampleRate: wavHeader.sampleRate });
-            } else {
-                reject(new Error(`FFmpeg process exited with code ${code}`));
-            }
-        });
-    });
-}
 
 async function searchForSilences(diarization: Diarization, start: number, end: number, minSilenceDuration: number): Promise<SilentSegment[]> {
     const sectionDuration = Math.min(minSilenceDuration * 20, end - start);
@@ -122,33 +81,29 @@ async function searchForSilences(diarization: Diarization, start: number, end: n
     return [];
 }
 
+
 const longSilenceThreshold = 5;
+// if the last diarization ends before the end of the audio, we return segments until the end of the diarization
 export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, diarization, maxDuration }, onProgress) => {
     console.log(`==> Splitting audio file: ${file}`);
     const outputDir = path.dirname(file);
     const fileName = path.basename(file, path.extname(file));
 
-    // Convert MP3 to WAV
-    const { buffer, sampleRate } = await convertMP3ToWAV(file);
-    console.log(`Converted to WAV: ${sampleRate} Hz`);
-    const wavData = wav.decode(buffer);
-    const audio = wavData.channelData[0];
-    const duration = audio.length / sampleRate;
-
-    console.log(`File duration: ${duration} seconds`);
+    const duration = diarization.reduce((acc, segment) => acc < segment.end ? segment.end : acc, 0);
+    console.log(`File duration (assumed from diarization): ${formatTime(duration)}`);
 
     // If the audio is already shorter than maxDuration, return it as a single segment
     if (duration <= maxDuration) {
         console.log(`Audio duration (${duration}s) is already shorter than or equal to maxDuration (${maxDuration}s). No splitting needed.`);
         const outputPath = path.join(outputDir, `${fileName}_full.mp3`);
-        await ffmpegPromise(file, outputPath);
+        await ffmpegPromise(file, outputPath, 0, duration);
         return [{ path: outputPath, startTime: 0 }];
     }
 
     let segments: { start: number; end: number }[] = [];
     let currentStart = 0;
 
-    while (currentStart < duration) {
+    while (duration - currentStart > maxDuration) {
         const intervalEnd = Math.min(currentStart + maxDuration, duration);
         console.log(`Searching for silences between ${formatTime(currentStart)} and ${formatTime(intervalEnd)}`);
         let silences = await searchForSilences(diarization, currentStart, intervalEnd, longSilenceThreshold);
@@ -158,13 +113,13 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
         }
 
         if (silences.length === 0) {
-            throw new Error(`No suitable silent segments found for splitting between ${currentStart} and ${intervalEnd}`);
+            throw new Error(`No suitable silent segments found for splitting between ${formatTime(currentStart)} and ${formatTime(intervalEnd)}`);
         }
 
         const longSilence = silences.reverse().find(s => s.end - s.start >= longSilenceThreshold);
         const splitPoint = longSilence ? longSilence.end : silences.reduce((max, silence) => silence.end > max.end ? silence : max).end;
 
-        console.log(`-> Splitting at the end of a ${longSilence ? 'long' : 'short'} silence at ${splitPoint}`);
+        console.log(`-> Splitting at the end of a ${longSilence ? 'long' : 'short'} silence at ${formatTime(splitPoint)}`);
 
         segments.push({ start: currentStart, end: splitPoint });
         currentStart = splitPoint;
@@ -172,16 +127,22 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
         onProgress("splitting", (currentStart / duration) * 100);
     }
 
-    console.log(`Got ${segments.length} segments, all under ${maxDuration} seconds`);
+    // Handle the remaining audio if any
+    if (currentStart < duration) {
+        segments.push({ start: currentStart, end: duration });
+        onProgress("splitting", 100);
+    }
+
+    console.log(`Got ${segments.length} segments, all under ${formatTime(maxDuration)} (${maxDuration}s)`);
 
     console.log(`About to split ${segments.length} segments`);
     const audioSegments: AudioSegment[] = [];
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
         const outputPath = path.join(outputDir, `${fileName}_segment_${i}.mp3`);
-        console.log(`Splitting segment ${i + 1} of ${segments.length}: ${segment.start} to ${segment.end}`);
+        console.log(`Splitting segment ${i + 1} of ${segments.length}: ${formatTime(segment.start)} to ${formatTime(segment.end)}`);
         await retryFfmpeg(file, outputPath, segment.start, segment.end - segment.start);
-        console.log(`DONE splitting segment ${i + 1} of ${segments.length}: ${segment.start} to ${segment.end}`);
+        console.log(`DONE splitting segment ${i + 1} of ${segments.length}: ${formatTime(segment.start)} to ${formatTime(segment.end)}`);
         audioSegments.push({ path: outputPath, startTime: segment.start });
     }
     console.log(`Split ${segments.length} segments`);
@@ -246,7 +207,7 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
     });
 };
 
-async function retryFfmpeg(input: string, output: string, startTime?: number, duration?: number, maxRetries = 3): Promise<void> {
+async function retryFfmpeg(input: string, output: string, startTime?: number, duration?: number, maxRetries = 2): Promise<void> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             await ffmpegPromise(input, output, startTime, duration);

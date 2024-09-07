@@ -5,7 +5,12 @@ import cors from 'cors';
 import { taskManager } from './lib/TaskManager.js';
 import path from 'path';
 import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYoutubeUrl } from './utils.js';
-import { TranscribeRequest } from './types.js';
+import { Diarization, TranscribeRequest } from './types.js';
+import fs from 'fs';
+import { uploadToSpaces } from './tasks/uploadToSpaces.js';
+import { diarize } from './tasks/diarize.js';
+import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
+
 
 dotenv.config();
 
@@ -71,6 +76,63 @@ app.post('/test', async (
     const resultPromise = pipeline({ youtubeUrl: testVideo }, () => { });
     res.status(200).json(await resultPromise);
 }, taskManager.serveTask(pipeline));
+app.post('/test-split', async (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+) => {
+    let { audioFile, audioUrl, diarizationFile } = req.body;
+
+    if (!audioFile) {
+        return res.status(400).json({ error: 'No audio file or URL provided' });
+    }
+
+    if (!audioUrl) {
+        const filePath = path.join(process.env.DATA_DIR || './data', audioFile);
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ error: 'Audio file not found' });
+        }
+
+        res.status(200).send({ "message": "ok" });
+        console.log('Uploading to spaces...');
+        const result = await uploadToSpaces({
+            files: [filePath],
+            spacesPath: 'test'
+        }, console.log);
+        console.log(`Uploaded to ${result[0]}`);
+        audioUrl = result[0];
+    } else {
+        res.status(200).send({ "message": "ok" });
+    }
+
+    let diarization: Diarization;
+    if (!diarizationFile) {
+        console.log('Diarizing...');
+        diarization = await diarize(audioFile, console.log);
+        console.log(`Got diarization of ${diarization.length} segments`);
+        console.log('Writing diarization to file...');
+
+        const diarFilePath = path.join(process.env.DATA_DIR || './data', 'temp', 'diar.json');
+        await fs.promises.mkdir(path.dirname(diarFilePath), { recursive: true });
+        await fs.promises.writeFile(diarFilePath, JSON.stringify(diarization, null, 2));
+        console.log(`Diarization written to ${diarFilePath}`);
+    } else {
+        console.log('Reading diarization from file...');
+        const diarFilePath = path.join(process.env.DATA_DIR || './data', diarizationFile);
+        diarization = JSON.parse(await fs.promises.readFile(diarFilePath, 'utf8')) as Diarization;
+        console.log(`Diarization read from ${diarFilePath}, contains ${diarization.length} segments`);
+    }
+
+    console.log('Splitting...');
+    const splits = await splitAudioDiarization({
+        diarization,
+        file: path.join(process.env.DATA_DIR || './data', audioFile),
+        maxDuration: 60 * 60
+    }, console.log);
+
+    console.log(`Got ${splits.length} splits`);
+});
 
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {

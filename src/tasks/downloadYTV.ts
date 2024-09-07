@@ -33,7 +33,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     let cookies = getFromEnvOrFile('COOKIES', './secrets/cookies.json');
 
     const scraper = YouTubeDataScraper.getInstance();
-    const youtubeVideoId = ytdl.getURLVideoID(youtubeUrl);
+    const youtubeVideoId = (await ytdl.getBasicInfo(youtubeUrl)).videoDetails.videoId;
     const { poToken, visitorData } = await scraper.getYouTubeData(youtubeVideoId);
     if (!poToken || !visitorData || poToken === "" || visitorData === "") {
         throw new Error('Missing poToken or visitorData.');
