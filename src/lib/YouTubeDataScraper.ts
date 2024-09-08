@@ -1,6 +1,6 @@
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
-import { getFromEnvOrFile } from '../utils.js';
+import { tryGetFromEnvOrFile } from '../utils.js';
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ export class YouTubeDataScraper {
     }
 
     public async getYouTubeData(videoId: string): Promise<{ poToken: string, visitorData: string }> {
-        const savedData = getFromEnvOrFile('SCRAPE_DATA', './secrets/scrapeData.json');
+        const savedData = tryGetFromEnvOrFile('SCRAPE_DATA', './secrets/scrapeData.json');
         if (savedData) {
             console.log("Using saved YouTube data:", savedData);
             return savedData;

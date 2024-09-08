@@ -2,7 +2,7 @@ import fs from 'fs';
 import express, { Router } from 'express';
 import { CallbackServer } from './lib/CallbackServer.js';
 
-export const getFromEnvOrFile = (key: string, path: string) => {
+export const tryGetFromEnvOrFile = (key: string, path: string) => {
     if (process.env[key]) {
         console.log(`Using ${key} from environment`);
         return JSON.parse(process.env[key] as string);
@@ -12,7 +12,15 @@ export const getFromEnvOrFile = (key: string, path: string) => {
         return JSON.parse(fs.readFileSync(path, 'utf8'));
     }
 
-    throw new Error(`Missing ${key} in environment or file ${path}`);
+    return null;
+}
+
+export const getFromEnvOrFile = (key: string, path: string) => {
+    const value = tryGetFromEnvOrFile(key, path);
+    if (!value) {
+        throw new Error(`Missing ${key} in environment or file ${path}`);
+    }
+    return value;
 }
 
 export const validateUrl = (url: string) => /^(https?:\/\/)?([\da-z\.-]+\.([a-z\.]{2,6})|localhost)(:\d+)?(\/[\w\.-]*)*\/?$/.test(url);
