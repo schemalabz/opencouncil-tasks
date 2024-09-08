@@ -25,13 +25,9 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     const audioOutputPath = path.join(outputDir, `${randomFileName}_audio.mp3`);
     const videoOutputPath = path.join(outputDir, `${randomFileName}_video.mp4`);
 
-    const tracker = {
-        start: Date.now(),
-        audio: { downloaded: 0, total: Infinity },
-        video: { downloaded: 0, total: Infinity },
-    };
 
     let cookies = getFromEnvOrFile('COOKIES', './secrets/cookies.json');
+    console.log(`Proceeding with ${cookies.length} cookies`);
 
     const scraper = YouTubeDataScraper.getInstance();
     const youtubeVideoId = youtubeUrl.split("v=")[1];
@@ -62,19 +58,11 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     }, undefined) || formats[0];
     console.log(`Picked video quality: ${pickedVideoQuality?.itag} (${pickedVideoQuality?.quality})`);
 
-    // @ts-ignore
-    const audio = ytdl(youtubeUrl, { quality: 'highestaudio', ...options })
-        .on('progress', (_, downloaded, total) => {
-            tracker.audio = { downloaded, total };
-            updateProgress();
-        });
-
-    // @ts-ignore
-    const video = ytdl(youtubeUrl, { quality: pickedVideoQuality?.itag, ...options })
-        .on('progress', (_, downloaded, total) => {
-            tracker.video = { downloaded, total };
-            updateProgress();
-        });
+    const tracker = {
+        start: Date.now(),
+        audio: { downloaded: 0, total: Infinity },
+        video: { downloaded: 0, total: Infinity },
+    };
 
     function updateProgress() {
         const audioProgress = tracker.audio.downloaded / tracker.audio.total;
@@ -83,6 +71,23 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
         onProgress("downloading-video", totalProgress * 100);
     }
 
+    console.log(`Starting to download audio`);
+    // @ts-ignore
+    const audio = ytdl(youtubeUrl, { quality: 'highestaudio', ...options })
+        .on('progress', (_, downloaded, total) => {
+            tracker.audio = { downloaded, total };
+            updateProgress();
+        });
+
+    console.log(`Starting to download video`);
+    // @ts-ignore
+    const video = ytdl(youtubeUrl, { quality: pickedVideoQuality?.itag, ...options })
+        .on('progress', (_, downloaded, total) => {
+            tracker.video = { downloaded, total };
+            updateProgress();
+        });
+
+    console.log(`Started downloading video and audio`);
     await Promise.all([
         new Promise<void>((resolve) => {
             audio.pipe(fs.createWriteStream(audioOutputPath)).on('finish', resolve);
@@ -91,6 +96,8 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
             video.pipe(fs.createWriteStream(videoOutputPath)).on('finish', resolve);
         })
     ]);
+
+    console.log(`Finished downloading video and audio, will now combine`);
 
     await new Promise<void>((resolve, reject) => {
         const combineProcess = cp.spawn(ffmpeg as any as string, [
