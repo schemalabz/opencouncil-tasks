@@ -19,6 +19,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
 
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
+        console.log(`Created output directory: ${outputDir}`);
     }
 
     const audioOutputPath = path.join(outputDir, `${randomFileName}_audio.mp3`);
@@ -33,7 +34,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     let cookies = getFromEnvOrFile('COOKIES', './secrets/cookies.json');
 
     const scraper = YouTubeDataScraper.getInstance();
-    const youtubeVideoId = (await ytdl.getBasicInfo(youtubeUrl)).videoDetails.videoId;
+    const youtubeVideoId = youtubeUrl.split("v=")[1];
     const { poToken, visitorData } = await scraper.getYouTubeData(youtubeVideoId);
     if (!poToken || !visitorData || poToken === "" || visitorData === "") {
         throw new Error('Missing poToken or visitorData.');
@@ -48,6 +49,8 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string }> 
     }
 
     const options = { agent, poToken, visitorData };
+    console.log(`Youtube URL: ${youtubeUrl}`);
+    console.log(`Getting info...`);
 
     const formats = await (await ytdl.getInfo(youtubeUrl, options))
         .formats.map((f) => ({ quality: f.quality, mimeType: f.mimeType, itag: f.itag }))

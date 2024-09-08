@@ -25,8 +25,10 @@ export class YouTubeDataScraper {
             console.log("Using saved YouTube data:", savedData);
             return savedData;
         }
+        console.log("No saved YouTube data found, scraping new data");
 
         if (this.youtubeData) {
+            console.log("\tUsing cached YouTube data");
             return this.youtubeData;
         }
 
