@@ -40,6 +40,27 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
     for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         const fileName = path.basename(file);
+        const finalUrl = `${process.env.CDN_BASE_URL}/${spacesPath}/${fileName}`;
+
+        // Check if the file already exists in the bucket
+        try {
+            await spacesEndpoint.headObject({
+                Bucket: bucketName,
+                Key: `${spacesPath}/${fileName}`
+            }).promise();
+
+            // If the file exists, add the URL to the list and skip uploading
+            console.log(`File ${fileName} already exists. Skipping upload.`);
+            uploadedUrls.push(finalUrl);
+            onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
+            continue;
+        } catch (error: any) {
+            // If the file doesn't exist, we'll proceed with the upload
+            if (error.code !== 'NotFound') {
+                console.error(`Error checking file existence for ${fileName}:`, error);
+                throw error;
+            }
+        }
         const fileContent = fs.readFileSync(file);
 
         const contentType = mime.getType(file);
@@ -57,7 +78,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
 
         try {
             const result = await spacesEndpoint.upload(params).promise();
-            uploadedUrls.push(`${process.env.CDN_BASE_URL}/${spacesPath}/${fileName}`);
+            uploadedUrls.push(finalUrl);
             onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
         } catch (error) {
             console.error(`Error uploading file ${fileName}:`, error);

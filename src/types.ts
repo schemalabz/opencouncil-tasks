@@ -25,10 +25,17 @@ export interface TranscribeRequest extends TaskRequest {
     customPrompt?: string;
 }
 
+
+export type TranscriptWithUtteranceDrifts = Transcript & {
+    transcription: {
+        utterances: (Utterance & { drift: number })[];
+    };
+};
+
 export interface TranscribeResult {
     videoUrl: string;
     audioUrl: string;
-    transcript: Transcript;
+    transcript: TranscriptWithUtteranceDrifts;
 }
 
 /*
@@ -84,4 +91,25 @@ export interface Word {
     start: number;
     end: number;
     confidence: number;
+}
+
+
+export interface SummarizeRequest extends TaskRequest {
+    transcript: {
+        speakerName: string | null;
+        speakerParty: string | null;
+        speakerSegmentId: string;
+        text: string;
+    }[];
+    topicLabels: string[];
+    cityName: string;
+    date: string;
+}
+
+export interface SummarizeResult {
+    speakerSegmentSummaries: {
+        speakerSegmentId: string;
+        topicLabels: string[];
+        summary: string | null;
+    }[];
 }

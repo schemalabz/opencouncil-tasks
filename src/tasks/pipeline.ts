@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { CallbackServer } from "../lib/CallbackServer.js";
-import { Diarization, TaskUpdate, TranscribeRequest, TranscribeResult } from "../types.js";
+import { Diarization, TaskUpdate, TranscribeRequest, TranscribeResult, TranscriptWithUtteranceDrifts } from "../types.js";
 import { applyDiarization } from "./applyDiarization.js";
 import { diarize } from "./diarize.js";
 import { downloadYTV } from "./downloadYTV.js";
@@ -56,7 +56,7 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
 
     console.log("Split audio and transcribed");
 
-    const diarizedTranscript = await applyDiarization({ diarization, transcript }, createProgressHandler("diarizing-transcript"));
+    const diarizedTranscript: TranscriptWithUtteranceDrifts = await applyDiarization({ diarization, transcript }, createProgressHandler("diarizing-transcript"));
 
     console.log("Applied diarization");
 

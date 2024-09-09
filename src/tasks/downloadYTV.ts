@@ -2,126 +2,108 @@ import { Task } from "./pipeline.js";
 import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
-import ytdl from "@ybd-project/ytdl-core";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
-import { getFromEnvOrFile } from "../utils.js";
-import { YouTubeDataScraper } from "../lib/YouTubeDataScraper.js";
 
 dotenv.config();
 
-const PROXY_SERVER = process.env.PROXY_SERVER;
+const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string }> = async (youtubeUrl, onProgress) => {
-    const randomFileName = Array.from({ length: 12 }, () => String.fromCharCode(97 + Math.floor(Math.random() * 26))).join('');
+    const videoId = youtubeUrl.split("v=")[1];
     const outputDir = process.env.DATA_DIR || "./data";
-    const filePath = path.join(outputDir, `${randomFileName}.mp4`);
+    const filePath = path.join(outputDir, `${videoId}.mp4`);
 
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
         console.log(`Created output directory: ${outputDir}`);
     }
 
-    const audioOutputPath = path.join(outputDir, `${randomFileName}_audio.mp3`);
-    const videoOutputPath = path.join(outputDir, `${randomFileName}_video.mp4`);
+    const audioOutputPath = path.join(outputDir, `${videoId}.mp3`);
+    const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
 
+    console.log(`Getting cobalt urls for ${youtubeUrl}`);
 
-    let cookies = getFromEnvOrFile('COOKIES', './secrets/cookies.json');
-    console.log(`Proceeding with ${cookies.length} cookies`);
-
-    const scraper = YouTubeDataScraper.getInstance();
-    const youtubeVideoId = youtubeUrl.split("v=")[1];
-    const { poToken, visitorData } = await scraper.getYouTubeData(youtubeVideoId);
-    if (!poToken || !visitorData || poToken === "" || visitorData === "") {
-        throw new Error('Missing poToken or visitorData.');
-    }
-
-    let agent;
-    if (PROXY_SERVER) {
-        console.log(`Using proxy server: ${PROXY_SERVER}, and cookies length is ${cookies.length}`);
-        agent = ytdl.createProxyAgent({ uri: `http://${PROXY_SERVER}` }, cookies);
-    } else {
-        agent = ytdl.createAgent(cookies);
-    }
-
-    const options = { agent, poToken, visitorData };
-    console.log(`Youtube URL: ${youtubeUrl}`);
-    console.log(`Getting info...`);
-
-    const formats = await (await ytdl.getInfo(youtubeUrl, options))
-        .formats.map((f) => ({ quality: f.quality, mimeType: f.mimeType, itag: f.itag }))
-        .filter((f) => f.mimeType?.startsWith('video/mp4'));
-
-    const qualityPreference = ['large', 'medium', 'highestvideo'];
-    const pickedVideoQuality = qualityPreference.reduce((picked: { quality: string; mimeType: string | undefined; itag: number; } | undefined, quality) => {
-        return picked || formats.find(f => f.quality === quality);
-    }, undefined) || formats[0];
-    console.log(`Picked video quality: ${pickedVideoQuality?.itag} (${pickedVideoQuality?.quality})`);
-
-    const tracker = {
-        start: Date.now(),
-        audio: { downloaded: 0, total: Infinity },
-        video: { downloaded: 0, total: Infinity },
-    };
-
-    function updateProgress() {
-        const audioProgress = tracker.audio.downloaded / tracker.audio.total;
-        const videoProgress = tracker.video.downloaded / tracker.video.total;
-        const totalProgress = (0.25 * audioProgress) + (0.75 * videoProgress);
-        onProgress("downloading-video", totalProgress * 100);
-    }
-
-    console.log(`Starting to download audio`);
-    // @ts-ignore
-    const audio = ytdl(youtubeUrl, { quality: 'highestaudio', ...options })
-        .on('progress', (_, downloaded, total) => {
-            tracker.audio = { downloaded, total };
-            updateProgress();
-        });
-
-    console.log(`Starting to download video`);
-    // @ts-ignore
-    const video = ytdl(youtubeUrl, { quality: pickedVideoQuality?.itag, ...options })
-        .on('progress', (_, downloaded, total) => {
-            tracker.video = { downloaded, total };
-            updateProgress();
-        });
-
-    console.log(`Started downloading video and audio`);
-    await Promise.all([
-        new Promise<void>((resolve) => {
-            audio.pipe(fs.createWriteStream(audioOutputPath)).on('finish', resolve);
-        }),
-        new Promise<void>((resolve) => {
-            video.pipe(fs.createWriteStream(videoOutputPath)).on('finish', resolve);
-        })
+    const [audioUrl, videoUrl] = await Promise.all([
+        getCobaltStreamUrl(youtubeUrl, { audioOnly: true }),
+        getCobaltStreamUrl(youtubeUrl, { vQuality: "480" })
     ]);
 
-    console.log(`Finished downloading video and audio, will now combine`);
+    console.log(`Got cobalt urls: ${audioUrl} (AUDIO) and ${videoUrl} (VIDEO)`);
 
-    await new Promise<void>((resolve, reject) => {
-        const combineProcess = cp.spawn(ffmpeg as any as string, [
-            '-i', videoOutputPath,
-            '-i', audioOutputPath,
-            '-c', 'copy',
-            filePath
-        ], {
-            windowsHide: true,
-            stdio: ['pipe', 'inherit', 'inherit']
-        });
+    await Promise.all([
+        downloadUrl(audioUrl, audioOutputPath),
+        downloadUrl(videoUrl, videoOutputPath)
+    ]);
 
-        combineProcess.on('close', (code) => {
-            if (code === 0) {
-                resolve();
-            } else {
-                reject(new Error(`FFmpeg process exited with code ${code}`));
-            }
-        });
+    return { audioOnly: audioOutputPath, combined: videoOutputPath };
+}
 
-        combineProcess.on('error', (err) => {
-            reject(err);
-        });
+const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, vQuality?: string } = {}) => {
+    const cobaltApiUrl = `${COBALT_API_BASE_URL}/api/json`;
+    const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+    };
+
+    const response = await fetch(cobaltApiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ url, isAudioOnly: options.audioOnly, vQuality: options.vQuality })
     });
 
-    return { audioOnly: audioOutputPath, combined: filePath };
-};
+    const data = await response.json();
+    return data.url;
+}
+
+const downloadUrl = async (url: string, outputPath: string) => {
+    if (fs.existsSync(outputPath)) {
+        console.log(`Skipping download of ${url} to ${outputPath} because it already exists`);
+        return;
+    }
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`HTTP error getting ${url}: status: ${response.status}`);
+    }
+
+    const writer = fs.createWriteStream(outputPath);
+    const reader = response.body?.getReader();
+    const decoder = new TextDecoder();
+
+    if (!reader) {
+        throw new Error("Unable to read response body");
+    }
+
+    let totalBytes = 0;
+    let lastLogTime = Date.now();
+
+    while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) {
+            break;
+        }
+
+        writer.write(Buffer.from(value));
+        totalBytes += value.length;
+
+        const currentTime = Date.now();
+        if (currentTime - lastLogTime >= 5000) {
+            console.log(`Downloading: ${formatBytes(totalBytes)} written`);
+            lastLogTime = currentTime;
+        }
+    }
+
+    writer.end();
+
+    console.log(`Total downloaded: ${formatBytes(totalBytes)}`);
+}
+
+function formatBytes(bytes: number): string {
+    if (bytes < 1024) return bytes + " B";
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}

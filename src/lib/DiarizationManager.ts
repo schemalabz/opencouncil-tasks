@@ -4,7 +4,7 @@ import { Diarization, Utterance, Word } from "../types.js";
 export class DiarizationManager {
     private diarization: Diarization;
     private speakerMap: Map<string, number>;
-    private config: { maxDriftCost: number } = { maxDriftCost: 1 };
+    private config: { maxDriftCost: number } = { maxDriftCost: 100 };
     private totalDrift: number;
 
     constructor(diarization: Diarization) {
@@ -27,7 +27,24 @@ export class DiarizationManager {
     private findDiarizationsContainingInterval(start: number, end: number): Diarization {
         return this.diarization.filter((d) => d.start <= start && d.end >= end);
     }
-    public findSpeakersWithDriftForUtterance(utterance: Utterance): Array<{ speaker: number, drift: number }> {
+    private findClosestDiarizationForSpeaker(speaker: string, wordStart: number, wordEnd: number): { start: number; end: number; speaker: string; } {
+        const diarizations = this.diarization.filter(d => d.speaker === speaker);
+
+        const closest = diarizations.reduce((closest, current) => {
+            if (current.start <= wordStart && current.end >= wordEnd) {
+                // the diarization fully contains the word
+                return current;
+            }
+
+            const closestTimeDifference = Math.abs(closest.start - wordStart) + Math.abs(closest.end - wordEnd);
+            const currentTimeDifference = Math.abs(current.start - wordStart) + Math.abs(current.end - wordEnd);
+            return currentTimeDifference < closestTimeDifference ? current : closest;
+        });
+
+        return closest;
+    }
+
+    private findSpeakersWithDriftForUtterance(utterance: Utterance): Array<{ speaker: number, drift: number }> {
         const speakersWithFullWordCoverage = new Set<string>();
         const speakersWithDrift: { [speaker: string]: number } = {};
 
@@ -43,13 +60,10 @@ export class DiarizationManager {
         for (const speaker of speakersWithFullWordCoverage) {
             let totalDrift = 0;
             for (const word of utterance.words) {
-                const diarizations = this.findDiarizationsContainingInterval(word.start, word.end);
-                const speakerDiarization = diarizations.find(d => d.speaker === speaker);
-                if (speakerDiarization) {
-                    const drift = Math.pow(Math.abs(speakerDiarization.start - word.start), 2) +
-                        Math.pow(Math.abs(speakerDiarization.end - word.end), 2);
-                    totalDrift += drift;
-                }
+                const speakerDiarization = this.findClosestDiarizationForSpeaker(speaker, word.start, word.end);
+                const drift = Math.pow(Math.abs(speakerDiarization.start - word.start), 2) +
+                    Math.pow(Math.abs(speakerDiarization.end - word.end), 2);
+                totalDrift += drift;
             }
             speakersWithDrift[speaker] = totalDrift;
         }
@@ -60,11 +74,24 @@ export class DiarizationManager {
         }));
     }
 
-    public findSpeakersForUtterance(utterance: Utterance): number[] {
-        return this.findSpeakersWithDriftForUtterance(utterance).map(s => s.speaker);
+    private findSpeakersForUtterance(utterance: Utterance): { speaker: number, drift: number }[] {
+        return this.findSpeakersWithDriftForUtterance(utterance);
     }
 
-    public findBestSpeakerForUtterance(utterance: Utterance): number | null {
+    public findBestSpeakerForUtterance(utterance: Utterance): { speaker: number, drift: number } | null {
+        const overlappingDiarizations = this.diarization.filter((d) => {
+            return (d.start <= utterance.end && d.start >= utterance.start) || // starts in utterance 
+                (d.end <= utterance.end && d.end >= utterance.start) || // ends in utterance
+                (d.start <= utterance.start && d.end >= utterance.end); // contains utterance
+        });
+
+        if (overlappingDiarizations.length === 1) {
+            return {
+                speaker: this.speakerMap.get(overlappingDiarizations[0].speaker)!,
+                drift: 0
+            };
+        }
+
         const speakersWithDrift = this.findSpeakersWithDriftForUtterance(utterance);
 
         if (speakersWithDrift.length === 0) {
@@ -72,7 +99,7 @@ export class DiarizationManager {
         }
 
         if (speakersWithDrift.length === 1) {
-            return speakersWithDrift[0].speaker;
+            return speakersWithDrift[0];
         }
 
 
@@ -88,7 +115,7 @@ export class DiarizationManager {
 
         console.log(`Warning: Utterance "${utterance.text}" (${formatTime(utterance.start)}-${formatTime(utterance.end)}) has ${speakersWithDrift.length} speakers, picking the best one with cost ${best.drift}`);
 
-        return best.speaker;
+        return best;
     }
 
     public getDriftCost(): number {

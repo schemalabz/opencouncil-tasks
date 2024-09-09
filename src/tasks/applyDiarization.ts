@@ -1,14 +1,15 @@
 import { Task } from "./pipeline.js";
-import { Diarization, Transcript, Word } from "../types.js";
+import { Diarization, Transcript, TranscriptWithUtteranceDrifts, Word } from "../types.js";
 import { Utterance } from "../types.js";
 import { DiarizationManager } from "../lib/DiarizationManager.js";
 
 
-export const applyDiarization: Task<{ diarization: Diarization, transcript: Transcript }, Transcript> = async ({ diarization, transcript }, onProgress) => {
+
+export const applyDiarization: Task<{ diarization: Diarization, transcript: Transcript }, TranscriptWithUtteranceDrifts> = async ({ diarization, transcript }, onProgress) => {
     const diarizationManager = new DiarizationManager(diarization);
 
     let skippedUtterances: Utterance[] = [];
-    const newUtterances: Utterance[] = transcript.transcription.utterances.map((utterance) => {
+    const newUtterances: (Utterance & { drift: number })[] = transcript.transcription.utterances.map((utterance) => {
         const speaker = diarizationManager.findBestSpeakerForUtterance(utterance);
 
         if (!speaker) {
@@ -19,9 +20,10 @@ export const applyDiarization: Task<{ diarization: Diarization, transcript: Tran
 
         return {
             ...utterance,
-            speaker: speaker
+            speaker: speaker.speaker,
+            drift: speaker.drift
         };
-    }).filter((utterance): utterance is Utterance => utterance !== null);
+    }).filter((utterance): utterance is Utterance & { drift: number } => utterance !== null);
 
     const speakerUtteranceCount = newUtterances.reduce((acc, curr) => {
         acc[curr.speaker] = (acc[curr.speaker] || 0) + 1;

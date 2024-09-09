@@ -10,7 +10,7 @@ import fs from 'fs';
 import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { diarize } from './tasks/diarize.js';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
-
+import { summarize } from './tasks/summarize.js';
 
 dotenv.config();
 
@@ -64,6 +64,8 @@ app.post('/transcribe', (
 
     next();
 }, taskManager.serveTask(pipeline));
+
+app.post('/summarize', taskManager.serveTask(summarize));
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
