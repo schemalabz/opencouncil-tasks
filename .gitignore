@@ -7,3 +7,4 @@ cookies.json
 scrapeData.json
 secrets/
 .DS_Store
+prompt-*.txt

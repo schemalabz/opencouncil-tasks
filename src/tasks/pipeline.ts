@@ -8,6 +8,9 @@ import { splitAudioDiarization } from "./splitAudioDiarization.js";
 import { transcribe } from "./transcribe.js";
 import { uploadToSpaces } from "./uploadToSpaces.js";
 import _ from 'underscore';
+import dotenv from "dotenv";
+
+dotenv.config();
 
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
@@ -28,6 +31,7 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
         spacesPath: "audio"
     }, () => { }).then(async (urls) => {
         const audioUrl = urls[0];
+        console.log(`Diarizing url ${audioUrl}`);
         const diarization = await diarize(audioUrl, createProgressHandler("diarizing"));
         return { audioUrl, diarization };
     });
@@ -73,6 +77,28 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
     return {
         videoUrl,
         audioUrl,
+        muxPlaybackId: await getMuxPlaybackId(videoUrl),
         transcript: diarizedTranscript
     };
+};
+
+const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID;
+const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET;
+
+const getMuxPlaybackId = async (videoUrl: string) => {
+    if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
+        throw new Error("MUX_TOKEN_ID or MUX_TOKEN_SECRET is not set");
+    }
+
+    const response = await fetch("https://api.mux.com/video/v1/assets", {
+        method: "POST",
+        body: JSON.stringify({ input: videoUrl, playback_policy: ["public"], video_quality: "basic" }),
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Basic ${Buffer.from(`${process.env.MUX_TOKEN_ID}:${process.env.MUX_TOKEN_SECRET}`).toString("base64")}`,
+        },
+    });
+    const data = await response.json();
+    console.log("Got Mux asset", data);
+    return data.data.playback_ids[0].id;
 };

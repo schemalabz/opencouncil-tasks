@@ -4,7 +4,7 @@ import { Diarization, Utterance, Word } from "../types.js";
 export class DiarizationManager {
     private diarization: Diarization;
     private speakerMap: Map<string, number>;
-    private config: { maxDriftCost: number } = { maxDriftCost: 100 };
+    private config: { maxDriftCost: number } = { maxDriftCost: Number.POSITIVE_INFINITY };
     private totalDrift: number;
 
     constructor(diarization: Diarization) {
@@ -61,6 +61,9 @@ export class DiarizationManager {
             let totalDrift = 0;
             for (const word of utterance.words) {
                 const speakerDiarization = this.findClosestDiarizationForSpeaker(speaker, word.start, word.end);
+                if (speakerDiarization.start <= word.start && speakerDiarization.end >= word.end) {
+                    continue;
+                }
                 const drift = Math.pow(Math.abs(speakerDiarization.start - word.start), 2) +
                     Math.pow(Math.abs(speakerDiarization.end - word.end), 2);
                 totalDrift += drift;

@@ -47,6 +47,7 @@ export default class PyannoteDiarizer {
             throw new Error("PYANNOTE_DIARIZE_API_URL and PYANNOTE_API_TOKEN must be set in environment variables");
         }
 
+        console.log(`Diarizing ${audioSegments.length} segments: ${audioSegments.map(({ url, start }) => `${url} (${start})`).join(', ')}`);
         const diarizationPromises = audioSegments.map(({ url, start }) => this.diarizeSingle(url));
         const diarizations = await Promise.all(diarizationPromises);
         return this.combineDiarizations(diarizations.map((diarization, index) => ({ diarization, start: audioSegments[index].start })));
@@ -68,6 +69,7 @@ export default class PyannoteDiarizer {
             return;
         }
 
+        console.log(`Processing diarization queue of length ${this.queue.length}`);
         this.activeDiarizations++;
         const request = this.queue.shift()!;
 
@@ -145,6 +147,7 @@ export default class PyannoteDiarizer {
     }
 
     private combineDiarizations(segments: { start: number, diarization: Diarization }[]): Diarization {
+        console.log(`Combining ${segments.length} diarizations`);
         const f = segments.map(({ diarization, start }, index) => {
             return diarization.map((d) => ({
                 start: d.start + start,

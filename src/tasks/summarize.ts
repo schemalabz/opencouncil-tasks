@@ -1,3 +1,4 @@
+import { aiChat, ResultWithUsage } from "../lib/ai.js";
 import { SummarizeRequest, SummarizeResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import Anthropic from '@anthropic-ai/sdk';
@@ -8,13 +9,13 @@ dotenv.config();
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 type SpeakerSegment = SummarizeRequest['transcript'][number];
 
-type ResultWithUsage<T> = { result: T, usage: Anthropic.Messages.Usage };
+const requestedSummaryWordCount = 50;
 
 export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
     const { transcript, topicLabels, cityName, date } = request;
     const segmentsToSummarize = transcript.filter((t) => {
         const wordCount = t.text.split(' ').length;
-        return wordCount >= 100;
+        return wordCount >= 40;
     });
 
     const originalWordCount = transcript.map(s => s.text.split(' ').length).reduce((a, b) => a + b, 0);
@@ -28,7 +29,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log(`- ${toSummarizeWordCount} words to summarize (only ${Math.round(toSummarizeWordCount / originalWordCount * 100)}% of total)`);
 
     const systemPrompt = getSystemPrompt(cityName, date, topicLabels);
-    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 40000);
+    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 50000);
     console.log(`System prompt: ${systemPrompt}`);
     console.log(`User prompt split into ${userPrompts.length} prompts, with lengths: ${userPrompts.map(p => p.length).join(', ')}`);
 
@@ -59,15 +60,14 @@ async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgre
     for (let i = 0; i < userPrompts.length; i++) {
         onProgress("summarizing", i / userPrompts.length);
         const userPrompt = userPrompts[i];
-        const response = await aiChat(systemPrompt, userPrompt);
+        const response = await aiChat<AiSummarizeResponse[]>(systemPrompt,
+            userPrompt,
+            "Με βάση τις τοποθετήσεις των συμμετεχόντων, ακολουθούν οι περιλήψεις και οι θεματικές λεζάντες σε μορφή JSON: \n[",
+            "[");
         responses.push(...response.result);
         totalUsage.input_tokens += response.usage.input_tokens;
         totalUsage.output_tokens += response.usage.output_tokens;
         console.log(response);
-        console.log(`Got response, sleeping for 1 minute..`);
-        if (i < userPrompts.length - 1) {
-            await sleep(1000 * 60);
-        }
     }
 
     return {
@@ -77,56 +77,6 @@ async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgre
 }
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-const maxTokens = 8192;
-async function aiChat(systemPrompt: string, userPrompt: string): Promise<ResultWithUsage<AiSummarizeResponse[]>> {
-    let response: Anthropic.Messages.Message;
-    try {
-        console.log(`Sending message to claude...`);
-        response = await anthropic.messages.create({
-            model: "claude-3-5-sonnet-20240620",
-            max_tokens: maxTokens,
-            system: systemPrompt,
-            messages: [
-                { "role": "user", "content": userPrompt }
-            ],
-            temperature: 0
-        });
-    } catch (e) {
-        console.log(`Error creating message: ${e}`);
-        throw e;
-    }
-
-    if (!response.content || response.content.length !== 1) {
-        console.log(`Expected 1 response, got ${response.content?.length ?? 0}`);
-        console.log(response.content);
-        throw new Error("Expected 1 response from claude, got " + response.content?.length);
-    }
-
-    console.log(`Usage: ${response.usage}`);
-    const responseContent = response.content[0];
-
-    if (responseContent.type !== "text") {
-        throw new Error("Expected text response from claude, got " + responseContent.type);
-    }
-
-    const responseText = responseContent.text;
-
-    let responseJson: AiSummarizeResponse[];
-    try {
-        responseJson = JSON.parse(responseText);
-    } catch (e) {
-        console.log(`Error parsing response as JSON : ${e}`);
-        console.log(responseText);
-        throw e;
-    }
-
-    return {
-        usage: response.usage,
-        result: responseJson
-    };
-}
-
 
 // Splits a user prompt into multiple prompts of a given maximum length in characters
 function splitUserPrompts(userPrompts: string[], maxLengthChars: number) {
@@ -180,7 +130,7 @@ function getSystemPrompt(cityName: string, date: string, topicLabels: string[]) 
         Είσαι ένα σύστημα που παράγει σύντομες περιλήψεις και θεματικές λεζάντες για τις τοποθετήσεις συμμετεχόντων σε δημοτικά συμβούλια.
         Σήμερα θα συντάξεις περιλήψεις για το δημοτικό συμβούλιο της πόλης "${cityName}" που πραγματοποιήθηκε στην ημερομηνία "${date}".
 
-        Οι περιλήψεις σου πρέπει να είναι σύντομες(1 - 3 προτάσεις, μέχρι περίπου 30 λέξεις),
+        Οι περιλήψεις σου πρέπει να είναι σύντομες(1 - 3 προτάσεις, μέχρι περίπου ${requestedSummaryWordCount} λέξεις),
         και να ανφέρονται στην ουσία και τα πιο σημαντικά θέματα της τοποθέτησης του εκάστοτε
         συμμετέχοντα. Χρησιμοποίησε, αν και όσο γίνεται, λέξεις που χρησιμοποίησε και ο
         συμμετέχοντας(δε χρειάζονται εισαγωγικά). Δε χρειάζεται να αναφέρεις το όνομα του

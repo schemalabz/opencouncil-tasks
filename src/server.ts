@@ -11,6 +11,7 @@ import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { diarize } from './tasks/diarize.js';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
 import { summarize } from './tasks/summarize.js';
+import { extractHighlights } from './tasks/extractHighlights.js';
 
 dotenv.config();
 
@@ -54,9 +55,10 @@ app.post('/transcribe', (
 ) => {
     const { youtubeUrl, callbackUrl } = req.body;
 
-    if (!validateYoutubeUrl(youtubeUrl)) {
+    /*
+    if (!validateUrl(youtubeUrl)) {
         return res.status(400).json({ error: 'Invalid YouTube URL' });
-    }
+    }*/
 
     if (!validateUrl(callbackUrl)) {
         return res.status(400).json({ error: 'Invalid callback URL' });
@@ -66,6 +68,7 @@ app.post('/transcribe', (
 }, taskManager.serveTask(pipeline));
 
 app.post('/summarize', taskManager.serveTask(summarize));
+app.post('/extract-highlights', taskManager.serveTask(extractHighlights));
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
@@ -165,7 +168,7 @@ const server = app.listen(port, () => {
 });
 
 if (process.argv.includes('--console')) {
-    setInterval(taskManager.printTaskUpdates, 5000);
+    setInterval(() => taskManager.printTaskUpdates(), 5000);
 } else {
     setInterval(() => {
         const taskUpdates = taskManager.getTaskUpdates();

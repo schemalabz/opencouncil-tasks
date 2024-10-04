@@ -35,6 +35,7 @@ export type TranscriptWithUtteranceDrifts = Transcript & {
 export interface TranscribeResult {
     videoUrl: string;
     audioUrl: string;
+    muxPlaybackId: string;
     transcript: TranscriptWithUtteranceDrifts;
 }
 
@@ -111,5 +112,28 @@ export interface SummarizeResult {
         speakerSegmentId: string;
         topicLabels: string[];
         summary: string | null;
+    }[];
+}
+
+export interface ExtractHighlightsRequest extends TaskRequest {
+    names: string[];
+    transcript: {
+        speakerName: string | null;
+        speakerParty: string | null;
+        speakerSegmentId: string;
+        utterances: {
+            text: string;
+            utteranceId: string;
+        }[];
+    }[];
+    topicLabels: string[];
+    cityName: string;
+    date: string;
+}
+
+export interface ExtractHighlightsResult {
+    highlights: {
+        name: string;
+        utteranceIds: string[];
     }[];
 }

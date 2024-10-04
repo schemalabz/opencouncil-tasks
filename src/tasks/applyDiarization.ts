@@ -9,6 +9,8 @@ export const applyDiarization: Task<{ diarization: Diarization, transcript: Tran
     const diarizationManager = new DiarizationManager(diarization);
 
     let skippedUtterances: Utterance[] = [];
+    console.log(`Last utterance ends at ${formatTime(transcript.transcription.utterances[transcript.transcription.utterances.length - 1].end)}`);
+    console.log(`Last diarization ends at ${formatTime(diarization[diarization.length - 1].end)}`);
     const newUtterances: (Utterance & { drift: number })[] = transcript.transcription.utterances.map((utterance) => {
         const speaker = diarizationManager.findBestSpeakerForUtterance(utterance);
 

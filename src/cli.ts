@@ -11,7 +11,7 @@ import { diarize } from './tasks/diarize.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
-
+import path from 'path';
 const program = new Command();
 const app = getExpressAppWithCallbacks();
 const port = process.env.PORT || 3000;
@@ -96,7 +96,7 @@ program
     });
 
 program
-    .command('transcribe <url>')
+    .command('transcribe-single <url>')
     .description('Transcribe an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
     .action(async (url: string, options: { outputFile: string }) => {
@@ -105,6 +105,47 @@ program
         });
 
         console.log('Transcribed audio');
+        fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+        console.log('Transcription saved to', options.outputFile);
+        server.close();
+    });
+
+program
+    .command('transcribe <file>')
+    .description('Transcribe an audio file')
+    .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
+    .action(async (file: string, options: { outputFile: string }) => {
+        const createProgressHandler = (stage: string) => {
+            return (subStage: string, perc: number) => {
+                process.stdout.write(`\r${stage}:${subStage} ${perc.toFixed(2)}%`);
+            };
+        };
+
+        const uploadedFileUrl = await uploadToSpaces({ files: [file], spacesPath: "audio" }, createProgressHandler("uploading-file"));
+        console.log("Uploaded file to DigitalOcean Spaces");
+
+        const diarization = await diarize(uploadedFileUrl[0], createProgressHandler("diarizing"));
+        console.log("Diarized audio");
+
+        const audioSegments = await splitAudioDiarization({ file, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-audio"));
+        console.log("Split audio into segments");
+
+        const audioUrls = await uploadToSpaces({
+            files: audioSegments.map((segment) => segment.path),
+            spacesPath: "audio"
+        }, createProgressHandler("uploading-audio"));
+        console.log("Uploaded audio segments to DigitalOcean Spaces");
+
+        const segments = audioSegments.map((segment, index) => ({
+            url: audioUrls[index],
+            start: segment.startTime
+        }));
+
+        const result = await transcribe({
+            segments
+        }, createProgressHandler("transcribing"));
+        console.log("Transcribed audio");
+
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Transcription saved to', options.outputFile);
         server.close();

@@ -10,33 +10,95 @@ dotenv.config();
 const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string }> = async (youtubeUrl, onProgress) => {
-    const videoId = youtubeUrl.split("v=")[1];
     const outputDir = process.env.DATA_DIR || "./data";
-    const filePath = path.join(outputDir, `${videoId}.mp4`);
-
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
         console.log(`Created output directory: ${outputDir}`);
     }
 
+    console.log(`Getting cobalt urls for ${youtubeUrl}`);
+
+    const { videoId, videoUrl } = await getVideoIdAndUrl(youtubeUrl);
+
+    console.log(`Got direct url: ${videoUrl} (VIDEO)`);
     const audioOutputPath = path.join(outputDir, `${videoId}.mp3`);
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
 
-    console.log(`Getting cobalt urls for ${youtubeUrl}`);
-
-    const [audioUrl, videoUrl] = await Promise.all([
-        getCobaltStreamUrl(youtubeUrl, { audioOnly: true }),
-        getCobaltStreamUrl(youtubeUrl, { vQuality: "480" })
-    ]);
-
-    console.log(`Got cobalt urls: ${audioUrl} (AUDIO) and ${videoUrl} (VIDEO)`);
-
     await Promise.all([
-        downloadUrl(audioUrl, audioOutputPath),
         downloadUrl(videoUrl, videoOutputPath)
     ]);
 
+    console.log(`Extracting sound from ${videoOutputPath} to ${audioOutputPath}`);
+    await extractSoundFromMP4(videoOutputPath, audioOutputPath);
+    console.log(`Extracted sound from ${videoOutputPath} to ${audioOutputPath}`);
+
     return { audioOnly: audioOutputPath, combined: videoOutputPath };
+}
+
+const randomId = () => Math.random().toString(36).substring(2, 15);
+
+const getVideoIdAndUrl = async (mediaUrl: string) => {
+    if (mediaUrl.includes("youtube.com")) {
+        const videoId = mediaUrl.split("v=")[1];
+        const videoUrl = await getCobaltStreamUrl(mediaUrl, { vQuality: "360" });
+        return { videoId, videoUrl };
+    }
+
+    console.log(`Unknown media type, assuming it's a url to an mp4 file: ${mediaUrl}`);
+    return { videoId: randomId(), videoUrl: mediaUrl };
+}
+
+const FREQUENCY_FILTER = true;
+const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
+    const args = [
+        '-i', inputPath,
+        '-vn',  // No video
+        '-acodec', 'libmp3lame',
+        '-b:a', '128k',
+        '-y',  // Overwrite output file if it exists
+        outputPath
+    ];
+
+    if (FREQUENCY_FILTER) {
+        args.splice(args.length - 1, 0, '-af', 'highpass=f=200, lowpass=f=3000');
+    }
+
+    console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
+
+    return new Promise<void>((resolve, reject) => {
+        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, args, {
+            windowsHide: true,
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let stdoutData = '';
+        let stderrData = '';
+
+        ffmpegProcess.stdout.on('data', (data) => {
+            stdoutData += data.toString();
+        });
+
+        ffmpegProcess.stderr.on('data', (data) => {
+            stderrData += data.toString();
+        });
+
+        ffmpegProcess.on('close', (code) => {
+            if (code === 0) {
+                console.log(`FFmpeg process completed successfully for output: ${outputPath}`);
+                resolve();
+            } else {
+                console.error(`FFmpeg process failed with code ${code}`);
+                console.error(`FFmpeg stdout: ${stdoutData}`);
+                console.error(`FFmpeg stderr: ${stderrData}`);
+                reject(new Error(`FFmpeg process exited with code ${code}`));
+            }
+        });
+
+        ffmpegProcess.on('error', (err) => {
+            console.error(`FFmpeg process error: ${err.message}`);
+            reject(err);
+        });
+    });
 }
 
 const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, vQuality?: string } = {}) => {
@@ -90,7 +152,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
 
         const currentTime = Date.now();
         if (currentTime - lastLogTime >= 5000) {
-            console.log(`Downloading: ${formatBytes(totalBytes)} written`);
+            console.log(`Downloading: ${formatBytes(totalBytes)} written to ${outputPath}`);
             lastLogTime = currentTime;
         }
     }
