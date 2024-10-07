@@ -94,29 +94,12 @@ export interface Word {
     confidence: number;
 }
 
+/*
+ * (Base) Request on Transcript
+ */
 
-export interface SummarizeRequest extends TaskRequest {
-    transcript: {
-        speakerName: string | null;
-        speakerParty: string | null;
-        speakerSegmentId: string;
-        text: string;
-    }[];
-    topicLabels: string[];
-    cityName: string;
-    date: string;
-}
-
-export interface SummarizeResult {
-    speakerSegmentSummaries: {
-        speakerSegmentId: string;
-        topicLabels: string[];
-        summary: string | null;
-    }[];
-}
-
-export interface ExtractHighlightsRequest extends TaskRequest {
-    names: string[];
+// A generic type for requests that need a transcript as input
+export interface RequestOnTranscript extends TaskRequest {
     transcript: {
         speakerName: string | null;
         speakerParty: string | null;
@@ -131,9 +114,25 @@ export interface ExtractHighlightsRequest extends TaskRequest {
     date: string;
 }
 
-export interface ExtractHighlightsResult {
-    highlights: {
+/*
+* Summarize
+*/
+
+export interface SummarizeRequest extends RequestOnTranscript {
+    requestedSubjects: string[];
+}
+
+export interface SummarizeResult {
+    speakerSegmentSummaries: {
+        speakerSegmentId: string;
+        topicLabels: string[];
+        summary: string | null;
+    }[];
+
+    subjects: {
         name: string;
-        utteranceIds: string[];
+        description: string;
+        speakerSegmentIds: string[];
+        highlightedUtteranceIds: string[];
     }[];
 }
