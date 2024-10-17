@@ -23,7 +23,7 @@ services:
     ports:
       - 3002:9000/tcp
     environment:
-      API_URL: "http://localhost:3002"
+      API_URL: "http://cobalt-api:9000"
       API_NAME: "opencouncil"
       DURATION_LIMIT: 36000
       COOKIE_PATH: "/secrets/cookies.json"

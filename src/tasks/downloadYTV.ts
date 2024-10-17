@@ -108,6 +108,7 @@ const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, v
         'Accept': 'application/json',
     };
 
+    console.log(`Calling cobalt via ${cobaltApiUrl}`);
     const response = await fetch(cobaltApiUrl, {
         method: 'POST',
         headers,
