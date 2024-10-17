@@ -11,7 +11,8 @@ import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { diarize } from './tasks/diarize.js';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
 import { summarize } from './tasks/summarize.js';
-import { extractHighlights } from './tasks/extractHighlights.js';
+import { generatePodcastSpec } from './tasks/generatePodcastSpec.js';
+import { splitMediaFile } from './tasks/splitMediaFile.js';
 
 dotenv.config();
 
@@ -68,7 +69,8 @@ app.post('/transcribe', (
 }, taskManager.serveTask(pipeline));
 
 app.post('/summarize', taskManager.serveTask(summarize));
-app.post('/extract-highlights', taskManager.serveTask(extractHighlights));
+app.post('/splitMediaFile', taskManager.serveTask(splitMediaFile));
+app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 

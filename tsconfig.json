@@ -12,7 +12,10 @@
     "declaration": true,
     "noImplicitAny": false,
     "allowJs": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "jsx": "react",
+    "jsxFactory": "Priompt.createElement",
+    "jsxFragmentFactory": "Priompt.Fragment",
   },
   "ts-node": {
     "esm": true,

@@ -26,7 +26,7 @@ export const getFromEnvOrFile = (key: string, path: string) => {
 export const validateUrl = (url: string) => /^(https?:\/\/)?([\da-z\.-]+\.([a-z\.]{2,6})|localhost)(:\d+)?(\/[\w\.-]*)*\/?$/.test(url);
 export const validateYoutubeUrl = (url: string) => /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(url);
 
-export const getExpressAppWithCallbacks = () => {
+export const getExpressAppWithCallbacks = (): express.Express => {
     const app = express();
     const port = process.env.PORT || 3000;
 

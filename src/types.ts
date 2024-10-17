@@ -103,10 +103,14 @@ export interface RequestOnTranscript extends TaskRequest {
     transcript: {
         speakerName: string | null;
         speakerParty: string | null;
+        speakerRole: string | null;
         speakerSegmentId: string;
+        text: string;
         utterances: {
             text: string;
             utteranceId: string;
+            startTimestamp: number;
+            endTimestamp: number;
         }[];
     }[];
     topicLabels: string[];
@@ -134,5 +138,57 @@ export interface SummarizeResult {
         description: string;
         speakerSegmentIds: string[];
         highlightedUtteranceIds: string[];
+    }[];
+}
+
+
+/*
+ * Produce Podcast
+ */
+
+export interface GeneratePodcastSpecRequest extends RequestOnTranscript {
+    subjects: {
+        name: string;
+        description: string;
+        speakerSegmentIds: string[];
+        highlightedUtteranceIds: string[];
+        allocation: 'onlyMention' | 'skip' | 'full';
+        allocatedMinutes: number;
+    }[];
+
+    audioUrl: string;
+}
+
+export type PodcastPart = {
+    type: "host";
+    text: string;
+} | {
+    type: "audio";
+    utteranceIds: string[];
+};
+
+export interface GeneratePodcastSpecResult {
+    parts: PodcastPart[];
+}
+
+/*
+ * Split Media File
+ */
+
+export interface SplitMediaFileRequest extends TaskRequest {
+    audioUrl: string;
+    parts: { // a part of the file, consisting of multiple contiguous segments
+        id: string;
+        segments: { // a contiguous segments of the media file
+            startTimestamp: number;
+            endTimestamp: number;
+        }[];
+    }[];
+}
+
+export interface SplitMediaFileResult {
+    parts: {
+        id: string;
+        audioUrl: string;
     }[];
 }
