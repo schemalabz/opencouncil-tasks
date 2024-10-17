@@ -119,13 +119,17 @@ const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, v
     return data.url;
 }
 
+const HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+};
+
 const downloadUrl = async (url: string, outputPath: string) => {
     if (fs.existsSync(outputPath)) {
         console.log(`Skipping download of ${url} to ${outputPath} because it already exists`);
         return;
     }
 
-    const response = await fetch(url);
+    const response = await fetch(url, { headers: HEADERS });
     if (!response.ok) {
         throw new Error(`HTTP error getting ${url}: status: ${response.status}`);
     }
