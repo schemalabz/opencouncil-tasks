@@ -3,8 +3,6 @@ import { Diarization, Transcript, TranscriptWithUtteranceDrifts, Word } from "..
 import { Utterance } from "../types.js";
 import { DiarizationManager } from "../lib/DiarizationManager.js";
 
-
-
 export const applyDiarization: Task<{ diarization: Diarization, transcript: Transcript }, TranscriptWithUtteranceDrifts> = async ({ diarization, transcript }, onProgress) => {
     const diarizationManager = new DiarizationManager(diarization);
 

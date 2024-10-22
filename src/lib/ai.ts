@@ -64,12 +64,6 @@ export async function aiChat<T>(systemPrompt: string, userPrompt: string, prefil
             responseContent = prependToResponse + responseContent;
         }
 
-        await fs.writeFile(
-            path.join(process.cwd(), 'lastClaudeResponse.json'),
-            JSON.stringify(responseContent, null, 2),
-        );
-        console.log('Response saved to ./lastClaudeResponse.json');
-
         let responseJson: T;
         try {
             responseJson = JSON.parse(responseContent) as T;
