@@ -11,7 +11,7 @@ type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>
 const requestedSummaryWordCount = 50;
 
 export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
-    const { transcript, topicLabels, cityName, date, requestedSubjects } = request;
+    const { transcript, topicLabels, cityName, date, requestedSubjects, additionalInstructions } = request;
 
     const shortIdToLong = new Map<string, string>();
     const longIdToShort = new Map<string, string>();
@@ -54,6 +54,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     const subjects = await extractSubjects({
         request: shortenedIdRequest,
         speakerSegmentSummaries,
+        additionalInstructions,
     }, onProgress);
 
     return {
@@ -77,11 +78,12 @@ function uniqify<T>(arr: T[]): T[] {
 
 export const extractSubjects: Task<{
     request: RequestOnTranscript,
-    speakerSegmentSummaries: SummarizeResult['speakerSegmentSummaries']
-}, SummarizeResult['subjects']> = async ({ request, speakerSegmentSummaries }, onProgress) => {
+    speakerSegmentSummaries: SummarizeResult['speakerSegmentSummaries'],
+    additionalInstructions?: string;
+}, SummarizeResult['subjects']> = async ({ request, speakerSegmentSummaries, additionalInstructions }, onProgress) => {
     const transcript = request.transcript;
 
-    const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date);
+    const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, additionalInstructions);
     const transcriptParts = splitTranscript(transcript, 100000);
 
     const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, onProgress);
@@ -250,7 +252,7 @@ function splitUserPrompts(userPrompts: string[], maxLengthChars: number) {
     return prompts;
 }
 
-function getExtractSubjectsSystemPrompt(cityName: string, date: string) {
+function getExtractSubjectsSystemPrompt(cityName: string, date: string, additionalInstructions?: string) {
     return `
         Είσαι ένα σύστημα που διαβάζει μέρη μιας απομαγνητοφωνημένης συνεδρίασης δημοτικού συμβουλίου,
         και κάνει αλλαγές σε μια λίστα με περιγραφές και στοιχεία για τα θέματα (subjects) που συζητήθηκαν
@@ -275,11 +277,11 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string) {
             highlightedUtteranceIds: string[];
         }[]
 
-        Τα highlighted utterance IDs χρησιμοποιούνται για να φτιάξουν αυτόματα tik-tok reels,
-        κατά τα οποία προβάλλονται τα συγκεκριμένα utterances ένα προς ένα. Οπότε, τα highlighted utterances
+        Τα highlighted utterance IDs χρησιμοποιούνται για να φτιάξουν αυτόματα tiktoks, reels και podcasts,
+        κατά τα οποία προβάλλονται και ακούγονται τα συγκεκριμένα utterances ένα προς ένα. Οπότε, τα highlighted utterances
         για ένα θέμα πρέπει να:
-        - έχουν ροή και συνέχεια
-        - να σχηματίζουν τις απόψεις όλων των ομιλητών και των παρατάξεων για το συγκεκριμένο θέμα
+        - έχουν ροή και συνέχεια, και να βγάζουν νόημα σαν σύνολο, αν ακουστούν το ένα μετά το άλλο.
+        - να περιγράφουν τις βασικές απόψεις όλων των ομιλητών στο θέμα και των παρατάξεων για το συγκεκριμένο θέμα. Αυτό είναι ΕΞΑΙΡΕΤΙΚΑ σημαντικό, δε πρέπει να ξεχάσεις απολύτως καμία παράταξη που είπε κάτι ουσιώδες για το θέμα.
         - να είναι περιεκτικά, και να μη περιέχουν άχρηστες φράσεις, αλλά να περιλαμβάνουν το κύριο επιχειρήμα και νόημα του ομιλητή
 
         Η δουλειά σου είναι να προτείνεις αλλαγές στη λίστα με τις περιγραφές και τα στοιχεία για τα θέματα (subjects) του συμβουλίου.
@@ -300,6 +302,8 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string) {
             speakerSegmentIds: string[]; // Τα speaker segment ids που πρέπει να προστεθούν στο θέμα
             highlightedUtteranceIds: string[]; // Τα utterance ids που πρέπει να προστεθούν στο θέμα
         }[]
+
+        ${additionalInstructions ? `Για τη σημερινή συνεδρίαση, είναι σημαντικό να ακολουθήσεις τις ακόλουθες πρόσθετες οδηγίες: ${additionalInstructions}` : ""}
         
         Δε χρειάζεται να συμπεριλάβεις στην απάντηση σου subjects που δεν αλλάζουν.
     `

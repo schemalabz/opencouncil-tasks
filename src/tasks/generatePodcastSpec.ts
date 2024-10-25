@@ -1,11 +1,6 @@
 import { Task } from "./pipeline.js";
 import { GeneratePodcastSpecRequest, GeneratePodcastSpecResult, PodcastPart } from "../types.js";
 import { aiChat } from "../lib/ai.js";
-import fs from "fs";
-import path from "path";
-import ffmpeg from "ffmpeg-static";
-import cp from "child_process";
-import { uploadToSpaces } from "./uploadToSpaces.js";
 
 type InternalPodcastSpec = {
     parts: ({
@@ -101,9 +96,9 @@ const getSubjectsForPrompt = (subjects: GeneratePodcastSpecRequest['subjects'], 
 };
 
 export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodcastSpecResult> = async (request, onProgress) => {
-    const { transcript, subjects, audioUrl } = request;
+    const { transcript, subjects, additionalInstructions } = request;
 
-    const systemPrompt = getSystemPrompt(subjects);
+    const systemPrompt = getSystemPrompt(subjects, additionalInstructions);
     const subjectsToInclude = subjects.filter((s) => s.allocation != 'skip');
     const subjectsForPrompt = getSubjectsForPrompt(subjectsToInclude, transcript);
 
@@ -167,7 +162,7 @@ export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodca
     };
 };
 
-export const getSystemPrompt = (subjects: GeneratePodcastSpecRequest['subjects']) => {
+export const getSystemPrompt = (subjects: GeneratePodcastSpecRequest['subjects'], additionalInstructions?: string) => {
     return `
     Είσαι ένα σύστημα που φτιάχνει περιγραφές (specs) για podcasts που αποτελούν
     συνόψεις δημοτικών συμβουλίων. Τα podcasts δημοσιεύονται από τον οργανισμό
@@ -239,6 +234,8 @@ export const getSystemPrompt = (subjects: GeneratePodcastSpecRequest['subjects']
 
     Θυμίσου πως τα utterances που επιλέγονται από κάθε speaker segment πρέπει να βγάζουν νόημα,
     όταν διαβαστούν το ένα μετά το άλλο, αφού θα αποτελέσουν ένα ηχητικό απόσπασμα που θα ακούσει ο ακροατής.
+    
+    ${additionalInstructions ? `Για το σημερινό podcast, πρέπει να ακολουθήσεις τις ακόλουθες πρόσθετες οδηγίες: ${additionalInstructions}` : ""}
 
     Απάντησε μόνο με το JSON που ζητείται, και απολύτως τίποτα άλλο.
     `;

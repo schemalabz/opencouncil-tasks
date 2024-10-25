@@ -124,6 +124,7 @@ export interface RequestOnTranscript extends TaskRequest {
 
 export interface SummarizeRequest extends RequestOnTranscript {
     requestedSubjects: string[];
+    additionalInstructions?: string;
 }
 
 export interface SummarizeResult {
@@ -157,6 +158,7 @@ export interface GeneratePodcastSpecRequest extends RequestOnTranscript {
     }[];
 
     audioUrl: string;
+    additionalInstructions?: string;
 }
 
 export type PodcastPart = {

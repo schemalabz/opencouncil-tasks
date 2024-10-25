@@ -27,7 +27,7 @@ export async function aiChat<T>(systemPrompt: string, userPrompt: string, prefil
         let response: Anthropic.Messages.Message;
         try {
             response = await anthropic.messages.create({
-                model: "claude-3-5-sonnet-20240620",
+                model: "claude-3-5-sonnet-20241022",
                 max_tokens: maxTokens,
                 system: systemPrompt,
                 messages,
