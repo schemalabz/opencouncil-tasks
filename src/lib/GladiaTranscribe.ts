@@ -73,7 +73,10 @@ class GladiaTranscriber {
             enable_code_switching: false,
             diarization: true,
             context_prompt: customPrompt,
+            /*
+            // Omitting this, because lately gladia is overfixating on the custom vocabulary
             custom_vocabulary: customVocabulary,
+            */
         };
         const gladiaUrl = "https://api.gladia.io/v2/transcription/";
         const headers = {
