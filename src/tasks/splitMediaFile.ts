@@ -7,19 +7,28 @@ import { Task } from "./pipeline.js";
 import { uploadToSpaces } from "./uploadToSpaces.js";
 
 export const splitMediaFile: Task<SplitMediaFileRequest, SplitMediaFileResult> = async (request, onProgress) => {
-    const { audioUrl, parts } = request;
+    const { url, type, parts } = request;
+
+    // Validate file extension
+    const fileExt = path.extname(url).toLowerCase();
+    if (type === 'audio' && fileExt !== '.mp3') {
+        throw new Error('Audio files must be MP3 format');
+    }
+    if (type === 'video' && fileExt !== '.mp4') {
+        throw new Error('Video files must be MP4 format');
+    }
 
     const results: SplitMediaFileResult['parts'] = [];
-    const audioFile = await downloadAudio(audioUrl);
+    const inputFile = await downloadFile(url);
 
     for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
         onProgress(`processing`, (i / parts.length) * 100);
 
-        const outputFilePath = await getFileParts(audioFile, part.segments);
+        const outputFilePath = await getFileParts(inputFile, part.segments, type);
         const uploadedUrls = await uploadToSpaces({
             files: [outputFilePath],
-            spacesPath: `podcast-parts`
+            spacesPath: `${type}-parts`
         }, onProgress);
 
         if (uploadedUrls.length !== 1) {
@@ -28,9 +37,17 @@ export const splitMediaFile: Task<SplitMediaFileRequest, SplitMediaFileResult> =
 
         const uploadedUrl = uploadedUrls[0];
 
+        const duration = part.segments.reduce((total, segment) => {
+            return total + (segment.endTimestamp - segment.startTimestamp);
+        }, 0);
+
         results.push({
             id: part.id,
-            audioUrl: uploadedUrl
+            url: uploadedUrl,
+            type,
+            duration,
+            startTimestamp: part.segments[0].startTimestamp,
+            endTimestamp: part.segments[part.segments.length - 1].endTimestamp
         });
     }
 
@@ -39,39 +56,62 @@ export const splitMediaFile: Task<SplitMediaFileRequest, SplitMediaFileResult> =
     return { parts: results };
 };
 
-const downloadAudio = async (audioUrl: string): Promise<string> => {
-    const audioFile = await fetch(audioUrl);
-    const audioBuffer = await audioFile.arrayBuffer();
+const downloadFile = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
     const fallbackRandomName = Math.random().toString(36).substring(2, 15);
-    const fileName = path.join(dataDir, audioUrl.split("/").pop() || fallbackRandomName);
-    await fs.promises.writeFile(fileName, Buffer.from(audioBuffer));
-    console.log(`Downloaded audio ${audioUrl} to ${fileName}`);
+    const fileName = path.join(dataDir, url.split("/").pop() || fallbackRandomName);
+    await fs.promises.writeFile(fileName, Buffer.from(buffer));
+    console.log(`Downloaded file ${url} to ${fileName}`);
     return fileName;
 }
 
 const dataDir = process.env.DATA_DIR || "./data";
-function getFileParts(filePath: string, segments: SplitMediaFileRequest['parts'][number]['segments']): Promise<string> {
-    // Creates a media (usually audio) file that consists of all the segments from the
-    // input file, with ffmpeg.const createMediaFilePart = async (filePath: string, segments: MediaFileSegments): Promise<string> => {
-    console.log(`Creating media file part with ${segments.length} segments (${segments.map(s => `${s.startTimestamp} - ${s.endTimestamp}`).join(", ")})...`);
+function getFileParts(filePath: string, segments: SplitMediaFileRequest['parts'][number]['segments'], type: 'audio' | 'video'): Promise<string> {
+    // Creates a media file that consists of all the segments from the input file
+    console.log(`Creating ${type} file part with ${segments.length} segments (${segments.map(s => `${s.startTimestamp} - ${s.endTimestamp}`).join(", ")})...`);
     const randomId = Math.random().toString(36).substring(2, 15);
-    const outputFilePath = path.join(dataDir, `${randomId}.mp3`);
+    const outputExt = type === 'audio' ? 'mp3' : 'mp4';
+    const outputFilePath = path.join(dataDir, `${randomId}.${outputExt}`);
 
     const filterComplex = segments.map((segment, index) => {
-        return `[0:a]atrim=${segment.startTimestamp}:${segment.endTimestamp},asetpts=PTS-STARTPTS[a${index}];`;
+        if (type === 'audio') {
+            return `[0:a]atrim=${segment.startTimestamp}:${segment.endTimestamp},asetpts=PTS-STARTPTS[a${index}];`;
+        } else {
+            return `[0:v]trim=${segment.startTimestamp}:${segment.endTimestamp},setpts=PTS-STARTPTS[v${index}];` +
+                `[0:a]atrim=${segment.startTimestamp}:${segment.endTimestamp},asetpts=PTS-STARTPTS[a${index}];`;
+        }
     }).join('');
 
-    const filterComplexConcat = segments.map((_, index) => `[a${index}]`).join('') + `concat=n=${segments.length}:v=0:a=1[outa]`;
+    let filterComplexConcat;
+    if (type === 'audio') {
+        filterComplexConcat = segments.map((_, index) => `[a${index}]`).join('') + `concat=n=${segments.length}:v=0:a=1[outa]`;
+    } else {
+        filterComplexConcat = segments.map((_, index) => `[v${index}][a${index}]`).join('') +
+            `concat=n=${segments.length}:v=1:a=1[outv][outa]`;
+    }
 
     const args = [
         '-i', filePath,
-        '-filter_complex', `${filterComplex}${filterComplexConcat}`,
-        '-map', '[outa]',
-        '-c:a', 'libmp3lame',
-        '-b:a', '128k',
-        '-y',
-        outputFilePath
+        '-filter_complex', `${filterComplex}${filterComplexConcat}`
     ];
+
+    if (type === 'audio') {
+        args.push(
+            '-map', '[outa]',
+            '-c:a', 'libmp3lame',
+            '-b:a', '128k'
+        );
+    } else {
+        args.push(
+            '-map', '[outv]',
+            '-map', '[outa]',
+            '-c:v', 'libx264',
+            '-c:a', 'aac'
+        );
+    }
+
+    args.push('-y', outputFilePath);
 
     console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
 
