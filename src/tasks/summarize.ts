@@ -66,8 +66,15 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         subjects: subjects.map(s => ({
             name: s.name,
             description: s.description,
-            speakerSegmentIds: s.speakerSegmentIds.map((ssi) => shortIdToLong.get(ssi)!),
+            hot: false,
+            agendaItemIndex: null,
+            speakerSegments: s.speakerSegments.map(seg => ({
+                speakerSegmentId: shortIdToLong.get(seg.speakerSegmentId)!,
+                summary: seg.summary
+            })),
             highlightedUtteranceIds: s.highlightedUtteranceIds.map((hui) => shortIdToLong.get(hui)!),
+            location: null,
+            topicLabel: s.topicLabel
         })),
     }
 };
@@ -76,6 +83,17 @@ function uniqify<T>(arr: T[]): T[] {
     return [...new Set(arr)];
 }
 
+type InternalSubject = {
+    name: string;
+    description: string;
+    speakerSegments: {
+        speakerSegmentId: string;
+        summary: string | null;
+    }[];
+    highlightedUtteranceIds: string[];
+    topicLabel: string | null;
+};
+
 export const extractSubjects: Task<{
     request: RequestOnTranscript,
     speakerSegmentSummaries: SummarizeResult['speakerSegmentSummaries'],
@@ -83,7 +101,7 @@ export const extractSubjects: Task<{
 }, SummarizeResult['subjects']> = async ({ request, speakerSegmentSummaries, additionalInstructions }, onProgress) => {
     const transcript = request.transcript;
 
-    const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, additionalInstructions);
+    const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, request.topicLabels, additionalInstructions);
     const transcriptParts = splitTranscript(transcript, 100000);
 
     const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, onProgress);
@@ -93,9 +111,17 @@ export const extractSubjects: Task<{
     console.log(`Subjects: ${JSON.stringify(subjects.result, null, 2)}`);
 
     return subjects.result.map(s => ({
-        ...s,
-        speakerSegmentIds: uniqify(s.speakerSegmentIds),
+        name: s.name,
+        description: s.description,
+        hot: false,
+        agendaItemIndex: null,
+        speakerSegments: s.speakerSegments.map(seg => ({
+            speakerSegmentId: seg.speakerSegmentId,
+            summary: seg.summary
+        })),
         highlightedUtteranceIds: uniqify(s.highlightedUtteranceIds),
+        location: null,
+        topicLabel: s.topicLabel
     }));
 }
 
@@ -155,59 +181,66 @@ type AiSummarizeResponse = {
     topicLabels: string[];
 };
 
-async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerSegment[][], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<SummarizeResult['subjects']>> {
+async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerSegment[][], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<InternalSubject[]>> {
     const totalUsage: Anthropic.Messages.Usage = {
         input_tokens: 0,
         output_tokens: 0,
     };
 
-    let subjects: SummarizeResult['subjects'] = [];
+    let subjects: InternalSubject[] = [];
 
     for (let i = 0; i < transcriptParts.length; i++) {
+        try {
+            const shortenedSubjects = subjects.map(s => ({
+                name: s.name,
+                description: s.description.slice(0, 1000),
+                speakerSegments: s.speakerSegments,
+                highlightedUtteranceIds: s.highlightedUtteranceIds,
+            }));
+            onProgress("extracting subjects", i / transcriptParts.length);
+            const userPrompt = `Το απόσπασμα της συνεδρίασης είναι το εξής:
+            ${JSON.stringify(transcriptParts[i], null, 2)}
+            
+            ---
+            
+            Η λίστα με τα subjects, όπως διαμορφώθηκε από τα προηγούμενα μέρη της συνεδρίασης, είναι η εξής:
+            ${JSON.stringify(subjects, null, 2)}
+            `;
 
-        const shortenedSubjects = subjects.map(s => ({
-            name: s.name,
-            description: s.description.slice(0, 1000),
-            speakerSegmentIds: [],
-            highlightedUtteranceIds: [],
-        }));
-        onProgress("extracting subjects", i / transcriptParts.length);
-        const userPrompt = `Το απόσπασμα της συνεδρίασης είναι το εξής:
-        ${JSON.stringify(transcriptParts[i], null, 2)}
-        
-        ---
-        
-        Η λίστα με τα subjects, όπως διαμορφώθηκε από τα προηγούμενα μέρη της συνεδρίασης, είναι η εξής:
-        ${JSON.stringify(subjects, null, 2)}
-        `;
+            const response = await aiChat<InternalSubject[]>(
+                systemPrompt,
+                userPrompt,
+                "Δώσε τα ανανεωμένα subjects σε μορφή JSON array. Μην προσθέσεις σχόλια ή επεξηγήσεις μέσα στο JSON:\n[",
+                "["
+            );
 
-        const response = await aiChat<SummarizeResult['subjects']>(systemPrompt,
-            userPrompt,
-            "Δώσε τα ανανεωμένα subjects, με βάση το παραπάνω απόσπασμα της συνεδρίασης, σε μορφή JSON: \n[",
-            "[");
-
-        console.log(response);
-
-        response.result.forEach(r => {
-            const existingSubject = subjects.find(s => s.name === r.name);
-            if (existingSubject) {
-                existingSubject.description = r.description;
-                existingSubject.speakerSegmentIds = [...existingSubject.speakerSegmentIds, ...r.speakerSegmentIds];
-                existingSubject.highlightedUtteranceIds = [...existingSubject.highlightedUtteranceIds, ...r.highlightedUtteranceIds];
-            } else {
-                subjects.push(r);
+            if (!Array.isArray(response.result)) {
+                console.warn("Invalid response format from AI, skipping...");
+                continue;
             }
-        });
 
-        console.log(`New subjects: ${JSON.stringify(subjects, null, 2)}`);
+            response.result.forEach(r => {
+                const existingSubject = subjects.find(s => s.name === r.name);
+                if (existingSubject) {
+                    existingSubject.description = r.description;
+                    existingSubject.speakerSegments = [...existingSubject.speakerSegments, ...r.speakerSegments];
+                    existingSubject.highlightedUtteranceIds = [...existingSubject.highlightedUtteranceIds, ...r.highlightedUtteranceIds];
+                } else {
+                    subjects.push(r);
+                }
+            });
+
+            console.log(`New subjects: ${JSON.stringify(subjects, null, 2)}`);
+        } catch (error) {
+            console.error("Error processing transcript part", i, error);
+            continue;
+        }
     }
 
     return {
         result: subjects,
         usage: totalUsage
     };
-
-
 }
 
 async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<AiSummarizeResponse[]>> {
@@ -252,7 +285,7 @@ function splitUserPrompts(userPrompts: string[], maxLengthChars: number) {
     return prompts;
 }
 
-function getExtractSubjectsSystemPrompt(cityName: string, date: string, additionalInstructions?: string) {
+function getExtractSubjectsSystemPrompt(cityName: string, date: string, topicLabels: string[], additionalInstructions?: string) {
     return `
         Είσαι ένα σύστημα που διαβάζει μέρη μιας απομαγνητοφωνημένης συνεδρίασης δημοτικού συμβουλίου,
         και κάνει αλλαγές σε μια λίστα με περιγραφές και στοιχεία για τα θέματα (subjects) που συζητήθηκαν
@@ -264,18 +297,18 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string, addition
         που ανήκει σε κάποια παράταξη. Κάθε speaker segment έχει πολλά utterances, που αποτελούν φράσεις που
         είπε ο ομιλητής.
 
-        Τα θέματα (subjects) αποτελούνται το καθένα από ένα σύντομο όνομα (π.χ. "Αντιπλημμυρικά έργα"),
-        μια περιγραφή (π.χ. "Συζήτηση για τις πρόσφατες πλημμύρες, και διαφωνία σχετικά με τις αρμοδιότητες των δήμων")
-        μια λίστα από speaker segment ids στα οποία το θέμα συζητάται,
-        και μια λίστα από highligted utterance IDs, που επισημαίνουν τις φράσεις
-        που είναι πιο σημαντικές για το συγκεκριμένο θέμα. Σου δίνονται στην εξής JSON μορφή:
+        Τα θέματα (subjects) αποτελούνται το καθένα από:
+        - ένα σύντομο όνομα (π.χ. "Αντιπλημμυρικά έργα")
+        - μια περιγραφή
+        - μια λίστα από speaker segments: κάθε speaker segment έχει ένα speaker segment id και ένα summary. Το summary περιγράφει το τι είπε ο ομιλητής στο segment επί του θέματος:
+          δε χρειάζεται να αναφέρει το όνομα του ομιλητή, και μπορεί να είναι κάπως πιο αναλυτικό (3-4 προτάσεις) αν χρειάζεται. Καλώ είναι να αποφεύγονται τα αχρείαστα ρήματα,
+          αλλά αν χρειάζονται να είναι γραμμένο σε γ' ενικό (π.χ. "εξηγεί πως").
+        - μια λίστα από highlighted utterance IDs
+        - ένα topicLabel που πρέπει να είναι ένα από τα ακόλουθα ή null:
+        ${topicLabels.map(label => `- "${label}"`).join('\n')}
 
-        subjects: {
-            name: string;
-            description: string;
-            speakerSegmentIds: string[];
-            highlightedUtteranceIds: string[];
-        }[]
+        Το topicLabel αντιπροσωπεύει την ευρύτερη θεματική ενότητα στην οποία ανήκει το θέμα.
+        Αν ένα θέμα δεν ταιριάζει σε καμία από τις παραπάνω θεματικές ενότητες, βάλε null.
 
         Τα highlighted utterance IDs χρησιμοποιούνται για να φτιάξουν αυτόματα tiktoks, reels και podcasts,
         κατά τα οποία προβάλλονται και ακούγονται τα συγκεκριμένα utterances ένα προς ένα. Οπότε, τα highlighted utterances
@@ -299,8 +332,12 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string, addition
         {
             name: string; // Ο τίτλος του θέματος που αλλάζεις (αν δεν υπάρχει θα προστεθεί)
             description: string; // Η περιγραφή του θέματος
-            speakerSegmentIds: string[]; // Τα speaker segment ids που πρέπει να προστεθούν στο θέμα
+            speakerSegments: {
+                speakerSegmentId: string;
+                summary: string | null;
+            }[];
             highlightedUtteranceIds: string[]; // Τα utterance ids που πρέπει να προστεθούν στο θέμα
+            topicLabel: string | null;
         }[]
 
         ${additionalInstructions ? `Για τη σημερινή συνεδρίαση, είναι σημαντικό να ακολουθήσεις τις ακόλουθες πρόσθετες οδηγίες: ${additionalInstructions}` : ""}
@@ -353,7 +390,7 @@ function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: s
         συμμετέχοντα. Χρησιμοποίησε, αν και όσο γίνεται, λέξεις που χρησιμοποίησε και ο
         συμμετέχοντας(δε χρειάζονται εισαγωγικά). Δε χρειάζεται να αναφέρεις το όνομα του
         ομιλούντα. Μην χρησιμοποιείς τον ομιλητή ως υποκείμενο της πρότασης, δηλαδή μη ξεκινάς
-        τις περιλήψεις με "ο ομιλτής..." ή "ο συμμετέχων...". Αντί για αυτό, δώσε τη περίληψη μιλώντας
+        τις περιλήψεις μιλώντας
         ως ο ομιλητής, π.χ. "Η καθαριότητα στο δήμο είναι μεγάλο πρόβλημα".
         
         Οι τοποθετήσεις που σου παρέχονται, είναι απομαγνητοφωνημένες αυτόματα,
