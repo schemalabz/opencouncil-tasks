@@ -13,6 +13,7 @@ import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
 import { summarize } from './tasks/summarize.js';
 import { generatePodcastSpec } from './tasks/generatePodcastSpec.js';
 import { splitMediaFile } from './tasks/splitMediaFile.js';
+import { fixTranscript } from './tasks/fixTranscript.js';
 
 dotenv.config();
 
@@ -71,7 +72,7 @@ app.post('/transcribe', (
 app.post('/summarize', taskManager.serveTask(summarize));
 app.post('/splitMediaFile', taskManager.serveTask(splitMediaFile));
 app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
-
+app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
 app.post('/test', async (

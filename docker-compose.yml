@@ -16,7 +16,7 @@ services:
     depends_on:
       - cobalt-api
   cobalt-api:
-    image: ghcr.io/imputnet/cobalt:7
+    image: ghcr.io/imputnet/cobalt:10
     restart: unless-stopped
     container_name: cobalt-api
     init: true

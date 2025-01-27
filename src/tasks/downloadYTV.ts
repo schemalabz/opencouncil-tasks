@@ -47,12 +47,12 @@ const getVideoIdAndUrl = async (mediaUrl: string) => {
     console.log(`Unknown media type, assuming it's a url to an mp4 file: ${mediaUrl}`);
     return { videoId: randomId(), videoUrl: mediaUrl };
 }
-
 const FREQUENCY_FILTER = true;
 const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
     const args = [
         '-i', inputPath,
         '-vn',  // No video
+        '-ac', '1', // Convert to mono
         '-acodec', 'libmp3lame',
         '-b:a', '128k',
         '-y',  // Overwrite output file if it exists
@@ -102,7 +102,7 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
 }
 
 const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, vQuality?: string } = {}) => {
-    const cobaltApiUrl = `${COBALT_API_BASE_URL}/api/json`;
+    const cobaltApiUrl = `${COBALT_API_BASE_URL}`;
     const headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

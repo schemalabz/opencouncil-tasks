@@ -1,4 +1,3 @@
-
 /*
  * Generic task types 
  */
@@ -116,7 +115,27 @@ export interface RequestOnTranscript extends TaskRequest {
     }[];
     topicLabels: string[];
     cityName: string;
+    partiesWithPeople: {
+        name: string;
+        people: string[];
+    }[];
     date: string;
+}
+
+
+/*
+ * Fix Transcript
+ */
+
+export interface FixTranscriptRequest extends RequestOnTranscript {
+}
+
+export interface FixTranscriptResult {
+    updateUtterances: {
+        utteranceId: string;
+        markUncertain: boolean;
+        text: string;
+    }[];
 }
 
 /*

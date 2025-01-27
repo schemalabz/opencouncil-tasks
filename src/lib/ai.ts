@@ -1,8 +1,8 @@
-
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import path from 'path';
 import { promises as fs } from 'fs';
+import { fetchAdalineDeployment, submitAdalineLog } from './adaline.js';
 
 dotenv.config();
 
@@ -80,4 +80,82 @@ export async function aiChat<T>(systemPrompt: string, userPrompt: string, prefil
         console.error(`Error in aiChat: ${e}`);
         throw e;
     }
+}
+
+export async function aiWithAdaline<T>({ projectId, deploymentId, variables }: { projectId: string, deploymentId?: string, variables: { [key: string]: string } }): Promise<ResultWithUsage<T>> {
+    const deployment = await fetchAdalineDeployment(projectId, deploymentId);
+    if (deployment.config.provider !== "anthropic") {
+        throw new Error("Adaline deployment provider is not anthropic");
+    }
+
+    // Check that all message content modalities are "text"
+    for (const message of deployment.messages) {
+        for (const content of message.content) {
+            if (content.modality !== "text") {
+                throw new Error(`Expected text modality in message content, got ${content.modality}`);
+            }
+        }
+    }
+
+    // Check that all variable values have text modality
+    for (const variable of deployment.variables) {
+        if (variable.value.modality !== "text") {
+            throw new Error(`Expected text modality in variable value, got ${variable.value.modality}`);
+        }
+    }
+    const messages = deployment.messages.map(msg => ({
+        role: msg.role as "user" | "assistant" | "system",
+        content: msg.content.map(c => {
+            let value = c.value;
+            // Replace variables in the format {varname} with their values
+            for (const [varName, varValue] of Object.entries(variables)) {
+                value = value.replace(new RegExp(`{${varName}}`, 'g'), varValue);
+            }
+            return value;
+        }).join('\n')
+    }));
+
+    const response = await anthropic.messages.create({
+        model: deployment.config.model,
+        messages: messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
+            msg.role === "user" || msg.role === "assistant"),
+        system: messages.find(msg => msg.role === "system")?.content,
+        max_tokens: deployment.config.settings.maxTokens,
+        temperature: deployment.config.settings.temperature,
+    });
+
+    if (!response.content || response.content.length !== 1) {
+        throw new Error("Expected 1 response from claude, got " + response.content?.length);
+    }
+
+    if (response.content[0].type !== "text") {
+        throw new Error("Expected text response from claude, got " + response.content[0].type);
+    }
+
+    const completion = response.content[0].text;
+
+    // fire and forget
+    submitAdalineLog({
+        projectId: projectId,
+        provider: deployment.config.provider,
+        model: deployment.config.model,
+        completion: completion,
+        inputTokens: response.usage.input_tokens,
+        outputTokens: response.usage.output_tokens,
+        variables
+    });
+
+    let responseJson: T;
+    try {
+        responseJson = JSON.parse(completion) as T;
+    } catch (e) {
+        console.error(`Error parsing Claude response: ${completion.slice(0, 100)}`);
+        throw e;
+    }
+
+    console.log(responseJson);
+    return {
+        usage: response.usage,
+        result: responseJson
+    };
 }
