@@ -27,6 +27,7 @@ export class DiarizationManager {
     private findDiarizationsContainingInterval(start: number, end: number): Diarization {
         return this.diarization.filter((d) => d.start <= start && d.end >= end);
     }
+
     private findClosestDiarizationForSpeaker(speaker: string, wordStart: number, wordEnd: number): { start: number; end: number; speaker: string; } {
         const diarizations = this.diarization.filter(d => d.speaker === speaker);
 

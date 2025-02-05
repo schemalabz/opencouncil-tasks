@@ -141,7 +141,7 @@ export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodca
     console.log(JSON.stringify(shortIdSubjectsForPrompt, null, 2));
 
     console.log(`Getting podcast spec...`);
-    const result = await aiChat<InternalPodcastSpec>(systemPrompt, JSON.stringify(shortIdSubjectsForPrompt), "To podcast spec σε JSON:\n{", "{");
+    const result = await aiChat<InternalPodcastSpec>({ systemPrompt, userPrompt: JSON.stringify(shortIdSubjectsForPrompt), prefillSystemResponse: "To podcast spec σε JSON:\n{", prependToResponse: "{" });
     console.log(`Got podcast spec with ${result.usage.input_tokens} input tokens and ${result.usage.output_tokens} output tokens!`);
 
     const internalPodcastSpecWithShortIds = result.result;

@@ -5,7 +5,7 @@ import fs from 'fs';
 import { aiWithAdaline } from "../lib/ai.js";
 
 const adalineProjectId = "e1ca2400-8500-4f55-8471-54166eb7e29c";
-const MAX_BATCH_SIZE = 100000;
+const MAX_BATCH_SIZE = 50000;
 
 export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
     const { transcript, partiesWithPeople, cityName } = request;

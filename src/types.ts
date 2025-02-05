@@ -1,3 +1,4 @@
+
 /*
  * Generic task types 
  */
@@ -56,6 +57,45 @@ export type Diarization = {
     speaker: string;
 }[];
 
+/*
+ * Task: Process Agenda
+ */
+
+export interface ProcessAgendaRequest extends TaskRequest {
+    agendaUrl: string;
+    people: {
+        id: string;
+        name: string;
+        role: string;
+        party: string;
+    }[];
+    topicLabels: string[];
+    cityName: string;
+    date: string;
+}
+
+export interface Subject {
+    name: string;
+    description: string;
+    hot: boolean;
+    agendaItemIndex: number | null;
+    introducedByPersonId: string | null;
+    speakerSegments: {
+        speakerSegmentId: string;
+        summary: string | null;
+    }[];
+    highlightedUtteranceIds: string[];
+    location: {
+        type: 'point' | 'lineString' | 'polygon';
+        text: string; // e.g. an area, an address, a road name
+        coordinates: number[][]; // a sequence of coordinates. just one coordinate for a point, more for a line or polygon
+    } | null;
+    topicLabel: string | null;
+};
+
+export interface ProcessAgendaResult {
+    subjects: Subject[];
+}
 
 /*
  * Transcript
@@ -117,11 +157,13 @@ export interface RequestOnTranscript extends TaskRequest {
     cityName: string;
     partiesWithPeople: {
         name: string;
-        people: string[];
+        people: {
+            name: string;
+            role: string;
+        }[];
     }[];
     date: string;
 }
-
 
 /*
  * Fix Transcript
@@ -144,6 +186,7 @@ export interface FixTranscriptResult {
 
 export interface SummarizeRequest extends RequestOnTranscript {
     requestedSubjects: string[];
+    existingSubjects: Subject[];
     additionalInstructions?: string;
 }
 
@@ -154,23 +197,7 @@ export interface SummarizeResult {
         summary: string | null;
     }[];
 
-    subjects: {
-        name: string;
-        description: string;
-        hot: boolean;
-        agendaItemIndex: number | null;
-        speakerSegments: {
-            speakerSegmentId: string;
-            summary: string | null;
-        }[];
-        highlightedUtteranceIds: string[];
-        location: {
-            type: 'point' | 'lineString' | 'polygon';
-            text: string; // e.g. an area, an address, a road name
-            coordinates: number[][]; // a sequence of coordinates. just one coordinate for a point, more for a line or polygon
-        } | null;
-        topicLabel: string | null;
-    }[];
+    subjects: Subject[];
 }
 
 

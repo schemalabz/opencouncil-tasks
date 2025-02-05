@@ -3,6 +3,7 @@ import { SummarizeRequest, SummarizeResult, RequestOnTranscript } from "../types
 import { Task } from "./pipeline.js";
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
+import { ExtractedSubject, extractedSubjectToApiSubject } from "./processAgenda.js";
 
 dotenv.config();
 
@@ -11,7 +12,7 @@ type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>
 const requestedSummaryWordCount = 50;
 
 export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
-    const { transcript, topicLabels, cityName, date, requestedSubjects, additionalInstructions } = request;
+    const { transcript, topicLabels, cityName, date, requestedSubjects, existingSubjects, additionalInstructions } = request;
 
     const shortIdToLong = new Map<string, string>();
     const longIdToShort = new Map<string, string>();
@@ -19,7 +20,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     const addLongIdToMaps = (longId: string) => {
         if (longIdToShort.has(longId)) return;
         // short ids should be 5 characters long, a-z, 0-9
-        const shortId = Math.random().toString(36).substring(2, 8);
+        const shortId = Math.random().toString(36).substring(2, 10);
         if (shortIdToLong.has(shortId)) {
             addLongIdToMaps(longId);
             return;
@@ -49,13 +50,14 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         transcript: shortenedIdTranscript,
     };
 
-    const speakerSegmentSummaries = await extractSpeakerSegmentSummaries(shortenedIdRequest, onProgress);
-
     const subjects = await extractSubjects({
         request: shortenedIdRequest,
-        speakerSegmentSummaries,
         additionalInstructions,
+        existingSubjects,
+        requestedSubjects,
     }, onProgress);
+
+    const speakerSegmentSummaries = await extractSpeakerSegmentSummaries(shortenedIdRequest, onProgress);
 
     return {
         speakerSegmentSummaries: speakerSegmentSummaries.map(s => ({
@@ -63,66 +65,44 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
             summary: s.summary,
             speakerSegmentId: shortIdToLong.get(s.speakerSegmentId)!,
         })),
-        subjects: subjects.map(s => ({
+        subjects: subjects.map(s => ({ // convert to long ids
             name: s.name,
             description: s.description,
             hot: false,
-            agendaItemIndex: null,
+            agendaItemIndex: s.agendaItemIndex,
             speakerSegments: s.speakerSegments.map(seg => ({
                 speakerSegmentId: shortIdToLong.get(seg.speakerSegmentId)!,
                 summary: seg.summary
             })),
             highlightedUtteranceIds: s.highlightedUtteranceIds.map((hui) => shortIdToLong.get(hui)!),
-            location: null,
-            topicLabel: s.topicLabel
+            location: s.location,
+            topicLabel: s.topicLabel,
+            introducedByPersonId: s.introducedByPersonId
         })),
     }
 };
 
-function uniqify<T>(arr: T[]): T[] {
-    return [...new Set(arr)];
-}
-
-type InternalSubject = {
-    name: string;
-    description: string;
-    speakerSegments: {
-        speakerSegmentId: string;
-        summary: string | null;
-    }[];
-    highlightedUtteranceIds: string[];
-    topicLabel: string | null;
-};
-
 export const extractSubjects: Task<{
     request: RequestOnTranscript,
-    speakerSegmentSummaries: SummarizeResult['speakerSegmentSummaries'],
+    requestedSubjects: SummarizeRequest['requestedSubjects'],
+    existingSubjects: SummarizeRequest['existingSubjects'],
     additionalInstructions?: string;
-}, SummarizeResult['subjects']> = async ({ request, speakerSegmentSummaries, additionalInstructions }, onProgress) => {
+}, SummarizeResult['subjects']> = async ({ request, requestedSubjects, existingSubjects, additionalInstructions }, onProgress) => {
     const transcript = request.transcript;
 
     const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, request.topicLabels, additionalInstructions);
-    const transcriptParts = splitTranscript(transcript, 100000);
+    const transcriptParts = splitTranscript(transcript, 50000);
 
-    const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, onProgress);
+    const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, existingSubjects.map(s => ({
+        ...s,
+        locationText: s.location?.text ?? null,
+    })), requestedSubjects, onProgress);
 
     console.log(`Finished extracting subjects, with cost ${subjects.usage.input_tokens} input tokens, ${subjects.usage.output_tokens} output tokens`);
 
     console.log(`Subjects: ${JSON.stringify(subjects.result, null, 2)}`);
 
-    return subjects.result.map(s => ({
-        name: s.name,
-        description: s.description,
-        hot: false,
-        agendaItemIndex: null,
-        speakerSegments: s.speakerSegments.map(seg => ({
-            speakerSegmentId: seg.speakerSegmentId,
-            summary: seg.summary
-        })),
-        highlightedUtteranceIds: uniqify(s.highlightedUtteranceIds),
-        location: null,
-        topicLabel: s.topicLabel
-    }));
+    return Promise.all(subjects.result.map(s => extractedSubjectToApiSubject(s, request.cityName)));
 }
 
 function splitTranscript(transcript: SpeakerSegment[], maxLengthChars: number) {
@@ -144,11 +124,11 @@ function splitTranscript(transcript: SpeakerSegment[], maxLengthChars: number) {
     return parts;
 }
 
-export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript, 'callbackUrl'>, SummarizeResult['speakerSegmentSummaries']> = async (request, onProgress) => {
-    const { transcript, topicLabels, cityName, date } = request;
+export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript & { additionalInstructions?: string }, 'callbackUrl'>, SummarizeResult['speakerSegmentSummaries']> = async (request, onProgress) => {
+    const { transcript, topicLabels, cityName, date, additionalInstructions } = request;
     const segmentsToSummarize = transcript.filter((t) => {
         const wordCount = t.text.split(' ').length;
-        return wordCount >= 40;
+        return wordCount >= 30;
     });
 
     const originalWordCount = transcript.map(s => s.text.split(' ').length).reduce((a, b) => a + b, 0);
@@ -161,8 +141,8 @@ export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript, 'cal
     console.log(`- ${originalWordCount} words`);
     console.log(`- ${toSummarizeWordCount} words to summarize (only ${Math.round(toSummarizeWordCount / originalWordCount * 100)}% of total)`);
 
-    const systemPrompt = getSummarizeSystemPrompt(cityName, date, topicLabels);
-    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 100000);
+    const systemPrompt = getSummarizeSystemPrompt(cityName, date, topicLabels, additionalInstructions);
+    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 75000);
     console.log(`System prompt: ${systemPrompt}`);
     console.log(`User prompt split into ${userPrompts.length} prompts, with lengths: ${userPrompts.map(p => p.length).join(', ')}`);
 
@@ -181,38 +161,37 @@ type AiSummarizeResponse = {
     topicLabels: string[];
 };
 
-async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerSegment[][], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<InternalSubject[]>> {
+async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerSegment[][], existingSubjects: ExtractedSubject[], requestedSubjects: SummarizeRequest['requestedSubjects'], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<ExtractedSubject[]>> {
     const totalUsage: Anthropic.Messages.Usage = {
         input_tokens: 0,
         output_tokens: 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
     };
 
-    let subjects: InternalSubject[] = [];
+    let subjects: ExtractedSubject[] = existingSubjects;
+    console.log(`Starting with ${subjects.length} existing subjects`);
 
     for (let i = 0; i < transcriptParts.length; i++) {
         try {
-            const shortenedSubjects = subjects.map(s => ({
-                name: s.name,
-                description: s.description.slice(0, 1000),
-                speakerSegments: s.speakerSegments,
-                highlightedUtteranceIds: s.highlightedUtteranceIds,
-            }));
             onProgress("extracting subjects", i / transcriptParts.length);
             const userPrompt = `Το απόσπασμα της συνεδρίασης είναι το εξής:
             ${JSON.stringify(transcriptParts[i], null, 2)}
             
             ---
+
+            ${requestedSubjects.length > 0 ? `Αν στο παραπάνω transcript αναφέρεται κάποιο από τα ακόλουθα θέματα, είναι σημαντικό να το συμπεριλάβεις (ή να το ανανεώσεις αν υπάρχει ήδη): ${requestedSubjects.map(s => `- ${s}`).join('\n')}` : ""}
             
-            Η λίστα με τα subjects, όπως διαμορφώθηκε από τα προηγούμενα μέρη της συνεδρίασης, είναι η εξής:
+            \nΗ λίστα με τα υπάρχοντα subjects, όπως διαμορφώθηκε από τα προηγούμενα μέρη της συνεδρίασης και την ημερήσια διάταξη, είναι η εξής:
             ${JSON.stringify(subjects, null, 2)}
             `;
 
-            const response = await aiChat<InternalSubject[]>(
+            const response = await aiChat<ExtractedSubject[]>({
                 systemPrompt,
                 userPrompt,
-                "Δώσε τα ανανεωμένα subjects σε μορφή JSON array. Μην προσθέσεις σχόλια ή επεξηγήσεις μέσα στο JSON:\n[",
-                "["
-            );
+                prefillSystemResponse: "Δώσε τα ανανεωμένα subjects σε μορφή JSON array. Μην προσθέσεις σχόλια ή επεξηγήσεις μέσα στο JSON:\n[",
+                prependToResponse: "[",
+            });
 
             if (!Array.isArray(response.result)) {
                 console.warn("Invalid response format from AI, skipping...");
@@ -223,14 +202,22 @@ async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerS
                 const existingSubject = subjects.find(s => s.name === r.name);
                 if (existingSubject) {
                     existingSubject.description = r.description;
-                    existingSubject.speakerSegments = [...existingSubject.speakerSegments, ...r.speakerSegments];
+                    existingSubject.locationText = r.locationText;
+                    // TODO
+                    // existingSubject.introducedByPersonId = r.introducedByPersonId;
+                    existingSubject.topicLabel = r.topicLabel;
+                    existingSubject.speakerSegments = [...existingSubject.speakerSegments, ...r.speakerSegments].filter((segment, index, self) =>
+                        index === self.findIndex(s => s.speakerSegmentId === segment.speakerSegmentId)
+                    );
                     existingSubject.highlightedUtteranceIds = [...existingSubject.highlightedUtteranceIds, ...r.highlightedUtteranceIds];
+                    console.log(`Updated subject ${existingSubject.name} with ${r.speakerSegments.length} speaker segments, in total now ${existingSubject.speakerSegments.length} speaker segments`);
                 } else {
+                    console.log(`Adding new subject ${r.name} (with ${r.speakerSegments.length} speaker segments)`);
                     subjects.push(r);
                 }
             });
 
-            console.log(`New subjects: ${JSON.stringify(subjects, null, 2)}`);
+            console.log(`Total subjects: ${subjects.length}`);
         } catch (error) {
             console.error("Error processing transcript part", i, error);
             continue;
@@ -249,15 +236,19 @@ async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgre
     const totalUsage: Anthropic.Messages.Usage = {
         input_tokens: 0,
         output_tokens: 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0,
     };
 
     for (let i = 0; i < userPrompts.length; i++) {
         onProgress("extracting summaries", i / userPrompts.length);
         const userPrompt = userPrompts[i];
-        const response = await aiChat<AiSummarizeResponse[]>(systemPrompt,
+        const response = await aiChat<AiSummarizeResponse[]>({
+            systemPrompt,
             userPrompt,
-            "Με βάση τις τοποθετήσεις των συμμετεχόντων, ακολουθούν οι περιλήψεις και οι θεματικές λεζάντες σε μορφή JSON: \n[",
-            "[");
+            prefillSystemResponse: "Με βάση τις τοποθετήσεις των συμμετεχόντων, ακολουθούν οι περιλήψεις και οι θεματικές λεζάντες σε μορφή JSON: \n[",
+            prependToResponse: "[",
+        });
         responses.push(...response.result);
         totalUsage.input_tokens += response.usage.input_tokens;
         totalUsage.output_tokens += response.usage.output_tokens;
@@ -301,9 +292,11 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string, topicLab
         - ένα σύντομο όνομα (π.χ. "Αντιπλημμυρικά έργα")
         - μια περιγραφή
         - μια λίστα από speaker segments: κάθε speaker segment έχει ένα speaker segment id και ένα summary. Το summary περιγράφει το τι είπε ο ομιλητής στο segment επί του θέματος:
-          δε χρειάζεται να αναφέρει το όνομα του ομιλητή, και μπορεί να είναι κάπως πιο αναλυτικό (3-4 προτάσεις) αν χρειάζεται. Καλώ είναι να αποφεύγονται τα αχρείαστα ρήματα,
+          δε χρειάζεται να αναφέρει το όνομα του ομιλητή, και μπορεί να είναι κάπως πιο αναλυτικό (4-5 προτάσεις) αν χρειάζεται. Καλώ είναι να αποφεύγονται τα αχρείαστα ρήματα,
           αλλά αν χρειάζονται να είναι γραμμένο σε γ' ενικό (π.χ. "εξηγεί πως").
         - μια λίστα από highlighted utterance IDs
+        - πιθανώς μια τοποθεσία (διεύθυνση, γειτονιά, τοπωνύμιο), εκτός αν το θέμα αναφέρεται σε ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου)
+        - το ID ενός εισηγητή
         - ένα topicLabel που πρέπει να είναι ένα από τα ακόλουθα ή null:
         ${topicLabels.map(label => `- "${label}"`).join('\n')}
 
@@ -322,7 +315,10 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string, topicLab
         Εσύ πρέπει να την αλλάξεις, ώστε να συμπεριλάβεις τις πληροφορίες του αποσπάσματος που επεξεργάζεσαι τώρα.
 
         Για να αλλάξεις τη λίστα (subjects), μπορείς να προσθέσεις ένα καινούργιο θέμα, ή να προσθέσεις speaker segment IDs
-        και highlighted utterance IDs σε ένα ήδη υπάρχον subject.
+        και highlighted utterance IDs σε ένα ήδη υπάρχον subject. Μπορείς επίσης να αλλάξεις την περιγραφή ή την τοποθεσία, αλλά όχι τον τίτλο!
+
+        Είναι ΠΟΛΥ ΣΗΜΑΝΤΙΚΟ να αποφεύγονται τα διπλά θέματα, ή θέματα που είναι πολύ παρόμοια.
+        Αν ένα θέμα υπάρχει ήδη και συζητάται ξανά, πρέπει να ανανεωθεί βάζοντας τον ίδιο τίτλο θέματος στην αλλαγή που προτείνεις.
 
         Η τελική λίστα που θα προκύψει με τα subjects πρέπει να περιλαμβάνει διακριτά θέματα, με σύντομους τίτλους και περιγραφές, όλα τα speakerSegmentIds που μιλάνε για αυτό το θέμα,
         και utterances που συνθέτουν ένα περιεκτικό απόσπασμα της συνεδρίασης που μιλάει για το συγκεκριμένο θέμα.
@@ -330,14 +326,16 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string, topicLab
         Όλες οι απαντήσεις σου πρέπει να είναι σε μορφή JSON, στην ακόλουθη μορφή:
 
         {
-            name: string; // Ο τίτλος του θέματος που αλλάζεις (αν δεν υπάρχει θα προστεθεί)
+            name: string; // Ο τίτλος του θέματος που αλλάζεις (αν δεν υπάρχει θα προστεθεί νέο θέμα, είναι δηλαδή το κλειδί του θέματος)
             description: string; // Η περιγραφή του θέματος
             speakerSegments: {
                 speakerSegmentId: string;
                 summary: string | null;
-            }[];
+            }[]; // Τα speaker segments που θέλεις να προστεθούν στο θέμα
             highlightedUtteranceIds: string[]; // Τα utterance ids που πρέπει να προστεθούν στο θέμα
-            topicLabel: string | null;
+            locationText: string | null; // Η τοποθεσία του θέματος
+            introducedByPersonId: string | null; // Το ID του εισηγητή του θέματος
+            topicLabel: string | null; // Η θεματική λεζάντα του θέματος
         }[]
 
         ${additionalInstructions ? `Για τη σημερινή συνεδρίαση, είναι σημαντικό να ακολουθήσεις τις ακόλουθες πρόσθετες οδηγίες: ${additionalInstructions}` : ""}
@@ -346,7 +344,7 @@ function getExtractSubjectsSystemPrompt(cityName: string, date: string, topicLab
     `
 }
 
-function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: string[]) {
+function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: string[], additionalInstructions?: string) {
     const exampleTranscript: SpeakerSegment[] = [{
         speakerName: "Χρήστος Χρήστου",
         speakerParty: "Καλύτερη Πόλη",
@@ -387,9 +385,9 @@ function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: s
 
         Οι περιλήψεις σου πρέπει να είναι σύντομες(1 - 3 προτάσεις, μέχρι περίπου ${requestedSummaryWordCount} λέξεις),
         και να ανφέρονται στην ουσία και τα πιο σημαντικά θέματα της τοποθέτησης του εκάστοτε
-        συμμετέχοντα. Χρησιμοποίησε, αν και όσο γίνεται, λέξεις που χρησιμοποίησε και ο
-        συμμετέχοντας(δε χρειάζονται εισαγωγικά). Δε χρειάζεται να αναφέρεις το όνομα του
-        ομιλούντα. Μην χρησιμοποιείς τον ομιλητή ως υποκείμενο της πρότασης, δηλαδή μη ξεκινάς
+        συμμετέχοντα. Χρησιμοποίησε, αν και όσο γίνεται, λέξεις, όρους και φράσεις που χρησιμοποίησε και ο
+        συμμετέχοντας (δε χρειάζονται εισαγωγικά), αποφεύγοντας να αλλοιώσεις τα λεγόμενα του.
+        Δε χρειάζεται να αναφέρεις το όνομα του ομιλούντα. Μην χρησιμοποιείς τον ομιλητή ως υποκείμενο της πρότασης, δηλαδή μη ξεκινάς
         τις περιλήψεις μιλώντας
         ως ο ομιλητής, π.χ. "Η καθαριότητα στο δήμο είναι μεγάλο πρόβλημα".
         
@@ -422,6 +420,8 @@ function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: s
 
         Μια καλή απάντηση σε αυτό είναι η ακόλουθη:
         ${JSON.stringify(expectedResponse)}
+
+        ${additionalInstructions ? `Για τη σημερινή συνεδρίαση, είναι σημαντικό να ακολουθήσεις τις ακόλουθες πρόσθετες οδηγίες: ${additionalInstructions}` : ""}
     
         Θυμίσου πως πρέπει πάντα να απαντάς μόνο με JSON, και απολύτως τίποτα άλλο.
     `
