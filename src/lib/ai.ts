@@ -8,6 +8,13 @@ dotenv.config();
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export type ResultWithUsage<T> = { result: T, usage: Anthropic.Messages.Usage };
+export const NO_USAGE: Anthropic.Messages.Usage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
+export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage) => ({
+    input_tokens: usage.input_tokens + otherUsage.input_tokens,
+    output_tokens: usage.output_tokens + otherUsage.output_tokens,
+    cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
+    cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
+});
 const maxTokens = 8192;
 const useDelay = 1000 * 60;
 let lastUseTimestamp = 0;
@@ -19,6 +26,7 @@ type AiChatOptions = {
     userPrompt: string;
     prefillSystemResponse?: string;
     prependToResponse?: string;
+    parseJson?: boolean;
 }
 
 async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -39,7 +47,7 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64 }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true }: AiChatOptions): Promise<ResultWithUsage<T>> {
     lastUseTimestamp = Date.now();
 
     try {
@@ -106,11 +114,15 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         }
 
         let responseJson: T;
-        try {
-            responseJson = JSON.parse(responseContent) as T;
-        } catch (e) {
-            console.error(`Error in aiChat. Response started with ${responseContent.slice(0, 100)}`);
-            throw e;
+        if (parseJson) {
+            try {
+                responseJson = JSON.parse(responseContent) as T;
+            } catch (e) {
+                console.error(`Error parsing Claude response: ${responseContent.slice(0, 100)}`);
+                throw e;
+            }
+        } else {
+            responseJson = responseContent as T;
         }
 
         return {
@@ -123,7 +135,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
     }
 }
 
-export async function aiWithAdaline<T>({ projectId, deploymentId, variables }: { projectId: string, deploymentId?: string, variables: { [key: string]: string } }): Promise<ResultWithUsage<T>> {
+export async function aiWithAdaline<T>({ projectId, deploymentId, variables, parseJson = true }: { projectId: string, deploymentId?: string, variables: { [key: string]: string }, parseJson?: boolean }): Promise<ResultWithUsage<T>> {
     const deployment = await fetchAdalineDeployment(projectId, deploymentId);
     if (deployment.config.provider !== "anthropic") {
         throw new Error("Adaline deployment provider is not anthropic");
@@ -189,11 +201,15 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables }: {
     });
 
     let responseJson: T;
-    try {
-        responseJson = JSON.parse(completion) as T;
-    } catch (e) {
-        console.error(`Error parsing Claude response: ${completion.slice(0, 100)}`);
-        throw e;
+    if (parseJson) {
+        try {
+            responseJson = JSON.parse(completion) as T;
+        } catch (e) {
+            console.error(`Error parsing Claude response: ${completion.slice(0, 100)}`);
+            throw e;
+        }
+    } else {
+        responseJson = completion as T;
     }
 
     console.log(responseJson);
