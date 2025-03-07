@@ -96,7 +96,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         if (response.stop_reason === "max_tokens") {
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
-            const response2 = await aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim() });
+            const response2 = await aiChat<T>({ systemPrompt, documentBase64, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim() });
             return {
                 usage: {
                     input_tokens: response.usage.input_tokens + response2.usage.input_tokens,
