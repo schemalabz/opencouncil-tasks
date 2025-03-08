@@ -2,7 +2,8 @@ import path from "path";
 import cp from "child_process";
 import ffmpeg from "ffmpeg-static";
 import fs from "fs";
-import { SplitMediaFileRequest } from "../../types.js";
+import { uploadToSpaces } from "../uploadToSpaces.js";
+import { SplitMediaFileRequest, SupportedMediaType } from "../../types.js";
 
 // Create data directory if it doesn't exist
 const dataDir = process.env.DATA_DIR || "./data";
@@ -14,13 +15,22 @@ if (!fs.existsSync(dataDir)) {
  * Download a file from a URL
  */
 export const downloadFile = async (url: string): Promise<string> => {
-    const response = await fetch(url);
-    const buffer = await response.arrayBuffer();
     const fallbackRandomName = Math.random().toString(36).substring(2, 15);
     const fileName = path.join(dataDir, url.split("/").pop() || fallbackRandomName);
-    await fs.promises.writeFile(fileName, Buffer.from(buffer));
-    console.log(`Downloaded file ${url} to ${fileName}`);
-    return fileName;
+
+    // Check if file already exists
+    try {
+        await fs.promises.access(fileName);
+        console.log(`File ${fileName} already exists, skipping download`);
+        return fileName;
+    } catch (error) {
+        // File doesn't exist, proceed with download
+        const response = await fetch(url);
+        const buffer = await response.arrayBuffer();
+        await fs.promises.writeFile(fileName, Buffer.from(buffer));
+        console.log(`Downloaded file ${url} to ${fileName}`);
+        return fileName;
+    }
 };
 
 /**
@@ -29,7 +39,7 @@ export const downloadFile = async (url: string): Promise<string> => {
 export const getFileParts = (
     filePath: string,
     segments: SplitMediaFileRequest["parts"][number]["segments"],
-    type: "audio" | "video",
+    type: SupportedMediaType,
 ): Promise<string> => {
     // Creates a media file that consists of all the segments from the input file
     console.log(
@@ -110,4 +120,69 @@ export const getFileParts = (
             reject(err);
         });
     });
+};
+
+/**
+ * Split media file and upload result to DigitalOcean Spaces
+ */
+export const splitAndUploadMedia = async (
+    mediaUrl: string,
+    type: SupportedMediaType,
+    segments: SplitMediaFileRequest["parts"][number]["segments"],
+    spacesPath: string,
+    onProgress,
+) => {
+    // Validate file extension
+    const fileExt = path.extname(mediaUrl).toLowerCase();
+    if (type === "audio" && fileExt !== ".mp3") {
+        throw new Error("Audio files must be MP3 format");
+    }
+    if (type === "video" && fileExt !== ".mp4") {
+        throw new Error("Video files must be MP4 format");
+    }
+
+    // Download the file
+    onProgress("downloading", 10);
+    const inputFile = await downloadFile(mediaUrl);
+
+    // Split the media
+    onProgress("splitting", 30);
+    const outputFilePath = await getFileParts(inputFile, segments, type);
+
+    // Upload to DO Spaces
+    onProgress("uploading", 50);
+    const uploadedUrls = await uploadToSpaces(
+        {
+            files: [outputFilePath],
+            spacesPath: spacesPath || `${type}-parts`,
+        },
+        onProgress,
+    );
+
+    if (uploadedUrls.length !== 1) {
+        throw new Error(`Expected 1 uploaded URL, got ${uploadedUrls.length}!`);
+    }
+
+    const uploadedUrl = uploadedUrls[0];
+
+    // Calculate total duration
+    const duration = segments.reduce((total, segment) => {
+        return total + (segment.endTimestamp - segment.startTimestamp);
+    }, 0);
+
+    // Clean up temporary files
+    try {
+        fs.unlinkSync(outputFilePath);
+    } catch (e) {
+        console.warn("Failed to clean up temporary files:", e);
+    }
+
+    onProgress("complete", 100);
+
+    return {
+        url: uploadedUrl,
+        duration,
+        startTimestamp: segments[0].startTimestamp,
+        endTimestamp: segments[segments.length - 1].endTimestamp,
+    };
 };
