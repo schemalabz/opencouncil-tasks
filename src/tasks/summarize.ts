@@ -4,7 +4,7 @@ import { Task } from "./pipeline.js";
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import { ExtractedSubject, extractedSubjectToApiSubject } from "./processAgenda.js";
-
+import { IdCompressor, formatTime } from "../utils.js";
 dotenv.config();
 
 type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>;
@@ -13,35 +13,21 @@ const requestedSummaryWordCount = 50;
 
 export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
     const { transcript, topicLabels, cityName, date, requestedSubjects, existingSubjects, additionalInstructions } = request;
-
-    const shortIdToLong = new Map<string, string>();
-    const longIdToShort = new Map<string, string>();
-
-    const addLongIdToMaps = (longId: string) => {
-        if (longIdToShort.has(longId)) return;
-        // short ids should be 5 characters long, a-z, 0-9
-        const shortId = Math.random().toString(36).substring(2, 10);
-        if (shortIdToLong.has(shortId)) {
-            addLongIdToMaps(longId);
-            return;
-        }
-        shortIdToLong.set(shortId, longId);
-        longIdToShort.set(longId, shortId);
-    };
+    const idCompressor = new IdCompressor();
 
     transcript.forEach(s => {
-        addLongIdToMaps(s.speakerSegmentId);
+        idCompressor.addLongId(s.speakerSegmentId);
         s.utterances.forEach(u => {
-            addLongIdToMaps(u.utteranceId);
+            idCompressor.addLongId(u.utteranceId);
         });
     });
 
     const shortenedIdTranscript = transcript.map(s => ({
         ...s,
-        speakerSegmentId: longIdToShort.get(s.speakerSegmentId)!,
+        speakerSegmentId: idCompressor.getShortId(s.speakerSegmentId),
         utterances: s.utterances.map(u => ({
             ...u,
-            utteranceId: longIdToShort.get(u.utteranceId)!,
+            utteranceId: idCompressor.getShortId(u.utteranceId),
         })),
     }));
 
@@ -63,7 +49,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         speakerSegmentSummaries: speakerSegmentSummaries.map(s => ({
             topicLabels: s.topicLabels,
             summary: s.summary,
-            speakerSegmentId: shortIdToLong.get(s.speakerSegmentId)!,
+            speakerSegmentId: idCompressor.getLongId(s.speakerSegmentId),
         })),
         subjects: subjects.map(s => ({ // convert to long ids
             name: s.name,
@@ -71,10 +57,10 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
             hot: false,
             agendaItemIndex: s.agendaItemIndex,
             speakerSegments: s.speakerSegments.map(seg => ({
-                speakerSegmentId: shortIdToLong.get(seg.speakerSegmentId)!,
+                speakerSegmentId: idCompressor.getLongId(seg.speakerSegmentId),
                 summary: seg.summary
             })),
-            highlightedUtteranceIds: s.highlightedUtteranceIds.map((hui) => shortIdToLong.get(hui)!),
+            highlightedUtteranceIds: s.highlightedUtteranceIds.map((hui) => idCompressor.getLongId(hui)),
             location: s.location,
             topicLabel: s.topicLabel,
             introducedByPersonId: s.introducedByPersonId

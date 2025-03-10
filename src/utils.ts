@@ -37,9 +37,58 @@ export const getExpressAppWithCallbacks = (): express.Express => {
     app.use('/callback', callbackRouter);
     return app;
 }
+
 export const formatTime = (time: number): string => {
     const hours = Math.floor(time / 3600);
     const minutes = Math.floor((time % 3600) / 60);
     const seconds = Math.floor(time % 60);
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Utility class for compressing long IDs into shorter ones and vice versa.
+ * Maintains a bidirectional mapping between long and short IDs.
+ */
+export class IdCompressor {
+    private shortIdToLong = new Map<string, string>();
+    private longIdToShort = new Map<string, string>();
+
+    /**
+     * Adds a long ID to the maps, generating a random short ID.
+     * @param longId The long ID to compress
+     * @returns The corresponding short ID
+     */
+    public addLongId(longId: string): string {
+        if (this.longIdToShort.has(longId)) {
+            return this.longIdToShort.get(longId)!;
+        }
+
+        // Short IDs are 8 characters long, using a-z, 0-9
+        const shortId = Math.random().toString(36).substring(2, 10);
+        if (this.shortIdToLong.has(shortId)) {
+            return this.addLongId(longId);
+        }
+
+        this.shortIdToLong.set(shortId, longId);
+        this.longIdToShort.set(longId, shortId);
+        return shortId;
+    }
+
+    /**
+     * Gets the long ID corresponding to a short ID.
+     * @param shortId The short ID
+     * @returns The corresponding long ID
+     */
+    public getLongId(shortId: string): string {
+        return this.shortIdToLong.get(shortId)!;
+    }
+
+    /**
+     * Gets the short ID corresponding to a long ID.
+     * @param longId The long ID
+     * @returns The corresponding short ID
+     */
+    public getShortId(longId: string): string {
+        return this.longIdToShort.get(longId)!;
+    }
+}

@@ -1,6 +1,7 @@
 import { Task } from "./pipeline.js";
 import { GeneratePodcastSpecRequest, GeneratePodcastSpecResult, PodcastPart } from "../types.js";
 import { aiChat } from "../lib/ai.js";
+import { IdCompressor } from "../utils.js";
 
 type InternalPodcastSpec = {
     parts: ({
@@ -102,27 +103,13 @@ export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodca
     const subjectsToInclude = subjects.filter((s) => s.allocation != 'skip');
     const subjectsForPrompt = getSubjectsForPrompt(subjectsToInclude, transcript);
 
-
-    const shortIdToLong = new Map<string, string>();
-    const longIdToShort = new Map<string, string>();
-
-    const addLongIdToMaps = (longId: string) => {
-        if (longIdToShort.has(longId)) return;
-        // short ids should be 5 characters long, a-z, 0-9
-        const shortId = Math.random().toString(36).substring(2, 8);
-        if (shortIdToLong.has(shortId)) {
-            addLongIdToMaps(longId);
-            return;
-        }
-        shortIdToLong.set(shortId, longId);
-        longIdToShort.set(longId, shortId);
-    };
+    const idCompressor = new IdCompressor();
 
     subjectsForPrompt.forEach(s => {
-        addLongIdToMaps(s.name);
+        idCompressor.addLongId(s.name);
         s.speakerSegments.forEach(ss => {
             ss.utterances.forEach(u => {
-                addLongIdToMaps(u.utteranceId);
+                idCompressor.addLongId(u.utteranceId);
             });
         });
     });
@@ -133,7 +120,7 @@ export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodca
             ...ss,
             utterances: ss.utterances.map(u => ({
                 ...u,
-                utteranceId: longIdToShort.get(u.utteranceId)!
+                utteranceId: idCompressor.getShortId(u.utteranceId)
             }))
         }))
     }));
@@ -149,7 +136,7 @@ export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodca
         if (p.type === "audio") {
             return {
                 type: "audio",
-                utteranceIds: p.utteranceIds.map(id => shortIdToLong.get(id)!)
+                utteranceIds: p.utteranceIds.map(id => idCompressor.getLongId(id))
             }
         }
         return p;
