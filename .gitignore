@@ -8,3 +8,5 @@ scrapeData.json
 secrets/
 .DS_Store
 prompt-*.txt
+combined.json
+elevenlabs-response.json
