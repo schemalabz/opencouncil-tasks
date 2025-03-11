@@ -3,7 +3,7 @@ import cp from "child_process";
 import ffmpeg from "ffmpeg-static";
 import fs from "fs";
 import { uploadToSpaces } from "../uploadToSpaces.js";
-import { SplitMediaFileRequest, SupportedMediaType } from "../../types.js";
+import { SplitMediaFileRequest, MediaType } from "../../types.js";
 
 // Create data directory if it doesn't exist
 const dataDir = process.env.DATA_DIR || "./data";
@@ -39,7 +39,7 @@ export const downloadFile = async (url: string): Promise<string> => {
 export const getFileParts = (
     filePath: string,
     segments: SplitMediaFileRequest["parts"][number]["segments"],
-    type: SupportedMediaType,
+    type: MediaType,
 ): Promise<string> => {
     // Creates a media file that consists of all the segments from the input file
     console.log(
@@ -127,7 +127,7 @@ export const getFileParts = (
  */
 export const splitAndUploadMedia = async (
     mediaUrl: string,
-    type: SupportedMediaType,
+    type: MediaType,
     segments: SplitMediaFileRequest["parts"][number]["segments"],
     spacesPath: string,
     onProgress,

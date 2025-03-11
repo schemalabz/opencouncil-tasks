@@ -14,7 +14,7 @@ export interface TaskRequest {
     callbackUrl: string;
 }
 
-export type SupportedMediaType = "audio" | "video";
+export type MediaType = "audio" | "video";
 
 /*
  * Task: Transcribe
@@ -237,7 +237,7 @@ export interface GeneratePodcastSpecResult {
 
 export interface SplitMediaFileRequest extends TaskRequest {
     url: string; // an mp4 or mp3 url
-    type: SupportedMediaType;
+    type: MediaType;
     parts: {
         // a part of the file, consisting of multiple contiguous segments
         id: string;
@@ -253,9 +253,29 @@ export interface SplitMediaFileResult {
     parts: {
         id: string;
         url: string;
-        type: SupportedMediaType;
+        type: MediaType;
         duration: number;
         startTimestamp: number;
         endTimestamp: number;
     }[];
+}
+
+/**
+ * Generate Voiceprint Task Types
+ */
+
+export interface GenerateVoiceprintRequest extends TaskRequest {
+  mediaUrl: string; // URL to audio or video source
+  segmentId: string; // Speaker segment ID used for the voiceprint
+  startTimestamp: number; // Start timestamp in the media file
+  endTimestamp: number; // End timestamp in the media file
+  // Used only for file naming in S3
+  cityId: string;
+  personId: string;
+}
+
+export interface GenerateVoiceprintResult {
+  audioUrl: string; // URL to the extracted audio
+  voiceprint: string; // Voiceprint embedding vector in base64
+  duration: number; // Duration of the audio
 }

@@ -2,12 +2,13 @@ import dotenv from 'dotenv';
 import { CallbackServer } from './CallbackServer.js';
 import axios, { AxiosResponse } from 'axios';
 import { Diarization } from '../types.js';
-import { Router } from 'express';
 
 dotenv.config();
-export type DiarizeResponse = {
+type PyannoteResponse = {
     jobId: string;
     status: string;
+}
+export type DiarizeResponse = PyannoteResponse & {
     output: {
         diarization: Diarization;
     };
@@ -19,9 +20,18 @@ type DiarizeRequest = {
     reject: (error: Error) => void;
 }
 
+type VoiceprintResponse = PyannoteResponse & {
+    output: {
+      voiceprint: string;
+    };
+}
+  
 const PYANNOTE_MAX_CONCURRENT_DIARIZATIONS = parseInt(process.env.PYANNOTE_MAX_CONCURRENT_DIARIZATIONS || '5', 10);
 const baseUrl = process.env.PYANNOTE_DIARIZE_API_URL;
 const apiToken = process.env.PYANNOTE_API_TOKEN;
+
+// Check if mock mode is enabled
+const MOCK_ENABLED = process.env.MOCK_PYANNOTE === 'true';
 
 export default class PyannoteDiarizer {
     private queue: DiarizeRequest[] = [];
@@ -62,6 +72,81 @@ export default class PyannoteDiarizer {
             });
             this.processQueue();
         });
+    }
+
+    /**
+     * Generates a voiceprint from an audio file
+     */
+    async generateVoiceprint(audioUrl: string): Promise<string> {
+        if (MOCK_ENABLED) {
+            console.log(`[MOCK MODE] Generating mock voiceprint for: ${audioUrl}`);
+            const mockVector = Array(512).fill(0).map(() => Math.random() - 0.5);
+
+            // Convert the array to a Float32Array
+            const float32Array = new Float32Array(mockVector);
+            
+            // Convert to base64 string
+            const buffer = float32Array.buffer;
+            const bytes = new Uint8Array(buffer);
+            const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+            const base64String = btoa(binary);
+            
+            return `MOCK_${base64String}`;
+        }
+
+        if (!baseUrl || !apiToken) {
+            throw new Error("PYANNOTE_DIARIZE_API_URL and PYANNOTE_API_TOKEN must be set in environment variables");
+        }
+
+        console.log(`Generating voiceprint from audio: ${audioUrl}`);
+        
+        const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<VoiceprintResponse>({ timeoutMinutes: 10 });
+
+        const voiceprintUrl = `${baseUrl}/voiceprint`;
+        let response: AxiosResponse<{jobId: string}>;
+        
+        try {
+            response = await axios.post(voiceprintUrl, {
+                url: audioUrl,
+                webhook: webhookUrl
+            }, this.axiosOptions);
+        } catch (error) {
+            console.error(`Error with request to ${voiceprintUrl}, passed url: ${audioUrl}`);
+            if (isAxiosError(error)) {
+                console.error(`Response was ${error.response?.status}: ${JSON.stringify(error.response?.data)}`);
+                throw new Error(`Failed to start voiceprint generation: ${error.response?.statusText || error.message}`);
+            } else {
+                console.log(`Non axios error:`, error);
+            }
+            throw error;
+        }
+
+        const jobId = response.data.jobId;
+        console.log(`Awaiting voiceprint callback: ${webhookUrl}. Response was ${response.status}: ${JSON.stringify(response.data)}`);
+
+        const statusCheckInterval = setInterval(async () => {
+            try {
+                const status = await this.getJobStatus(jobId);
+                console.log(`Voiceprint job status: ${JSON.stringify(status)}`);
+            } catch (error) {
+                console.error('Error checking voiceprint job status:', error);
+            }
+        }, 20000);
+
+        let result: VoiceprintResponse;
+        try {
+            result = await callbackPromise;
+        } catch (e) {
+            throw e;
+        } finally {
+            clearInterval(statusCheckInterval);
+        }
+
+        if (result.status !== 'succeeded') {
+            throw new Error(`Voiceprint generation failed with status: ${result.status}`);
+        }
+
+        return result.output.voiceprint;
     }
 
     private async processQueue() {
@@ -143,7 +228,6 @@ export default class PyannoteDiarizer {
         }
 
         return result.output.diarization;
-
     }
 
     private combineDiarizations(segments: { start: number, diarization: Diarization }[]): Diarization {

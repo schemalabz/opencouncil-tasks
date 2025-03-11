@@ -15,6 +15,7 @@ import { generatePodcastSpec } from './tasks/generatePodcastSpec.js';
 import { splitMediaFile } from './tasks/splitMediaFile.js';
 import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
+import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 
 dotenv.config();
 
@@ -75,6 +76,7 @@ app.post('/splitMediaFile', taskManager.serveTask(splitMediaFile));
 app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
 app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
 app.post('/processAgenda', taskManager.serveTask(processAgenda));
+app.post('/generateVoiceprint', taskManager.serveTask(generateVoiceprint));
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
