@@ -11,7 +11,7 @@ import { diarize } from './tasks/diarize.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
-import path from 'path';
+import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 const program = new Command();
 const app = getExpressAppWithCallbacks();
 const port = process.env.PORT || 3000;
@@ -209,6 +209,22 @@ program
         console.log('Callback called with: ', result);
         server.close();
     });
+
+program
+    .command('job-status <jobId>')
+    .description('Check the status of a Pyannote job')
+    .action(async (jobId: string) => {
+        try {
+            const diarizer = PyannoteDiarizer.getInstance();
+            const status = await diarizer.getJobStatus(jobId);
+            console.log(JSON.stringify(status, null, 2));
+        } catch (error) {
+            console.error('Error checking job status:', error);
+        } finally {
+            server.close();
+        }
+    });
+
 
 program.parse(process.argv);
 

@@ -176,7 +176,7 @@ export default class PyannoteDiarizer {
         }
     };
 
-    private async getJobStatus(jobId: string): Promise<any> {
+    async getJobStatus(jobId: string): Promise<any> {
         const response = await axios.get(`${baseUrl}/jobs/${jobId}`, this.axiosOptions);
         return response.data;
     }
