@@ -24,6 +24,7 @@ export interface TranscribeRequest extends TaskRequest {
     youtubeUrl: string;
     customVocabulary?: string[];
     customPrompt?: string;
+    voiceprints?: Voiceprint[];
 }
 
 export type TranscriptWithUtteranceDrifts = Transcript & {
@@ -32,11 +33,22 @@ export type TranscriptWithUtteranceDrifts = Transcript & {
     };
 };
 
+// Processed speaker information in the final transcript
+export interface SpeakerIdentificationResult extends DiarizationSpeakerMatch {
+    speaker: number;  // Numeric speaker ID used in utterances
+}
+
+export type TranscriptWithSpeakerIdentification = TranscriptWithUtteranceDrifts & {
+    transcription: {
+        speakers: SpeakerIdentificationResult[];
+    };
+}
+
 export interface TranscribeResult {
     videoUrl: string;
     audioUrl: string;
     muxPlaybackId: string;
-    transcript: Transcript;
+    transcript: TranscriptWithSpeakerIdentification;
 }
 
 /*
@@ -45,10 +57,16 @@ export interface TranscribeResult {
 
 export interface DiarizeRequest extends TaskRequest {
     audioUrl: string;
+    voiceprints?: Voiceprint[];
 }
 
-export interface DiarizeResult {
-    diarization: Diarization;
+interface DiarizationSpeakerMatch {
+    match: string | null;  // The identified personId if there's a match
+    confidence: { [personId: string]: number; };
+}
+
+export interface DiarizationSpeaker extends DiarizationSpeakerMatch {
+    speaker: string;  // The speaker ID from diarization (may include SEG prefix)
 }
 
 export type Diarization = {
@@ -56,6 +74,16 @@ export type Diarization = {
     end: number;
     speaker: string;
 }[];
+
+export type DiarizeResult = {
+    diarization: Diarization;
+    speakers: DiarizationSpeaker[];
+};
+
+export type Voiceprint = {
+    personId: string;
+    voiceprint: string;
+}
 
 /*
  * Task: Process Agenda
@@ -99,6 +127,7 @@ export interface ProcessAgendaResult {
 
 /*
  * Transcript
+ * see https://docs.gladia.io/api-reference/v2/transcription/get#response-result
  */
 
 export interface Transcript {
@@ -169,7 +198,7 @@ export interface RequestOnTranscript extends TaskRequest {
  * Fix Transcript
  */
 
-export interface FixTranscriptRequest extends RequestOnTranscript {}
+export interface FixTranscriptRequest extends RequestOnTranscript { }
 
 export interface FixTranscriptResult {
     updateUtterances: {
@@ -219,13 +248,13 @@ export interface GeneratePodcastSpecRequest extends RequestOnTranscript {
 
 export type PodcastPart =
     | {
-          type: "host";
-          text: string;
-      }
+        type: "host";
+        text: string;
+    }
     | {
-          type: "audio";
-          utteranceIds: string[];
-      };
+        type: "audio";
+        utteranceIds: string[];
+    };
 
 export interface GeneratePodcastSpecResult {
     parts: PodcastPart[];
@@ -265,17 +294,17 @@ export interface SplitMediaFileResult {
  */
 
 export interface GenerateVoiceprintRequest extends TaskRequest {
-  mediaUrl: string; // URL to audio or video source
-  segmentId: string; // Speaker segment ID used for the voiceprint
-  startTimestamp: number; // Start timestamp in the media file
-  endTimestamp: number; // End timestamp in the media file
-  // Used only for file naming in S3
-  cityId: string;
-  personId: string;
+    mediaUrl: string; // URL to audio or video source
+    segmentId: string; // Speaker segment ID used for the voiceprint
+    startTimestamp: number; // Start timestamp in the media file
+    endTimestamp: number; // End timestamp in the media file
+    // Used only for file naming in S3
+    cityId: string;
+    personId: string;
 }
 
 export interface GenerateVoiceprintResult {
-  audioUrl: string; // URL to the extracted audio
-  voiceprint: string; // Voiceprint embedding vector in base64
-  duration: number; // Duration of the audio
+    audioUrl: string; // URL to the extracted audio
+    voiceprint: string; // Voiceprint embedding vector in base64
+    duration: number; // Duration of the audio
 }

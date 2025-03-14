@@ -5,7 +5,7 @@ import cors from 'cors';
 import { taskManager } from './lib/TaskManager.js';
 import path from 'path';
 import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYoutubeUrl } from './utils.js';
-import { Diarization, TranscribeRequest } from './types.js';
+import { Diarization, TranscribeRequest, DiarizeResult } from './types.js';
 import fs from 'fs';
 import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { diarize } from './tasks/diarize.js';
@@ -95,7 +95,7 @@ app.post('/test-split', async (
     res: express.Response,
     next: express.NextFunction
 ) => {
-    let { audioFile, audioUrl, diarizationFile } = req.body;
+    let { audioFile, audioUrl, diarizationFile, voiceprints } = req.body;
 
     if (!audioFile) {
         return res.status(400).json({ error: 'No audio file or URL provided' });
@@ -123,7 +123,7 @@ app.post('/test-split', async (
     let diarization: Diarization;
     if (!diarizationFile) {
         console.log('Diarizing...');
-        diarization = await diarize(audioFile, console.log);
+        diarization = (await diarize({ audioUrl:audioFile, voiceprints }, console.log)).diarization;
         console.log(`Got diarization of ${diarization.length} segments`);
         console.log('Writing diarization to file...');
 
@@ -134,7 +134,7 @@ app.post('/test-split', async (
     } else {
         console.log('Reading diarization from file...');
         const diarFilePath = path.join(process.env.DATA_DIR || './data', diarizationFile);
-        diarization = JSON.parse(await fs.promises.readFile(diarFilePath, 'utf8')) as Diarization;
+        diarization = (JSON.parse(await fs.promises.readFile(diarFilePath, 'utf8')) as DiarizeResult).diarization;
         console.log(`Diarization read from ${diarFilePath}, contains ${diarization.length} segments`);
     }
 

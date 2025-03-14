@@ -1,24 +1,35 @@
-import { Diarization, Utterance, Word } from "../types.js";
-
+import { Diarization, Utterance, SpeakerIdentificationResult, DiarizationSpeaker } from "../types.js";
 
 export class DiarizationManager {
     private diarization: Diarization;
-    private speakerMap: Map<string, number>;
+    private speakerMap: Map<string, number>;  // Maps diarization speaker IDs to numeric IDs
+    private speakerIdentificationMap: Map<number, SpeakerIdentificationResult>;  // Maps numeric IDs to speaker info
     private config: { maxDriftCost: number } = { maxDriftCost: Number.POSITIVE_INFINITY };
     private totalDrift: number;
 
-    constructor(diarization: Diarization) {
+    constructor(diarization: Diarization, speakers: DiarizationSpeaker[]) {
         this.diarization = diarization;
-        this.speakerMap = this.buildSpeakerMap();
+        this.speakerIdentificationMap = new Map();
+        this.speakerMap = this.buildSpeakerMaps(speakers);
         this.totalDrift = 0;
     }
 
-    private buildSpeakerMap(): Map<string, number> {
+    /**
+     * Builds a mapping from diarization speaker IDs to sequential numbers
+     * 
+     * This ensures consistent speaker numbering regardless of
+     * the speaker IDs returned by the diarization API
+     */
+    private buildSpeakerMaps(speakers: DiarizationSpeaker[]): Map<string, number> {
         const map = new Map<string, number>();
         let speakerNumber = 1;
-        for (const d of this.diarization) {
-            if (!map.has(d.speaker)) {
-                map.set(d.speaker, speakerNumber++);
+        for (const speaker of speakers) {
+            const speakerKey = speaker.match ?? speaker.speaker;
+            if (!map.has(speakerKey)) {
+                map.set(speakerKey, speakerNumber);
+                // Store speaker identification info with the numeric ID as the speaker identifier
+                this.speakerIdentificationMap.set(speakerNumber, { ...speaker, speaker: speakerNumber });
+                speakerNumber++;
             }
         }
         return map;
@@ -83,6 +94,7 @@ export class DiarizationManager {
     }
 
     public findBestSpeakerForUtterance(utterance: Utterance): { speaker: number, drift: number } | null {
+        // First check for simple case - utterance overlaps with exactly one diarization segment
         const overlappingDiarizations = this.diarization.filter((d) => {
             return (d.start <= utterance.end && d.start >= utterance.start) || // starts in utterance 
                 (d.end <= utterance.end && d.end >= utterance.start) || // ends in utterance
@@ -96,6 +108,7 @@ export class DiarizationManager {
             };
         }
 
+        // Complex case - compute drift for potential speaker matches
         const speakersWithDrift = this.findSpeakersWithDriftForUtterance(utterance);
 
         if (speakersWithDrift.length === 0) {
@@ -105,7 +118,6 @@ export class DiarizationManager {
         if (speakersWithDrift.length === 1) {
             return speakersWithDrift[0];
         }
-
 
         const best = speakersWithDrift.reduce((best, current) =>
             current.drift < best.drift ? current : best
@@ -126,8 +138,10 @@ export class DiarizationManager {
         return this.totalDrift;
     }
 
+    public getSpeakerInfo(): SpeakerIdentificationResult[] {
+        return Array.from(this.speakerIdentificationMap.values());
+    }
 }
-
 
 function formatTime(time: number): string {
     // returns hh:mm:ss

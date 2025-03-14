@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { CallbackServer } from "../lib/CallbackServer.js";
-import { Diarization, TaskUpdate, TranscribeRequest, TranscribeResult, TranscriptWithUtteranceDrifts } from "../types.js";
+import { TranscribeRequest, TranscribeResult, TranscriptWithSpeakerIdentification } from "../types.js";
 import { applyDiarization } from "./applyDiarization.js";
 import { diarize } from "./diarize.js";
 import { downloadYTV } from "./downloadYTV.js";
@@ -26,14 +26,14 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
         spacesPath: "council-meeting-videos"
     }, () => { });
 
-    const { audioUrl, diarization } = await uploadToSpaces({
+    const { audioUrl, diarization, speakers } = await uploadToSpaces({
         files: [audioOnly],
         spacesPath: "audio"
     }, () => { }).then(async (urls) => {
         const audioUrl = urls[0];
         console.log(`Diarizing url ${audioUrl}`);
-        const diarization = await diarize(audioUrl, createProgressHandler("diarizing"));
-        return { audioUrl, diarization };
+        const { diarization, speakers } = await diarize({ audioUrl, voiceprints: request.voiceprints }, createProgressHandler("diarizing"));
+        return { audioUrl, diarization, speakers };
     });
 
     console.log("Uploaded audio to spaces and diarized");
@@ -60,7 +60,7 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
 
     console.log("Split audio and transcribed");
 
-    const diarizedTranscript: TranscriptWithUtteranceDrifts = await applyDiarization({ diarization, transcript }, createProgressHandler("diarizing-transcript"));
+    const diarizedTranscript: TranscriptWithSpeakerIdentification = await applyDiarization({ diarization, speakers, transcript }, createProgressHandler("diarizing-transcript"));
 
     console.log("Applied diarization");
 

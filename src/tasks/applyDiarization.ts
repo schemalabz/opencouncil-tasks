@@ -1,10 +1,17 @@
 import { Task } from "./pipeline.js";
-import { Diarization, Transcript, TranscriptWithUtteranceDrifts, Word } from "../types.js";
+import { Diarization, Transcript, TranscriptWithSpeakerIdentification, DiarizationSpeaker } from "../types.js";
 import { Utterance } from "../types.js";
 import { DiarizationManager } from "../lib/DiarizationManager.js";
 
-export const applyDiarization: Task<{ diarization: Diarization, transcript: Transcript }, TranscriptWithUtteranceDrifts> = async ({ diarization, transcript }, onProgress) => {
-    const diarizationManager = new DiarizationManager(diarization);
+/**
+ * Applies diarization data to a transcript
+ * 
+ * This solves the problem of aligning two independently
+ * processed data sources (diarization and transcription) that
+ * may have slight timing differences.
+ */
+export const applyDiarization: Task<{ diarization: Diarization, speakers: DiarizationSpeaker[], transcript: Transcript }, TranscriptWithSpeakerIdentification> = async ({ diarization, speakers, transcript }, onProgress) => {
+    const diarizationManager = new DiarizationManager(diarization, speakers);
 
     let skippedUtterances: Utterance[] = [];
     console.log(`Last utterance ends at ${formatTime(transcript.transcription.utterances[transcript.transcription.utterances.length - 1].end)}`);
@@ -45,11 +52,11 @@ export const applyDiarization: Task<{ diarization: Diarization, transcript: Tran
         ...transcript,
         transcription: {
             ...transcript.transcription,
-            utterances: newUtterances
+            utterances: newUtterances,
+            speakers: diarizationManager.getSpeakerInfo()
         }
     };
 }
-
 
 // formats seconds as hh:mm:ss
 function formatTime(time: number): string {

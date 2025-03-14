@@ -1,31 +1,38 @@
 import dotenv from 'dotenv';
 import { CallbackServer } from './CallbackServer.js';
 import axios, { AxiosResponse } from 'axios';
-import { Diarization } from '../types.js';
+import { Diarization, DiarizationSpeaker, DiarizeResult, Voiceprint } from '../types.js';
 
 dotenv.config();
 type PyannoteResponse = {
     jobId: string;
     status: string;
 }
-export type DiarizeResponse = PyannoteResponse & {
+
+export type IdentifyResponse = PyannoteResponse & {
     output: {
-        diarization: Diarization;
+        identification: Diarization[number] & {
+            diarizationSpeaker: string;
+            match: string | null;
+        }[]; // list of identification segments, not used in the current implementation
+        voiceprints: DiarizationSpeaker[];
+        diarization: Diarization; // subset of identification
     };
 };
 
-type DiarizeRequest = {
+type IdentifyRequest = {
     audioUrl: string;
-    resolve: (diarization: DiarizeResponse['output']['diarization']) => void;
+    voiceprints: Voiceprint[];
+    resolve: (response: IdentifyResponse) => void;
     reject: (error: Error) => void;
 }
 
 type VoiceprintResponse = PyannoteResponse & {
     output: {
-      voiceprint: string;
+        voiceprint: string;
     };
 }
-  
+
 const PYANNOTE_MAX_CONCURRENT_DIARIZATIONS = parseInt(process.env.PYANNOTE_MAX_CONCURRENT_DIARIZATIONS || '5', 10);
 const baseUrl = process.env.PYANNOTE_DIARIZE_API_URL;
 const apiToken = process.env.PYANNOTE_API_TOKEN;
@@ -34,10 +41,11 @@ const apiToken = process.env.PYANNOTE_API_TOKEN;
 const MOCK_ENABLED = process.env.MOCK_PYANNOTE === 'true';
 
 export default class PyannoteDiarizer {
-    private queue: DiarizeRequest[] = [];
+    private queue: IdentifyRequest[] = [];
     private activeDiarizations = 0;
     private static callbackServer: CallbackServer;
     private static instance: PyannoteDiarizer;
+    private static readonly CONFIDENCE_THRESHOLD = 50; // Minimum confidence score required to consider a match valid
 
     public static getInstance(): PyannoteDiarizer {
         if (!PyannoteDiarizer.instance) {
@@ -52,21 +60,33 @@ export default class PyannoteDiarizer {
         }
     }
 
-    async diarize(audioSegments: { url: string, start: number }[]): Promise<Diarization> {
+    /**
+     * Performs diarization and speaker identification on multiple audio segments.
+     * 
+     * Processes each segment separately, then combines results while
+     * maintaining correct timestamp offsets. Uses identified speaker names 
+     * when available; otherwise, prefixes diarization labels with segment numbers (e.g., SEG1:SpeakerA).
+     */
+    async diarize(audioSegments: { url: string, start: number }[], voiceprints?: Voiceprint[]): Promise<DiarizeResult> {
         if (!baseUrl || !apiToken) {
             throw new Error("PYANNOTE_DIARIZE_API_URL and PYANNOTE_API_TOKEN must be set in environment variables");
         }
 
         console.log(`Diarizing ${audioSegments.length} segments: ${audioSegments.map(({ url, start }) => `${url} (${start})`).join(', ')}`);
-        const diarizationPromises = audioSegments.map(({ url, start }) => this.diarizeSingle(url));
-        const diarizations = await Promise.all(diarizationPromises);
-        return this.combineDiarizations(diarizations.map((diarization, index) => ({ diarization, start: audioSegments[index].start })));
+        const identificationPromises = audioSegments.map(({ url, start }) => this.identifySingle(url, voiceprints || []));
+        const identifications = await Promise.all(identificationPromises);
+        return this.combineDiarizations(identifications.map((identification, index) => ({
+            diarization: identification.output.diarization,
+            voiceprints: identification.output.voiceprints,
+            start: audioSegments[index].start
+        })));
     }
 
-    async diarizeSingle(audioUrl: string): Promise<Diarization> {
+    async identifySingle(audioUrl: string, voiceprints: Voiceprint[]): Promise<IdentifyResponse> {
         return new Promise((resolve, reject) => {
             this.queue.push({
                 audioUrl,
+                voiceprints,
                 resolve,
                 reject,
             });
@@ -84,13 +104,13 @@ export default class PyannoteDiarizer {
 
             // Convert the array to a Float32Array
             const float32Array = new Float32Array(mockVector);
-            
+
             // Convert to base64 string
             const buffer = float32Array.buffer;
             const bytes = new Uint8Array(buffer);
             const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
             const base64String = btoa(binary);
-            
+
             return `MOCK_${base64String}`;
         }
 
@@ -99,12 +119,12 @@ export default class PyannoteDiarizer {
         }
 
         console.log(`Generating voiceprint from audio: ${audioUrl}`);
-        
+
         const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<VoiceprintResponse>({ timeoutMinutes: 10 });
 
         const voiceprintUrl = `${baseUrl}/voiceprint`;
-        let response: AxiosResponse<{jobId: string}>;
-        
+        let response: AxiosResponse<PyannoteResponse>;
+
         try {
             response = await axios.post(voiceprintUrl, {
                 url: audioUrl,
@@ -159,8 +179,8 @@ export default class PyannoteDiarizer {
         const request = this.queue.shift()!;
 
         try {
-            const diarization = await this.diarizeSegment(request.audioUrl);
-            request.resolve(diarization);
+            const response = await this.identifySegment(request.audioUrl, request.voiceprints);
+            request.resolve(response);
         } catch (error) {
             request.reject(error as Error);
         } finally {
@@ -181,21 +201,29 @@ export default class PyannoteDiarizer {
         return response.data;
     }
 
-    private async diarizeSegment(audioUrl: string): Promise<DiarizeResponse['output']['diarization']> {
-        const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<DiarizeResponse>({ timeoutMinutes: 30 });
+    private async identifySegment(audioUrl: string, voiceprints: Voiceprint[]): Promise<IdentifyResponse> {
+        const { callbackPromise, url: webhookUrl } = await PyannoteDiarizer.callbackServer.getCallback<IdentifyResponse>({ timeoutMinutes: 30 });
 
-        const diarizeUrl = `${baseUrl}/diarize`;
-        let response: AxiosResponse<DiarizeResponse>;
+        const identifyUrl = `${baseUrl}/identify`;
+        let response: AxiosResponse<PyannoteResponse>;
+
         try {
-            response = await axios.post(diarizeUrl, {
+            // Map personId to label for the API request
+            const apiVoiceprints = voiceprints.map(vp => ({
+                label: vp.personId,
+                voiceprint: vp.voiceprint
+            }));
+
+            response = await axios.post(identifyUrl, {
                 url: audioUrl,
+                voiceprints: apiVoiceprints,
                 webhook: webhookUrl
             }, this.axiosOptions);
         } catch (error) {
-            console.error(`Error with request to ${diarizeUrl}, passed url: ${audioUrl} and webhook: ${webhookUrl}.`);
+            console.error(`Error with request to ${identifyUrl}, passed url: ${audioUrl}`);
             if (isAxiosError(error)) {
                 console.error(`Response was ${error.response?.status}: ${JSON.stringify(error.response?.data)}`);
-                throw new Error(`Failed to start diarization job: ${error.response?.statusText || error.message}`);
+                throw new Error(`Failed to start identification job: ${error.response?.statusText || error.message}`);
             } else {
                 console.log(`Non axios error:`, error);
             }
@@ -203,18 +231,18 @@ export default class PyannoteDiarizer {
         }
 
         const jobId = response.data.jobId;
-        console.log(`Awaiting diarization callback: ${webhookUrl}. Response was ${response.status}: ${JSON.stringify(response.data)}`);
+        console.log(`Awaiting identification callback: ${webhookUrl}. Response was ${response.status}: ${JSON.stringify(response.data)}`);
 
         const statusCheckInterval = setInterval(async () => {
             try {
                 const status = await this.getJobStatus(jobId);
-                console.log(`Diarize job status: ${JSON.stringify(status)}`);
+                console.log(`Identification job status: ${JSON.stringify(status)}`);
             } catch (error) {
-                console.error('Error checking diarize job status:', error);
+                console.error('Error checking identification job status:', error);
             }
         }, 20000);
 
-        let result: DiarizeResponse;
+        let result: IdentifyResponse;
         try {
             result = await callbackPromise;
         } catch (e) {
@@ -224,23 +252,64 @@ export default class PyannoteDiarizer {
         }
 
         if (result.status !== 'succeeded') {
-            throw new Error(`Diarization job failed with status: ${result.status}`);
+            throw new Error(`Identification job failed with status: ${result.status}`);
         }
 
-        return result.output.diarization;
+        return result;
     }
 
-    private combineDiarizations(segments: { start: number, diarization: Diarization }[]): Diarization {
-        console.log(`Combining ${segments.length} diarizations`);
-        const f = segments.map(({ diarization, start }, index) => {
-            return diarization.map((d) => ({
-                start: d.start + start,
-                end: d.end + start,
-                speaker: `SEG${index + 1}:${d.speaker}`
-            }))
-        })
+    private combineDiarizations(segments: { start: number, diarization: Diarization, voiceprints: IdentifyResponse['output']['voiceprints'] }[]): DiarizeResult {
+        console.log(`Combining ${segments.length} identifications`);
 
-        return f.flat();
+        // Process diarization entries
+        const diarization = segments.flatMap(({ diarization, voiceprints, start }, segmentIndex) => {
+            return diarization.map((d) => {
+                // Find the voiceprint entry for this speaker
+                const voiceprintEntry = voiceprints.find(vp => vp.speaker === d.speaker);
+
+                // Check if we have a valid match with sufficient confidence
+                // We don't use output.identification directly since Pyannote may return matches with low confidence.
+                // Instead, we implement our own threshold check to ensure more reliable speaker identification.
+                const hasValidMatch = this.hasValidMatch(voiceprintEntry);
+
+                return {
+                    start: d.start + start,
+                    end: d.end + start,
+                    // Use identified speaker only if confidence threshold is met, otherwise use diarization speaker
+                    speaker: hasValidMatch ? voiceprintEntry!.match! : `SEG${segmentIndex + 1}:${d.speaker}`
+                };
+            });
+        });
+
+        // Process speaker information
+        const speakers = segments.flatMap(({ voiceprints }, segmentIndex) => {
+            return voiceprints.map(vp => {
+                const hasValidMatch = this.hasValidMatch(vp);
+
+                return {
+                    speaker: hasValidMatch ? vp.speaker : `SEG${segmentIndex + 1}:${vp.speaker}`,
+                    match: hasValidMatch ? vp.match : null,
+                    // Store only top 3 confidence scores
+                    confidence: Object.entries(vp.confidence)
+                        .sort(([, a], [, b]) => b - a) // Sort by confidence score in descending order
+                        .slice(0, 3) // Take the top 3 entries
+                        .reduce((acc, [speaker, score]) => ({ ...acc, [speaker]: score }), {}) // Convert back to object
+                };
+            });
+        });
+
+        return {
+            diarization,
+            speakers
+        };
+    }
+
+    /**
+     * Checks if a voiceprint entry has a valid match that meets our confidence threshold
+     */
+    private hasValidMatch(voiceprintEntry?: IdentifyResponse['output']['voiceprints'][number]): boolean {
+        return !!voiceprintEntry?.match &&
+            voiceprintEntry.confidence[voiceprintEntry.match] >= PyannoteDiarizer.CONFIDENCE_THRESHOLD;
     }
 }
 
