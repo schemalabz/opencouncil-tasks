@@ -123,7 +123,7 @@ app.post('/test-split', async (
     let diarization: Diarization;
     if (!diarizationFile) {
         console.log('Diarizing...');
-        diarization = (await diarize({ audioUrl:audioFile, voiceprints }, console.log)).diarization;
+        diarization = (await diarize({ audioUrl: audioFile, voiceprints }, console.log)).diarization;
         console.log(`Got diarization of ${diarization.length} segments`);
         console.log('Writing diarization to file...');
 
@@ -182,6 +182,7 @@ if (process.argv.includes('--console')) {
     setInterval(() => {
         const taskUpdates = taskManager.getTaskUpdates();
         const tasksRunning = taskUpdates.length;
+        const tasksQueued = taskManager.getQueuedTasksCount();
 
         let longestRunningTaskDuration = 0;
         if (tasksRunning > 0) {
@@ -195,6 +196,7 @@ if (process.argv.includes('--console')) {
         console.log(JSON.stringify({
             type: 'task-updates',
             tasksRunning,
+            tasksQueued,
             longestRunningTaskDuration
         }));
     }, 5000);
