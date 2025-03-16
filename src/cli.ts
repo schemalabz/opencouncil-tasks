@@ -11,7 +11,8 @@ import { diarize } from './tasks/diarize.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
-import path from 'path';
+import PyannoteDiarizer from './lib/PyannoteDiarize.js';
+import { DiarizeResult } from './types.js';
 const program = new Command();
 const app = getExpressAppWithCallbacks();
 const port = process.env.PORT || 3000;
@@ -114,17 +115,19 @@ program
     .command('transcribe <file>')
     .description('Transcribe an audio file')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
-    .action(async (file: string, options: { outputFile: string }) => {
+    .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
+    .action(async (file: string, options: { outputFile: string; voiceprints?: string }) => {
         const createProgressHandler = (stage: string) => {
             return (subStage: string, perc: number) => {
                 process.stdout.write(`\r${stage}:${subStage} ${perc.toFixed(2)}%`);
             };
         };
+        const voiceprints = options.voiceprints ? JSON.parse(fs.readFileSync(options.voiceprints, 'utf-8')) : undefined;
 
         const uploadedFileUrl = await uploadToSpaces({ files: [file], spacesPath: "audio" }, createProgressHandler("uploading-file"));
         console.log("Uploaded file to DigitalOcean Spaces");
 
-        const diarization = await diarize(uploadedFileUrl[0], createProgressHandler("diarizing"));
+        const { diarization } = await diarize({ audioUrl: uploadedFileUrl[0], voiceprints }, createProgressHandler("diarizing"));
         console.log("Diarized audio");
 
         const audioSegments = await splitAudioDiarization({ file, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-audio"));
@@ -173,8 +176,10 @@ program
     .command('diarize <url>')
     .description('Diarize an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
-    .action(async (url: string, options: { outputFile: string }) => {
-        const result = await diarize(url, (stage: string, progressPercent: number) => {
+    .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
+    .action(async (url: string, options: { outputFile: string; voiceprints?: string }) => {
+        const voiceprints = options.voiceprints ? JSON.parse(fs.readFileSync(options.voiceprints, 'utf-8')) : undefined;
+        const result = await diarize({ audioUrl: url, voiceprints }, (stage: string, progressPercent: number) => {
             process.stdout.write(`\rDiarizing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
@@ -189,15 +194,16 @@ program
     .requiredOption('-T, --transcript-file <file>', 'Transcript file')
     .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
     .action(async (options: { diarizationFile: string; transcriptFile: string; outputFile: string }) => {
-        const diarization = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
+        const { diarization, speakers }: DiarizeResult = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
         const transcript = JSON.parse(fs.readFileSync(options.transcriptFile, 'utf8'));
-        const result = await applyDiarization({ diarization, transcript }, (stage: string, progressPercent: number) => {
+        const result = await applyDiarization({ diarization, speakers, transcript }, (stage: string, progressPercent: number) => {
             process.stdout.write(`\rApplying diarization... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Diarization applied to transcript saved to', options.outputFile);
         server.close();
     });
+
 program
     .command('test-callback-server')
     .description('Test the callback server')
@@ -209,6 +215,22 @@ program
         console.log('Callback called with: ', result);
         server.close();
     });
+
+program
+    .command('job-status <jobId>')
+    .description('Check the status of a Pyannote job')
+    .action(async (jobId: string) => {
+        try {
+            const diarizer = PyannoteDiarizer.getInstance();
+            const status = await diarizer.getJobStatus(jobId);
+            console.log(JSON.stringify(status, null, 2));
+        } catch (error) {
+            console.error('Error checking job status:', error);
+        } finally {
+            server.close();
+        }
+    });
+
 
 program.parse(process.argv);
 
