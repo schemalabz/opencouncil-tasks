@@ -10,19 +10,8 @@ dotenv.config();
 type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>;
 
 const requestedSummaryWordCount = 50;
-
-export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
-    const { transcript, topicLabels, cityName, date, requestedSubjects, existingSubjects, additionalInstructions } = request;
-    const idCompressor = new IdCompressor();
-
-    transcript.forEach(s => {
-        idCompressor.addLongId(s.speakerSegmentId);
-        s.utterances.forEach(u => {
-            idCompressor.addLongId(u.utteranceId);
-        });
-    });
-
-    const shortenedIdTranscript = transcript.map(s => ({
+const compressIds = (request: SummarizeRequest, idCompressor: IdCompressor) => {
+    const shortenedIdTranscript = request.transcript.map(s => ({
         ...s,
         speakerSegmentId: idCompressor.getShortId(s.speakerSegmentId),
         utterances: s.utterances.map(u => ({
@@ -31,10 +20,37 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         })),
     }));
 
-    const shortenedIdRequest = {
+    return {
         ...request,
         transcript: shortenedIdTranscript,
     };
+};
+
+const decompressIds = (result: SummarizeResult, idCompressor: IdCompressor): SummarizeResult => {
+    return {
+        speakerSegmentSummaries: result.speakerSegmentSummaries.map(s => ({
+            ...s,
+            speakerSegmentId: idCompressor.getLongId(s.speakerSegmentId),
+        })),
+        subjects: result.subjects.map(s => ({
+            ...s,
+            speakerSegments: s.speakerSegments.map(seg => ({
+                speakerSegmentId: idCompressor.getLongId(seg.speakerSegmentId),
+                summary: seg.summary
+            })),
+            highlightedUtteranceIds: s.highlightedUtteranceIds.map(hui =>
+                idCompressor.getLongId(hui)
+            ),
+        })),
+    };
+};
+
+export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
+    const { additionalInstructions, existingSubjects, requestedSubjects } = request;
+    const idCompressor = new IdCompressor();
+    const shortenedIdRequest = compressIds(request, idCompressor);
+
+    const speakerSegmentSummaries = await extractSpeakerSegmentSummaries(shortenedIdRequest, onProgress);
 
     const subjects = await extractSubjects({
         request: shortenedIdRequest,
@@ -43,29 +59,10 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         requestedSubjects,
     }, onProgress);
 
-    const speakerSegmentSummaries = await extractSpeakerSegmentSummaries(shortenedIdRequest, onProgress);
-
-    return {
-        speakerSegmentSummaries: speakerSegmentSummaries.map(s => ({
-            topicLabels: s.topicLabels,
-            summary: s.summary,
-            speakerSegmentId: idCompressor.getLongId(s.speakerSegmentId),
-        })),
-        subjects: subjects.map(s => ({ // convert to long ids
-            name: s.name,
-            description: s.description,
-            hot: false,
-            agendaItemIndex: s.agendaItemIndex,
-            speakerSegments: s.speakerSegments.map(seg => ({
-                speakerSegmentId: idCompressor.getLongId(seg.speakerSegmentId),
-                summary: seg.summary
-            })),
-            highlightedUtteranceIds: s.highlightedUtteranceIds.map((hui) => idCompressor.getLongId(hui)),
-            location: s.location,
-            topicLabel: s.topicLabel,
-            introducedByPersonId: s.introducedByPersonId
-        })),
-    }
+    return decompressIds({
+        speakerSegmentSummaries,
+        subjects
+    }, idCompressor);
 };
 
 export const extractSubjects: Task<{
@@ -114,7 +111,7 @@ export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript & { a
     const { transcript, topicLabels, cityName, date, additionalInstructions } = request;
     const segmentsToSummarize = transcript.filter((t) => {
         const wordCount = t.text.split(' ').length;
-        return wordCount >= 30;
+        return wordCount >= 10;
     });
 
     const originalWordCount = transcript.map(s => s.text.split(' ').length).reduce((a, b) => a + b, 0);
@@ -145,6 +142,7 @@ type AiSummarizeResponse = {
     speakerSegmentId: string;
     summary: string;
     topicLabels: string[];
+    type: "SUBSTANTIAL" | "PROCEDURAL";
 };
 
 async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerSegment[][], existingSubjects: ExtractedSubject[], requestedSubjects: SummarizeRequest['requestedSubjects'], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<ExtractedSubject[]>> {
@@ -361,7 +359,8 @@ function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: s
         {
             speakerSegmentId: "abcdefg1234567890",
             summary: "Η καθημερινότητα στην Αθήνα είναι δύσκολη. Η πολιτική του αυτόματου πιλότου φτάνει στα όριά της.",
-            topicLabels: []
+            topicLabels: [],
+            type: "SUBSTANTIAL"
         }
     ];
 
@@ -373,27 +372,23 @@ function getSummarizeSystemPrompt(cityName: string, date: string, topicLabels: s
         και να ανφέρονται στην ουσία και τα πιο σημαντικά θέματα της τοποθέτησης του εκάστοτε
         συμμετέχοντα. Χρησιμοποίησε, αν και όσο γίνεται, λέξεις, όρους και φράσεις που χρησιμοποίησε και ο
         συμμετέχοντας (δε χρειάζονται εισαγωγικά), αποφεύγοντας να αλλοιώσεις τα λεγόμενα του.
-        Δε χρειάζεται να αναφέρεις το όνομα του ομιλούντα. Μην χρησιμοποιείς τον ομιλητή ως υποκείμενο της πρότασης, δηλαδή μη ξεκινάς
-        τις περιλήψεις μιλώντας
-        ως ο ομιλητής, π.χ. "Η καθαριότητα στο δήμο είναι μεγάλο πρόβλημα".
+        Δε χρειάζεται να αναφέρεις το όνομα του ομιλούντα. Μην χρησιμοποιείς τον ομιλητή ως υποκείμενο της πρότασης, δηλαδή να ξεκινάς
+        τις περιλήψεις μιλώντας ως ο ομιλητής, π.χ. "Η καθαριότητα στο δήμο είναι μεγάλο πρόβλημα".
         
         Οι τοποθετήσεις που σου παρέχονται, είναι απομαγνητοφωνημένες αυτόματα,
         και μπορεί να έχουν μικρά λάθη σε σημεία.
 
-            Επίσης, μπορείς να διαλέξεις θεματικές λεζάντες σχετικές με την τοποθέτηση του κάθε ομιλητή.
+        Επίσης, μπορείς να διαλέξεις θεματικές λεζάντες σχετικές με την τοποθέτηση του κάθε ομιλητή.
         Οι θεματικές λεζάντες που μπορείς να χρησιμοποιήσεις είναι μόνο οι ακόλουθες:
         ${topicLabels.map(label => `- ${label}`).join('\n')}
-
-        Οι περιλήψεις και οι θεματικές λεζάντες που παράγεις, δε πρέπει να αναφέρονται σε τεχνικά θέματα
-        που ίσως να υπήρχαν στην τοποθέτηση, ούτε διαδικαστικά ζητήματα όπως οι παρουσίες που παίρνονται από
-        τη γραμματέα.
-
-        Αν μία τοποθέτηση είναι καθαρά διαδικαστική, δηλαδή δε περιέχει σημαντικά θέματα ή απόψεις, δε χρειάζεται να παράγεις περίληψη.
         Επίσης μία τοποθέτηση μπορεί να μην χρειάζεται καμία θεματική λεζάντα.
+
+        Για κάθε τοποθέτηση, πρέπει να αποφασίσεις αν η τοποθέτηση είναι κατά βάση επί της ουσίας (SUBSTANTIAL) ή διαδικαστική (PROCEDURAL).
+        Μια διαδικαστική τοποθέτηση είναι π.χ. οι παρουσίες που παίρνονται από τη γραμματέα, όταν ο πρόεδρος δίνει το λόγο ή διακόπτει κ.α.
 
         Τα αποτελέσματα που θα παράγεις πρέπει να είναι στα ελληνικά, σε JSON, στην ακόλουθη μορφή:
     [
-        { speakerSegmentId: string, summary: string, topicLabels: string[] }
+        { speakerSegmentId: string, summary: string, topicLabels: string[], type: "SUBSTANTIAL" | "PROCEDURAL" }
     ]
 
         Πρέπει να απαντήσεις μόνο με JSON, και απολύτως τίποτα άλλο.

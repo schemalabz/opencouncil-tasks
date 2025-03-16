@@ -57,7 +57,6 @@ export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, ci
         name: subject.name,
         description: subject.description,
         agendaItemIndex: subject.agendaItemIndex,
-        hot: false,
         speakerSegments: subject.speakerSegments.map(seg => ({
             speakerSegmentId: seg.speakerSegmentId,
             summary: seg.summary
@@ -72,7 +71,7 @@ export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, ci
 export type ExtractedSubject = {
     name: string;
     description: string;
-    agendaItemIndex: number | null;
+    agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
     speakerSegments: {
         speakerSegmentId: string;
