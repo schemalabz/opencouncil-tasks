@@ -12,7 +12,7 @@ interface UploadFilesArgs {
     spacesPath: string;
 }
 
-const FORCE_REUPLOAD = true;
+const FORCE_REUPLOAD = false;
 const VERSION = "1";
 
 export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, spacesPath }, onProgress) => {
