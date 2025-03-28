@@ -9,7 +9,8 @@ dotenv.config();
 type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {
     createdAt: Date,
     lastUpdatedAt: Date,
-    taskType: string
+    taskType: string,
+    version?: number
 };
 
 // Task queue item with all necessary information to run a task
@@ -19,6 +20,7 @@ type QueuedTask<T, R> = {
     callbackUrl: string;
     taskType: string;
     createdAt: Date;
+    version?: number;
 };
 
 class TaskManager {
@@ -65,6 +67,7 @@ class TaskManager {
         input: T,
         callbackUrl: string,
         taskType: string,
+        version?: number
     ): Promise<void> {
         const taskId = `task_${++this.taskCounter}`;
         const createdAt = new Date();
@@ -76,6 +79,7 @@ class TaskManager {
                 createdAt,
                 lastUpdatedAt: createdAt,
                 taskType,
+                version
             });
 
             const result = await task(input, (stage, progressPercent) => {
@@ -87,6 +91,7 @@ class TaskManager {
                     createdAt,
                     lastUpdatedAt: now,
                     taskType,
+                    version
                 };
                 this.runningTasks.set(taskId, update);
                 this.sendCallback(callbackUrl, update);
@@ -100,6 +105,7 @@ class TaskManager {
                 createdAt,
                 lastUpdatedAt: new Date(),
                 taskType,
+                version
             };
             await this.sendCallback(callbackUrl, finalUpdate);
         } catch (error: any) {
@@ -111,6 +117,7 @@ class TaskManager {
                 createdAt,
                 lastUpdatedAt: new Date(),
                 taskType,
+                version
             };
             await this.sendCallback(callbackUrl, errorUpdate);
             console.error('Error in task:', error);
@@ -126,6 +133,7 @@ class TaskManager {
         input: T,
         callbackUrl: string,
         taskType: string,
+        version?: number
     ): Promise<void> {
         // Check if we've reached the maximum number of parallel tasks
         if (this.runningTasks.size >= this.maxParallelTasks) {
@@ -135,7 +143,8 @@ class TaskManager {
                 input,
                 callbackUrl,
                 taskType,
-                createdAt: new Date()
+                createdAt: new Date(),
+                version
             };
             this.taskQueue.push(queuedTask);
             console.log(`Task ${taskType} queued. Current queue size: ${this.taskQueue.length}`);
@@ -148,6 +157,7 @@ class TaskManager {
                 createdAt: queuedTask.createdAt,
                 lastUpdatedAt: queuedTask.createdAt,
                 taskType,
+                version
             });
         } else {
             // Execute the task immediately
@@ -155,7 +165,7 @@ class TaskManager {
         }
     }
 
-    public serveTask<REQ, RES>(task: Task<REQ, RES>) {
+    public serveTask<REQ, RES>(task: Task<REQ, RES>, version?: number) {
         return (req: express.Request<{}, {}, REQ & { callbackUrl: string }>, res: express.Response) => {
             let taskType = req.path.substring(1);
 
@@ -163,7 +173,8 @@ class TaskManager {
                 task,
                 req.body,
                 req.body.callbackUrl,
-                taskType
+                taskType,
+                version
             );
 
             const queueSize = this.taskQueue.length;

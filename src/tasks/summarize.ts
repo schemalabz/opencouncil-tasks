@@ -1,10 +1,11 @@
 import { aiChat, ResultWithUsage } from "../lib/ai.js";
-import { SummarizeRequest, SummarizeResult, RequestOnTranscript } from "../types.js";
+import { SummarizeRequest, SummarizeResult, RequestOnTranscript, SubjectContext } from "../types.js";
 import { Task } from "./pipeline.js";
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import { ExtractedSubject, extractedSubjectToApiSubject } from "./processAgenda.js";
 import { IdCompressor, formatTime } from "../utils.js";
+import { enhanceSubjectWithContext } from "../lib/sonar.js";
 dotenv.config();
 
 type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>;
@@ -13,10 +14,10 @@ const requestedSummaryWordCount = 50;
 const compressIds = (request: SummarizeRequest, idCompressor: IdCompressor) => {
     const shortenedIdTranscript = request.transcript.map(s => ({
         ...s,
-        speakerSegmentId: idCompressor.getShortId(s.speakerSegmentId),
+        speakerSegmentId: idCompressor.addLongId(s.speakerSegmentId),
         utterances: s.utterances.map(u => ({
             ...u,
-            utteranceId: idCompressor.getShortId(u.utteranceId),
+            utteranceId: idCompressor.addLongId(u.utteranceId),
         })),
     }));
 
@@ -59,9 +60,17 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         requestedSubjects,
     }, onProgress);
 
+    console.log(`Extracted ${subjects.length} subjects`);
+
+    const enhancedSubjects = await Promise.all(subjects.map(s => enhanceSubjectWithContext({
+        subject: s,
+        cityName: request.cityName,
+        date: request.date
+    })));
+
     return decompressIds({
         speakerSegmentSummaries,
-        subjects
+        subjects: enhancedSubjects
     }, idCompressor);
 };
 
@@ -74,7 +83,7 @@ export const extractSubjects: Task<{
     const transcript = request.transcript;
 
     const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, request.topicLabels, additionalInstructions);
-    const transcriptParts = splitTranscript(transcript, 50000);
+    const transcriptParts = splitTranscript(transcript, 35000);
 
     const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, existingSubjects.map(s => ({
         ...s,
@@ -126,16 +135,14 @@ export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript & { a
 
     const systemPrompt = getSummarizeSystemPrompt(cityName, date, topicLabels, additionalInstructions);
     const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 75000);
-    console.log(`System prompt: ${systemPrompt}`);
     console.log(`User prompt split into ${userPrompts.length} prompts, with lengths: ${userPrompts.map(p => p.length).join(', ')}`);
 
     const summariesAndLabels = await aiSummarize(systemPrompt, userPrompts, onProgress);
 
     console.log(`Total usage: ${summariesAndLabels.usage.input_tokens} input tokens, ${summariesAndLabels.usage.output_tokens} output tokens`);
-    console.log(`All done!`);
+    console.log(`Summaries extrafted!`);
 
     return summariesAndLabels.result;
-
 }
 
 type AiSummarizeResponse = {

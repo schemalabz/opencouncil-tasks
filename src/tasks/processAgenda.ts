@@ -1,5 +1,6 @@
 import { aiChat } from "../lib/ai.js";
 import { geocodeLocation } from "../lib/geocode.js";
+import { enhanceSubjectWithContext } from "../lib/sonar.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
 import { Task } from "./pipeline.js";
 
@@ -30,8 +31,9 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     );
 
     console.log(`Extracted ${subjects.length} subjects`);
+    const enhancedSubjects = await Promise.all(subjects.map(s => enhanceSubjectWithContext({ subject: s, cityName: request.cityName, date: request.date })));
 
-    return { subjects };
+    return { subjects: enhancedSubjects };
 };
 
 const downloadFileToBase64 = async (url: string) => {
@@ -62,6 +64,7 @@ export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, ci
             summary: seg.summary
         })),
         highlightedUtteranceIds: subject.highlightedUtteranceIds,
+        context: null,
         location,
         topicLabel: subject.topicLabel,
         introducedByPersonId: subject.introducedByPersonId

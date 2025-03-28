@@ -80,6 +80,10 @@ export class IdCompressor {
      * @returns The corresponding long ID
      */
     public getLongId(shortId: string): string {
+        if (!this.shortIdToLong.has(shortId)) {
+            console.error(`Short ID ${shortId} not found`);
+        }
+
         return this.shortIdToLong.get(shortId)!;
     }
 
@@ -89,6 +93,10 @@ export class IdCompressor {
      * @returns The corresponding short ID
      */
     public getShortId(longId: string): string {
+        if (!this.longIdToShort.has(longId)) {
+            console.error(`Long ID ${longId} not found`);
+        }
+
         return this.longIdToShort.get(longId)!;
     }
 }

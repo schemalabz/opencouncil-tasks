@@ -10,3 +10,7 @@ secrets/
 prompt-*.txt
 combined.json
 elevenlabs-response.json
+
+# AI Log specific
+ai.log
+sonar.log

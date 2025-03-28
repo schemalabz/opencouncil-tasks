@@ -8,6 +8,7 @@ export interface TaskUpdate<T> {
     progressPercent: number;
     result?: T;
     error?: string;
+    version: number | undefined;
 }
 
 export interface TaskRequest {
@@ -102,6 +103,11 @@ export interface ProcessAgendaRequest extends TaskRequest {
     date: string;
 }
 
+export interface SubjectContext {
+    text: string;
+    citationUrls: string[];
+}
+
 export interface Subject {
     name: string;
     description: string;
@@ -122,6 +128,7 @@ export interface Subject {
     } | null;
 
     topicLabel: string | null;
+    context: SubjectContext | null;
 }
 
 export interface ProcessAgendaResult {

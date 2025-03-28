@@ -20,6 +20,21 @@ const useDelay = 1000 * 60;
 let lastUseTimestamp = 0;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+const logFilePath = path.join(process.cwd(), 'ai.log');
+async function logToFile(message: string, data?: any) {
+    const timestamp = new Date().toISOString();
+    let logEntry = `${timestamp} - ${message}`;
+    if (data) {
+        logEntry += `:\n${JSON.stringify(data, null, 2)}`;
+    }
+    logEntry += '\n---\n';
+    try {
+        await fs.appendFile(logFilePath, logEntry);
+    } catch (err) {
+        console.error('Failed to write to log file:', err);
+    }
+}
+
 type AiChatOptions = {
     documentBase64?: string;
     systemPrompt: string;
@@ -37,7 +52,7 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
             if (e?.error?.error?.type === 'rate_limit_error' && e.headers?.['anthropic-ratelimit-tokens-reset']) {
                 const resetTime = new Date(e.headers['anthropic-ratelimit-tokens-reset']);
                 const now = new Date();
-                const sleepTime = resetTime.getTime() - now.getTime() + 1000; // Add 1 second buffer
+                const sleepTime = resetTime.getTime() - now.getTime() + 1000;
                 console.log(`Rate limit hit, sleeping until ${resetTime.toISOString()} (${sleepTime}ms)`);
                 await sleep(sleepTime);
                 continue;
@@ -73,17 +88,21 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             messages.push({ "role": "assistant", "content": prefillSystemResponse });
         }
 
-        let response = await withRateLimitRetry(() =>
-            anthropic.messages.create({
-                model: "claude-3-7-sonnet-20250219",
-                max_tokens: maxTokens,
-                system: systemPrompt,
-                messages,
-                temperature: 0,
-            }, {
+        const requestParams = {
+            model: "claude-3-7-sonnet-20250219",
+            max_tokens: maxTokens,
+            system: systemPrompt,
+            messages,
+            temperature: 0,
+        };
 
-            })
+        await logToFile("Claude Request", requestParams);
+
+        let response = await withRateLimitRetry(() =>
+            anthropic.messages.create(requestParams, {})
         );
+
+        await logToFile("Claude Response", response);
 
         if (!response.content || response.content.length !== 1) {
             throw new Error("Expected 1 response from claude, got " + response.content?.length);
@@ -119,11 +138,14 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
                 responseJson = JSON.parse(responseContent) as T;
             } catch (e) {
                 console.error(`Error parsing Claude response: ${responseContent.slice(0, 100)}`);
+                await logToFile(`Error parsing Claude response: ${responseContent.slice(0, 100)}`, e);
                 throw e;
             }
         } else {
             responseJson = responseContent as T;
         }
+
+        await logToFile("Parsed Result", responseJson);
 
         return {
             usage: response.usage,
@@ -131,6 +153,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         };
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);
+        await logToFile("Error in aiChat", e);
         throw e;
     }
 }
@@ -141,7 +164,6 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         throw new Error("Adaline deployment provider is not anthropic");
     }
 
-    // Check that all message content modalities are "text"
     for (const message of deployment.messages) {
         for (const content of message.content) {
             if (content.modality !== "text") {
@@ -150,7 +172,6 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         }
     }
 
-    // Check that all variable values have text modality
     for (const variable of deployment.variables) {
         if (variable.value.modality !== "text") {
             throw new Error(`Expected text modality in variable value, got ${variable.value.modality}`);
@@ -160,7 +181,6 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         role: msg.role as "user" | "assistant" | "system",
         content: msg.content.map(c => {
             let value = c.value;
-            // Replace variables in the format {varname} with their values
             for (const [varName, varValue] of Object.entries(variables)) {
                 value = value.replace(new RegExp(`{${varName}}`, 'g'), varValue);
             }
@@ -168,16 +188,22 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         }).join('\n')
     }));
 
+    const requestParams = {
+        model: deployment.config.model,
+        messages: messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
+            msg.role === "user" || msg.role === "assistant"),
+        system: messages.find(msg => msg.role === "system")?.content,
+        max_tokens: deployment.config.settings.maxTokens,
+        temperature: deployment.config.settings.temperature,
+    };
+
+    await logToFile("Adaline Claude Request", requestParams);
+
     const response = await withRateLimitRetry(() =>
-        anthropic.messages.create({
-            model: deployment.config.model,
-            messages: messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
-                msg.role === "user" || msg.role === "assistant"),
-            system: messages.find(msg => msg.role === "system")?.content,
-            max_tokens: deployment.config.settings.maxTokens,
-            temperature: deployment.config.settings.temperature,
-        })
+        anthropic.messages.create(requestParams)
     );
+
+    await logToFile("Adaline Claude Response", response);
 
     if (!response.content || response.content.length !== 1) {
         throw new Error("Expected 1 response from claude, got " + response.content?.length);
@@ -189,7 +215,6 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
 
     const completion = response.content[0].text;
 
-    // fire and forget
     submitAdalineLog({
         projectId: projectId,
         provider: deployment.config.provider,
@@ -206,13 +231,14 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
             responseJson = JSON.parse(completion) as T;
         } catch (e) {
             console.error(`Error parsing Claude response: ${completion.slice(0, 100)}`);
+            await logToFile(`Error parsing Claude response: ${completion.slice(0, 100)}`, e);
             throw e;
         }
     } else {
         responseJson = completion as T;
     }
 
-    console.log(responseJson);
+    await logToFile("Adaline Parsed Result", responseJson);
     return {
         usage: response.usage,
         result: responseJson
