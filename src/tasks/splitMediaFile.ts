@@ -1,3 +1,4 @@
+import { getMuxPlaybackId } from "../lib/mux.js";
 import { SplitMediaFileRequest, SplitMediaFileResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import { splitAndUploadMedia } from "./utils/mediaOperations.js";
@@ -27,14 +28,21 @@ export const splitMediaFile: Task<
       partProgress
     );
 
-    results.push({
+    const partResult: SplitMediaFileResult["parts"][0] = {
       id: part.id,
       url: result.url,
       type,
       duration: result.duration,
       startTimestamp: result.startTimestamp,
       endTimestamp: result.endTimestamp,
-    });
+    };
+
+    // Only generate muxPlaybackId for video parts
+    if (type === "video") {
+      partResult.muxPlaybackId = await getMuxPlaybackId(result.url);
+    }
+
+    results.push(partResult);
   }
 
   onProgress(`processing complete`, 100);

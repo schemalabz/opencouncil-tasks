@@ -1,5 +1,3 @@
-import { Router } from "express";
-import { CallbackServer } from "../lib/CallbackServer.js";
 import { TranscribeRequest, TranscribeResult, TranscriptWithSpeakerIdentification } from "../types.js";
 import { applyDiarization } from "./applyDiarization.js";
 import { diarize } from "./diarize.js";
@@ -7,6 +5,7 @@ import { downloadYTV } from "./downloadYTV.js";
 import { splitAudioDiarization } from "./splitAudioDiarization.js";
 import { transcribe } from "./transcribe.js";
 import { uploadToSpaces } from "./uploadToSpaces.js";
+import { getMuxPlaybackId } from "../lib/mux.js";
 import _ from 'underscore';
 import dotenv from "dotenv";
 
@@ -80,25 +79,4 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
         muxPlaybackId: await getMuxPlaybackId(videoUrl),
         transcript: diarizedTranscript
     };
-};
-
-const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID;
-const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET;
-
-const getMuxPlaybackId = async (videoUrl: string) => {
-    if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
-        throw new Error("MUX_TOKEN_ID or MUX_TOKEN_SECRET is not set");
-    }
-
-    const response = await fetch("https://api.mux.com/video/v1/assets", {
-        method: "POST",
-        body: JSON.stringify({ input: videoUrl, playback_policy: ["public"], video_quality: "basic" }),
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Basic ${Buffer.from(`${process.env.MUX_TOKEN_ID}:${process.env.MUX_TOKEN_SECRET}`).toString("base64")}`,
-        },
-    });
-    const data = await response.json();
-    console.log("Got Mux asset", data);
-    return data.data.playback_ids[0].id;
 };
