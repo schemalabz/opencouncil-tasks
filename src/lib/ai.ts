@@ -20,7 +20,7 @@ const useDelay = 1000 * 60;
 let lastUseTimestamp = 0;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const logFilePath = path.join(process.cwd(), 'ai.log');
+const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
 async function logToFile(message: string, data?: any) {
     const timestamp = new Date().toISOString();
     let logEntry = `${timestamp} - ${message}`;
