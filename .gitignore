@@ -14,3 +14,5 @@ elevenlabs-response.json
 # AI Log specific
 ai.log
 sonar.log
+logs/
+
