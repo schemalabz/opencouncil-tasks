@@ -60,6 +60,17 @@ export default class PyannoteDiarizer {
         }
     }
 
+    private generateMockVoiceprint(): string {
+        const mockVector = Array(512).fill(0).map(() => Math.random() - 0.5);
+        const float32Array = new Float32Array(mockVector);
+        const buffer = float32Array.buffer;
+        const bytes = new Uint8Array(buffer);
+        const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+        const base64String = btoa(binary);
+
+        return `MOCK_${base64String}`;
+    }
+
     /**
      * Performs diarization and speaker identification on multiple audio segments.
      * 
@@ -72,8 +83,19 @@ export default class PyannoteDiarizer {
             throw new Error("PYANNOTE_DIARIZE_API_URL and PYANNOTE_API_TOKEN must be set in environment variables");
         }
 
+        // TODO: Find a better way to handle the case where we don't have any voiceprints yet.
+        // Currently using a pre-generated valid voiceprint because Pyannote's /identify endpoint
+        // requires at least one valid voiceprint and rejects dummy/mock ones.
+        // This is a temporary solution until we can either:
+        // 1. Get Pyannote to accept diarization without voiceprints
+        // 2. Implement a proper way to handle initial diarization before having any voiceprints
+        const effectiveVoiceprints = voiceprints?.length ? voiceprints : [{
+            personId: 'DUMMY_SPEAKER',
+            voiceprint: "mRCrvEmgdb7MDnY8eXxePluWCD56zj4+U0GkPh+9Rr/jL+Y8snUPPzKtND3GXY29dDusvZJdtb3cBGi+PaYdv38ddL0d+Ac9kNT3veIbIb5ESH8+1JtZPnL2sL52lno+XMKkPvSRID7DEbG94q9uPTrfmb4T4Qg/phLivfi8qb30WxE++MgXPfDw7TvwiEw8W+4yPm7lE77GiNu++mRdPTW1Iz0USBA/R2k3voAXFL4iHKg+2PX7PXocc77ahsA80qZiPVHWsDzyMsm+zUwSv0iUJz0+XZ49Ad0WP2sM1L0z5pS+gT4+PreVXL0auyi+kqzKvUrxPr7xyw0+moKqPbBLAT7sNYc+8H4gPVy5Yj03HJq9bG9tPt87ib3gVMU9egtJvq7CAD/CNHo+KO3lvTNfq7405zC9CPI+v8lLkj4oyHq+h63ivs70gL7DLZ0+Eb1RPgQMqb68Vw4/7skdPeOwFD4ffuq98CKdPuD+pj2sU6m82JPTvlPVkj4VJU++YNcvvubMoj4Ltha9/qWIPZi8er5EHlG+s3wpvikJgL5wEVY+zjgFPs5bjj4v9W492pWQPswTEj2p0sW9uyukPTRcpz2sHFe+3qbEvgrP171wy969XaLRPpCxdr7wJWG9xVmVPiXvn76zZKC9zqFtvrZlUj2k3YK+sM6OPpSl0T2fdTm+KpB2vii2dj7G6708eFICvhqjCT8hE2E+3lthPs4mbD5iRAS+lrdwPRvZ7D0e9uA+Gv89PgLpAr1Zhaa8nH59vsNSBL7j+4W+/sBOvj6sVL3cWNW8gjmRPqikhL6KWKa9NlRWvmto9D6lWx6+Hz53vujTpT1Y+ru9/5ZePb9oyz26eJ4+T6gmvhueqz4kscE904qevfYwKL5kThi94D5cvu3nrz1FxxE9nO1MvX4t5T2YKVw9an3LvYAMEDkIgUO+tD9ovXRQkL2myJs+npODvfI1v72ppEk+wh41veAneT6mCAk+jQAtPkFoI76+Xom+UZZ/vpWaqb7g4Ly+0IQQur5K9zxjQBy9IYKaPdirgTxPXRU+JCfIPXGhWD1rG+y+Ck2HvTXumz78NIg+rLZdPhjH3T7ZieI9L90cPoLSKL4XwlQ9KF0YPhzfGj857Vq89ueHPXqyiz5grh+9PdAovtpuCD6nXKM+kupHPTZckT5+GQc/SuvVPGwLK7565fi91gRDPb3XIT3D2PE+n2YWvywpAz1y6xO/YUnDPVVyizwR1pa9BWhAPTqOlr6aUMC+NztnPh4PnT7VN50+JYMCvmjFfD1DbNC9nDCZvJIBmzsLY9C9DukvPNx9sb3M0Ko+XVa8PRr9jz4fFV6+6oGtPjABjzxUsW0+eisevg=="
+        }];
+
         console.log(`Diarizing ${audioSegments.length} segments: ${audioSegments.map(({ url, start }) => `${url} (${start})`).join(', ')}`);
-        const identificationPromises = audioSegments.map(({ url, start }) => this.identifySingle(url, voiceprints || []));
+        const identificationPromises = audioSegments.map(({ url, start }) => this.identifySingle(url, effectiveVoiceprints));
         const identifications = await Promise.all(identificationPromises);
         return this.combineDiarizations(identifications.map((identification, index) => ({
             diarization: identification.output.diarization,
@@ -100,18 +122,7 @@ export default class PyannoteDiarizer {
     async generateVoiceprint(audioUrl: string): Promise<string> {
         if (MOCK_ENABLED) {
             console.log(`[MOCK MODE] Generating mock voiceprint for: ${audioUrl}`);
-            const mockVector = Array(512).fill(0).map(() => Math.random() - 0.5);
-
-            // Convert the array to a Float32Array
-            const float32Array = new Float32Array(mockVector);
-
-            // Convert to base64 string
-            const buffer = float32Array.buffer;
-            const bytes = new Uint8Array(buffer);
-            const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-            const base64String = btoa(binary);
-
-            return `MOCK_${base64String}`;
+            return this.generateMockVoiceprint();
         }
 
         if (!baseUrl || !apiToken) {
