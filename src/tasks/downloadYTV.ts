@@ -40,7 +40,7 @@ const randomId = () => Math.random().toString(36).substring(2, 15);
 const getVideoIdAndUrl = async (mediaUrl: string) => {
     if (mediaUrl.includes("youtube.com")) {
         const videoId = mediaUrl.split("v=")[1];
-        const videoUrl = await getCobaltStreamUrl(mediaUrl, { vQuality: "360" });
+        const videoUrl = await getCobaltStreamUrl(mediaUrl, { videoQuality: "360" });
         return { videoId, videoUrl };
     }
 
@@ -101,7 +101,7 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
     });
 }
 
-const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, vQuality?: string } = {}) => {
+const getCobaltStreamUrl = async (url: string, options: { videoQuality?: string } = {}) => {
     const cobaltApiUrl = `${COBALT_API_BASE_URL}`;
     const headers = {
         'Content-Type': 'application/json',
@@ -112,11 +112,39 @@ const getCobaltStreamUrl = async (url: string, options: { audioOnly?: boolean, v
     const response = await fetch(cobaltApiUrl, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ url, isAudioOnly: options.audioOnly, vQuality: options.vQuality })
+        body: JSON.stringify({ url, videoQuality: options.videoQuality })
     });
 
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const errorMessage = errorData?.error 
+            ? `Cobalt API error: ${errorData.error.code}${errorData.error.context ? ` - Context: ${JSON.stringify(errorData.error.context)}` : ''}`
+            : `Cobalt API request failed with status ${response.status}: ${response.statusText}`;
+        throw new Error(errorMessage);
+    }
+
     const data = await response.json();
-    return data.url;
+    
+    if (!data || typeof data !== 'object') {
+        throw new Error('Invalid response from Cobalt API: response is not a valid JSON object');
+    }
+
+    // Handle different response types
+    // see https://github.com/imputnet/cobalt/blob/main/docs/api.md
+    switch (data.status) {
+        case 'error':
+            throw new Error(`Cobalt API error: ${data.error?.code || 'Unknown error'}`);
+        case 'picker':
+            throw new Error('Multiple items found - picker response not supported');
+        case 'redirect':
+        case 'tunnel':
+            if (!data.url || typeof data.url !== 'string') {
+                throw new Error('Invalid response from Cobalt API: missing or invalid url field');
+            }
+            return data.url;
+        default:
+            throw new Error(`Unknown response status from Cobalt API: ${data.status}`);
+    }
 }
 
 const HEADERS = {
