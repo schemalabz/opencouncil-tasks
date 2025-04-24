@@ -1,7 +1,6 @@
 node_modules/
 dist/
 data/
-.env*
 yarn-error.log
 cookies.json
 scrapeData.json
@@ -16,3 +15,6 @@ ai.log
 sonar.log
 logs/
 
+# local env files
+.env*.local
+.env
