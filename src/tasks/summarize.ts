@@ -83,7 +83,7 @@ export const extractSubjects: Task<{
     const transcript = request.transcript;
 
     const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, request.topicLabels, additionalInstructions);
-    const transcriptParts = splitTranscript(transcript, 150000);
+    const transcriptParts = splitTranscript(transcript, 130000);
 
     const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, existingSubjects.map(s => ({
         ...s,
