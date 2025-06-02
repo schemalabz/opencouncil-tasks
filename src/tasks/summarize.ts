@@ -134,7 +134,7 @@ export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript & { a
     console.log(`- ${toSummarizeWordCount} words to summarize (only ${Math.round(toSummarizeWordCount / originalWordCount * 100)}% of total)`);
 
     const systemPrompt = getSummarizeSystemPrompt(cityName, date, topicLabels, additionalInstructions);
-    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 150000);
+    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 250000);
     console.log(`User prompt split into ${userPrompts.length} prompts, with lengths: ${userPrompts.map(p => p.length).join(', ')}`);
 
     const summariesAndLabels = await aiSummarize(systemPrompt, userPrompts, onProgress);
