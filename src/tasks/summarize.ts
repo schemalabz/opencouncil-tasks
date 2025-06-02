@@ -83,7 +83,7 @@ export const extractSubjects: Task<{
     const transcript = request.transcript;
 
     const systemPrompt = getExtractSubjectsSystemPrompt(request.cityName, request.date, request.topicLabels, additionalInstructions);
-    const transcriptParts = splitTranscript(transcript, 35000);
+    const transcriptParts = splitTranscript(transcript, 150000);
 
     const subjects = await aiExtractSubjects(systemPrompt, transcriptParts, existingSubjects.map(s => ({
         ...s,
@@ -134,7 +134,7 @@ export const extractSpeakerSegmentSummaries: Task<Omit<RequestOnTranscript & { a
     console.log(`- ${toSummarizeWordCount} words to summarize (only ${Math.round(toSummarizeWordCount / originalWordCount * 100)}% of total)`);
 
     const systemPrompt = getSummarizeSystemPrompt(cityName, date, topicLabels, additionalInstructions);
-    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 75000);
+    const userPrompts = splitUserPrompts(segmentsToSummarize.map(speakerSegmentToPrompt), 150000);
     console.log(`User prompt split into ${userPrompts.length} prompts, with lengths: ${userPrompts.map(p => p.length).join(', ')}`);
 
     const summariesAndLabels = await aiSummarize(systemPrompt, userPrompts, onProgress);

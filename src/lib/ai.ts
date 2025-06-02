@@ -15,9 +15,7 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
     cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
 });
-const maxTokens = 8192;
-const useDelay = 1000 * 60;
-let lastUseTimestamp = 0;
+const maxTokens = 64000;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
@@ -63,8 +61,6 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true }: AiChatOptions): Promise<ResultWithUsage<T>> {
-    lastUseTimestamp = Date.now();
-
     try {
         console.log(`Sending message to claude...`);
         let messages: Anthropic.Messages.MessageParam[] = [];
@@ -89,7 +85,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         }
 
         const requestParams = {
-            model: "claude-3-7-sonnet-20250219",
+            model: "claude-sonnet-4-20250514",
             max_tokens: maxTokens,
             system: systemPrompt,
             messages,
