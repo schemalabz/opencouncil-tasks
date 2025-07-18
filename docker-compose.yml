@@ -14,6 +14,8 @@ services:
     restart: unless-stopped
     depends_on:
       - cobalt-api
+      - elastic-connector
+
   cobalt-api:
     image: ghcr.io/imputnet/cobalt:10
     restart: unless-stopped
@@ -30,6 +32,18 @@ services:
         - com.centurylinklabs.watchtower.scope=cobalt
     volumes:
       - ./secrets:/secrets
+
+  elastic-connector:
+    image: docker.elastic.co/integrations/elastic-connectors:9.0.0
+    volumes:
+      - ./connectors-config:/config
+    environment:
+      - ELASTICSEARCH_HOST=${ELASTICSEARCH_HOST}
+      - ELASTICSEARCH_API_KEY=${ELASTICSEARCH_API_KEY}
+      - ELASTICSEARCH_CONNECTOR_ID=${ELASTICSEARCH_CONNECTOR_ID}
+    env_file:
+      - .env
+    command: /app/bin/elastic-ingest -c /config/config.yml
 
 x-buildkit:
   enabled: true

@@ -1,0 +1,11 @@
+services:
+  app:
+    networks:
+      - opencouncil-net
+  cobalt-api:
+    networks:
+      - opencouncil-net
+
+networks:
+  opencouncil-net:
+    external: true

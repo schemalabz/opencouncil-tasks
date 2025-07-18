@@ -16,6 +16,7 @@ import { splitMediaFile } from './tasks/splitMediaFile.js';
 import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
+import { syncElasticsearch } from './tasks/syncElasticsearch.js';
 
 dotenv.config();
 
@@ -77,6 +78,7 @@ app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
 app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
 app.post('/processAgenda', taskManager.serveTask(processAgenda));
 app.post('/generateVoiceprint', taskManager.serveTask(generateVoiceprint));
+app.post('/syncElasticsearch', taskManager.serveTask(syncElasticsearch));
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
@@ -174,6 +176,15 @@ process.on('SIGTERM', async () => {
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+
+    console.log('\nAvailable Endpoints:');
+    (app as any)._router.stack.forEach((middleware: any) => {
+        if (middleware.route) { // routes registered directly on the app
+            const methods = Object.keys(middleware.route.methods).map(method => method.toUpperCase()).join(', ');
+            console.log(`  ${methods.padEnd(8)} ${middleware.route.path}`);
+        }
+    });
+    console.log();
 });
 
 if (process.argv.includes('--console')) {

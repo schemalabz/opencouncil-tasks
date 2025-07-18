@@ -24,6 +24,9 @@ The server supports the following processing tasks:
 - [`applyDiarization`](src/tasks/applyDiarization.ts) - Applies speaker identification to existing transcripts
 - [`generateVoiceprint`](src/tasks/generateVoiceprint.ts) - Creates unique speaker voice fingerprints for identification
 
+### Data Synchronization
+- [`syncElasticsearch`](src/tasks/syncElasticsearch.ts) - Triggers and monitors a data synchronization job between PostgreSQL and Elasticsearch.
+
 The [`pipeline`](src/tasks/pipeline.ts) task orchestrates multiple tasks above in sequence, providing a complete end-to-end processing workflow.
 
 ## 🛠️ Development Setup
@@ -47,13 +50,42 @@ cp .env.example .env
 
 Then edit the file to include your specific [configuration values](#configuration).
 
+
 ### Docker Setup (Recommended)
 
-The Docker setup includes both the main service and the Cobalt API service for YouTube video processing. The services are automatically configured to work together through Docker's internal network.
+The Docker setup includes the main service, the Cobalt API service for YouTube video processing, and the Elastic connector for data synchronization.
+
+#### Standalone Mode
+
+If you are running this service by itself without needing to connect to the main OpenCouncil application, you can start it with the standard command:
 
 ```bash
+# This runs the app service and its dependencies
 docker compose up app
 ```
+
+#### Integrated Development Mode
+
+This mode is for when you are developing locally and need this service to communicate with the main `opencouncil` application.
+
+**Prerequisite**
+
+Before starting in this mode, you must first start the main `opencouncil` project using its `./run.sh` script. This step is essential because it creates the shared Docker network named `opencouncil-net` that this project will connect to.
+
+**Command**
+
+Once the `opencouncil` project is running, start this tasks service with the following command:
+
+```bash
+# Use this for local development alongside the main opencouncil project
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up app
+```
+
+**How it Works**
+
+This command uses the `docker-compose.dev.yml` file, which tells Docker to connect this project's services to the `external` network named `opencouncil-net`.
+
+This allows the two projects to communicate directly and efficiently within Docker.
 
 ### Manual Setup
 ```bash
@@ -127,6 +159,9 @@ The service uses environment variables for configuration. Not all variables are 
 - `PYANNOTE_API_TOKEN` - Required for speaker diarization
 - `PYANNOTE_DIARIZE_API_URL` - Pyannote API endpoint
 - `MOCK_PYANNOTE` - Enable mock mode for Pyannote (development only)
+- `ELASTICSEARCH_HOST` - Elasticsearch host URL
+- `ELASTICSEARCH_API_KEY` - Elasticsearch API key for the connector
+- `ELASTICSEARCH_CONNECTOR_ID` - The ID of the Elasticsearch connector
 
 ### Task-Specific Configuration
 - `GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 20) - Maximum concurrent transcription tasks
