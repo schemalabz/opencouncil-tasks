@@ -46,6 +46,15 @@ export const formatTime = (time: number): string => {
 };
 
 /**
+ * Helper function to detect if we're using MinIO
+ * @returns true if using MinIO (development), false if using DO Spaces (production)
+ */
+export const isUsingMinIO = (): boolean => {
+    const endpoint = process.env.DO_SPACES_ENDPOINT;
+    return endpoint?.includes('minio') || endpoint?.includes('localhost') || false;
+};
+
+/**
  * Utility class for compressing long IDs into shorter ones and vice versa.
  * Maintains a bidirectional mapping between long and short IDs.
  */

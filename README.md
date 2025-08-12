@@ -53,39 +53,31 @@ Then edit the file to include your specific [configuration values](#configuratio
 
 ### Docker Setup (Recommended)
 
-The Docker setup includes the main service, the Cobalt API service for YouTube video processing, and the Elastic connector for data synchronization.
-
-#### Standalone Mode
-
-If you are running this service by itself without needing to connect to the main OpenCouncil application, you can start it with the standard command:
+#### Quick start (development)
 
 ```bash
-# This runs the app service and its dependencies
-docker compose up app
-```
-
-#### Integrated Development Mode
-
-This mode is for when you are developing locally and need this service to communicate with the main `opencouncil` application.
-
-**Prerequisite**
-
-Before starting in this mode, you must first start the main `opencouncil` project using its `./run.sh` script. This step is essential because it creates the shared Docker network named `opencouncil-net` that this project will connect to.
-
-**Command**
-
-Once the `opencouncil` project is running, start this tasks service with the following command:
-
-```bash
-# Use this for local development alongside the main opencouncil project
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up app
 ```
 
-**How it Works**
+What this gives you:
+- Hot reload (bind-mounted `./src` via `Dockerfile.dev`)
+- Local S3 via MinIO: console `http://localhost:9001`, API `http://localhost:9000`
+- Dev routes:
+  - POST `/dev/test-upload` → tests the real upload pipeline
+  - GET `/dev/files/:bucket/*` → serves files from MinIO (via `CDN_BASE_URL`)
+- Mock Mux playback IDs when MinIO is detected
 
-This command uses the `docker-compose.dev.yml` file, which tells Docker to connect this project's services to the `external` network named `opencouncil-net`.
+Notes:
+- Ensure `.env` has `PORT` and `DO_SPACES_BUCKET`; optionally set `NO_AUTH=true` for local testing.
+- Create the MinIO bucket (from `DO_SPACES_BUCKET`, e.g. `opencouncil-dev`) in the MinIO console if missing.
+- When `DO_SPACES_ENDPOINT` includes `minio` or `localhost`, uploads go to MinIO and Mux playback IDs are mocked.
+- Shared network with main app: if you run the main `opencouncil` app via `./run.sh`, it creates `opencouncil-net`. Otherwise, create it once: `docker network create opencouncil-net || true`. The `docker-compose.dev.yml` connects to this network.
 
-This allows the two projects to communicate directly and efficiently within Docker.
+#### Production-like run (no hot reload, no MinIO)
+
+```bash
+docker compose up app
+```
 
 ### Manual Setup
 ```bash

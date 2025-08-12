@@ -5,6 +5,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { Task } from './pipeline.js';
 import mime from 'mime/lite';
+import { isUsingMinIO } from '../utils.js';
 dotenv.config();
 
 interface UploadFilesArgs {
@@ -16,9 +17,6 @@ const FORCE_REUPLOAD = false;
 const VERSION = "1";
 
 export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, spacesPath }, onProgress) => {
-    // Detect if we're using MinIO by endpoint
-    const isMinIO = process.env.DO_SPACES_ENDPOINT?.includes('minio') || 
-                   process.env.DO_SPACES_ENDPOINT?.includes('localhost');
     
     const spacesEndpoint = new S3({
         endpoint: process.env.DO_SPACES_ENDPOINT,
@@ -26,7 +24,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
         secretAccessKey: process.env.DO_SPACES_SECRET,
         region: "fra1",
         // Only add MinIO-specific config when needed
-        ...(isMinIO && {
+        ...(isUsingMinIO() && {
             s3ForcePathStyle: true,
             signatureVersion: 'v4'
         })
