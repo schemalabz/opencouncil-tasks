@@ -17,6 +17,7 @@ import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { syncElasticsearch } from './tasks/syncElasticsearch.js';
+import devRouter from './routes/dev.js';
 
 dotenv.config();
 
@@ -79,6 +80,12 @@ app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
 app.post('/processAgenda', taskManager.serveTask(processAgenda));
 app.post('/generateVoiceprint', taskManager.serveTask(generateVoiceprint));
 app.post('/syncElasticsearch', taskManager.serveTask(syncElasticsearch));
+
+// Development routes (only in development mode)
+if (process.env.NODE_ENV === 'development') {
+    app.use('/dev', devRouter);
+    console.log('🔧 Development routes mounted at /dev');
+}
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 

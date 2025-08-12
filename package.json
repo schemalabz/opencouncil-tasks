@@ -7,7 +7,8 @@
     "build": "tsc",
     "dev": "nodemon --watch .env --watch src --exec \"tsx\" src/server.ts",
     "start": "node dist/server.js",
-    "cli": "tsc && node dist/cli.js"
+    "cli": "tsc && node dist/cli.js",
+    "test:upload": "curl -X POST http://localhost:3005/dev/test-upload"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
