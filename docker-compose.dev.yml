@@ -1,5 +1,17 @@
 services:
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env 
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./secrets:/app/secrets
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=development
     networks:
       - opencouncil-net
   cobalt-api:

@@ -1,0 +1,20 @@
+# Development Dockerfile with hot reloading support
+FROM node:20-alpine
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package.json package-lock.json ./
+
+# Install all dependencies (including dev dependencies)
+# Using cache mount for faster builds - this persists npm cache across builds
+# See: https://docs.docker.com/build/cache/
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
+
+# Expose the port the app runs on
+EXPOSE ${PORT}
+
+# Start the development server with hot reloading
+CMD ["npm", "run", "dev"] 
