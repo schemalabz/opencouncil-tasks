@@ -32,10 +32,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
-const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
-
 if (process.env.NO_AUTH !== 'true') {
+    const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
+    const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
+    
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
         const authHeader = req.headers.authorization;
 

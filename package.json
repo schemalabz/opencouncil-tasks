@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "tsc && node dist/server.js",
+    "dev": "nodemon --watch .env --watch src --exec \"tsx\" src/server.ts",
     "start": "node dist/server.js",
     "cli": "tsc && node dist/cli.js"
   },
@@ -26,11 +26,12 @@
     "underscore": "^1.13.7"
   },
   "devDependencies": {
-    "@anysphere/priompt-preview": "^0.1.27",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/node": "^22.5.4",
-    "@types/underscore": "^1.11.15"
+    "@types/underscore": "^1.11.15",
+    "nodemon": "^3.1.10",
+    "tsx": "^4.20.3"
   },
   "engines": {
     "node": "^20.11.1"
