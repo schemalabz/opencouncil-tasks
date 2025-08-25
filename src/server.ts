@@ -16,6 +16,7 @@ import { splitMediaFile } from './tasks/splitMediaFile.js';
 import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
+import { generateHighlight } from './tasks/generateHighlight.js';
 import { syncElasticsearch } from './tasks/syncElasticsearch.js';
 import devRouter from './routes/dev.js';
 
@@ -79,6 +80,7 @@ app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
 app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
 app.post('/processAgenda', taskManager.serveTask(processAgenda));
 app.post('/generateVoiceprint', taskManager.serveTask(generateVoiceprint));
+app.post('/generateHighlight', taskManager.serveTask(generateHighlight));
 app.post('/syncElasticsearch', taskManager.serveTask(syncElasticsearch));
 
 // Development routes (only in development mode)
