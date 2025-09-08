@@ -1,7 +1,7 @@
 import { getMuxPlaybackId } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { splitAndUploadMedia, generateSocialFilter } from "./utils/mediaOperations.js";
+import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSocialWithCaptionsFilter } from "./utils/mediaOperations.js";
 
 export const generateHighlight: Task<
   GenerateHighlightRequest,
@@ -28,6 +28,9 @@ export const generateHighlight: Task<
 
     let result;
 
+    // Generate video filters based on render options
+    let videoFilters: string | undefined;
+
     // Check if social media transformation is needed
     if (render.aspectRatio === 'social-9x16') {
       // Inline social media transformation logic
@@ -44,9 +47,14 @@ export const generateHighlight: Task<
         zoomFactor: Math.max(0.6, Math.min(1.0, social.zoomFactor || 1.0)) // Clamp to valid range
       };
       
-      const socialFilter = generateSocialFilter(socialOptions);
+      // Generate filter with or without captions
+      if (render.includeCaptions) {
+        console.log(`📝 Generating social filter with captions for ${part.utterances.length} utterances`);
+        videoFilters = await generateSocialWithCaptionsFilter(socialOptions, part.utterances);
+      } else {
+        videoFilters = generateSocialFilter(socialOptions);
+      }
       
-      console.log(`🎬 Social filter generated:`, socialFilter);
       partProgress(20);
       
       // Apply social transformation to media processing pipeline
@@ -56,20 +64,27 @@ export const generateHighlight: Task<
         segments,
         `highlights`,
         (progress) => partProgress(20 + progress * 0.8), // Map to 20-100% range
-        socialFilter // Pass the social filter to FFmpeg
+        videoFilters // Pass the combined filter to FFmpeg
       );
       
       const overallEndTime = Date.now();
       const overallDuration = overallEndTime - overallStartTime;
       console.log(`⏱️  Social media transformation completed in ${overallDuration}ms (${(overallDuration/1000).toFixed(2)}s)`);
     } else {
-      // Use standard media operations (default - no transformation)
+      // Default aspect ratio processing
+      if (render.includeCaptions) {
+        console.log(`📝 Generating captions for ${part.utterances.length} utterances in default format`);
+        videoFilters = await generateCaptionFilters(part.utterances, 'default');
+      }
+
+      // Use standard media operations with optional caption filters
       result = await splitAndUploadMedia(
         media.videoUrl,
         media.type,
         segments,
         `highlights`,
-        partProgress
+        partProgress,
+        videoFilters
       );
     }
 
