@@ -1,7 +1,7 @@
 import { getMuxPlaybackId } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSocialWithCaptionsFilter } from "./utils/mediaOperations.js";
+import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter } from "./utils/mediaOperations.js";
 
 export const generateHighlight: Task<
   GenerateHighlightRequest,
@@ -29,64 +29,66 @@ export const generateHighlight: Task<
     let result;
 
     // Generate video filters based on render options
+    // Filter chain: social_transform → speaker_overlays → captions
     let videoFilters: string | undefined;
+    const aspectRatio = render.aspectRatio || 'default';
+    const isSocial = aspectRatio === 'social-9x16';
 
-    // Check if social media transformation is needed
-    if (render.aspectRatio === 'social-9x16') {
-      // Inline social media transformation logic
-      const overallStartTime = Date.now();
+    if (isSocial) {
       console.log(`⏱️  Starting social media transformation...`);
-      
       partProgress(10);
-      
-      // Parse social options with sensible defaults
+    }
+
+    // Step 1: Social transformation (if needed)
+    let baseFilter = '';
+    if (isSocial) {
       const social = render.socialOptions || {};
       const socialOptions: Required<NonNullable<GenerateHighlightRequest['render']['socialOptions']>> = {
         marginType: social.marginType || 'blur',
         backgroundColor: social.backgroundColor || '#000000',
-        zoomFactor: Math.max(0.6, Math.min(1.0, social.zoomFactor || 1.0)) // Clamp to valid range
+        zoomFactor: Math.max(0.6, Math.min(1.0, social.zoomFactor || 1.0))
       };
-      
-      // Generate filter with or without captions
-      if (render.includeCaptions) {
-        console.log(`📝 Generating social filter with captions for ${part.utterances.length} utterances`);
-        videoFilters = await generateSocialWithCaptionsFilter(socialOptions, part.utterances);
-      } else {
-        videoFilters = generateSocialFilter(socialOptions);
-      }
-      
-      partProgress(20);
-      
-      // Apply social transformation to media processing pipeline
-      result = await splitAndUploadMedia(
-        media.videoUrl,
-        media.type,
-        segments,
-        `highlights`,
-        (progress) => partProgress(20 + progress * 0.8), // Map to 20-100% range
-        videoFilters // Pass the combined filter to FFmpeg
-      );
-      
-      const overallEndTime = Date.now();
-      const overallDuration = overallEndTime - overallStartTime;
-      console.log(`⏱️  Social media transformation completed in ${overallDuration}ms (${(overallDuration/1000).toFixed(2)}s)`);
-    } else {
-      // Default aspect ratio processing
-      if (render.includeCaptions) {
-        console.log(`📝 Generating captions for ${part.utterances.length} utterances in default format`);
-        videoFilters = await generateCaptionFilters(part.utterances, 'default');
-      }
-
-      // Use standard media operations with optional caption filters
-      result = await splitAndUploadMedia(
-        media.videoUrl,
-        media.type,
-        segments,
-        `highlights`,
-        partProgress,
-        videoFilters
-      );
+      baseFilter = generateSocialFilter(socialOptions);
+      partProgress(15);
     }
+
+    // Step 2: Speaker overlays (if enabled)
+    let speakerFilter = '';
+    if (render.includeSpeakerOverlay) {
+      console.log(`👤 Generating speaker overlays for ${part.utterances.length} utterances`);
+      speakerFilter = await generateSpeakerOverlayFilter(part.utterances, aspectRatio);
+      partProgress(isSocial ? 18 : 10);
+    }
+
+    // Step 3: Captions (if enabled)
+    let captionFilter = '';
+    if (render.includeCaptions) {
+      console.log(`📝 Generating captions for ${part.utterances.length} utterances in ${aspectRatio} format`);
+      captionFilter = await generateCaptionFilters(part.utterances, aspectRatio);
+      partProgress(isSocial ? 20 : 15);
+    }
+
+    // Combine all filters in the correct order
+    const filterParts = [baseFilter, speakerFilter, captionFilter].filter(f => f.length > 0);
+    if (filterParts.length > 0) {
+      videoFilters = filterParts.join(',');
+      console.log(`🎬 Combined filter chain: ${filterParts.length} filter(s)`);
+    }
+
+    // Apply combined filters to media processing pipeline
+    const progressStart = isSocial ? 20 : 15;
+    const progressRange = 100 - progressStart - 5; // Leave 5% for final steps
+    
+    result = await splitAndUploadMedia(
+      media.videoUrl,
+      media.type,
+      segments,
+      `highlights`,
+      (progress) => partProgress(progressStart + progress * (progressRange / 100)),
+      videoFilters
+    );
+
+
 
     const highlightResult: GenerateHighlightResult["parts"][0] = {
       id: part.id,

@@ -53,6 +53,47 @@ const CAPTION_CONSTANTS = {
     FONT_FILENAME: 'relative-book-pro.ttf',
 };
 
+// Speaker overlay constants for easy modification and iteration
+const SPEAKER_OVERLAY_CONSTANTS = {
+    // Feature flags (server-side only)
+    ENABLED: true,                        // Master enable/disable
+    PARTY_ACCENT_ENABLED: true,          // Default to false (opt-in)
+    DISPLAY_MODE: 'always' as 'always' | 'on_speaker_change', // Default: always show
+    
+    // 16:9 (Default) positioning
+    DEFAULT_TOP_PADDING: 20,
+    DEFAULT_LEFT_PADDING: 20,
+    DEFAULT_FONT_SIZE: 16,               // Base font size - smaller than captions (24)
+    DEFAULT_MAX_WIDTH: 280,
+    
+    // 9:16 (Social) positioning - above main video, left-aligned like 16:9
+    SOCIAL_LEFT_PADDING: 20,             // Same left alignment as 16:9
+    SOCIAL_VIDEO_TOP_OFFSET: 80,         // Increased offset to avoid video overlap
+    SOCIAL_FONT_SIZE: 20,                // Base font size - smaller than captions (28)
+    SOCIAL_MAX_WIDTH: 450,               // Increased to accommodate longer names
+    
+    // Typography hierarchy
+    SPEAKER_NAME_FONT_RATIO: 1.2,        // Speaker name 20% larger than base
+    PARTY_INFO_FONT_RATIO: 0.85,         // Party info 15% smaller than base
+    
+    // Styling - differentiated from captions
+    BACKGROUND_COLOR: 'black@0.8',       // More opaque than captions (0.7)
+    TEXT_COLOR: '#e0e0e0',               // Slightly off-white vs pure white captions
+    BORDER_WIDTH: 0,                     // No border vs captions (2px)
+    BORDER_COLOR: 'black@0.3',
+    
+    // Party color accent (Option A: Left Border)
+    PARTY_ACCENT_WIDTH: 3,                // Subtle left border width
+    
+    // Layout spacing for single box design
+    INTERNAL_LINE_SPACING: 6,            // Space between name and party within the box
+    PADDING_HORIZONTAL: 16,              // Increased padding for better visual separation
+    PADDING_VERTICAL: 12,
+    
+    // Timing
+    FADE_DURATION: 0.2,
+};
+
 /**
  * Generate FFmpeg filter for social-9x16 transformation
  * Converts 16:9 input to 9:16 output with configurable margins and zoom
@@ -313,26 +354,321 @@ function escapeTextForFFmpeg(text: string, aspectRatio: 'default' | 'social-9x16
 }
 
 /**
- * Combine social transformation and caption filters
- * Returns a complete filter chain for social media format with captions
+ * Calculate the Y position where video content starts in social (9:16) format
+ * Based on zoom factor and centering logic from generateSocialFilter
  */
-export async function generateSocialWithCaptionsFilter(
-    socialOptions: Required<NonNullable<GenerateHighlightRequest['render']['socialOptions']>>,
+function calculateSocialVideoTopPosition(zoomFactor: number = 1.0): number {
+    // Same calculation as in generateSocialFilter
+    const videoHeight = Math.round(405 + (SOCIAL_CONSTANTS.ASSUMED_INPUT_WIDTH - 405) * (1 - zoomFactor));
+    
+    // Video is centered vertically: y = (totalHeight - videoHeight) / 2
+    const videoTopY = Math.round((SOCIAL_CONSTANTS.TARGET_HEIGHT - videoHeight) / 2);
+    
+    return videoTopY;
+}
+
+// Speaker overlay types and interfaces
+interface SpeakerInfo {
+    name: string;
+    role?: string;
+    party?: string;
+    partyColor?: string;
+}
+
+interface SpeakerDisplaySegment {
+    speakerInfo: SpeakerInfo;
+    startTime: number;
+    endTime: number;
+    showOverlay: boolean;
+}
+
+/**
+ * Format speaker information for display
+ * Returns primary text (name) and secondary text (role, party)
+ */
+function formatSpeakerInfo(speaker?: GenerateHighlightRequest['parts'][0]['utterances'][0]['speaker']): SpeakerInfo {
+    const name = speaker?.name || 'Unknown Speaker';
+    
+    return {
+        name,
+        role: speaker?.roleLabel,
+        party: speaker?.partyLabel,
+        partyColor: speaker?.partyColorHex
+    };
+}
+
+/**
+ * Calculate when to show speaker overlays based on display mode
+ * Handles both 'always' mode and 'on_speaker_change' mode
+ */
+function calculateSpeakerDisplaySegments(
     utterances: Array<{
         text: string;
         startTimestamp: number;
         endTimestamp: number;
-    }>
-): Promise<string> {
-    const socialFilter = generateSocialFilter(socialOptions);
-    const captionFilter = await generateCaptionFilters(utterances, 'social-9x16');
+        speaker?: GenerateHighlightRequest['parts'][0]['utterances'][0]['speaker'];
+    }>,
+    displayMode: 'always' | 'on_speaker_change'
+): SpeakerDisplaySegment[] {
+    if (utterances.length === 0) {
+        return [];
+    }
+
+    // Normalize timestamps for concatenated timeline
+    const normalizedUtterances = normalizeUtteranceTimestamps(utterances);
     
-    if (!captionFilter) {
-        return socialFilter;
+    const segments: SpeakerDisplaySegment[] = [];
+    let lastSpeakerId: string | undefined;
+
+    for (const utterance of normalizedUtterances) {
+        const currentSpeakerId = utterance.originalStart + '-' + (utterance.text || 'unknown'); // Use a combination for uniqueness
+        const speakerInfo = formatSpeakerInfo(utterances.find(u => 
+            u.startTimestamp === utterance.originalStart && u.endTimestamp === utterance.originalEnd
+        )?.speaker);
+
+        let showOverlay = false;
+
+        if (displayMode === 'always') {
+            showOverlay = true;
+        } else if (displayMode === 'on_speaker_change') {
+            // Show overlay when speaker changes or for the first utterance
+            const actualSpeakerId = utterances.find(u => 
+                u.startTimestamp === utterance.originalStart && u.endTimestamp === utterance.originalEnd
+            )?.speaker?.id || speakerInfo.name;
+            
+            showOverlay = !lastSpeakerId || lastSpeakerId !== actualSpeakerId;
+            lastSpeakerId = actualSpeakerId;
+        }
+
+        segments.push({
+            speakerInfo,
+            startTime: utterance.normalizedStart,
+            endTime: utterance.normalizedEnd,
+            showOverlay
+        });
+    }
+
+    return segments;
+}
+
+/**
+ * Generate FFmpeg drawtext filter for speaker overlay (single box design)
+ */
+function generateSpeakerOverlayDrawtext(
+    segment: SpeakerDisplaySegment,
+    aspectRatio: 'default' | 'social-9x16',
+    fontPath: string
+): string[] {
+    const isSocial = aspectRatio === 'social-9x16';
+    const constants = SPEAKER_OVERLAY_CONSTANTS;
+    
+    // Calculate positioning
+    let xPosition: string;
+    let yPosition: number;
+    
+    if (isSocial) {
+        // Left-aligned like 16:9, positioned above video content
+        xPosition = constants.SOCIAL_LEFT_PADDING.toString();
+        const videoTopY = calculateSocialVideoTopPosition(1.0); // Default zoom for calculation
+        yPosition = videoTopY - constants.SOCIAL_VIDEO_TOP_OFFSET;
+    } else {
+        // 16:9 default positioning
+        xPosition = constants.DEFAULT_LEFT_PADDING.toString();
+        yPosition = constants.DEFAULT_TOP_PADDING;
     }
     
-    // Combine filters: social transformation, then caption overlay
-    return `${socialFilter},${captionFilter}`;
+    // Calculate font sizes for hierarchy
+    const baseFontSize = isSocial ? constants.SOCIAL_FONT_SIZE : constants.DEFAULT_FONT_SIZE;
+    const nameFont = Math.round(baseFontSize * constants.SPEAKER_NAME_FONT_RATIO);
+    const partyFont = Math.round(baseFontSize * constants.PARTY_INFO_FONT_RATIO);
+    
+    const speakerName = segment.speakerInfo.name;
+    const partyInfo: string[] = [];
+    if (segment.speakerInfo.role) partyInfo.push(segment.speakerInfo.role);
+    if (segment.speakerInfo.party) partyInfo.push(segment.speakerInfo.party);
+    
+    const filters: string[] = [];
+    
+    // Calculate unified box dimensions for consistent background
+    const hasPartyInfo = partyInfo.length > 0;
+    const totalHeight = hasPartyInfo ? 
+        nameFont + partyFont + constants.INTERNAL_LINE_SPACING + (constants.PADDING_VERTICAL * 2) :
+        nameFont + (constants.PADDING_VERTICAL * 2);
+    
+    // Calculate box width with proper constraints for each aspect ratio
+    const maxWidthConstraint = isSocial ? constants.SOCIAL_MAX_WIDTH : constants.DEFAULT_MAX_WIDTH;
+    
+    // More accurate font width estimation - typical font character width is ~0.7-0.8 of font size
+    const fontCharRatio = 0.75; // More realistic character width ratio
+    const nameWidthEst = speakerName.length * (nameFont * fontCharRatio);
+    const partyWidthEst = hasPartyInfo ? partyInfo.join(', ').length * (partyFont * fontCharRatio) : 0;
+    const contentWidth = Math.max(nameWidthEst, partyWidthEst);
+    
+    // Add padding and apply constraints
+    const boxWidthWithPadding = contentWidth + (constants.PADDING_HORIZONTAL * 2);
+    
+    // For 9:16, calculate max available width more precisely
+    const availableWidth = isSocial ? 
+        SOCIAL_CONSTANTS.TARGET_WIDTH - constants.SOCIAL_LEFT_PADDING - 30 : // 30px right margin for safety
+        SOCIAL_CONSTANTS.TARGET_WIDTH; // No constraint for 16:9
+    
+    // Apply all constraints
+    const finalBoxWidth = Math.min(
+        boxWidthWithPadding,
+        maxWidthConstraint,
+        availableWidth
+    );
+    
+    // Debug logging for width calculation (social format only)
+    if (isSocial) {
+        console.log(`📏 Speaker overlay width calc: "${speakerName}" | nameFont=${nameFont}px | estimated=${nameWidthEst.toFixed(1)}px | withPadding=${boxWidthWithPadding.toFixed(1)}px | maxConstraint=${maxWidthConstraint}px | available=${availableWidth}px | final=${finalBoxWidth.toFixed(1)}px`);
+    }
+    
+    // Step 1: Draw unified background box first
+    filters.push(
+        `drawbox=` +
+        `x=${xPosition}:` +
+        `y=${yPosition}:` +
+        `w=${finalBoxWidth}:` +
+        `h=${totalHeight}:` +
+        `color=${constants.BACKGROUND_COLOR}:` +
+        `t=fill:` +
+        `enable='between(t,${segment.startTime},${segment.endTime})'`
+    );
+    
+    // Step 2: Draw speaker name (larger font) with transparent background
+    const escapedName = escapeTextForFFmpeg(speakerName, aspectRatio);
+    const nameX = parseInt(xPosition) + constants.PADDING_HORIZONTAL;
+    const nameY = yPosition + constants.PADDING_VERTICAL;
+    
+    filters.push(
+        `drawtext=` +
+        `fontfile='${fontPath}':` +
+        `text='${escapedName}':` +
+        `enable='between(t,${segment.startTime},${segment.endTime})':` +
+        `x=${nameX}:` +
+        `y=${nameY}:` +
+        `fontsize=${nameFont}:` +
+        `fontcolor=${constants.TEXT_COLOR}:` +
+        `box=0` // No box - using the unified background
+    );
+    
+    // Step 3: Draw party info (smaller font) below name if present
+    if (hasPartyInfo) {
+        const partyText = partyInfo.join(', ');
+        const escapedPartyText = escapeTextForFFmpeg(partyText, aspectRatio);
+        const partyX = nameX; // Same X as name for alignment
+        const partyY = nameY + nameFont + constants.INTERNAL_LINE_SPACING;
+        
+        filters.push(
+            `drawtext=` +
+            `fontfile='${fontPath}':` +
+            `text='${escapedPartyText}':` +
+            `enable='between(t,${segment.startTime},${segment.endTime})':` +
+            `x=${partyX}:` +
+            `y=${partyY}:` +
+            `fontsize=${partyFont}:` +
+            `fontcolor=${constants.TEXT_COLOR}:` +
+            `box=0` // No box - using the unified background
+        );
+    }
+    
+    return filters;
+}
+
+/**
+ * Generate party color accent filter (Option A: Left Border)
+ */
+function generatePartyAccentFilter(
+    segment: SpeakerDisplaySegment,
+    aspectRatio: 'default' | 'social-9x16'
+): string | null {
+    if (!SPEAKER_OVERLAY_CONSTANTS.PARTY_ACCENT_ENABLED || !segment.speakerInfo.partyColor) {
+        return null;
+    }
+    
+    const isSocial = aspectRatio === 'social-9x16';
+    const constants = SPEAKER_OVERLAY_CONSTANTS;
+    
+    // Calculate accent position (left border of the text box) - same as main box
+    const accentX = isSocial ? 
+        constants.SOCIAL_LEFT_PADDING : 
+        constants.DEFAULT_LEFT_PADDING;
+    
+    let accentY: number;
+    if (isSocial) {
+        const videoTopY = calculateSocialVideoTopPosition(1.0); // Default zoom for calculation
+        accentY = videoTopY - constants.SOCIAL_VIDEO_TOP_OFFSET;
+    } else {
+        accentY = constants.DEFAULT_TOP_PADDING;
+    }
+    
+    // Use EXACT same height calculation as the unified box
+    const baseFontSize = isSocial ? constants.SOCIAL_FONT_SIZE : constants.DEFAULT_FONT_SIZE;
+    const nameFont = Math.round(baseFontSize * constants.SPEAKER_NAME_FONT_RATIO);
+    const partyFont = Math.round(baseFontSize * constants.PARTY_INFO_FONT_RATIO);
+    
+    const hasPartyInfo = segment.speakerInfo.role || segment.speakerInfo.party;
+    const totalHeight = hasPartyInfo ? 
+        nameFont + partyFont + constants.INTERNAL_LINE_SPACING + (constants.PADDING_VERTICAL * 2) :
+        nameFont + (constants.PADDING_VERTICAL * 2);
+    
+    // Convert hex color to RGB for FFmpeg
+    const color = segment.speakerInfo.partyColor.startsWith('#') ? 
+        segment.speakerInfo.partyColor : 
+        `#${segment.speakerInfo.partyColor}`;
+    
+    return `drawbox=x=${accentX}:y=${accentY}:w=${constants.PARTY_ACCENT_WIDTH}:h=${totalHeight}:color=${color}:t=fill:enable='between(t,${segment.startTime},${segment.endTime})'`;
+}
+
+/**
+ * Generate complete speaker overlay filter for video highlighting
+ * Creates speaker information overlays with precise timing
+ */
+export async function generateSpeakerOverlayFilter(
+    utterances: Array<{
+        text: string;
+        startTimestamp: number;
+        endTimestamp: number;
+        speaker?: GenerateHighlightRequest['parts'][0]['utterances'][0]['speaker'];
+    }>,
+    aspectRatio: 'default' | 'social-9x16'
+): Promise<string> {
+    if (!SPEAKER_OVERLAY_CONSTANTS.ENABLED || utterances.length === 0) {
+        return '';
+    }
+
+    // Ensure font is available
+    const fontPath = await ensureFontAvailable();
+    
+    console.log(`👤 Generating speaker overlays in ${SPEAKER_OVERLAY_CONSTANTS.DISPLAY_MODE} mode for ${aspectRatio} aspect ratio`);
+    
+    // Calculate when to show overlays based on display mode
+    const displaySegments = calculateSpeakerDisplaySegments(utterances, SPEAKER_OVERLAY_CONSTANTS.DISPLAY_MODE);
+    
+    const allFilters: string[] = [];
+    
+    // Generate text overlay filters (includes background boxes and text)
+    for (const segment of displaySegments) {
+        if (segment.showOverlay) {
+            const textFilters = generateSpeakerOverlayDrawtext(segment, aspectRatio, fontPath);
+            allFilters.push(...textFilters);
+            
+            // Add party accent on top of the background (after background but before text)
+            if (SPEAKER_OVERLAY_CONSTANTS.PARTY_ACCENT_ENABLED) {
+                const accentFilter = generatePartyAccentFilter(segment, aspectRatio);
+                if (accentFilter) {
+                    // Insert accent filter after background but before text
+                    // Background is first (index 0), so insert accent at index 1
+                    allFilters.splice(-textFilters.length + 1, 0, accentFilter);
+                }
+            }
+        }
+    }
+    
+    console.log(`👤 Generated ${allFilters.length} speaker overlay filters`);
+    
+    return allFilters.join(',');
 }
 
 /**
