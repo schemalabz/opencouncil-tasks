@@ -5,6 +5,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 import { Task } from './pipeline.js';
 import mime from 'mime/lite';
+import { isUsingMinIO } from '../utils.js';
 dotenv.config();
 
 interface UploadFilesArgs {
@@ -16,11 +17,17 @@ const FORCE_REUPLOAD = false;
 const VERSION = "1";
 
 export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, spacesPath }, onProgress) => {
+    
     const spacesEndpoint = new S3({
         endpoint: process.env.DO_SPACES_ENDPOINT,
         accessKeyId: process.env.DO_SPACES_KEY,
         secretAccessKey: process.env.DO_SPACES_SECRET,
-        region: "fra1"
+        region: "fra1",
+        // Only add MinIO-specific config when needed
+        ...(isUsingMinIO() && {
+            s3ForcePathStyle: true,
+            signatureVersion: 'v4'
+        })
     });
 
     const bucketName = process.env.DO_SPACES_BUCKET;

@@ -1,5 +1,5 @@
 # Use Node.js 20 as the base image
-FROM --platform=linux/amd64 node:20-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Set the working directory
 WORKDIR /app
@@ -18,7 +18,7 @@ COPY . .
 RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
-FROM --platform=linux/amd64 node:20.11.1 AS runner
+FROM node:20.11.1 AS runner
 # Install the latest Chrome dev package, necessary fonts and libraries
 RUN apt-get update \
     && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \

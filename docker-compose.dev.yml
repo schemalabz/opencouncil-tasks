@@ -1,10 +1,52 @@
 services:
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./src:/app/src
+      - ./.env:/app/.env 
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./secrets:/app/secrets
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=development
+      - DO_SPACES_ENDPOINT=http://minio:9000
+      - DO_SPACES_KEY=minioadmin
+      - DO_SPACES_SECRET=minioadmin
+      - DO_SPACES_BUCKET=opencouncil-dev
+      - CDN_BASE_URL=http://localhost:${PORT}/dev/files/opencouncil-dev
     networks:
       - opencouncil-net
+    depends_on:
+      - minio
+  
   cobalt-api:
     networks:
       - opencouncil-net
+  
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"      # API endpoint for external tools
+      - "9001:9001"      # Web console for debugging
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - opencouncil-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+volumes:
+  minio_data:
 
 networks:
   opencouncil-net:

@@ -16,7 +16,9 @@ import { splitMediaFile } from './tasks/splitMediaFile.js';
 import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
+import { generateHighlight } from './tasks/generateHighlight.js';
 import { syncElasticsearch } from './tasks/syncElasticsearch.js';
+import devRouter from './routes/dev.js';
 
 dotenv.config();
 
@@ -32,10 +34,10 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
-const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
-
 if (process.env.NO_AUTH !== 'true') {
+    const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
+    const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
+    
     app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
         const authHeader = req.headers.authorization;
 
@@ -78,7 +80,14 @@ app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
 app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
 app.post('/processAgenda', taskManager.serveTask(processAgenda));
 app.post('/generateVoiceprint', taskManager.serveTask(generateVoiceprint));
+app.post('/generateHighlight', taskManager.serveTask(generateHighlight));
 app.post('/syncElasticsearch', taskManager.serveTask(syncElasticsearch));
+
+// Development routes (only in development mode)
+if (process.env.NODE_ENV === 'development') {
+    app.use('/dev', devRouter);
+    console.log('🔧 Development routes mounted at /dev');
+}
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
