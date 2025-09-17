@@ -108,24 +108,28 @@ export interface SubjectContext {
     citationUrls: string[];
 }
 
+export interface SpeakerSegment {
+    speakerSegmentId: string;
+    summary: string | null;
+}
+
+export interface Location {
+    type: "point" | "lineString" | "polygon";
+    text: string; // e.g. an area, an address, a road name
+    coordinates: number[][]; // a sequence of coordinates. just one coordinate for a point, more for a line or polygon
+}
+
 export interface Subject {
     name: string;
     description: string;
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
 
-    speakerSegments: {
-        speakerSegmentId: string;
-        summary: string | null;
-    }[];
+    speakerSegments: SpeakerSegment[];
 
     highlightedUtteranceIds: string[];
 
-    location: {
-        type: "point" | "lineString" | "polygon";
-        text: string; // e.g. an area, an address, a road name
-        coordinates: number[][]; // a sequence of coordinates. just one coordinate for a point, more for a line or polygon
-    } | null;
+    location: Location | null;
 
     topicLabel: string | null;
     context: SubjectContext | null;

@@ -1,4 +1,4 @@
-import express, { Router } from 'express';
+import express from 'express';
 import dotenv from 'dotenv';
 import { pipeline } from './tasks/pipeline.js';
 import cors from 'cors';
@@ -19,6 +19,8 @@ import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { syncElasticsearch } from './tasks/syncElasticsearch.js';
 import devRouter from './routes/dev.js';
+import swaggerUi from 'swagger-ui-express';
+// Swagger will be imported after routes are defined
 
 dotenv.config();
 
@@ -55,6 +57,11 @@ if (process.env.NO_AUTH !== 'true') {
     });
 }
 
+// ============================================================================
+// TASK ENDPOINTS
+// ============================================================================
+// All task endpoints are defined here with their metadata for automatic Swagger generation
+
 app.post('/transcribe', (
     req: express.Request<{}, {}, TranscribeRequest & { callbackUrl: string }>,
     res: express.Response,
@@ -72,22 +79,82 @@ app.post('/transcribe', (
     }
 
     next();
-}, taskManager.serveTask(pipeline));
+}, taskManager.registerTask(pipeline, {
+    summary: 'Transcribe audio/video content',
+    description: 'Convert audio or video content to text using speech recognition'
+}));
 
-app.post('/summarize', taskManager.serveTask(summarize));
-app.post('/splitMediaFile', taskManager.serveTask(splitMediaFile));
-app.post('/generatePodcastSpec', taskManager.serveTask(generatePodcastSpec));
-app.post('/fixTranscript', taskManager.serveTask(fixTranscript));
-app.post('/processAgenda', taskManager.serveTask(processAgenda));
-app.post('/generateVoiceprint', taskManager.serveTask(generateVoiceprint));
-app.post('/generateHighlight', taskManager.serveTask(generateHighlight));
-app.post('/syncElasticsearch', taskManager.serveTask(syncElasticsearch));
+app.post('/summarize', taskManager.registerTask(summarize, {
+    summary: 'Summarize transcript content',
+    description: 'Generate a summary of transcript content with subject extraction',
+  }));
+
+app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
+  summary: 'Split media file into segments',
+  description: 'Split audio or video files into smaller segments based on specified time ranges'
+}));
+
+app.post('/generatePodcastSpec', taskManager.registerTask(generatePodcastSpec, {
+  summary: 'Generate podcast specification',
+  description: 'Create a podcast specification from transcript and subjects'
+}));
+
+app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
+  summary: 'Fix transcript formatting',
+  description: 'Cleans and corrects transcription output for improved accuracy'
+}));
+
+app.post('/processAgenda', taskManager.registerTask(processAgenda, {
+  summary: 'Process meeting agenda',
+  description: 'Extracts and structures agenda information from documents'
+}));
+
+app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
+  summary: 'Generate voiceprint',
+  description: 'Creates unique speaker voice fingerprints for identification'
+}));
+
+app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
+  summary: 'Generate video highlight',
+  description: 'Create video highlights from source media with visual enhancements'
+}));
+
+app.post('/syncElasticsearch', taskManager.registerTask(syncElasticsearch, {
+  summary: 'Sync with Elasticsearch',
+  description: 'Synchronize data with Elasticsearch index for search functionality'
+}));
+
+// Resolve task paths from Express routes, then load API Documentation
+taskManager.resolvePathsFromApp(app);
+import('./lib/swaggerConfig.js').then(({ swaggerSpec }) => {
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+        customCss: '.swagger-ui .topbar { display: none }',
+        customSiteTitle: 'OpenCouncil Tasks API',
+        swaggerOptions: {
+            persistAuthorization: true,
+            displayRequestDuration: true,
+            showExtensions: true,
+            showCommonExtensions: true,
+        }
+    }));
+    console.log('📚 API Documentation available at /docs');
+});
+
+// ============================================================================
+// DEVELOPMENT ROUTES
+// ============================================================================
 
 // Development routes (only in development mode)
 if (process.env.NODE_ENV === 'development') {
     app.use('/dev', devRouter);
     console.log('🔧 Development routes mounted at /dev');
 }
+        
+
+// ============================================================================
+// TEST ENDPOINTS
+// ============================================================================
 
 const testVideo = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 
@@ -99,7 +166,7 @@ app.post('/test', async (
 
     const resultPromise = pipeline({ youtubeUrl: testVideo }, () => { });
     res.status(200).json(await resultPromise);
-}, taskManager.serveTask(pipeline));
+});
 
 app.post('/test-split', async (
     req: express.Request,
@@ -158,6 +225,10 @@ app.post('/test-split', async (
 
     console.log(`Got ${splits.length} splits`);
 });
+
+// ============================================================================
+// SERVER SETUP
+// ============================================================================
 
 // Handle graceful shutdown
 process.on('SIGTERM', async () => {
