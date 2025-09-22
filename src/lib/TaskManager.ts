@@ -4,6 +4,21 @@ import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 
+// Task metadata interface
+export interface TaskMetadata {
+  path?: string;
+  summary: string;
+  description: string;
+  tags?: string[];
+  security?: boolean; // defaults to true
+}
+
+// Global task registry - maps task functions to their metadata
+const taskRegistry = new Map<Task<any, any>, TaskMetadata>();
+
+// Symbol used to tag route handlers with their associated task for later path resolution
+export const ROUTE_TASK_SYMBOL: unique symbol = Symbol('route_task');
+
 dotenv.config();
 
 type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {
@@ -165,6 +180,50 @@ class TaskManager {
         }
     }
 
+    /**
+     * Register task metadata for Swagger generation
+     */
+    public registerTaskMetadata(task: Task<any, any>, metadata: TaskMetadata): void {
+        taskRegistry.set(task, metadata);
+    }
+
+    /**
+     * Get metadata for a task function
+     */
+    public getTaskMetadata(task: Task<any, any>): TaskMetadata | undefined {
+        return taskRegistry.get(task);
+    }
+
+    /**
+     * Get all registered tasks with their metadata
+     */
+    public getAllRegisteredTasks(): Array<{ task: Task<any, any>; metadata: TaskMetadata }> {
+        return Array.from(taskRegistry.entries()).map(([task, metadata]) => ({ task, metadata }));
+    }
+
+    /**
+     * Register a task with metadata and return the Express handler
+     * This eliminates the need to specify the path twice - the path is auto-derived from the Express route
+     */
+    public registerTask(
+        task: Task<any, any>,
+        metadata: Omit<TaskMetadata, 'path'>
+    ): express.RequestHandler {
+        // Register metadata without path for now; we'll resolve path from Express later
+        // Default security to true if not specified
+        const partialMetadata: TaskMetadata = { 
+            security: true, // default to secure
+            ...metadata 
+        };
+        this.registerTaskMetadata(task, partialMetadata);
+
+        // Create the handler and tag it with the task reference for later discovery
+        const handler = this.serveTask(task) as express.RequestHandler & { [key: symbol]: any };
+        (handler as any)[ROUTE_TASK_SYMBOL] = task;
+        return handler;
+    }
+
+
     public serveTask<REQ, RES>(task: Task<REQ, RES>, version?: number) {
         return (req: express.Request<{}, {}, REQ & { callbackUrl: string }>, res: express.Response) => {
             let taskType = req.path.substring(1);
@@ -186,6 +245,39 @@ class TaskManager {
                 runningTasks: runningTasksCount,
                 maxParallelTasks: this.maxParallelTasks
             });
+        }
+    }
+
+    /**
+     * Resolve and attach route paths to registered tasks by introspecting the Express app's routes.
+     * This allows using registerTask without specifying the path twice.
+     */
+    public resolvePathsFromApp(app: express.Express): void {
+        try {
+            const routerStack: any[] = (app as any)._router?.stack || [];
+            for (const layer of routerStack) {
+                if (!layer.route || !layer.route.path || !Array.isArray(layer.route.stack)) {
+                    continue;
+                }
+
+                const routePath: string = layer.route.path;
+                for (const routeLayer of layer.route.stack) {
+                    const handle = routeLayer.handle;
+                    if (handle && (handle as any)[ROUTE_TASK_SYMBOL]) {
+                        const task: Task<any, any> = (handle as any)[ROUTE_TASK_SYMBOL];
+                        const metadata = taskRegistry.get(task);
+                        if (metadata) {
+                            // Only set path if not already set
+                            if (!metadata.path) {
+                                metadata.path = routePath;
+                                taskRegistry.set(task, metadata);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to resolve task paths from Express app:', error);
         }
     }
 
@@ -234,5 +326,6 @@ class TaskManager {
         console.log(chalk.dim('\n(Updates every 5 seconds)'));
     }
 }
+
 
 export const taskManager = new TaskManager();
