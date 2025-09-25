@@ -67,7 +67,7 @@ const swaggerOptions: swaggerJSDoc.Options = {
     ]
   },
   apis: [
-    './src/routes/*.ts', // Only include routes files (no server.ts)
+    './src/routes/*.ts', // include all routes files including dev.ts
     './src/routes/*.js',
     './dist/routes/*.js', // Include compiled JS files for production
   ],

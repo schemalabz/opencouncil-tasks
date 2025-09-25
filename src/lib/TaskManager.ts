@@ -1,8 +1,9 @@
 import express from 'express';
 import { Task } from '../tasks/pipeline.js';
-import { TaskUpdate } from '../types.js';
+import { TaskUpdate, TaskRequest } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
+import { DevPayloadManager } from '../tasks/utils/devPayloadManager.js';
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -218,22 +219,32 @@ class TaskManager {
         this.registerTaskMetadata(task, partialMetadata);
 
         // Create the handler and tag it with the task reference for later discovery
-        const handler = this.serveTask(task) as unknown as express.RequestHandler & { [key: symbol]: any };
+        const handler = this.serveTask(task);
         (handler as any)[ROUTE_TASK_SYMBOL] = task;
-        return handler;
+        return handler as express.RequestHandler;
     }
 
 
-    public serveTask<REQ, RES>(task: Task<REQ, RES>, version?: number) {
-        return (req: express.Request<{}, {}, REQ & { callbackUrl: string }>, res: express.Response) => {
+    public serveTask<REQ extends TaskRequest, RES>(
+        task: Task<REQ, RES>, 
+        options?: { version?: number; capturePayloads?: boolean }
+    ) {
+        return (req: express.Request<{}, {}, REQ>, res: express.Response) => {
             let taskType = req.path.substring(1);
+
+            // Capture payload if enabled
+            if (options?.capturePayloads !== false) {
+                DevPayloadManager.capture(taskType, req.body).catch(error => {
+                    console.error(`Failed to capture payload for ${taskType}:`, error);
+                });
+            }
 
             this.runTaskWithCallback(
                 task,
                 req.body,
                 req.body.callbackUrl,
                 taskType,
-                version
+                options?.version
             );
 
             const queueSize = this.taskQueue.length;

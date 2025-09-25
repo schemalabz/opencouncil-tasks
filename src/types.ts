@@ -353,6 +353,9 @@ export interface GenerateHighlightRequest extends TaskRequest {
             zoomFactor?: number;
         };
     };
+
+    // Development options
+    skipCapture?: boolean; // Set to true to prevent payload capture during testing
 }
 // Shared rendering types
 export type AspectRatio = 'default' | 'social-9x16';
