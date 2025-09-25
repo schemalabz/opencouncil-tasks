@@ -218,7 +218,7 @@ class TaskManager {
         this.registerTaskMetadata(task, partialMetadata);
 
         // Create the handler and tag it with the task reference for later discovery
-        const handler = this.serveTask(task) as express.RequestHandler & { [key: symbol]: any };
+        const handler = this.serveTask(task) as unknown as express.RequestHandler & { [key: symbol]: any };
         (handler as any)[ROUTE_TASK_SYMBOL] = task;
         return handler;
     }

@@ -26,7 +26,8 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "typescript": "^5.5.4",
-    "underscore": "^1.13.7"
+    "underscore": "^1.13.7",
+    "typescript-json-schema": "^0.65.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -35,8 +36,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@types/underscore": "^1.11.15",
     "nodemon": "^3.1.10",
-    "tsx": "^4.20.3",
-    "typescript-json-schema": "^0.65.1"
+    "tsx": "^4.20.3"
   },
   "engines": {
     "node": "^20.11.1"

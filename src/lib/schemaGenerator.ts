@@ -115,7 +115,7 @@ function loadCacheFromDisk(): boolean {
     console.log(`📁 Loaded cache from disk (${Object.keys(schemaCache).length} schemas, hash: ${contentHash.substring(0, 8)}...)`);
     return true;
   } catch (error) {
-    console.log('⚠️  Failed to load cache from disk:', error.message);
+    console.log('⚠️  Failed to load cache from disk:', error instanceof Error ? error.message : String(error));
     return false;
   }
 }
@@ -134,7 +134,7 @@ function saveCacheToDisk(): void {
     fs.writeFileSync(CACHE_FILE, JSON.stringify(cacheData, null, 2));
     console.log(`💾 Saved cache to disk (${Object.keys(schemaCache).length} schemas)`);
   } catch (error) {
-    console.log('⚠️  Failed to save cache to disk:', error.message);
+    console.log('⚠️  Failed to save cache to disk:', error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -400,7 +400,7 @@ export function clearSchemaCache(): void {
       fs.unlinkSync(CACHE_FILE);
     }
   } catch (error) {
-    console.log('⚠️  Failed to delete cache file:', error.message);
+    console.log('⚠️  Failed to delete cache file:', error instanceof Error ? error.message : String(error));
   }
   
   console.log('🗑️  Schema cache cleared');

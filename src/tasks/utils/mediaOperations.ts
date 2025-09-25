@@ -485,7 +485,8 @@ function generateSpeakerOverlayDrawtext(
     const speakerName = segment.speakerInfo.name;
     const partyInfo: string[] = [];
     if (segment.speakerInfo.role) partyInfo.push(segment.speakerInfo.role);
-    if (segment.speakerInfo.party) partyInfo.push(segment.speakerInfo.party);
+    // Only show party if there's no role defined
+    if (segment.speakerInfo.party && !segment.speakerInfo.role) partyInfo.push(segment.speakerInfo.party);
     
     const filters: string[] = [];
     
