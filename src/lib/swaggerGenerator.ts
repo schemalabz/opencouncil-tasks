@@ -23,6 +23,29 @@ function getRequestTypeName(path: string): string {
  */
 export function generateSwaggerPaths(): Record<string, any> {
     const paths: Record<string, any> = {};
+    
+    // Add public endpoints
+    paths['/health'] = {
+        get: {
+            summary: 'Health check',
+            description: 'Check if the API is running and healthy, includes version information',
+            tags: ['System'],
+            responses: {
+                '200': {
+                    description: 'Service is healthy',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                $ref: '#/components/schemas/HealthResponse'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
+    // Add task endpoints
     const registeredTasks = taskManager.getAllRegisteredTasks();
     
     for (const { task, metadata } of registeredTasks) {

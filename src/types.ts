@@ -15,6 +15,18 @@ export interface TaskRequest {
     callbackUrl: string;
 }
 
+/*
+ * System endpoints
+ */
+
+export interface HealthResponse {
+    status: 'healthy' | 'unhealthy';
+    timestamp: string;
+    environment: string;
+    version: string;
+    name: string;
+}
+
 export type MediaType = "audio" | "video";
 
 /*

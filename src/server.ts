@@ -5,7 +5,8 @@ import cors from 'cors';
 import { taskManager } from './lib/TaskManager.js';
 import path from 'path';
 import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYoutubeUrl } from './utils.js';
-import { Diarization, TranscribeRequest, DiarizeResult } from './types.js';
+import { Diarization, TranscribeRequest, DiarizeResult, HealthResponse } from './types.js';
+import { authMiddleware } from './lib/auth.js';
 import fs from 'fs';
 import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { diarize } from './tasks/diarize.js';
@@ -36,29 +37,27 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-if (process.env.NO_AUTH !== 'true') {
-    const apiTokensPath = path.join(process.cwd(), 'secrets', 'apiTokens.json');
-    const apiTokens = getFromEnvOrFile('API_TOKENS', apiTokensPath);
-    
-    app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
-
-        const token = authHeader.split(' ')[1].trim();
-
-        if (!apiTokens.includes(token)) {
-            return res.status(403).json({ error: 'Invalid token' });
-        }
-
-        next();
-    });
-}
+// Apply authentication middleware
+app.use(authMiddleware);
 
 // ============================================================================
-// TASK ENDPOINTS
+// PUBLIC ENDPOINTS (No Authentication Required)
+// ============================================================================
+
+// Health check endpoint with version information
+app.get('/health', (req: express.Request, res: express.Response<HealthResponse>) => {
+    const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    res.status(200).json({ 
+        status: 'healthy', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
+        version: packageJson.version,
+        name: packageJson.name
+    });
+});
+
+// ============================================================================
+// TASK ENDPOINTS (Authentication Required)
 // ============================================================================
 // All task endpoints are defined here with their metadata for automatic Swagger generation
 

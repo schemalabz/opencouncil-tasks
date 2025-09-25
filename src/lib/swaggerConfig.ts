@@ -17,7 +17,7 @@ This service handles various audio, video, and content processing tasks through 
 
 ## Authentication
 
-This API uses Bearer token authentication. Include your API token in the Authorization header:
+This API uses Bearer token authentication for task processing endpoints. Include your API token in the Authorization header:
 
 \`Authorization: Bearer your-api-token\`
 
@@ -39,12 +39,7 @@ You can disable authentication by setting \`NO_AUTH=true\` in your environment v
         description: 'API token for authentication. Contact your administrator to obtain a token.'
       }
     }
-  },
-  security: [
-    {
-      bearerAuth: []
-    }
-  ]
+  }
 };
 
 // Swagger JSDoc options
@@ -56,6 +51,20 @@ const swaggerOptions: swaggerJSDoc.Options = {
       ...swaggerDefinition.components,
       ...getOpenAPIComponents().components, // Merge auto-generated schemas with security schemes
     },
+    tags: [
+      {
+        name: 'System',
+        description: 'System endpoints for health checking (includes version information, no authentication required)'
+      },
+      {
+        name: 'Tasks',
+        description: 'Production task processing endpoints (authentication required)'
+      },
+      {
+        name: 'Development',
+        description: 'Development and testing endpoints (only available in development mode)'
+      }
+    ]
   },
   apis: [
     './src/routes/*.ts', // Only include routes files (no server.ts)

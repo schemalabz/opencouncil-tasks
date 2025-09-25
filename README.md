@@ -132,7 +132,10 @@ The service uses environment variables for configuration. Not all variables are 
 
 ### Authentication
 - `API_TOKENS` - JSON array of valid API tokens for authentication
-  - Can also be provided through `./secrets/apiTokens.json` file
+  - Example: `API_TOKENS=["token1","token2","token3"]`
+  - Falls back to `./secrets/apiTokens.json` file if not set in environment
+- `NO_AUTH` - Set to `true` to disable authentication entirely (development only)
+- `PUBLIC_ENDPOINTS` - Comma-separated list of additional public endpoints
 
 ### Storage
 - `DO_SPACES_KEY` - Digital Ocean Spaces access key
