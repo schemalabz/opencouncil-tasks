@@ -11,10 +11,14 @@ COPY package.json package-lock.json ./
 # Using cache mount for faster builds - this persists npm cache across builds
 # See: https://docs.docker.com/build/cache/
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+    npm ci && \
+    apk add --no-cache ffmpeg
 
 # Expose the port the app runs on
 EXPOSE ${PORT}
+
+# Ensure ffprobe is discoverable by the app
+ENV FFPROBE_PATH=/usr/bin/ffprobe
 
 # Start the development server with hot reloading
 CMD ["npm", "run", "dev"] 

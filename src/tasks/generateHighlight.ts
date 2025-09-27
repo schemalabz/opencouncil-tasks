@@ -1,7 +1,7 @@
 import { getMuxPlaybackId } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter } from "./utils/mediaOperations.js";
+import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile } from "./utils/mediaOperations.js";
 
 export const generateHighlight: Task<
   GenerateHighlightRequest,
@@ -10,6 +10,20 @@ export const generateHighlight: Task<
   const { media, parts, render } = request;
 
   const results: GenerateHighlightResult["parts"] = [];
+
+  // Determine input video resolution once for the entire request
+  let inputVideoWidth: number | undefined;
+  let inputVideoHeight: number | undefined;
+  if (media.type === 'video') {
+    try {
+      const localPath = await downloadFile(media.videoUrl);
+      const res = await getVideoResolution(localPath);
+      inputVideoWidth = res.width;
+      inputVideoHeight = res.height;
+    } catch (err) {
+      console.warn(`⚠️ Failed to detect input video resolution, falling back to defaults: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
 
   for (let i = 0; i < parts.length; i++) {
     const part = parts[i];
@@ -48,7 +62,7 @@ export const generateHighlight: Task<
         backgroundColor: social.backgroundColor || '#000000',
         zoomFactor: Math.max(0.6, Math.min(1.0, social.zoomFactor || 1.0))
       };
-      baseFilter = generateSocialFilter(socialOptions);
+      baseFilter = generateSocialFilter(socialOptions, inputVideoWidth || 1280, inputVideoHeight || 720);
       partProgress(15);
     }
 
@@ -56,7 +70,7 @@ export const generateHighlight: Task<
     let speakerFilter = '';
     if (render.includeSpeakerOverlay) {
       console.log(`👤 Generating speaker overlays for ${part.utterances.length} utterances`);
-      speakerFilter = await generateSpeakerOverlayFilter(part.utterances, aspectRatio);
+      speakerFilter = await generateSpeakerOverlayFilter(part.utterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
       partProgress(isSocial ? 18 : 10);
     }
 
@@ -64,7 +78,7 @@ export const generateHighlight: Task<
     let captionFilter = '';
     if (render.includeCaptions) {
       console.log(`📝 Generating captions for ${part.utterances.length} utterances in ${aspectRatio} format`);
-      captionFilter = await generateCaptionFilters(part.utterances, aspectRatio);
+      captionFilter = await generateCaptionFilters(part.utterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
       partProgress(isSocial ? 20 : 15);
     }
 

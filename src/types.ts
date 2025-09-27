@@ -344,7 +344,7 @@ export interface GenerateHighlightRequest extends TaskRequest {
     render: {
         includeCaptions?: boolean;
         includeSpeakerOverlay?: boolean;
-        aspectRatio?: 'default' | 'social-9x16';
+        aspectRatio?: AspectRatio;
         
         // Social media formatting options (only used when aspectRatio is 'social-9x16')
         socialOptions?: {
@@ -354,6 +354,8 @@ export interface GenerateHighlightRequest extends TaskRequest {
         };
     };
 }
+// Shared rendering types
+export type AspectRatio = 'default' | 'social-9x16';
 
 export interface GenerateHighlightResult {
     parts: Array<{

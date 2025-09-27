@@ -16,6 +16,7 @@ The server supports the following processing tasks:
 - [`downloadYTV`](src/tasks/downloadYTV.ts) - Downloads YouTube videos and extracts audio with optimized quality settings
 - [`splitMediaFile`](src/tasks/splitMediaFile.ts) - Splits media files into smaller segments with precise timestamp control
 - [`uploadToSpaces`](src/tasks/uploadToSpaces.ts) - Handles secure file uploads to cloud storage with public access URLs
+- [`generateHighlight`](docs/generateHighlight.md) - Produces short highlight clips from source videos with optional social media transforms, speaker overlays, and captions
 
 ### Transcription & Diarization
 - [`diarize`](src/tasks/diarize.ts) - Identifies and separates different speakers in audio recordings

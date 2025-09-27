@@ -142,10 +142,40 @@ function saveCacheToDisk(): void {
  * Generate a SHA-256 content hash for the source files
  * This is used to determine if the cache is still valid
  */
+/**
+ * Get the appropriate types file path based on environment
+ */
+function getTypesFilePath(): string {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  if (isDevelopment) {
+    // In development, use source TypeScript files
+    return path.join(process.cwd(), 'src/types.ts');
+  } else {
+    // In production, use compiled declaration files
+    return path.join(process.cwd(), 'dist/types.d.ts');
+  }
+}
+
+/**
+ * Get the appropriate dev routes file path based on environment
+ */
+function getDevRoutesFilePath(): string {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  if (isDevelopment) {
+    // In development, use source TypeScript files
+    return path.join(process.cwd(), 'src/routes/dev.ts');
+  } else {
+    // In production, use compiled declaration files
+    return path.join(process.cwd(), 'dist/routes/dev.d.ts');
+  }
+}
+
 function generateContentHash(): string {
   try {
-    const typesPath = path.join(__dirname, '../types.ts');
-    const devRoutesPath = path.join(__dirname, '../routes/dev.ts');
+    const typesPath = getTypesFilePath();
+    const devRoutesPath = getDevRoutesFilePath();
     
     // Read file contents
     const typesContent = fs.readFileSync(typesPath, 'utf8');
@@ -192,8 +222,8 @@ function isCacheValid(): boolean {
  * Initialize the schema generator with TypeScript program
  */
 export function initializeSchemaGenerator(): void {
-  const typesPath = path.join(__dirname, '../types.ts');
-  const devRoutesPath = path.join(__dirname, '../routes/dev.ts');
+  const typesPath = getTypesFilePath();
+  const devRoutesPath = getDevRoutesFilePath();
   
   try {
     program = TJS.getProgramFromFiles([typesPath, devRoutesPath], compilerOptions);
@@ -255,8 +285,9 @@ function discoverExportedTypes(): string[] {
 
   const typeNames: string[] = [];
   
-  // Discover types from main types.ts file
-  const typesFile = program.getSourceFile(path.join(__dirname, '../types.ts'));
+  // Discover types from the appropriate types file
+  const typesPath = getTypesFilePath();
+  const typesFile = program.getSourceFile(typesPath);
   if (typesFile) {
     const visit = (node: ts.Node) => {
       // Check for interface declarations
@@ -278,11 +309,12 @@ function discoverExportedTypes(): string[] {
     };
     visit(typesFile);
   } else {
-    console.error('❌ Could not find types.ts source file');
+    console.error(`❌ Could not find types file at: ${typesPath}`);
   }
 
   // Discover dev-specific types from dev routes file
-  const devRoutesFile = program.getSourceFile(path.join(__dirname, '../routes/dev.ts'));
+  const devRoutesPath = getDevRoutesFilePath();
+  const devRoutesFile = program.getSourceFile(devRoutesPath);
   if (devRoutesFile) {
     const visit = (node: ts.Node) => {
       // Check for interface declarations
