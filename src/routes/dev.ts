@@ -35,6 +35,27 @@ export interface DevTestTaskErrorResponse {
     totalPayloads?: number;
 }
 
+export interface DevTestTaskBatchResponse {
+    success: boolean;
+    message: string;
+    taskType: string;
+    videoLinks: string[]; // Top-level array for easy access to generated videos
+    results: Array<{
+        combination: string;
+        success: boolean;
+        result?: any;
+        error?: string;
+        errors?: string[];
+        payloadIndex: number;
+        overrideString: string;
+    }>;
+    summary: {
+        total: number;
+        successful: number;
+        failed: number;
+    };
+}
+
 const router = express.Router();
 
 // Development endpoint for testing file uploads
@@ -141,14 +162,21 @@ router.get('/files/:bucket/*', async (req: express.Request, res: express.Respons
  * @swagger
  * /dev/test-task/{taskType}:
  *   post:
- *     summary: Test task with captured payload and parameter overrides
+ *     summary: Test task with captured payloads and parameter overrides (supports batch testing)
  *     description: |
  *       Execute a task using captured payloads with optional parameter overrides.
- *       This endpoint supports multiple testing scenarios:
+ *       This endpoint supports batch testing with Cartesian product combinations:
  *       
  *       1. **Use captured payloads** - Test with real data captured during development
  *       2. **Parameter overrides** - Modify specific parameters without creating variations
  *       3. **Custom payloads** - Provide completely custom payload in request body
+ *       4. **Batch testing** - Test multiple payloads × multiple override combinations
+ *       
+ *       ## Batch Testing Examples:
+ *       - `payload=0,1&overrides=render.aspectRatio:social-9x16;render.aspectRatio:default`
+ *         Tests: payload-0+social, payload-0+default, payload-1+social, payload-1+default
+ *       - `payload=0&overrides=render.aspectRatio:social-9x16;render.includeCaptions:true;render.includeSpeakerOverlay:true`
+ *         Tests: payload-0+social, payload-0+captions, payload-0+speaker
  *       
  *       ## Parameter Override Examples:
  *       - `render.aspectRatio:social-9x16` - Change aspect ratio
@@ -168,24 +196,40 @@ router.get('/files/:bucket/*', async (req: express.Request, res: express.Respons
  *           example: generateHighlight
  *       - name: payload
  *         in: query
- *         description: Index of captured payload to use (0 = latest, 1 = second latest, etc.)
+ *         description: |
+ *           Index(es) of captured payload(s) to use. Can be single value or comma-separated array.
+ *           Examples: `0`, `0,1,2`, `1,3`
+ *           Default: 0
  *         schema:
- *           type: integer
- *           minimum: 0
- *           default: 0
- *           example: 0
+ *           oneOf:
+ *             - type: integer
+ *               minimum: 0
+ *               example: 0
+ *             - type: string
+ *               pattern: '^[0-9]+(,[0-9]+)*$'
+ *               example: "0,1,2"
  *       - name: overrides
  *         in: query
  *         description: |
- *           Parameter overrides in dot-notation format.
- *           Format: `path:value,path2:value2`
+ *           Parameter overrides in dot-notation format. Use semicolon (;) to separate different override sets.
+ *           Each override set will be combined with each payload.
+ *           
+ *           Within each override set, use commas to combine multiple parameters:
+ *           - `render.aspectRatio:social-9x16,render.includeCaptions:true` (single execution with both overrides)
+ *           
+ *           Use semicolons to create separate executions:
+ *           - `render.aspectRatio:social-9x16;render.aspectRatio:default` (two separate executions)
  *           
  *           Examples:
- *           - `render.aspectRatio:social-9x16`
- *           - `render.includeCaptions:true,render.socialOptions.zoomFactor:0.8`
+ *           - `render.aspectRatio:social-9x16` (single override)
+ *           - `render.aspectRatio:social-9x16;render.aspectRatio:default` (two separate executions)
+ *           - `render.aspectRatio:social-9x16,render.includeCaptions:true;render.includeSpeakerOverlay:true` (two executions)
  *         schema:
- *           type: string
- *           example: "render.aspectRatio:social-9x16,render.includeCaptions:true"
+ *           oneOf:
+ *             - type: string
+ *               example: "render.aspectRatio:social-9x16"
+ *             - type: string
+ *               example: "render.aspectRatio:social-9x16;render.aspectRatio:default"
  *     requestBody:
  *       description: Custom payload (overrides captured payload if provided)
  *       content:
@@ -223,12 +267,13 @@ router.get('/files/:bucket/*', async (req: express.Request, res: express.Respons
  *                   includeCaptions: false
  *     responses:
  *       200:
- *         description: Task execution results
+ *         description: Task execution results (single or batch)
  *         content:
  *           application/json:
  *             schema:
  *               oneOf:
  *                 - $ref: '#/components/schemas/DevTestTaskSuccessResponse'
+ *                 - $ref: '#/components/schemas/DevTestTaskBatchResponse'
  *                 - $ref: '#/components/schemas/DevTestTaskErrorResponse'
  *       400:
  *         description: Parameter override failed or invalid request
@@ -255,21 +300,48 @@ router.post('/test-task/:taskType', async (req: express.Request, res: express.Re
         const { taskType } = req.params;
         console.log(`🧪 Testing task: ${taskType}`);
         
-        const { payload: payloadIndex, overrides: overrideString } = req.query;
+        const { payload: payloadParam, overrides: overridesParam } = req.query;
         const hasBodyPayload = req.body && Object.keys(req.body).length > 0;
         
-        let testPayload: any;
-        let testName = 'test';
+        // Parse overrides as arrays
+        const overrideStrings = Array.isArray(overridesParam)
+            ? overridesParam as string[]
+            : overridesParam
+                ? [(overridesParam as string)]
+                : [''];
         
-        // Handle different scenarios
+        // Split each override string by semicolon to get individual override sets
+        // This preserves comma-separated overrides within each set
+        const allOverrideSets: string[] = [];
+        for (const overrideString of overrideStrings) {
+            if (overrideString && overrideString.trim() !== '') {
+                // Split by semicolon to get individual override sets
+                const sets = overrideString.split(';').map(s => s.trim()).filter(s => s !== '');
+                allOverrideSets.push(...sets);
+            }
+        }
+        
+        // If no semicolons found, treat the whole string as one override set
+        const validOverrides = allOverrideSets.length > 0 ? allOverrideSets : [''];
+        
+        // Determine payload indices based on whether custom payload is provided
+        let payloadIndices: number[];
+        let capturedPayloads: any[] = [];
+        
         if (hasBodyPayload) {
-            // Scenario 1: Custom payload provided in body
-            testPayload = { ...req.body, callbackUrl: 'dev-test', skipCapture: true };
-            testName = 'custom';
-            
+            // When custom payload is provided, ignore payload query param
+            payloadIndices = [0]; // Single index for custom payload
+            console.log(`📋 Using custom payload from request body`);
         } else {
-            // Scenario 2: Use captured payloads
-            const capturedPayloads = await DevPayloadManager.getCapturedPayloads(taskType);
+            // Parse payload indices from query param
+            payloadIndices = Array.isArray(payloadParam) 
+                ? payloadParam.map(p => parseInt(p as string))
+                : payloadParam 
+                    ? (payloadParam as string).split(',').map(p => parseInt(p.trim())).filter(p => !isNaN(p))
+                    : [0];
+            
+            // Get captured payloads
+            capturedPayloads = await DevPayloadManager.getCapturedPayloads(taskType);
             
             if (capturedPayloads.length === 0) {
                 return res.status(404).json({
@@ -279,47 +351,24 @@ router.post('/test-task/:taskType', async (req: express.Request, res: express.Re
                 });
             }
             
-            // Select payload (by index or latest)
-            const selectedIndex = payloadIndex ? parseInt(payloadIndex as string) : 0;
-            const selectedPayload = capturedPayloads[selectedIndex];
-            
-            if (!selectedPayload) {
-                return res.status(404).json({
+            // Validate payload indices BEFORE generating combinations
+            const invalidIndices = payloadIndices.filter(idx => idx < 0 || idx >= capturedPayloads.length);
+            if (invalidIndices.length > 0) {
+                return res.status(400).json({
                     success: false,
-                    error: `Payload index ${selectedIndex} not found`,
-                    availableIndices: capturedPayloads.map((_, i) => i),
+                    error: `Invalid payload indices: ${invalidIndices.join(', ')}`,
+                    message: `Payload indices must be between 0 and ${capturedPayloads.length - 1}`,
+                    availableIndices: Array.from({ length: capturedPayloads.length }, (_, i) => i),
                     totalPayloads: capturedPayloads.length
                 });
             }
             
-            console.log(`📋 Using captured payload ${selectedIndex} from ${selectedPayload.timestamp}`);
-            testPayload = { ...selectedPayload.payload, skipCapture: true };
-            testName = `payload-${selectedIndex}`;
+            console.log(`📋 Payload indices: [${payloadIndices.join(', ')}]`);
         }
         
-        // Apply parameter overrides if provided
-        if (overrideString && typeof overrideString === 'string') {
-            console.log(`🔧 Applying parameter overrides: ${overrideString}`);
-            
-            const overrideResult = createTestPayload(testPayload, overrideString, true);
-            
-            if (!overrideResult.success) {
-                return res.status(400).json({
-                    success: false,
-                    error: 'Parameter override failed',
-                    message: 'Failed to apply parameter overrides',
-                    errors: overrideResult.errors,
-                    overrides: overrideString
-                });
-            }
-            
-            testPayload = overrideResult.payload;
-            testName = `${testName}-with-overrides`;
-        }
+        console.log(`🔧 Override sets: [${validOverrides.map(o => `"${o}"`).join(', ')}]`);
         
-        console.log(`🎬 Testing ${testName}...`);
-        
-        // Execute test - import task dynamically
+        // Import task function once
         let taskFunction;
         try {
             const taskModule = await import(`../tasks/${taskType}.js`);
@@ -336,39 +385,120 @@ router.post('/test-task/:taskType', async (req: express.Request, res: express.Re
             });
         }
         
-        let result: any;
-        let success = false;
-        let error: string | undefined;
+        // Generate all combinations (Cartesian product)
+        // Note: payloadIndices are already validated, so no need for bounds checking
+        const combinations: Array<{payloadIndex: number, overrideString: string, testName: string}> = [];
         
-        try {
-            result = await taskFunction(testPayload, (stage: string, progress: number) => {
-                console.log(`🎬 ${testName} progress: ${stage} - ${progress}%`);
-            });
-            success = true;
-            console.log(`✅ ${testName} successful!`);
-            
-        } catch (err) {
-            error = err instanceof Error ? err.message : String(err);
-            console.error(`❌ ${testName} failed:`, err);
+        for (const payloadIndex of payloadIndices) {
+            for (const overrideString of validOverrides) {
+                const baseTestName = hasBodyPayload ? 'custom' : `payload-${payloadIndex}`;
+                const testName = overrideString ? `${baseTestName}-with-overrides` : baseTestName;
+                
+                combinations.push({ payloadIndex, overrideString, testName });
+            }
         }
         
+        console.log(`🎬 Executing ${combinations.length} combination${combinations.length === 1 ? '' : 's'}...`);
+        
+        // Execute all combinations sequentially
+        const results: any[] = [];
+        const videoLinks: string[] = [];
+        
+        for (let i = 0; i < combinations.length; i++) {
+            const { payloadIndex, overrideString, testName } = combinations[i];
+            console.log(`🎬 [${i + 1}/${combinations.length}] Testing ${testName}...`);
+            
+            try {
+                // Prepare payload
+                let testPayload: any;
+                if (hasBodyPayload) {
+                    testPayload = { ...req.body, callbackUrl: 'dev-test', skipCapture: true };
+                } else {
+                    const selectedPayload = capturedPayloads[payloadIndex];
+                    testPayload = { ...selectedPayload.payload, skipCapture: true };
+                }
+                
+                // Apply overrides
+                if (overrideString) {
+                    const overrideResult = createTestPayload(testPayload, overrideString, true);
+                    
+                    if (!overrideResult.success) {
+                        results.push({
+                            combination: `${testName} (${overrideString})`,
+                            success: false,
+                            error: 'Parameter override failed',
+                            errors: overrideResult.errors,
+                            payloadIndex,
+                            overrideString
+                        });
+                        continue;
+                    }
+                    
+                    testPayload = overrideResult.payload;
+                }
+                
+                // Execute task
+                const result = await taskFunction(testPayload, (stage: string, progress: number) => {
+                    console.log(`🎬 ${testName} progress: ${stage} - ${progress}%`);
+                });
+                
+                console.log(`✅ ${testName} successful!`);
+                
+                // Extract video links for easy access
+                if (result && result.parts && Array.isArray(result.parts)) {
+                    result.parts.forEach((part: any) => {
+                        if (part.url) {
+                            videoLinks.push(part.url);
+                        }
+                    });
+                }
+                
+                results.push({
+                    combination: `${testName} (${overrideString || 'no overrides'})`,
+                    success: true,
+                    result,
+                    payloadIndex,
+                    overrideString
+                });
+                
+            } catch (err) {
+                const error = err instanceof Error ? err.message : String(err);
+                console.error(`❌ ${testName} failed:`, err);
+                
+                results.push({
+                    combination: `${testName} (${overrideString || 'no overrides'})`,
+                    success: false,
+                    error,
+                    payloadIndex,
+                    overrideString
+                });
+            }
+        }
+        
+        const successCount = results.filter(r => r.success).length;
+        const totalCount = results.length;
+        
+        console.log(`🎬 Batch test completed: ${successCount}/${totalCount} successful`);
+        
         res.json({
-            success,
-            message: success ? 'Task test completed successfully' : 'Task test failed',
+            success: successCount > 0,
+            message: `Batch test completed: ${successCount}/${totalCount} combinations successful`,
             taskType,
-            testName,
-            result: success ? result : undefined,
-            error,
-            payload: testPayload,
-            overrides: overrideString ? parseOverrides(overrideString as string) : undefined
+            videoLinks, // Top-level array for easy access
+            results, // Detailed results
+            summary: {
+                total: totalCount,
+                successful: successCount,
+                failed: totalCount - successCount
+            }
         });
         
     } catch (error) {
-        console.error(`❌ Task test failed:`, error);
+        console.error(`❌ Batch test failed:`, error);
         res.status(500).json({
             success: false,
             error: error instanceof Error ? error.message : String(error),
-            message: 'Task test failed'
+            message: 'Batch test failed'
         });
     }
 });
