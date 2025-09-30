@@ -9,30 +9,23 @@ dotenv.config();
 
 const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
 
-export const downloadYTV: Task<string, { audioOnly: string, combined: string }> = async (youtubeUrl, onProgress) => {
+export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {
     const outputDir = process.env.DATA_DIR || "./data";
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
         console.log(`Created output directory: ${outputDir}`);
     }
 
-    console.log(`Getting cobalt urls for ${youtubeUrl}`);
-
-    const { videoId, videoUrl } = await getVideoIdAndUrl(youtubeUrl);
-
-    console.log(`Got direct url: ${videoUrl} (VIDEO)`);
+    const { videoId, videoUrl, sourceType } = await getVideoIdAndUrl(youtubeUrl);
+    console.log(`Processing ${sourceType}: ${youtubeUrl}`);
+    
     const audioOutputPath = path.join(outputDir, `${videoId}.mp3`);
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
 
-    await Promise.all([
-        downloadUrl(videoUrl, videoOutputPath)
-    ]);
-
-    console.log(`Extracting sound from ${videoOutputPath} to ${audioOutputPath}`);
+    await downloadUrl(videoUrl, videoOutputPath);
     await extractSoundFromMP4(videoOutputPath, audioOutputPath);
-    console.log(`Extracted sound from ${videoOutputPath} to ${audioOutputPath}`);
 
-    return { audioOnly: audioOutputPath, combined: videoOutputPath };
+    return { audioOnly: audioOutputPath, combined: videoOutputPath, sourceType };
 }
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
@@ -41,11 +34,17 @@ const getVideoIdAndUrl = async (mediaUrl: string) => {
     if (mediaUrl.includes("youtube.com")) {
         const videoId = mediaUrl.split("v=")[1];
         const videoUrl = await getCobaltStreamUrl(mediaUrl, { videoQuality: "360" });
-        return { videoId, videoUrl };
+        return { videoId, videoUrl, sourceType: 'YouTube' };
     }
 
-    console.log(`Unknown media type, assuming it's a url to an mp4 file: ${mediaUrl}`);
-    return { videoId: randomId(), videoUrl: mediaUrl };
+    // Check if it's from our CDN
+    const cdnBaseUrl = process.env.CDN_BASE_URL;
+    if (cdnBaseUrl && mediaUrl.startsWith(cdnBaseUrl)) {
+        const fileName = path.basename(mediaUrl, path.extname(mediaUrl));
+        return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'CDN' };
+    }
+
+    return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL' };
 }
 const FREQUENCY_FILTER = true;
 const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
@@ -84,7 +83,8 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
 
         ffmpegProcess.on('close', (code) => {
             if (code === 0) {
-                console.log(`FFmpeg process completed successfully for output: ${outputPath}`);
+                const audioSize = fs.statSync(outputPath).size;
+                console.log(`Extracted audio: ${formatBytes(audioSize)} -> ${path.basename(outputPath)}`);
                 resolve();
             } else {
                 console.error(`FFmpeg process failed with code ${code}`);
@@ -166,10 +166,12 @@ const HEADERS = {
 
 const downloadUrl = async (url: string, outputPath: string) => {
     if (fs.existsSync(outputPath)) {
-        console.log(`Skipping download of ${url} to ${outputPath} because it already exists`);
+        const existingSize = fs.statSync(outputPath).size;
+        console.log(`Using existing file: ${formatBytes(existingSize)} -> ${path.basename(outputPath)}`);
         return;
     }
 
+    console.log(`Downloading from: ${url}`);
     const response = await fetch(url, { headers: HEADERS });
     if (!response.ok) {
         throw new Error(`HTTP error getting ${url}: status: ${response.status}`);
@@ -177,7 +179,6 @@ const downloadUrl = async (url: string, outputPath: string) => {
 
     const writer = fs.createWriteStream(outputPath);
     const reader = response.body?.getReader();
-    const decoder = new TextDecoder();
 
     if (!reader) {
         throw new Error("Unable to read response body");
@@ -198,14 +199,15 @@ const downloadUrl = async (url: string, outputPath: string) => {
 
         const currentTime = Date.now();
         if (currentTime - lastLogTime >= 5000) {
-            console.log(`Downloading: ${formatBytes(totalBytes)} written to ${outputPath}`);
+            console.log(`  Downloading... ${formatBytes(totalBytes)}`);
             lastLogTime = currentTime;
         }
     }
 
     writer.end();
-
-    console.log(`Total downloaded: ${formatBytes(totalBytes)}`);
+    
+    const finalSize = fs.statSync(outputPath).size;
+    console.log(`Downloaded video: ${formatBytes(finalSize)} -> ${path.basename(outputPath)}`);
 }
 
 function formatBytes(bytes: number): string {

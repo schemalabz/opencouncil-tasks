@@ -18,12 +18,16 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
         return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
     };
 
-    const { audioOnly, combined } = await downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+    const { audioOnly, combined, sourceType } = await downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
-    const combinedVideoUploadPromise = uploadToSpaces({
-        files: [combined],
-        spacesPath: "council-meeting-videos"
-    }, () => { });
+    // Only upload video if it's not already from our CDN
+    const isCdnUrl = sourceType === 'CDN';
+    const combinedVideoUploadPromise = isCdnUrl 
+        ? Promise.resolve([request.youtubeUrl]) // Use the original CDN URL
+        : uploadToSpaces({
+            files: [combined],
+            spacesPath: "council-meeting-videos"
+        }, () => { });
 
     const { audioUrl, diarization, speakers } = await uploadToSpaces({
         files: [audioOnly],
@@ -63,13 +67,13 @@ export const pipeline: Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeRe
 
     console.log("Applied diarization");
 
-    const combinedVideoUrls = await combinedVideoUploadPromise; // wait for 2A
+    const combinedVideoUrls = await combinedVideoUploadPromise; // wait for video upload or get CDN URL
     if (combinedVideoUrls.length !== 1) {
         throw new Error("Expected a single video URL");
     }
     let videoUrl = combinedVideoUrls[0];
 
-    console.log("Uploaded combined video");
+    console.log(isCdnUrl ? "Using existing CDN video URL" : "Uploaded combined video");
     onProgress("finished", 100); //lfgggg
 
     console.log("All done");
