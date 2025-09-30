@@ -80,8 +80,6 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
                 throw error;
             }
         }
-        const fileContent = fs.readFileSync(file);
-
         const contentType = mime.getType(file);
         if (!contentType) {
             throw new Error(`Content type for file ${file} not found`);
@@ -90,7 +88,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
         const params = {
             Bucket: bucketName,
             Key: `${spacesPath}/${fileName}`,
-            Body: fileContent,
+            Body: fs.createReadStream(file),
             ContentType: contentType,
             ACL: 'public-read',
         };
