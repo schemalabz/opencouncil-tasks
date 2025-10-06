@@ -1,14 +1,83 @@
 import { anthropic } from '@ai-sdk/anthropic';
+import { wrapLanguageModel } from 'ai';
+import type { LanguageModelV2Middleware } from '@ai-sdk/provider';
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 dotenv.config();
 
+const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
+
 /**
- * Configured Anthropic model for Claude Sonnet 4
- * Uses ANTHROPIC_API_KEY from environment variables
+ * Logging middleware that maintains existing log file behavior
+ * Logs both requests and responses to ai.log
  */
-export const claudeModel = anthropic('claude-sonnet-4-20250514');
+const loggingMiddleware: LanguageModelV2Middleware = {
+  wrapGenerate: async ({ doGenerate, params }) => {
+    const timestamp = new Date().toISOString();
+    try {
+      await fs.appendFile(logFilePath, `${timestamp} - AI SDK Request:\n${JSON.stringify(params, null, 2)}\n---\n`);
+    } catch (err) {
+      console.error('Failed to write request to log file:', err);
+    }
+    
+    const result = await doGenerate();
+    
+    try {
+      await fs.appendFile(logFilePath, `${timestamp} - AI SDK Response:\n${JSON.stringify(result, null, 2)}\n---\n`);
+    } catch (err) {
+      console.error('Failed to write response to log file:', err);
+    }
+    
+    return result;
+  }
+};
+
+/**
+ * Retry middleware for handling rate limits
+ * Replaces the manual withRateLimitRetry logic
+ */
+const retryMiddleware: LanguageModelV2Middleware = {
+  wrapGenerate: async ({ doGenerate }) => {
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (true) {
+      try {
+        return await doGenerate();
+      } catch (error: any) {
+        // Check for Anthropic rate limit error
+        if (error?.statusCode === 429 && retries < maxRetries) {
+          const retryAfter = error.headers?.['retry-after'] 
+            ? parseInt(error.headers['retry-after']) * 1000 
+            : 5000 * Math.pow(2, retries);
+          
+          console.log(`Rate limit hit, retrying after ${retryAfter}ms (attempt ${retries + 1}/${maxRetries})`);
+          await new Promise(resolve => setTimeout(resolve, retryAfter));
+          retries++;
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+};
+
+/**
+ * Base Anthropic model instance
+ */
+const claudeModel = anthropic('claude-sonnet-4-20250514');
+
+/**
+ * Wrapped model with retry and logging middleware applied
+ * This is the main export to use for all AI operations
+ */
+export const model = wrapLanguageModel({
+  model: claudeModel,
+  middleware: [retryMiddleware, loggingMiddleware]
+});
 
 /**
  * Zod schema for speaker segment summaries
