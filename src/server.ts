@@ -24,6 +24,7 @@ import { generateHighlight } from './tasks/generateHighlight.js';
 import devRouter from './routes/dev.js';
 import swaggerUi from 'swagger-ui-express';
 import { DevPayloadManager } from './tasks/utils/devPayloadManager.js';
+import { performStartupChecks } from './lib/startupChecks.js';
 // Swagger will be imported after routes are defined
 
 dotenv.config();
@@ -258,6 +259,8 @@ process.on('SIGTERM', async () => {
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+
+    performStartupChecks();
 
     // Log payload capture configuration
     const payloadConfig = DevPayloadManager.getConfig();

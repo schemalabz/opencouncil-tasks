@@ -70,6 +70,8 @@ interface SonarApiResponse {
 export async function getSubjectContext({ subjectName, subjectDescription, cityName, date }: { subjectName: string, subjectDescription: string, cityName: string, date: string }): Promise<SubjectContext> {
     const apiKey = process.env.PERPLEXITY_API_KEY;
 
+    // This check is now redundant since enhanceSubjectWithContext handles it,
+    // but keeping it for safety if getSubjectContext is called directly
     if (!apiKey) {
         throw new Error('Perplexity API key not found in environment variables');
     }
@@ -139,10 +141,23 @@ export async function getSubjectContext({ subjectName, subjectDescription, cityN
 
 /**
  * Enhances a subject with context information from the Perplexity Sonar API
- 
+ * Gracefully skips enhancement if PERPLEXITY_API_KEY is not configured
+ * 
  * @returns A Promise resolving to the enhanced subject
  */
 export async function enhanceSubjectWithContext({ subject, cityName, date }: { subject: Subject, cityName: string, date: string }) {
+    // Check if Perplexity API key is available
+    const apiKey = process.env.PERPLEXITY_API_KEY;
+    
+    if (!apiKey) {
+        // Silently skip Sonar enhancement when no API key is configured
+        console.log(`Skipping Sonar enhancement for subject "${subject.name}" - PERPLEXITY_API_KEY not configured`);
+        return {
+            ...subject,
+            context: null
+        };
+    }
+    
     try {
         const context = await getSubjectContext({ subjectName: subject.name, subjectDescription: subject.description, cityName, date });
         return {
@@ -151,10 +166,10 @@ export async function enhanceSubjectWithContext({ subject, cityName, date }: { s
         };
     } catch (error) {
         console.error(`Failed to enhance subject "${subject.name}" with context:`, error);
+        await logToFile(`Failed to enhance subject "${subject.name}"`, error);
         return {
             ...subject,
             context: null
         };
-
     }
 }
