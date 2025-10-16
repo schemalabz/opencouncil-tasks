@@ -99,6 +99,26 @@ export async function aiChat<T>({
             });
         }
 
+        // Enable telemetry if CAPTURE_PAYLOADS is enabled
+        const telemetryEnabled = process.env.CAPTURE_PAYLOADS === 'true';
+        
+        // Get sessionId from context for Langfuse grouping
+        const sessionId = getSessionId();
+        const context = getTelemetryContext();
+        
+        // Build telemetry metadata (filter out undefined values)
+        const telemetryMetadata: Record<string, string> = Object.fromEntries(
+            Object.entries({
+                sessionId: sessionId,
+                taskType: context?.taskType,
+                taskId: context?.taskId
+            }).filter(([_, value]) => value !== undefined)
+        ) as Record<string, string>;
+
+        // Build descriptive functionId with task type prefix
+        const baseFunctionId = schema && parseJson ? 'aiChat-generateObject' : 'aiChat-generateText';
+        const functionId = context?.taskType ? `${context.taskType}.${baseFunctionId}` : baseFunctionId;
+
         // Use generateObject if schema provided and parseJson is true
         if (schema && parseJson) {
             const result = await generateObject({
@@ -108,7 +128,12 @@ export async function aiChat<T>({
                 schema,
                 temperature: 0,
                 maxOutputTokens: maxTokens,
-                mode: 'json'
+                mode: 'json',
+                experimental_telemetry: telemetryEnabled ? {
+                    isEnabled: true,
+                    functionId: functionId,
+                    metadata: telemetryMetadata
+                } : undefined
             });
 
             // Handle prependToResponse for partial results
@@ -134,7 +159,12 @@ export async function aiChat<T>({
                 system: systemPrompt,
                 messages,
                 temperature: 0,
-                maxOutputTokens: maxTokens
+                maxOutputTokens: maxTokens,
+                experimental_telemetry: telemetryEnabled ? {
+                    isEnabled: true,
+                    functionId: functionId,
+                    metadata: telemetryMetadata
+                } : undefined
             });
 
             // Handle max_tokens continuation
@@ -244,6 +274,23 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
     
     const systemMessage = processedMessages.find(msg => msg.role === "system")?.content;
 
+    // Get sessionId from context for Langfuse grouping
+    const sessionId = getSessionId();
+    const context = getTelemetryContext();
+    
+    // Build telemetry metadata (filter out undefined values)
+    const telemetryMetadata: Record<string, string> = Object.fromEntries(
+        Object.entries({
+            sessionId: sessionId,
+            taskType: context?.taskType,
+            taskId: context?.taskId,
+            adalineProjectId: projectId
+        }).filter(([_, value]) => value !== undefined)
+    ) as Record<string, string>;
+
+    // Build descriptive functionId with task type prefix
+    const functionId = context?.taskType ? `${context.taskType}.aiWithAdaline` : 'aiWithAdaline';
+
     // Use AI SDK (automatically benefits from retry and logging middleware!)
     const result = await generateText({
         model,
@@ -251,6 +298,11 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         messages,
         maxOutputTokens: deployment.config.settings.maxTokens,
         temperature: deployment.config.settings.temperature,
+        experimental_telemetry: process.env.CAPTURE_PAYLOADS === 'true' ? {
+            isEnabled: true,
+            functionId: functionId,
+            metadata: telemetryMetadata
+        } : undefined
     });
 
     const completion = result.text;

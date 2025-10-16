@@ -5,8 +5,21 @@ import { z } from 'zod';
 import dotenv from 'dotenv';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { Langfuse } from 'langfuse';
 
 dotenv.config();
+
+/**
+ * Langfuse client for AI observability
+ * Only initialized if Langfuse credentials are available
+ */
+export const langfuse = process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_PUBLIC_KEY
+  ? new Langfuse({
+      secretKey: process.env.LANGFUSE_SECRET_KEY,
+      publicKey: process.env.LANGFUSE_PUBLIC_KEY,
+      baseUrl: process.env.LANGFUSE_BASEURL || 'https://cloud.langfuse.com'
+    })
+  : null;
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
 

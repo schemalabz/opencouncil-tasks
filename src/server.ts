@@ -1,3 +1,6 @@
+// Initialize OpenTelemetry instrumentation FIRST (before other imports)
+import './instrumentation.js';
+
 import express from 'express';
 import dotenv from 'dotenv';
 import { pipeline } from './tasks/pipeline.js';

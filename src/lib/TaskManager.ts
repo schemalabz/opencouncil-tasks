@@ -4,6 +4,8 @@ import { TaskUpdate, TaskRequest } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { DevPayloadManager } from '../tasks/utils/devPayloadManager.js';
+import { runWithTelemetryContext } from './telemetryContext.js';
+import { randomUUID } from 'crypto';
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -87,61 +89,73 @@ class TaskManager {
     ): Promise<void> {
         const taskId = `task_${++this.taskCounter}`;
         const createdAt = new Date();
-        try {
-            this.runningTasks.set(taskId, {
-                status: "processing",
-                stage: "initializing",
-                progressPercent: 0,
-                createdAt,
-                lastUpdatedAt: createdAt,
-                taskType,
-                version
-            });
+        
+        // Create sessionId for Langfuse grouping (groups all AI calls in this task)
+        const sessionId = `${taskType}-${Date.now()}-${randomUUID().slice(0, 8)}`;
+        
+        // Run task within telemetry context
+        await runWithTelemetryContext(
+            { sessionId, taskType, taskId },
+            async () => {
+                try {
+                    this.runningTasks.set(taskId, {
+                        status: "processing",
+                        stage: "initializing",
+                        progressPercent: 0,
+                        createdAt,
+                        lastUpdatedAt: createdAt,
+                        taskType,
+                        version
+                    });
+                    
+                    console.log(`🔍 Task ${taskType} [${taskId}] - Langfuse sessionId: ${sessionId}`);
 
-            const result = await task(input, (stage, progressPercent) => {
-                const now = new Date();
-                const update: RunningTask = {
-                    status: "processing",
-                    stage,
-                    progressPercent,
-                    createdAt,
-                    lastUpdatedAt: now,
-                    taskType,
-                    version
-                };
-                this.runningTasks.set(taskId, update);
-                this.sendCallback(callbackUrl, update);
-            });
+                    const result = await task(input, (stage, progressPercent) => {
+                        const now = new Date();
+                        const update: RunningTask = {
+                            status: "processing",
+                            stage,
+                            progressPercent,
+                            createdAt,
+                            lastUpdatedAt: now,
+                            taskType,
+                            version
+                        };
+                        this.runningTasks.set(taskId, update);
+                        this.sendCallback(callbackUrl, update);
+                    });
 
-            const finalUpdate: TaskUpdate<R> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
-                status: "success",
-                stage: "finished",
-                progressPercent: 100,
-                result,
-                createdAt,
-                lastUpdatedAt: new Date(),
-                taskType,
-                version
-            };
-            await this.sendCallback(callbackUrl, finalUpdate);
-        } catch (error: any) {
-            const errorUpdate: TaskUpdate<any> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
-                status: "error",
-                stage: "finished",
-                progressPercent: 100,
-                error: error.message,
-                createdAt,
-                lastUpdatedAt: new Date(),
-                taskType,
-                version
-            };
-            await this.sendCallback(callbackUrl, errorUpdate);
-            console.error('Error in task:', error);
-        } finally {
-            this.runningTasks.delete(taskId);
-            // Process the queue after a task finishes
-            this.processQueue();
-        }
+                    const finalUpdate: TaskUpdate<R> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
+                        status: "success",
+                        stage: "finished",
+                        progressPercent: 100,
+                        result,
+                        createdAt,
+                        lastUpdatedAt: new Date(),
+                        taskType,
+                        version
+                    };
+                    await this.sendCallback(callbackUrl, finalUpdate);
+                } catch (error: any) {
+                    const errorUpdate: TaskUpdate<any> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
+                        status: "error",
+                        stage: "finished",
+                        progressPercent: 100,
+                        error: error.message,
+                        createdAt,
+                        lastUpdatedAt: new Date(),
+                        taskType,
+                        version
+                    };
+                    await this.sendCallback(callbackUrl, errorUpdate);
+                    console.error('Error in task:', error);
+                } finally {
+                    this.runningTasks.delete(taskId);
+                    // Process the queue after a task finishes
+                    this.processQueue();
+                }
+            }
+        );
     }
 
     public async runTaskWithCallback<T, R>(
