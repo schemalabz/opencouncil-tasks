@@ -4,6 +4,7 @@ import { model } from './aiClient.js';
 import { z } from 'zod';
 import dotenv from 'dotenv';
 import { fetchAdalineDeployment, submitAdalineLog } from './adaline.js';
+import { getSessionId, getTelemetryContext } from './telemetryContext.js';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ type AiChatOptions = {
     prependToResponse?: string;
     parseJson?: boolean;
     schema?: z.ZodType; // Optional Zod schema for structured output
+    output?: 'object' | 'array'; // Output type when using schema
 }
 
 export async function aiChat<T>({ 
@@ -59,7 +61,8 @@ export async function aiChat<T>({
     prependToResponse, 
     documentBase64, 
     parseJson = true,
-    schema
+    schema,
+    output = 'object'
 }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude via AI SDK...`);
@@ -126,6 +129,7 @@ export async function aiChat<T>({
                 system: systemPrompt,
                 messages,
                 schema,
+                output,  // 'object' or 'array' - tells SDK how to structure the response
                 temperature: 0,
                 maxOutputTokens: maxTokens,
                 mode: 'json',

@@ -178,12 +178,12 @@ async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerS
             ${JSON.stringify(subjects, null, 2)}
             `;
 
+            // Use generateObject with output: 'array' - no need for prefill tricks!
             const response = await aiChat<ExtractedSubject[]>({
                 systemPrompt,
                 userPrompt,
-                prefillSystemResponse: "Δώσε τα ανανεωμένα subjects σε μορφή JSON array. Μην προσθέσεις σχόλια ή επεξηγήσεις μέσα στο JSON:\n[",
-                prependToResponse: "[",
-                schema: z.array(extractedSubjectSchema)
+                schema: extractedSubjectSchema,
+                output: 'array'
             });
 
             if (!Array.isArray(response.result)) {
@@ -236,12 +236,12 @@ async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgre
     for (let i = 0; i < userPrompts.length; i++) {
         onProgress("extracting summaries", i / userPrompts.length);
         const userPrompt = userPrompts[i];
+        // Use generateObject with output: 'array' - no need for prefill tricks!
         const response = await aiChat<AiSummarizeResponse[]>({
             systemPrompt,
             userPrompt,
-            prefillSystemResponse: "Με βάση τις τοποθετήσεις των συμμετεχόντων, ακολουθούν οι περιλήψεις και οι θεματικές λεζάντες σε μορφή JSON: \n[",
-            prependToResponse: "[",
-            schema: z.array(speakerSegmentSummarySchema)
+            schema: speakerSegmentSummarySchema,
+            output: 'array'
         });
         responses.push(...response.result);
         totalUsage.input_tokens += response.usage.input_tokens;

@@ -2,16 +2,23 @@ import { Task } from "./pipeline.js";
 import { GeneratePodcastSpecRequest, GeneratePodcastSpecResult, PodcastPart } from "../types.js";
 import { aiChat } from "../lib/ai.js";
 import { IdCompressor } from "../utils.js";
+import { z } from "zod";
 
-type InternalPodcastSpec = {
-    parts: ({
-        type: "host";
-        text: string;
-    } | {
-        type: "audio";
-        utteranceIds: string[];
-    })[]
-};
+// Schema for InternalPodcastSpec
+const internalPodcastSpecSchema = z.object({
+    parts: z.array(z.union([
+        z.object({
+            type: z.literal("host"),
+            text: z.string()
+        }),
+        z.object({
+            type: z.literal("audio"),
+            utteranceIds: z.array(z.string())
+        })
+    ]))
+});
+
+type InternalPodcastSpec = z.infer<typeof internalPodcastSpecSchema>;
 
 const dataDir = process.env.DATA_DIR || "./data";
 
@@ -128,7 +135,12 @@ export const generatePodcastSpec: Task<GeneratePodcastSpecRequest, GeneratePodca
     console.log(JSON.stringify(shortIdSubjectsForPrompt, null, 2));
 
     console.log(`Getting podcast spec...`);
-    const result = await aiChat<InternalPodcastSpec>({ systemPrompt, userPrompt: JSON.stringify(shortIdSubjectsForPrompt), prefillSystemResponse: "To podcast spec σε JSON:\n{", prependToResponse: "{" });
+    // Use schema with output: 'object' (default) - this is an object, not array
+    const result = await aiChat<InternalPodcastSpec>({ 
+        systemPrompt, 
+        userPrompt: JSON.stringify(shortIdSubjectsForPrompt),
+        schema: internalPodcastSpecSchema
+    });
     console.log(`Got podcast spec with ${result.usage.input_tokens} input tokens and ${result.usage.output_tokens} output tokens!`);
 
     const internalPodcastSpecWithShortIds = result.result;

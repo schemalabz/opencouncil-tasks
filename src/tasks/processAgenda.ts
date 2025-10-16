@@ -17,12 +17,14 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 
     const base64 = await downloadFileToBase64(request.agendaUrl);
 
+    // Use extractedSubjectSchema with output: 'array' instead of prefill tricks
+    const { extractedSubjectSchema } = await import("../lib/aiClient.js");
     const result = await aiChat<Omit<ExtractedSubject, "speakerSegments" | "highlightedUtteranceIds">[]>({
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
-        prefillSystemResponse: "Η απάντηση σου σε JSON: [",
-        prependToResponse: "[",
-        documentBase64: base64
+        documentBase64: base64,
+        schema: extractedSubjectSchema,
+        output: 'array'
     });
 
     const subjects = await Promise.all(
