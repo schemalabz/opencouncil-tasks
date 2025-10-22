@@ -31,14 +31,19 @@ type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {
     version?: number
 };
 
-// Task queue item with all necessary information to run a task
-type QueuedTask<T, R> = {
+// Common parameters for task execution
+type TaskExecutionParams<T, R> = {
     task: Task<T, R>;
     input: T;
     callbackUrl: string;
     taskType: string;
-    createdAt: Date;
     version?: number;
+    capturePayload?: boolean;
+};
+
+// Task queue item with all necessary information to run a task
+type QueuedTask<T, R> = TaskExecutionParams<T, R> & {
+    createdAt: Date;
 };
 
 class TaskManager {
@@ -74,24 +79,32 @@ class TaskManager {
         while (this.runningTasks.size < this.maxParallelTasks && this.taskQueue.length > 0) {
             const nextTask = this.taskQueue.shift();
             if (nextTask) {
-                const { task, input, callbackUrl, taskType } = nextTask;
-                this.executeTask(task, input, callbackUrl, taskType);
+                this.executeTask(nextTask);
             }
         }
     }
 
-    private async executeTask<T, R>(
-        task: Task<T, R>,
-        input: T,
-        callbackUrl: string,
-        taskType: string,
-        version?: number
-    ): Promise<void> {
+    private async executeTask<T, R>(params: TaskExecutionParams<T, R>): Promise<void> {
+        const { 
+            task, 
+            input, 
+            callbackUrl, 
+            taskType, 
+            version, 
+            capturePayload = true 
+        } = params;
         const taskId = `task_${++this.taskCounter}`;
         const createdAt = new Date();
         
         // Create sessionId for Langfuse grouping (groups all AI calls in this task)
         const sessionId = `${taskType}-${Date.now()}-${randomUUID().slice(0, 8)}`;
+        
+        // Capture payload with sessionId (if enabled)
+        if (capturePayload) {
+            DevPayloadManager.capture(taskType, input as any, sessionId).catch(error => {
+                console.error(`Failed to capture payload for ${taskType}:`, error);
+            });
+        }
         
         // Run task within telemetry context
         await runWithTelemetryContext(
@@ -158,13 +171,8 @@ class TaskManager {
         );
     }
 
-    public async runTaskWithCallback<T, R>(
-        task: Task<T, R>,
-        input: T,
-        callbackUrl: string,
-        taskType: string,
-        version?: number
-    ): Promise<void> {
+    public async runTaskWithCallback<T, R>(params: TaskExecutionParams<T, R>): Promise<void> {
+        const { task, input, callbackUrl, taskType, version, capturePayload = true } = params;
         // Check if we've reached the maximum number of parallel tasks
         if (this.runningTasks.size >= this.maxParallelTasks) {
             // Queue the task
@@ -174,7 +182,8 @@ class TaskManager {
                 callbackUrl,
                 taskType,
                 createdAt: new Date(),
-                version
+                version,
+                capturePayload // Preserve capturePayload flag for when task is dequeued
             };
             this.taskQueue.push(queuedTask);
             console.log(`Task ${taskType} queued. Current queue size: ${this.taskQueue.length}`);
@@ -191,7 +200,7 @@ class TaskManager {
             });
         } else {
             // Execute the task immediately
-            await this.executeTask(task, input, callbackUrl, taskType);
+            await this.executeTask({ task, input, callbackUrl, taskType, version, capturePayload });
         }
     }
 
@@ -246,20 +255,17 @@ class TaskManager {
         return (req: express.Request<{}, {}, REQ>, res: express.Response) => {
             let taskType = req.path.substring(1);
 
-            // Capture payload if enabled
-            if (options?.capturePayloads !== false) {
-                DevPayloadManager.capture(taskType, req.body).catch(error => {
-                    console.error(`Failed to capture payload for ${taskType}:`, error);
-                });
-            }
+            // Capture payload flag will be passed to executeTask where sessionId is available
+            const capturePayload = options?.capturePayloads !== false;
 
-            this.runTaskWithCallback(
+            this.runTaskWithCallback({
                 task,
-                req.body,
-                req.body.callbackUrl,
+                input: req.body,
+                callbackUrl: req.body.callbackUrl,
                 taskType,
-                options?.version
-            );
+                version: options?.version,
+                capturePayload
+            });
 
             const queueSize = this.taskQueue.length;
             const runningTasksCount = this.runningTasks.size;

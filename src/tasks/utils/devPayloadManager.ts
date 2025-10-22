@@ -20,6 +20,7 @@ export interface CapturedPayload<T extends TaskRequest = any> {
   timestamp: string;
   note: string;
   taskType: string;
+  sessionId?: string; // Langfuse sessionId for trace linking
   payload: T;
 }
 
@@ -85,7 +86,11 @@ export class DevPayloadManager {
     return config.taskTypes.includes(taskType);
   }
 
-  static async capture<T extends TaskRequest>(taskType: string, payload: T): Promise<void> {
+  static async capture<T extends TaskRequest>(
+    taskType: string, 
+    payload: T, 
+    sessionId?: string
+  ): Promise<void> {
     if (!this.shouldCapture(taskType, payload)) {
       return;
     }
@@ -99,12 +104,17 @@ export class DevPayloadManager {
         taskType,
         timestamp: new Date().toISOString(),
         note: 'Captured from API call',
+        sessionId, // Store Langfuse sessionId for trace linking
         payload: sanitizedPayload
       };
 
       await this.storePayload(taskType, capturedPayload);
       
-      console.log(`📝 Payload captured for task: ${taskType}`);
+      if (sessionId) {
+        console.log(`📝 Payload captured for task: ${taskType} (sessionId: ${sessionId})`);
+      } else {
+        console.log(`📝 Payload captured for task: ${taskType}`);
+      }
       
     } catch (error) {
       console.error(`Failed to capture payload for ${taskType}:`, error);

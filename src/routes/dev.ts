@@ -4,6 +4,7 @@ import path from 'path';
 import { uploadToSpaces } from '../tasks/uploadToSpaces.js';
 import { DevPayloadManager } from '../tasks/utils/devPayloadManager.js';
 import { createTestPayload, parseOverrides } from '../lib/parameterOverride.js';
+import { syncTraceFromLangfuse, traceFileExists, listSyncedTraces } from '../lib/langfuseSync.js';
 import aws from 'aws-sdk';
 const S3 = aws.S3;
 
@@ -185,6 +186,8 @@ router.get('/files/:bucket/*', async (req: express.Request, res: express.Respons
  *       - `render.socialOptions.backgroundColor:#ffffff` - Set background color
  *       
  *       Multiple overrides can be combined with commas.
+ *     tags:
+ *       - Development
  *     parameters:
  *       - name: taskType
  *         in: path
@@ -300,7 +303,18 @@ router.post('/test-task/:taskType', async (req: express.Request, res: express.Re
         const { taskType } = req.params;
         console.log(`🧪 Testing task: ${taskType}`);
         
-        const { payload: payloadParam, overrides: overridesParam } = req.query;
+        const { payload: payloadParam, overrides: overridesParam, useAiCache } = req.query;
+        
+        // TODO (V2): Implement AI response caching using synced traces
+        // When useAiCache=true:
+        //   1. Load local trace file (matching payload timestamp)
+        //   2. Extract observations in chronological order
+        //   3. Inject middleware to return cached responses instead of calling AI
+        //   4. Result: Instant, $0 task execution for testing
+        if (useAiCache === 'true') {
+            console.log('⚠️  useAiCache parameter received but not yet implemented (V2 feature)');
+            console.log('    This will enable cost-free reruns using synced Langfuse traces');
+        }
         const hasBodyPayload = req.body && Object.keys(req.body).length > 0;
         
         // Parse overrides as arrays
@@ -589,6 +603,399 @@ router.delete('/captured-payloads/:taskType?', async (req: express.Request, res:
             success: false,
             error: error instanceof Error ? error.message : String(error),
             message: 'Failed to clear captured payloads'
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /dev/sync-trace/{taskType}:
+ *   get:
+ *     summary: Sync Langfuse trace to local file
+ *     description: |
+ *       Fetches a trace from Langfuse cloud using the sessionId from a captured payload
+ *       and saves it as a local JSON file for offline analysis and future caching.
+ *       
+ *       This enables:
+ *       - Offline trace analysis without Langfuse UI
+ *       - Version control of AI traces as fixtures
+ *       - Foundation for V2 caching (instant, $0 reruns)
+ *       
+ *       The trace file is saved with the same timestamp as the payload for easy pairing:
+ *       - Payload: `taskType-payload-2025-10-16T10-00-00-000Z.json`
+ *       - Trace: `taskType-trace-2025-10-16T10-00-00-000Z.json`
+ *     tags:
+ *       - Development
+ *     parameters:
+ *       - name: taskType
+ *         in: path
+ *         required: true
+ *         description: Type of task to sync trace for
+ *         schema:
+ *           type: string
+ *           enum: [generateHighlight, transcribe, summarize, diarize, generatePodcastSpec, processAgenda, generateVoiceprint, syncElasticsearch]
+ *           example: summarize
+ *       - name: payload
+ *         in: query
+ *         description: Index of captured payload to sync trace for (0 = latest, 1 = second latest, etc.)
+ *         schema:
+ *           type: integer
+ *           minimum: 0
+ *           default: 0
+ *           example: 0
+ *       - name: force
+ *         in: query
+ *         description: Force overwrite if trace file already exists
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *           example: false
+ *     responses:
+ *       200:
+ *         description: Trace synced successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Trace synced successfully"
+ *                 sessionId:
+ *                   type: string
+ *                   example: "summarize-1729080000000-abc12345"
+ *                 filepath:
+ *                   type: string
+ *                   example: "/data/dev-payloads/summarize-trace-2025-10-16T10-00-00-000Z.json"
+ *                 observationCount:
+ *                   type: integer
+ *                   example: 5
+ *                 totalTokens:
+ *                   type: integer
+ *                   example: 7500
+ *       400:
+ *         description: Payload does not have a sessionId (captured before Langfuse integration)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Payload does not have a sessionId. This payload was captured before Langfuse integration."
+ *       404:
+ *         description: No captured payloads found or payload index out of range
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "No captured payloads found for task type: summarize"
+ *       409:
+ *         description: Trace file already exists (use force=true to overwrite)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Trace file already exists. Use force=true to overwrite."
+ *                 existingFile:
+ *                   type: string
+ *                   example: "summarize-trace-2025-10-16T10-00-00-000Z.json"
+ *       500:
+ *         description: Langfuse API error or sync failed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "No traces found for sessionId: summarize-1729080000000-abc12345"
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to sync trace"
+ */
+router.get('/sync-trace/:taskType', async (req: express.Request, res: express.Response) => {
+    try {
+        const { taskType } = req.params;
+        const payloadParam = req.query.payload as string | undefined;
+        const force = req.query.force === 'true';
+        
+        // Get all captured payloads for this task type
+        const payloads = await DevPayloadManager.getCapturedPayloads(taskType);
+        
+        if (payloads.length === 0) {
+            res.status(404).json({
+                success: false,
+                error: `No captured payloads found for task type: ${taskType}`
+            });
+            return;
+        }
+        
+        // If payload parameter is NOT provided, sync ALL payloads
+        if (payloadParam === undefined) {
+            console.log(`📡 Batch syncing ALL traces for ${taskType} (${payloads.length} payloads)...`);
+            
+            const results = {
+                synced: [] as any[],
+                skipped: [] as any[],
+                failed: [] as any[]
+            };
+            
+            for (let i = 0; i < payloads.length; i++) {
+                const payload = payloads[i];
+                
+                // Check if payload has sessionId
+                if (!payload.sessionId) {
+                    results.skipped.push({
+                        index: i,
+                        timestamp: payload.timestamp,
+                        reason: 'No sessionId (captured before Langfuse integration)'
+                    });
+                    continue;
+                }
+                
+                // Check if trace already exists
+                const exists = await traceFileExists(taskType, payload.timestamp);
+                if (exists && !force) {
+                    results.skipped.push({
+                        index: i,
+                        timestamp: payload.timestamp,
+                        sessionId: payload.sessionId,
+                        reason: 'Trace already synced (use force=true to overwrite)'
+                    });
+                    continue;
+                }
+                
+                // Sync trace
+                const result = await syncTraceFromLangfuse(
+                    payload.sessionId,
+                    taskType,
+                    payload.timestamp
+                );
+                
+                if (result.success) {
+                    results.synced.push({
+                        index: i,
+                        timestamp: payload.timestamp,
+                        sessionId: payload.sessionId,
+                        observationCount: result.observationCount,
+                        totalTokens: result.totalTokens
+                    });
+                } else {
+                    results.failed.push({
+                        index: i,
+                        timestamp: payload.timestamp,
+                        sessionId: payload.sessionId,
+                        error: result.error
+                    });
+                }
+            }
+            
+            const summary = {
+                total: payloads.length,
+                synced: results.synced.length,
+                skipped: results.skipped.length,
+                failed: results.failed.length,
+                totalObservations: results.synced.reduce((sum, r) => sum + (r.observationCount || 0), 0),
+                totalTokens: results.synced.reduce((sum, r) => sum + (r.totalTokens || 0), 0)
+            };
+            
+            console.log(`✅ Batch sync complete: ${summary.synced} synced, ${summary.skipped} skipped, ${summary.failed} failed`);
+            
+            res.json({
+                success: true,
+                message: `Batch sync complete for ${taskType}`,
+                ...results,
+                summary
+            });
+            return;
+        }
+        
+        // If payload parameter IS provided, sync that specific payload (original behavior)
+        const payloadIndex = parseInt(payloadParam, 10);
+        console.log(`📡 Syncing trace for ${taskType} (payload index: ${payloadIndex})...`);
+        
+        if (payloadIndex < 0 || isNaN(payloadIndex)) {
+            res.status(400).json({
+                success: false,
+                error: `Invalid payload index: ${payloadParam}`
+            });
+            return;
+        }
+        
+        if (payloadIndex >= payloads.length) {
+            res.status(404).json({
+                success: false,
+                error: `Payload index ${payloadIndex} out of range (available: 0-${payloads.length - 1})`
+            });
+            return;
+        }
+        
+        const payload = payloads[payloadIndex];
+        
+        // Check if payload has sessionId
+        if (!payload.sessionId) {
+            res.status(400).json({
+                success: false,
+                error: 'Payload does not have a sessionId. This payload was captured before Langfuse integration.'
+            });
+            return;
+        }
+        
+        // Check if trace already exists
+        const exists = await traceFileExists(taskType, payload.timestamp);
+        if (exists && !force) {
+            res.status(409).json({
+                success: false,
+                error: 'Trace file already exists. Use force=true to overwrite.',
+                existingFile: `${taskType}-trace-${payload.timestamp.replace(/[:.]/g, '-')}.json`
+            });
+            return;
+        }
+        
+        // Sync trace from Langfuse
+        const result = await syncTraceFromLangfuse(
+            payload.sessionId,
+            taskType,
+            payload.timestamp
+        );
+        
+        if (result.success) {
+            res.json({
+                success: true,
+                message: 'Trace synced successfully',
+                sessionId: payload.sessionId,
+                filepath: result.filepath,
+                observationCount: result.observationCount,
+                totalTokens: result.totalTokens
+            });
+        } else {
+            res.status(500).json({
+                success: false,
+                error: result.error || 'Failed to sync trace'
+            });
+        }
+        
+    } catch (error) {
+        console.error('❌ Failed to sync trace:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            message: 'Failed to sync trace'
+        });
+    }
+});
+
+/**
+ * @swagger
+ * /dev/synced-traces/{taskType}:
+ *   get:
+ *     summary: List all synced Langfuse traces
+ *     description: |
+ *       Returns a list of all trace files that have been synced from Langfuse cloud
+ *       to local JSON files. Optionally filter by task type.
+ *       
+ *       Use this to:
+ *       - See which traces are available locally
+ *       - Verify trace sync operations
+ *       - Find traces for specific task types
+ *     tags:
+ *       - Development
+ *     parameters:
+ *       - name: taskType
+ *         in: path
+ *         required: false
+ *         description: Filter traces by task type (omit to list all traces)
+ *         schema:
+ *           type: string
+ *           enum: [generateHighlight, transcribe, summarize, diarize, generatePodcastSpec, processAgenda, generateVoiceprint, syncElasticsearch]
+ *           example: summarize
+ *     responses:
+ *       200:
+ *         description: List of synced trace files
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Found 3 synced traces"
+ *                 taskType:
+ *                   type: string
+ *                   example: "summarize"
+ *                 count:
+ *                   type: integer
+ *                   example: 3
+ *                 traces:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   example:
+ *                     - "summarize-trace-2025-10-16T10-00-00-000Z.json"
+ *                     - "summarize-trace-2025-10-16T09-30-00-000Z.json"
+ *                     - "summarize-trace-2025-10-16T08-15-00-000Z.json"
+ *       500:
+ *         description: Failed to list synced traces
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to read directory"
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to list synced traces"
+ */
+router.get('/synced-traces/:taskType?', async (req: express.Request, res: express.Response) => {
+    try {
+        const { taskType } = req.params;
+        
+        const traces = await listSyncedTraces(taskType);
+        
+        res.json({
+            success: true,
+            message: `Found ${traces.length} synced trace${traces.length === 1 ? '' : 's'}`,
+            taskType: taskType || 'all',
+            count: traces.length,
+            traces
+        });
+        
+    } catch (error) {
+        console.error('❌ Failed to list synced traces:', error);
+        res.status(500).json({
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+            message: 'Failed to list synced traces'
         });
     }
 });
