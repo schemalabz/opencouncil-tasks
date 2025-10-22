@@ -1,12 +1,17 @@
 import { aiChat, ResultWithUsage, Usage } from "../lib/ai.js";
-import { SummarizeRequest, SummarizeResult, RequestOnTranscript, SubjectContext } from "../types.js";
+import { 
+    SummarizeRequest, 
+    SummarizeResult, 
+    RequestOnTranscript, 
+    ExtractedSubject,
+    speakerSegmentSummarySchema,
+    extractedSubjectSchema
+} from "../types.js";
 import { Task } from "./pipeline.js";
 import dotenv from 'dotenv';
-import { ExtractedSubject, extractedSubjectToApiSubject } from "./processAgenda.js";
+import { extractedSubjectToApiSubject } from "./processAgenda.js";
 import { IdCompressor, formatTime } from "../utils.js";
 import { enhanceSubjectWithContext } from "../lib/sonar.js";
-import { speakerSegmentSummarySchema, extractedSubjectSchema } from "../lib/aiClient.js";
-import { z } from 'zod';
 dotenv.config();
 
 type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>;

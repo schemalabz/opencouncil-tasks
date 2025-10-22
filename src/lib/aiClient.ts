@@ -91,37 +91,3 @@ export const model = wrapLanguageModel({
   model: claudeModel,
   middleware: [retryMiddleware, loggingMiddleware]
 });
-
-/**
- * Zod schema for speaker segment summaries
- * Matches the AiSummarizeResponse type from summarize.ts
- */
-export const speakerSegmentSummarySchema = z.object({
-  speakerSegmentId: z.string(),
-  summary: z.string(),
-  topicLabels: z.array(z.string()),
-  type: z.enum(["SUBSTANTIAL", "PROCEDURAL"])
-});
-
-/**
- * Zod schema for extracted subjects
- * Matches the ExtractedSubject type from processAgenda.ts
- */
-export const extractedSubjectSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  speakerSegments: z.array(z.object({
-    speakerSegmentId: z.string(),
-    summary: z.string().nullable()
-  })),
-  highlightedUtteranceIds: z.array(z.string()),
-  locationText: z.string().nullable(),
-  introducedByPersonId: z.string().nullable(),
-  topicLabel: z.string().nullable()
-});
-
-/**
- * Type inference from schemas for type-safe AI responses
- */
-export type AiSummarizeResponse = z.infer<typeof speakerSegmentSummarySchema>;
-export type ExtractedSubjectResponse = z.infer<typeof extractedSubjectSchema>;

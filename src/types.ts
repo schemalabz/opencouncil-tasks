@@ -2,6 +2,8 @@
  * Generic task types
  */
 
+import { z } from 'zod';
+
 export interface TaskUpdate<T> {
     status: "processing" | "success" | "error";
     stage: string;
@@ -131,19 +133,42 @@ export interface Location {
     coordinates: number[][]; // a sequence of coordinates. just one coordinate for a point, more for a line or polygon
 }
 
-export interface Subject {
-    name: string;
-    description: string;
-    agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
-    introducedByPersonId: string | null;
+/**
+ * Zod schema for extracted subjects (used in processAgenda and summarize tasks)
+ * This is the source of truth for AI-extracted subject structure (before geocoding/enhancement)
+ */
+export const extractedSubjectSchema = z.object({
+  name: z.string(),
+  description: z.string(),
+  agendaItemIndex: z.union([z.number(), z.literal("BEFORE_AGENDA"), z.literal("OUT_OF_AGENDA")]),
+  introducedByPersonId: z.string().nullable(),
+  speakerSegments: z.array(z.object({
+    speakerSegmentId: z.string(),
+    summary: z.string().nullable()
+  })),
+  highlightedUtteranceIds: z.array(z.string()),
+  locationText: z.string().nullable().describe('Raw location text extracted by AI, e.g. "Πλατεία Συντάγματος"'),
+  topicLabel: z.string().nullable()
+});
 
-    speakerSegments: SpeakerSegment[];
+/**
+ * TypeScript type inferred from Zod schema
+ * Represents the raw AI-extracted subject (before geocoding location or adding web context)
+ */
+export type ExtractedSubject = z.infer<typeof extractedSubjectSchema>;
 
-    highlightedUtteranceIds: string[];
-
+/**
+ * Subject: Final API type derived from ExtractedSubject
+ * 
+ * Transformation pipeline:
+ *   ExtractedSubject → geocoding → web enhancement → Subject
+ * 
+ * Type-level transformation:
+ *   - locationText (string) → location (Location with coordinates via Google Maps API)
+ *   - Adds context (SubjectContext via Perplexity Sonar)
+ */
+export interface Subject extends Omit<ExtractedSubject, 'locationText'> {
     location: Location | null;
-
-    topicLabel: string | null;
     context: SubjectContext | null;
 }
 
@@ -244,14 +269,26 @@ export interface SummarizeRequest extends RequestOnTranscript {
     additionalInstructions?: string;
 }
 
-export interface SummarizeResult {
-    speakerSegmentSummaries: {
-        speakerSegmentId: string;
-        topicLabels: string[];
-        summary: string | null;
-        type: "PROCEDURAL" | "SUBSTANTIAL";
-    }[];
+/**
+ * Zod schema for speaker segment summaries
+ * This is the source of truth - TypeScript types are inferred from this
+ */
+export const speakerSegmentSummarySchema = z.object({
+  speakerSegmentId: z.string(),
+  topicLabels: z.array(z.string()),
+  summary: z.string().nullable(),
+  type: z.enum(["PROCEDURAL", "SUBSTANTIAL"]).describe(
+    'PROCEDURAL: administrative/procedural discussion. SUBSTANTIAL: actual policy/topic discussion'
+  )
+});
 
+/**
+ * TypeScript type inferred from Zod schema
+ */
+export type SpeakerSegmentSummary = z.infer<typeof speakerSegmentSummarySchema>;
+
+export interface SummarizeResult {
+    speakerSegmentSummaries: SpeakerSegmentSummary[];
     subjects: Subject[];
 }
 
