@@ -109,7 +109,10 @@ LANGFUSE_SECRET_KEY="sk-lf-..."
 LANGFUSE_PUBLIC_KEY="pk-lf-..."
 LANGFUSE_BASEURL="https://cloud.langfuse.com"  # or https://us.cloud.langfuse.com
 
-# Enable telemetry and payload capture
+# Enable telemetry
+ENABLE_TELEMETRY="true"
+
+# Enable payload capture
 CAPTURE_PAYLOADS="true"
 
 # Optional: Environment tagging
@@ -169,7 +172,7 @@ export async function myNewFunction(input: string) {
   const result = await generateText({
     model,
     prompt: input,
-    experimental_telemetry: process.env.CAPTURE_PAYLOADS === 'true' ? {
+    experimental_telemetry: process.env.ENABLE_TELEMETRY === 'true' ? {
       isEnabled: true,
       functionId: context?.taskType 
         ? `${context.taskType}.myNewFunction` 

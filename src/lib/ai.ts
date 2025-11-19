@@ -87,7 +87,7 @@ function convertUsage(sdkUsage: { inputTokens?: number; outputTokens?: number })
  * Centralizes telemetry setup to ensure consistent tracking across all AI operations.
  */
 function buildTelemetryConfig(functionId: string, additionalMetadata?: Record<string, string>) {
-    const telemetryEnabled = process.env.CAPTURE_PAYLOADS === 'true';
+    const telemetryEnabled = process.env.ENABLE_TELEMETRY === 'true';
     if (!telemetryEnabled) return undefined;
 
     const sessionId = getSessionId();

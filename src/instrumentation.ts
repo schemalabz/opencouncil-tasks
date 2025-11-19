@@ -14,7 +14,7 @@ import { LangfuseExporter } from 'langfuse-vercel';
 
 // Only initialize if Langfuse is configured and telemetry is enabled
 const shouldEnableTelemetry = 
-  process.env.CAPTURE_PAYLOADS === 'true' &&
+  process.env.ENABLE_TELEMETRY === 'true' &&
   process.env.LANGFUSE_SECRET_KEY &&
   process.env.LANGFUSE_PUBLIC_KEY;
 
@@ -55,7 +55,7 @@ if (shouldEnableTelemetry) {
       .finally(() => process.exit(0));
   });
 } else {
-  console.log('ℹ️  Langfuse telemetry disabled (CAPTURE_PAYLOADS not enabled or credentials missing)');
+  console.log('ℹ️  Langfuse telemetry disabled (ENABLE_TELEMETRY not enabled or credentials missing)');
 }
 
 export {};

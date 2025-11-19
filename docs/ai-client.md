@@ -17,7 +17,7 @@ The module implements a middleware-based architecture where AI calls flow throug
 AI calls execute through a multi-stage pipeline with automatic quality preservation:
 
 1. **Message Construction**: Builds AI SDK message format, handling document attachments (PDF files as base64), user prompts, and optional prefilled assistant responses for continuation
-2. **Telemetry Setup**: Configures Langfuse observability with sessionId and task context when `CAPTURE_PAYLOADS=true`, enabling trace grouping and debugging
+2. **Telemetry Setup**: Configures Langfuse observability with sessionId and task context when `ENABLE_TELEMETRY=true`, enabling trace grouping and debugging
 3. **Model Selection**: Routes to `generateObject` (schema-validated structured output) or `generateText` (unstructured response) based on schema presence
 4. **Execution**: Calls the configured language model (see `aiClient.ts`) through middleware stack (retry → model), with temperature=0 for deterministic outputs
 5. **Token Limit Detection**: Checks `finishReason === 'length'` indicating response truncation at configured token limit (default: 64K)
@@ -84,7 +84,7 @@ When a response reaches the 64,000 token limit (`maxOutputTokens`), the AI SDK r
 ## Dependencies
 - **Vercel AI SDK**: Provider abstraction and middleware system, enables model-agnostic code and retry middleware. Supports multiple providers (Anthropic, OpenAI, etc.)
 - **Language Model Provider**: Configured in `aiClient.ts` (default: Anthropic Claude). Requires provider-specific API key (e.g., `ANTHROPIC_API_KEY`), subject to provider rate limits (handled by retry middleware)
-- **Langfuse**: Optional observability platform for AI call tracing, requires `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_BASEURL` (enabled when `CAPTURE_PAYLOADS=true`)
+- **Langfuse**: Optional observability platform for AI call tracing, requires `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_BASEURL` (enabled when `ENABLE_TELEMETRY=true`)
 - **Adaline**: Optional prompt management platform for versioned prompts, requires `ADALINE_API_KEY`, used via `aiWithAdaline` function
 - **Zod**: Schema validation library for structured outputs, ensures type safety and runtime validation
 
@@ -97,9 +97,10 @@ When a response reaches the 64,000 token limit (`maxOutputTokens`), the AI SDK r
 
 ## Configuration
 - **Model Provider API Key** (required): API key for the configured language model provider (see `aiClient.ts` for current configuration). Example: `ANTHROPIC_API_KEY` for Anthropic Claude
-- `CAPTURE_PAYLOADS` (optional, default: `false`): Enables Langfuse telemetry for AI calls when set to `true`, enables trace capture and debugging
-- `LANGFUSE_SECRET_KEY` (optional): Secret key for Langfuse cloud, required when `CAPTURE_PAYLOADS=true`
-- `LANGFUSE_PUBLIC_KEY` (optional): Public key for Langfuse cloud, required when `CAPTURE_PAYLOADS=true`
+- `CAPTURE_PAYLOADS` (optional, default: `false`): Enables capturing of request payloads to disk for development and testing
+- `ENABLE_TELEMETRY` (optional, default: `false`): Enables Langfuse telemetry for AI calls when set to `true`
+- `LANGFUSE_SECRET_KEY` (optional): Secret key for Langfuse cloud, required when `ENABLE_TELEMETRY=true`
+- `LANGFUSE_PUBLIC_KEY` (optional): Public key for Langfuse cloud, required when `ENABLE_TELEMETRY=true`
 - `LANGFUSE_BASEURL` (optional, default: `https://cloud.langfuse.com`): Langfuse instance URL, can be self-hosted
 - `ADALINE_API_KEY` (optional): API key for Adaline prompt management platform, only required when using `aiWithAdaline`
 
