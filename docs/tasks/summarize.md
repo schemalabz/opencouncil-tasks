@@ -63,7 +63,6 @@ graph LR
 - `ANTHROPIC_API_KEY`: Required for Claude API access, used for all AI processing operations
 - `PERPLEXITY_API_KEY`: Required for Perplexity Sonar API access, used for web context enhancement
 - `MAX_PARALLEL_TASKS`: Controls concurrent task execution limit (default: 10), affects overall system throughput
-- `LOG_DIR`: Directory for AI operation logs (default: current working directory), stores request/response data for debugging
 
 ## Key Functions & Utilities
 - **`summarize`**: Main task entry point that orchestrates the complete summarization pipeline

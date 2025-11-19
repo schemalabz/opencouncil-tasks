@@ -299,7 +299,7 @@ export async function aiChat<T>({
  * Execute AI calls using versioned prompts from Adaline platform.
  * 
  * Enables external prompt management, A/B testing, and version control. Automatically
- * benefits from retry and logging middleware. Does not support continuation (use aiChat for that).
+ * benefits from retry middleware. Does not support continuation (use aiChat for that).
  * 
  * @see docs/ai-client.md for usage examples and best practices
  */
@@ -351,7 +351,7 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
     // Build telemetry configuration with Adaline project metadata
     const telemetryConfig = buildTelemetryConfig('aiWithAdaline', { adalineProjectId: projectId });
 
-    // Use AI SDK (automatically benefits from retry and logging middleware!)
+    // Use AI SDK (automatically benefits from retry middleware!)
     const result = await generateText({
         model,
         system: systemMessage,

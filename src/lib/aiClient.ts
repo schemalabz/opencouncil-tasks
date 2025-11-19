@@ -3,8 +3,6 @@ import { wrapLanguageModel } from 'ai';
 import type { LanguageModelV2Middleware } from '@ai-sdk/provider';
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import { promises as fs } from 'fs';
-import path from 'path';
 import { Langfuse } from 'langfuse';
 
 dotenv.config();
@@ -20,33 +18,6 @@ export const langfuse = process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_
       baseUrl: process.env.LANGFUSE_BASEURL || 'https://cloud.langfuse.com'
     })
   : null;
-
-const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
-
-/**
- * Logging middleware that maintains existing log file behavior
- * Logs both requests and responses to ai.log
- */
-const loggingMiddleware: LanguageModelV2Middleware = {
-  wrapGenerate: async ({ doGenerate, params }) => {
-    const timestamp = new Date().toISOString();
-    try {
-      await fs.appendFile(logFilePath, `${timestamp} - AI SDK Request:\n${JSON.stringify(params, null, 2)}\n---\n`);
-    } catch (err) {
-      console.error('Failed to write request to log file:', err);
-    }
-    
-    const result = await doGenerate();
-    
-    try {
-      await fs.appendFile(logFilePath, `${timestamp} - AI SDK Response:\n${JSON.stringify(result, null, 2)}\n---\n`);
-    } catch (err) {
-      console.error('Failed to write response to log file:', err);
-    }
-    
-    return result;
-  }
-};
 
 /**
  * Retry middleware for handling rate limits
@@ -84,10 +55,13 @@ const retryMiddleware: LanguageModelV2Middleware = {
 const claudeModel = anthropic('claude-sonnet-4-20250514');
 
 /**
- * Wrapped model with retry and logging middleware applied
+ * Wrapped model with retry middleware applied
  * This is the main export to use for all AI operations
+ * 
+ * Note: Logging/observability is handled by Langfuse via OpenTelemetry instrumentation
+ * See docs/observability.md for details
  */
 export const model = wrapLanguageModel({
   model: claudeModel,
-  middleware: [retryMiddleware, loggingMiddleware]
+  middleware: [retryMiddleware]
 });

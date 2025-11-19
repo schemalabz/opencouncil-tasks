@@ -4,7 +4,7 @@
 The AI client layer (`src/lib/ai.ts`) provides a unified interface for all AI model interactions in the OpenCouncil system, wrapping the Vercel AI SDK with automatic retry logic, observability, token limit continuation, and usage tracking. It abstracts away the complexities of model provider APIs, enabling tasks to focus on prompt engineering and business logic rather than infrastructure concerns.
 
 ## Architecture
-The module implements a middleware-based architecture where AI calls flow through multiple layers: the configured language model (via `aiClient.ts`), retry middleware for rate limit handling, logging middleware for debugging, and optional Langfuse telemetry for observability. Two primary execution paths exist: `generateText` for unstructured responses and `generateObject` for schema-validated structured outputs, both supporting automatic continuation when responses exceed token limits.
+The module implements a middleware-based architecture where AI calls flow through multiple layers: the configured language model (via `aiClient.ts`), retry middleware for rate limit handling, and optional Langfuse telemetry for observability. Two primary execution paths exist: `generateText` for unstructured responses and `generateObject` for schema-validated structured outputs, both supporting automatic continuation when responses exceed token limits.
 
 **File References**: [`ai.ts`](../src/lib/ai.ts), [`aiClient.ts`](../src/lib/aiClient.ts), [`telemetryContext.ts`](../src/lib/telemetryContext.ts), [`adaline.ts`](../src/lib/adaline.ts)
 
@@ -19,7 +19,7 @@ AI calls execute through a multi-stage pipeline with automatic quality preservat
 1. **Message Construction**: Builds AI SDK message format, handling document attachments (PDF files as base64), user prompts, and optional prefilled assistant responses for continuation
 2. **Telemetry Setup**: Configures Langfuse observability with sessionId and task context when `CAPTURE_PAYLOADS=true`, enabling trace grouping and debugging
 3. **Model Selection**: Routes to `generateObject` (schema-validated structured output) or `generateText` (unstructured response) based on schema presence
-4. **Execution**: Calls the configured language model (see `aiClient.ts`) through middleware stack (retry → logging → model), with temperature=0 for deterministic outputs
+4. **Execution**: Calls the configured language model (see `aiClient.ts`) through middleware stack (retry → model), with temperature=0 for deterministic outputs
 5. **Token Limit Detection**: Checks `finishReason === 'length'` indicating response truncation at configured token limit (default: 64K)
 6. **Automatic Continuation**: Recursively calls `aiChat` with partial response as prefill, seamlessly completing truncated outputs while accumulating usage metrics
 7. **Response Parsing**: Validates structured outputs against schema, parses JSON for text responses, handles type conversions
@@ -82,7 +82,7 @@ When a response reaches the 64,000 token limit (`maxOutputTokens`), the AI SDK r
 - Most common in: bulk subject extraction, very long summarizations, large transcript processing
 
 ## Dependencies
-- **Vercel AI SDK**: Provider abstraction and middleware system, enables model-agnostic code and retry/logging middleware. Supports multiple providers (Anthropic, OpenAI, etc.)
+- **Vercel AI SDK**: Provider abstraction and middleware system, enables model-agnostic code and retry middleware. Supports multiple providers (Anthropic, OpenAI, etc.)
 - **Language Model Provider**: Configured in `aiClient.ts` (default: Anthropic Claude). Requires provider-specific API key (e.g., `ANTHROPIC_API_KEY`), subject to provider rate limits (handled by retry middleware)
 - **Langfuse**: Optional observability platform for AI call tracing, requires `LANGFUSE_SECRET_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_BASEURL` (enabled when `CAPTURE_PAYLOADS=true`)
 - **Adaline**: Optional prompt management platform for versioned prompts, requires `ADALINE_API_KEY`, used via `aiWithAdaline` function
@@ -91,7 +91,7 @@ When a response reaches the 64,000 token limit (`maxOutputTokens`), the AI SDK r
 ## Integration Points
 - **Task Usage**: All tasks (summarize, transcribe, processAgenda, etc.) use `aiChat` as the primary interface for AI operations, with automatic retry and telemetry
 - **Telemetry Context**: Tasks call `setTelemetryContext({ taskType, taskId })` before AI calls to enable trace grouping and session tracking in Langfuse
-- **Middleware Stack**: Defined in [`aiClient.ts`](../src/lib/aiClient.ts), applies retry and logging to all AI calls automatically
+- **Middleware Stack**: Defined in [`aiClient.ts`](../src/lib/aiClient.ts), applies retry middleware to all AI calls automatically
 - **Usage Tracking**: The `addUsage` helper accumulates token usage across multiple AI calls within a task for cost tracking and reporting
 - **Session Grouping**: All AI calls within a task execution share a `sessionId` (timestamp-based) for Langfuse trace correlation
 
@@ -102,7 +102,6 @@ When a response reaches the 64,000 token limit (`maxOutputTokens`), the AI SDK r
 - `LANGFUSE_PUBLIC_KEY` (optional): Public key for Langfuse cloud, required when `CAPTURE_PAYLOADS=true`
 - `LANGFUSE_BASEURL` (optional, default: `https://cloud.langfuse.com`): Langfuse instance URL, can be self-hosted
 - `ADALINE_API_KEY` (optional): API key for Adaline prompt management platform, only required when using `aiWithAdaline`
-- `LOG_DIR` (optional, default: `./`): Directory for AI operation logs (`ai.log`), used by logging middleware for debugging
 
 ## Data Flow & State Management
 
@@ -123,8 +122,3 @@ During token limit continuation, state flows through function parameters:
 
 ### Concurrency
 Multiple AI calls can execute concurrently (e.g., `Promise.all` for parallel subject enhancement), each with independent retry and telemetry tracking. Rate limiting is handled per-request by retry middleware.
-
-## Future: V2 Cache Strategy
-See [`ai-cache-strategy-v2.md`](./ai-cache-strategy-v2.md) for details on upcoming AI response caching using synced Langfuse traces, enabling instant $0 reruns for development testing.
-
-
