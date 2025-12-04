@@ -980,7 +980,7 @@ export const downloadFile = async (url: string): Promise<string> => {
         // File doesn't exist, proceed with download
         const response = await fetch(url);
         const buffer = await response.arrayBuffer();
-        await fs.promises.writeFile(fileName, Buffer.from(buffer));
+        await fs.promises.writeFile(fileName, new Uint8Array(buffer));
         console.log(`Downloaded file ${url} to ${fileName}`);
         return fileName;
     }
