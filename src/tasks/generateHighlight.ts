@@ -1,7 +1,7 @@
 import { getMuxPlaybackId } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile } from "./utils/mediaOperations.js";
+import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile, mergeContinuousUtterances } from "./utils/mediaOperations.js";
 
 export const generateHighlight: Task<
   GenerateHighlightRequest,
@@ -35,9 +35,11 @@ export const generateHighlight: Task<
     };
 
     // Convert utterances to segments for media splitting
-    const segments = part.utterances.map(utterance => ({
-      startTimestamp: utterance.startTimestamp,
-      endTimestamp: utterance.endTimestamp,
+    // Merge continuous utterances to avoid unnatural cuts when utterances are close together (within 2 seconds)
+    const mergedSegments = mergeContinuousUtterances(part.utterances, 2.0);
+    const segments = mergedSegments.map(segment => ({
+      startTimestamp: segment.startTimestamp,
+      endTimestamp: segment.endTimestamp,
     }));
 
     let result;
@@ -92,7 +94,7 @@ export const generateHighlight: Task<
     // Apply combined filters to media processing pipeline
     const progressStart = isSocial ? 20 : 15;
     const progressRange = 100 - progressStart - 5; // Leave 5% for final steps
-    
+
     result = await splitAndUploadMedia(
       media.videoUrl,
       media.type,

@@ -19,13 +19,13 @@ const CAPTION_CONSTANTS = {
     // Font configuration
     FONT_URL: 'https://townhalls-gr.fra1.cdn.digitaloceanspaces.com/fonts/relative-book-pro.ttf',
     FONT_FILENAME: 'relative-book-pro.ttf',
-    
+
     // Font width estimation (typical character width ratio for most fonts)
     FONT_CHAR_WIDTH_RATIO: 0.6,  // Character width is typically 60% of font size
-    
+
     // Minimum font size to maintain readability
     MIN_FONT_SIZE: 12,
-    
+
     // Global styling constants (same across all resolutions and aspect ratios)
     FONT_COLOR: 'white',
     BACKGROUND_COLOR: 'black@0.7',
@@ -77,8 +77,8 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
                 sidePadding: 30,
                 maxLines: 3
             },
-            'social-9x16': { 
-                startFont: 32, 
+            'social-9x16': {
+                startFont: 32,
                 maxFont: 40,
                 bottomPadding: 400,
                 sidePadding: 30,
@@ -149,7 +149,7 @@ function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
     if (aspectRatio === 'social-9x16') {
         const [width, height] = resolution.split('x').map(n => parseInt(n, 10));
         const swappedResolution = `${height}x${width}`;
-        
+
         // Try exact match first
         if (RESOLUTION_PRESETS[swappedResolution]) {
             return {
@@ -157,7 +157,7 @@ function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
                 dimensions: { width: height, height: width } // Swapped for social
             };
         }
-        
+
         // Fallback: use first available preset for social
         const firstPresetKey = Object.keys(RESOLUTION_PRESETS)[0];
         const [fallbackWidth, fallbackHeight] = firstPresetKey.split('x').map(n => parseInt(n, 10));
@@ -166,7 +166,7 @@ function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
             dimensions: { width: fallbackHeight, height: fallbackWidth } // Swapped for social
         };
     }
-    
+
     // Default aspect ratio - direct lookup with fallback
     if (RESOLUTION_PRESETS[resolution]) {
         const [width, height] = resolution.split('x').map(n => parseInt(n, 10));
@@ -175,7 +175,7 @@ function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
             dimensions: { width, height }
         };
     }
-    
+
     // Fallback: use first available preset
     const firstPresetKey = Object.keys(RESOLUTION_PRESETS)[0];
     const [fallbackWidth, fallbackHeight] = firstPresetKey.split('x').map(n => parseInt(n, 10));
@@ -191,17 +191,17 @@ const SPEAKER_OVERLAY_CONSTANTS = {
     ENABLED: true,
     PARTY_ACCENT_ENABLED: true,
     DISPLAY_MODE: 'always' as 'always' | 'on_speaker_change',
-    
+
     // Typography hierarchy
     SPEAKER_NAME_FONT_RATIO: 1.2,        // Speaker name 20% larger than base
     PARTY_INFO_FONT_RATIO: 0.85,         // Party info 15% smaller than base
-    
+
     // Styling
     BACKGROUND_COLOR: 'black@0.8',
     TEXT_COLOR: '#e0e0e0',
     BORDER_WIDTH: 0,
     BORDER_COLOR: 'black@0.3',
-    
+
     // Timing
     FADE_DURATION: 0.2,
 };
@@ -211,40 +211,40 @@ const SPEAKER_OVERLAY_CONSTANTS = {
  * @param videoPath Path to the video file
  * @returns Promise<{width: number, height: number}> Video dimensions
  */
-export async function getVideoResolution(videoPath: string): Promise<{width: number, height: number}> {
+export async function getVideoResolution(videoPath: string): Promise<{ width: number, height: number }> {
     try {
         console.log(`🔍 Getting video resolution for: ${videoPath}`);
-        
+
         // Resolve ffprobe path: allow override via env, fallback to system ffprobe
         const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
-        
+
         // Use ffprobe to get video stream dimensions
         const command = `${ffprobePath} -v quiet -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${videoPath}"`;
-        
+
         const { stdout, stderr } = await execAsync(command);
-        
+
         if (stderr) {
             console.warn(`⚠️ ffprobe stderr: ${stderr}`);
         }
-        
+
         // Parse the output (format: "width,height")
         const dimensions = stdout.trim().split(',');
-        
+
         if (dimensions.length !== 2) {
             throw new Error(`Invalid ffprobe output format: ${stdout}`);
         }
-        
+
         const width = parseInt(dimensions[0], 10);
         const height = parseInt(dimensions[1], 10);
-        
+
         if (isNaN(width) || isNaN(height) || width <= 0 || height <= 0) {
             throw new Error(`Invalid video dimensions: ${width}x${height}`);
         }
-        
+
         console.log(`📐 Video resolution: ${width}x${height}`);
-        
+
         return { width, height };
-        
+
     } catch (error) {
         console.error(`❌ Failed to get video resolution for ${videoPath}:`, error);
         throw new Error(`Failed to get video resolution: ${error instanceof Error ? error.message : String(error)}`);
@@ -262,9 +262,9 @@ export function generateSocialFilter(
     inputVideoHeight: number
 ): string {
     const { marginType, backgroundColor, zoomFactor } = options;
-    
+
     console.log(`🎬 Social filter: zoom=${zoomFactor}, marginType=${marginType}`);
-    
+
     if (marginType === 'blur') {
         return generateBlurredMarginFilter(zoomFactor, inputVideoWidth, inputVideoHeight);
     } else {
@@ -284,36 +284,36 @@ function generateSolidMarginFilter(
 ): string {
     // Normalize color for FFmpeg (support #RRGGBB and names)
     const padColor = backgroundColor.startsWith('#') ? `0x${backgroundColor.slice(1)}` : backgroundColor;
-    
+
     // Get social resolution from preset system
     const resolution = `${inputVideoWidth}x${inputVideoHeight}`;
     const { dimensions } = getPresetConfig(resolution, 'social-9x16');
     const socialWidth = dimensions.width;
     const socialHeight = dimensions.height;
-    
+
     console.log(`🎬 Social filter using resolution: ${socialWidth}x${socialHeight} (from input: ${inputVideoWidth}x${inputVideoHeight})`);
-    
+
     // Size-agnostic transformation to 9:16 aspect ratio
     // This approach works with any input dimensions
     const chainParts: string[] = [
         // Step 1: Scale video based on zoom factor while maintaining aspect ratio
         // The scale filter will automatically fit the video into 9:16 format
         `scale='if(gt(a,9/16),${socialWidth},-1)':'if(gt(a,9/16),-1,${socialHeight})'`,
-        
+
         // Step 2: Apply zoom by scaling again
         `scale='iw*${zoomFactor}':'ih*${zoomFactor}'`,
-        
+
         // Step 3: Pad to exact social resolution with colored margins, centering the video
         `pad=${socialWidth}:${socialHeight}:(ow-iw)/2:(oh-ih)/2:${padColor}`,
-        
+
         // Step 4: Ensure widely compatible pixel format
         `format=yuv420p`,
-        
+
         // Step 5: Force portrait sample and display aspect ratios
         `setsar=1`,
         `setdar=9/16`
     ];
-    
+
     return chainParts.join(',');
 }
 
@@ -331,19 +331,19 @@ function generateBlurredMarginFilter(
     const { dimensions } = getPresetConfig(resolution, 'social-9x16');
     const socialWidth = dimensions.width;
     const socialHeight = dimensions.height;
-    
+
     console.log(`🎬 Blurred social filter using resolution: ${socialWidth}x${socialHeight} (from input: ${inputVideoWidth}x${inputVideoHeight})`);
-    
+
     return [
         // Split input into two branches: one for background, one for foreground video
         'split=2[bg][video]',
-        
+
         // Background branch: scale to fill social resolution, crop to exact frame, then blur
         `[bg]scale=${socialWidth}:${socialHeight}:force_original_aspect_ratio=increase,crop=${socialWidth}:${socialHeight},gblur=sigma=20[blurred]`,
-        
+
         // Video branch: scale based on aspect ratio and zoom factor
         `[video]scale='if(gt(a,9/16),${socialWidth},-1)':'if(gt(a,9/16),-1,${socialHeight})',scale='iw*${zoomFactor}':'ih*${zoomFactor}'[scaled]`,
-        
+
         // Composite: overlay sharp video on blurred background, centered
         `[blurred][scaled]overlay=(W-w)/2:(H-h)/2,setsar=1,setdar=9/16`
     ].join(';');
@@ -442,35 +442,35 @@ export async function generateCaptionFilters(
 
     // Ensure font is available
     const fontPath = await ensureFontAvailable();
-    
+
     const resolution = `${inputVideoWidth}x${inputVideoHeight}`;
     const { config } = getPresetConfig(resolution, aspectRatio);
     const cap = config.caption[aspectRatio];
-    
+
     if (!cap) {
         throw new Error(`Missing caption configuration for ${aspectRatio} aspect ratio in ${resolution} preset`);
     }
-    
+
     console.log(`📐 Caption resolution: ${resolution} (${aspectRatio})`);
-    
+
     // Fixed pixel bottom padding from preset
     const yPosition = `h-${cap.bottomPadding}`;
-    
+
     // Normalize timestamps for concatenated timeline
     const normalizedUtterances = normalizeUtteranceTimestamps(utterances);
-    
+
     // Generate drawtext filter for each utterance with dynamic font sizing
     const captionFilters = normalizedUtterances.map((utterance, index) => {
         // Calculate optimal font size and wrapped text for this utterance
         // Start size scaled from frame height
         const baseStartFont = cap.startFont;
         const maxFont = cap.maxFont;
-        
+
         // For social-9x16, use the output width (swapped dimensions) for text wrapping
-        const textWrapWidth = aspectRatio === 'social-9x16' ? 
-            getPresetConfig(`${inputVideoWidth}x${inputVideoHeight}`, 'social-9x16').dimensions.width : 
+        const textWrapWidth = aspectRatio === 'social-9x16' ?
+            getPresetConfig(`${inputVideoWidth}x${inputVideoHeight}`, 'social-9x16').dimensions.width :
             inputVideoWidth;
-        
+
         const { fontSize, wrappedText } = calculateOptimalFontSizeWithStartAndCap(
             utterance.text,
             aspectRatio,
@@ -480,10 +480,10 @@ export async function generateCaptionFilters(
             textWrapWidth,
             cap.maxLines
         );
-        
+
         // Escape text for FFmpeg (wrappedText already contains newlines)
         const escapedText = escapeTextForFFmpeg(wrappedText, aspectRatio);
-        
+
         return `drawtext=` +
             `fontfile='${fontPath}':` + // Use downloaded font file
             `text='${escapedText}':` +
@@ -498,7 +498,7 @@ export async function generateCaptionFilters(
             `borderw=${CAPTION_CONSTANTS.BORDER_WIDTH}:` +
             `bordercolor=${CAPTION_CONSTANTS.BORDER_COLOR}`;
     });
-    
+
     return captionFilters.join(',');
 }
 
@@ -518,15 +518,15 @@ function normalizeUtteranceTimestamps(utterances: Array<{
     originalEnd: number;
 }> {
     let currentTime = 0;
-    
+
     return utterances.map((utterance) => {
         const duration = utterance.endTimestamp - utterance.startTimestamp;
         const normalizedStart = currentTime;
         const normalizedEnd = currentTime + duration;
-        
+
         // Update current time for next utterance
         currentTime = normalizedEnd;
-        
+
         return {
             text: utterance.text,
             normalizedStart,
@@ -575,7 +575,7 @@ interface SpeakerDisplaySegment {
  */
 function formatSpeakerInfo(speaker?: GenerateHighlightRequest['parts'][0]['utterances'][0]['speaker']): SpeakerInfo {
     const name = speaker?.name || 'Unknown Speaker';
-    
+
     return {
         name,
         role: speaker?.roleLabel,
@@ -603,13 +603,13 @@ function calculateSpeakerDisplaySegments(
 
     // Normalize timestamps for concatenated timeline
     const normalizedUtterances = normalizeUtteranceTimestamps(utterances);
-    
+
     const segments: SpeakerDisplaySegment[] = [];
     let lastSpeakerId: string | undefined;
 
     for (const utterance of normalizedUtterances) {
         const currentSpeakerId = utterance.originalStart + '-' + (utterance.text || 'unknown'); // Use a combination for uniqueness
-        const speakerInfo = formatSpeakerInfo(utterances.find(u => 
+        const speakerInfo = formatSpeakerInfo(utterances.find(u =>
             u.startTimestamp === utterance.originalStart && u.endTimestamp === utterance.originalEnd
         )?.speaker);
 
@@ -619,10 +619,10 @@ function calculateSpeakerDisplaySegments(
             showOverlay = true;
         } else if (displayMode === 'on_speaker_change') {
             // Show overlay when speaker changes or for the first utterance
-            const actualSpeakerId = utterances.find(u => 
+            const actualSpeakerId = utterances.find(u =>
                 u.startTimestamp === utterance.originalStart && u.endTimestamp === utterance.originalEnd
             )?.speaker?.id || speakerInfo.name;
-            
+
             showOverlay = !lastSpeakerId || lastSpeakerId !== actualSpeakerId;
             lastSpeakerId = actualSpeakerId;
         }
@@ -645,18 +645,18 @@ function calculateSpeakerDisplaySegments(
 function wrapSpeakerText(text: string, isSocial: boolean): string {
     // Character limits based on aspect ratio
     const maxCharsPerLine = isSocial ? 25 : 35;
-    
+
     if (text.length <= maxCharsPerLine) {
         return text;
     }
-    
+
     const words = text.split(' ');
     const lines: string[] = [];
     let currentLine = '';
-    
+
     for (const word of words) {
         const testLine = currentLine ? `${currentLine} ${word}` : word;
-        
+
         if (testLine.length <= maxCharsPerLine) {
             currentLine = testLine;
         } else {
@@ -670,11 +670,11 @@ function wrapSpeakerText(text: string, isSocial: boolean): string {
             }
         }
     }
-    
+
     if (currentLine) {
         lines.push(currentLine);
     }
-    
+
     return lines.join('\n');
 }
 
@@ -692,21 +692,21 @@ function generateSpeakerOverlayDrawtext(
 ): string[] {
     const isSocial = aspectRatio === 'social-9x16';
     const constants = SPEAKER_OVERLAY_CONSTANTS;
-    
+
     // Simple pixel-based positioning
     const boxX = layout.boxX;
     const boxY = layout.boxY;
     const baseFontSize = layout.baseFontSize;
     const maxWidth = layout.maxWidth;
-    
+
     // Calculate font sizes
     const nameFontSize = Math.round(baseFontSize * constants.SPEAKER_NAME_FONT_RATIO);
     const partyFontSize = Math.round(baseFontSize * constants.PARTY_INFO_FONT_RATIO);
-    
+
     // Process speaker info with text wrapping
     const speakerName = segment.speakerInfo.name;
     const partyInfo: string[] = [];
-    
+
     if (segment.speakerInfo.role) {
         const wrappedRole = wrapSpeakerText(segment.speakerInfo.role, isSocial);
         partyInfo.push(wrappedRole);
@@ -715,10 +715,10 @@ function generateSpeakerOverlayDrawtext(
         const wrappedParty = wrapSpeakerText(segment.speakerInfo.party, isSocial);
         partyInfo.push(wrappedParty);
     }
-    
+
     // Calculate box dimensions dynamically
     const hasPartyInfo = partyInfo.length > 0;
-    
+
     // Calculate height based on content
     const paddingV = layout.paddingV;
     const paddingH = layout.paddingH;
@@ -729,31 +729,31 @@ function generateSpeakerOverlayDrawtext(
         const partyLines = partyInfo.map(text => text.split('\n').length).reduce((sum, lines) => sum + lines, 0);
         boxHeight += (partyFontSize * partyLines) + lineSpacing;
     }
-    
+
     // Calculate width based on speaker name and party info
     // Estimate character width as ~0.6 of font size (typical for most fonts)
     const nameCharWidth = nameFontSize * 0.6;
     const partyCharWidth = partyFontSize * 0.6;
-    
+
     // Calculate width needed for speaker name
     const nameWidth = speakerName.length * nameCharWidth;
-    
+
     // Calculate width needed for party info (if present)
     let partyWidth = 0;
     if (hasPartyInfo) {
         const partyText = partyInfo.join(', ');
         partyWidth = partyText.length * partyCharWidth;
     }
-    
+
     // Use the wider of name or party info, plus padding
     const contentWidth = Math.max(nameWidth, partyWidth);
     const boxWidth = Math.min(
         Math.max(contentWidth + (paddingH * 2), 120),
         maxWidth
     );
-    
+
     const filters: string[] = [];
-    
+
     // Step 1: Draw background box
     filters.push(
         `drawbox=` +
@@ -765,12 +765,12 @@ function generateSpeakerOverlayDrawtext(
         `t=fill:` +
         `enable='between(t,${segment.startTime},${segment.endTime})'`
     );
-    
+
     // Step 2: Draw speaker name
     const escapedName = escapeTextForFFmpeg(speakerName, aspectRatio);
     const nameX = boxX + paddingH;
     const nameY = boxY + paddingV;
-    
+
     filters.push(
         `drawtext=` +
         `fontfile='${fontPath}':` +
@@ -782,14 +782,14 @@ function generateSpeakerOverlayDrawtext(
         `fontcolor=${constants.TEXT_COLOR}:` +
         `box=0`
     );
-    
+
     // Step 3: Draw party info if present
     if (hasPartyInfo) {
         const partyText = partyInfo.join(', ');
         const escapedPartyText = escapeTextForFFmpeg(partyText, aspectRatio);
         const partyX = nameX;
         const partyY = nameY + nameFontSize + lineSpacing;
-        
+
         filters.push(
             `drawtext=` +
             `fontfile='${fontPath}':` +
@@ -802,7 +802,7 @@ function generateSpeakerOverlayDrawtext(
             `box=0`
         );
     }
-    
+
     return filters;
 }
 
@@ -820,37 +820,37 @@ function generatePartyAccentFilter(
     if (!SPEAKER_OVERLAY_CONSTANTS.PARTY_ACCENT_ENABLED || !segment.speakerInfo.partyColor) {
         return null;
     }
-    
+
     const isSocial = aspectRatio === 'social-9x16';
     const constants = SPEAKER_OVERLAY_CONSTANTS;
-    
+
     // Simple pixel-based positioning
     const accentX = layoutOverrides ? layoutOverrides.accentX : 0;
     const accentY = layoutOverrides ? layoutOverrides.accentY : 0;
     const accentWidth = layoutOverrides ? layoutOverrides.accentWidth : 0;
-    
+
     // Calculate accent height to match main box (same logic as main box)
     const baseFontSize = layoutOverrides ? layoutOverrides.baseFontSize : 14;
     const nameFontSize = Math.round(baseFontSize * constants.SPEAKER_NAME_FONT_RATIO);
     const partyFontSize = Math.round(baseFontSize * constants.PARTY_INFO_FONT_RATIO);
-    
+
     const paddingV = layoutOverrides ? layoutOverrides.paddingV : 6;
     const lineSpacing = layoutOverrides ? layoutOverrides.lineSpacing : 4;
 
     let accentHeight = nameFontSize + (paddingV * 2);
-    
+
     if (segment.speakerInfo.role || segment.speakerInfo.party) {
         const partyText = segment.speakerInfo.role || segment.speakerInfo.party || '';
         const wrappedPartyText = wrapSpeakerText(partyText, isSocial);
         const partyLines = wrappedPartyText.split('\n').length;
         accentHeight += (partyFontSize * partyLines) + lineSpacing;
     }
-    
+
     // Convert hex color to RGB for FFmpeg
-    const color = segment.speakerInfo.partyColor.startsWith('#') ? 
-        segment.speakerInfo.partyColor : 
+    const color = segment.speakerInfo.partyColor.startsWith('#') ?
+        segment.speakerInfo.partyColor :
         `#${segment.speakerInfo.partyColor}`;
-    
+
     return `drawbox=x=${accentX}:y=${accentY}:w=${accentWidth}:h=${accentHeight}:color=${color}:t=fill:enable='between(t,${segment.startTime},${segment.endTime})'`;
 }
 
@@ -875,18 +875,18 @@ export async function generateSpeakerOverlayFilter(
 
     // Ensure font is available
     const fontPath = await ensureFontAvailable();
-    
+
     const resolution = `${inputVideoWidth}x${inputVideoHeight}`;
     const { config } = getPresetConfig(resolution, aspectRatio);
     const o = config.overlay[aspectRatio];
-    
+
     if (!o) {
         throw new Error(`Missing overlay configuration for ${aspectRatio} aspect ratio in ${resolution} preset`);
     }
-    
+
     // Calculate when to show overlays based on display mode
     const displaySegments = calculateSpeakerDisplaySegments(utterances, SPEAKER_OVERLAY_CONSTANTS.DISPLAY_MODE);
-    
+
     const allFilters: string[] = [];
     const layout = {
         boxX: o.leftPadding,
@@ -906,7 +906,7 @@ export async function generateSpeakerOverlayFilter(
         if (segment.showOverlay) {
             const textFilters = generateSpeakerOverlayDrawtext(segment, aspectRatio, fontPath, layout);
             allFilters.push(...textFilters);
-            
+
             // Add party accent on top of the background (after background but before text)
             if (SPEAKER_OVERLAY_CONSTANTS.PARTY_ACCENT_ENABLED) {
                 const accentFilter = generatePartyAccentFilter(segment, aspectRatio, {
@@ -925,7 +925,7 @@ export async function generateSpeakerOverlayFilter(
             }
         }
     }
-    
+
     return allFilters.join(',');
 }
 
@@ -936,27 +936,27 @@ export async function generateSpeakerOverlayFilter(
 async function ensureFontAvailable(): Promise<string> {
     const fontsDir = path.join(dataDir, 'fonts');
     const fontPath = path.join(fontsDir, CAPTION_CONSTANTS.FONT_FILENAME);
-    
+
     // Check if font already exists
     if (fs.existsSync(fontPath)) {
         return fontPath;
     }
-    
+
     // Create fonts directory if it doesn't exist
     if (!fs.existsSync(fontsDir)) {
         fs.mkdirSync(fontsDir, { recursive: true });
         console.log(`📁 Created fonts directory: ${fontsDir}`);
     }
-    
+
     console.log(`📝 Downloading font from: ${CAPTION_CONSTANTS.FONT_URL}`);
-    
+
     try {
         const fontData = await downloadFile(CAPTION_CONSTANTS.FONT_URL);
-        
+
         // Move downloaded font to the correct location
         fs.renameSync(fontData, fontPath);
         console.log(`✅ Font downloaded successfully: ${fontPath}`);
-        
+
         return fontPath;
     } catch (error) {
         console.error(`❌ Failed to download font:`, error);
@@ -1021,7 +1021,7 @@ export const getFileParts = (
     let filterComplexConcat;
     let finalVideoOutput = "[outv]";
     let finalAudioOutput = "[outa]";
-    
+
     if (type === "audio") {
         // Audio-only: concat directly to final output [outa]
         filterComplexConcat =
@@ -1031,7 +1031,7 @@ export const getFileParts = (
         filterComplexConcat =
             segments.map((_, index) => `[v${index}][a${index}]`).join("") +
             `concat=n=${segments.length}:v=1:a=1[concatv][concata]`;
-        
+
         // Apply video filters if provided
         if (videoFilters && type === "video") {
             // Chain: [concatv] → video filters → [outv], audio passes through as [concata]
@@ -1092,6 +1092,67 @@ export const getFileParts = (
         });
     });
 };
+
+/**
+ * Merge continuous utterances to avoid unnatural cuts
+ * Utterances are considered continuous if the gap between them is <= maxGapSeconds
+ */
+export function mergeContinuousUtterances<T extends { startTimestamp: number; endTimestamp: number }>(
+    utterances: T[],
+    maxGapSeconds: number = 2.0
+): Array<{
+    startTimestamp: number;
+    endTimestamp: number;
+    originalUtterances: T[];
+}> {
+    if (utterances.length === 0) {
+        return [];
+    }
+
+    // Sort utterances by start time to ensure proper ordering
+    const sortedUtterances = [...utterances].sort((a, b) => a.startTimestamp - b.startTimestamp);
+
+    const mergedSegments: Array<{
+        startTimestamp: number;
+        endTimestamp: number;
+        originalUtterances: T[];
+    }> = [];
+
+    let currentSegment = {
+        startTimestamp: sortedUtterances[0].startTimestamp,
+        endTimestamp: sortedUtterances[0].endTimestamp,
+        originalUtterances: [sortedUtterances[0]]
+    };
+
+    for (let i = 1; i < sortedUtterances.length; i++) {
+        const utterance = sortedUtterances[i];
+        const gap = utterance.startTimestamp - currentSegment.endTimestamp;
+
+        if (gap <= maxGapSeconds) {
+            // Merge with current segment
+            currentSegment.endTimestamp = utterance.endTimestamp;
+            currentSegment.originalUtterances.push(utterance);
+        } else {
+            // Start new segment
+            mergedSegments.push(currentSegment);
+            currentSegment = {
+                startTimestamp: utterance.startTimestamp,
+                endTimestamp: utterance.endTimestamp,
+                originalUtterances: [utterance]
+            };
+        }
+    }
+
+    // Don't forget the last segment
+    mergedSegments.push(currentSegment);
+
+    console.log(`📎 Merged ${sortedUtterances.length} utterances into ${mergedSegments.length} continuous segments`);
+    mergedSegments.forEach((segment, index) => {
+        console.log(`   Segment ${index + 1}: ${segment.startTimestamp}s - ${segment.endTimestamp}s (${segment.originalUtterances.length} utterances)`);
+    });
+
+    return mergedSegments;
+}
 
 /**
  * Split media file and upload result to DigitalOcean Spaces
