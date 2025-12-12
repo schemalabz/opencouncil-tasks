@@ -3,6 +3,104 @@ import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile } from "./utils/mediaOperations.js";
 
+/**
+ * Merge consecutive video segments to simplify FFmpeg operations
+ * When segments are continuous (end of one = start of next), merge them into single ranges
+ * This reduces the number of trim+concat operations FFmpeg needs to perform
+ */
+function mergeConsecutiveSegments(
+  segments: Array<{ startTimestamp: number; endTimestamp: number }>
+): Array<{ startTimestamp: number; endTimestamp: number }> {
+  if (segments.length === 0) {
+    return [];
+  }
+  
+  const merged: Array<{ startTimestamp: number; endTimestamp: number }> = [];
+  let currentMerge = { ...segments[0] };
+  
+  for (let i = 1; i < segments.length; i++) {
+    const segment = segments[i];
+    
+    // Check if this segment is consecutive with the current merge
+    // Use small epsilon for floating point comparison
+    const isConsecutive = Math.abs(currentMerge.endTimestamp - segment.startTimestamp) < 0.001;
+    
+    if (isConsecutive) {
+      // Extend the current merge to include this segment
+      currentMerge.endTimestamp = segment.endTimestamp;
+    } else {
+      // Gap detected - save current merge and start a new one
+      merged.push(currentMerge);
+      currentMerge = { ...segment };
+    }
+  }
+  
+  // Don't forget the last merge
+  merged.push(currentMerge);
+  
+  return merged;
+}
+
+/**
+ * Bridge small gaps between consecutive utterances to avoid jarring cuts
+ * Extends utterance end times to meet the next utterance's start time if gap is small
+ * Returns both the video segments (for FFmpeg) and adjusted utterances (for captions/overlays sync)
+ * Merges consecutive segments to simplify FFmpeg operations
+ */
+function bridgeUtteranceGaps(
+  utterances: GenerateHighlightRequest['parts'][0]['utterances'],
+  maxGapSeconds: number = 2.0
+): {
+  segments: Array<{ startTimestamp: number; endTimestamp: number }>;
+  adjustedUtterances: GenerateHighlightRequest['parts'][0]['utterances'];
+} {
+  if (utterances.length === 0) {
+    return { segments: [], adjustedUtterances: [] };
+  }
+  
+  const segments: Array<{ startTimestamp: number; endTimestamp: number }> = [];
+  const adjustedUtterances = utterances.map((utterance, index) => {
+    if (index < utterances.length - 1) {
+      const nextUtterance = utterances[index + 1];
+      const gap = nextUtterance.startTimestamp - utterance.endTimestamp;
+      
+      // Only bridge if gap is positive and small (less than threshold)
+      if (gap > 0 && gap <= maxGapSeconds) {
+        console.log(`🔗 Bridging ${gap.toFixed(3)}s gap between utterances ${index} and ${index + 1}`);
+        
+        // Extend the segment to bridge the gap
+        segments.push({
+          startTimestamp: utterance.startTimestamp,
+          endTimestamp: nextUtterance.startTimestamp,  // Extended to next utterance
+        });
+        
+        // Also extend the utterance end time for caption/overlay sync
+        return {
+          ...utterance,
+          endTimestamp: nextUtterance.startTimestamp,  // Extended to match segment
+        };
+      }
+    }
+    
+    // No bridging needed - use original timestamps
+    segments.push({
+      startTimestamp: utterance.startTimestamp,
+      endTimestamp: utterance.endTimestamp,
+    });
+    
+    return utterance;
+  });
+  
+  // Merge consecutive segments to optimize FFmpeg operations
+  const mergedSegments = mergeConsecutiveSegments(segments);
+  
+  if (mergedSegments.length < segments.length) {
+    console.log(`✨ Optimized: merged ${segments.length} segments into ${mergedSegments.length} continuous range(s)`);
+  }
+  
+  return { segments: mergedSegments, adjustedUtterances };
+}
+
 export const generateHighlight: Task<
   GenerateHighlightRequest,
   GenerateHighlightResult
@@ -34,11 +132,11 @@ export const generateHighlight: Task<
       );
     };
 
-    // Convert utterances to segments for media splitting
-    const segments = part.utterances.map(utterance => ({
-      startTimestamp: utterance.startTimestamp,
-      endTimestamp: utterance.endTimestamp,
-    }));
+    // Convert utterances to segments for media splitting, bridging small gaps
+    // to avoid jarring cuts while keeping captions/overlays in sync
+    const { segments, adjustedUtterances } = bridgeUtteranceGaps(part.utterances);
+    
+    console.log(`🎞️  Processing ${part.utterances.length} utterances → ${segments.length} video segments`);
 
     let result;
 
@@ -67,18 +165,20 @@ export const generateHighlight: Task<
     }
 
     // Step 2: Speaker overlays (if enabled)
+    // Use adjustedUtterances to keep overlays synced with bridged video segments
     let speakerFilter = '';
     if (render.includeSpeakerOverlay) {
-      console.log(`👤 Generating speaker overlays for ${part.utterances.length} utterances`);
-      speakerFilter = await generateSpeakerOverlayFilter(part.utterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
+      console.log(`👤 Generating speaker overlays for ${adjustedUtterances.length} utterances`);
+      speakerFilter = await generateSpeakerOverlayFilter(adjustedUtterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
       partProgress(isSocial ? 18 : 10);
     }
 
     // Step 3: Captions (if enabled)
+    // Use adjustedUtterances to keep captions synced with bridged video segments
     let captionFilter = '';
     if (render.includeCaptions) {
-      console.log(`📝 Generating captions for ${part.utterances.length} utterances in ${aspectRatio} format`);
-      captionFilter = await generateCaptionFilters(part.utterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
+      console.log(`📝 Generating captions for ${adjustedUtterances.length} utterances in ${aspectRatio} format`);
+      captionFilter = await generateCaptionFilters(adjustedUtterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
       partProgress(isSocial ? 20 : 15);
     }
 

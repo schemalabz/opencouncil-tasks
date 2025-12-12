@@ -13,7 +13,8 @@ Produce short highlight clips from a source video using utterance time ranges. B
 flowchart TD
   A[GenerateHighlightRequest] --> B[downloadFile]
   B --> C[ffprobe getVideoResolution]
-  C --> D{aspectRatio}
+  C --> BG[bridgeUtteranceGaps]
+  BG --> |segments + adjustedUtterances| D{aspectRatio}
   D -- default 16:9 --> E[Speaker Overlays]
   D -- social 9:16 --> S[Social Transform] --> E
   E --> F[Captions]
@@ -48,26 +49,36 @@ flowchart TD
 1) Detect input resolution once
 - downloadFile(videoUrl) to local cache under DATA_DIR
 - getVideoResolution(localPath) via ffprobe (width/height)
-2) Unified preset resolution system
+2) Gap bridging and segment merging for smooth, optimized video
+- bridgeUtteranceGaps(utterances, maxGapSeconds=2.0) extends utterance timestamps to bridge small gaps
+- Avoids jarring cuts between consecutive utterances with millisecond-to-second gaps
+- Only bridges gaps ≤2 seconds to preserve intentional pauses (e.g., speaker changes)
+- mergeConsecutiveSegments() combines consecutive segments into continuous ranges
+- **FFmpeg optimization**: 50 utterances with bridged gaps → 1 merged segment (instead of 50 trim+concat operations)
+- Returns optimized video segments (for FFmpeg trimming) and adjusted utterances (for caption/overlay sync)
+- Captions and overlays remain perfectly synchronized by using adjusted timestamps
+3) Unified preset resolution system
 - getPresetConfig(resolution, aspectRatio) returns both config and dimensions
 - Handles 9:16 aspect ratio by finding corresponding 16:9 preset
 - Uses sequential fallback (first available preset) if exact match not found
 - Example: 640x360 + social-9x16 → uses 1280x720 preset's social config + 720x1280 dimensions
-3) Social transform (optional)
+4) Social transform (optional)
 - generateSocialFilter(options, inputVideoWidth, inputVideoHeight) uses preset dimensions
 - generateSolidMarginFilter() and generateBlurredMarginFilter() get resolution from preset system
 - FFmpeg output resolution matches preset dimensions (e.g., 720x1280 from 1280x720 preset)
-4) Speaker overlays (optional)
-- generateSpeakerOverlayFilter(utterances, aspectRatio, inputVideoWidth, inputVideoHeight)
+5) Speaker overlays (optional)
+- generateSpeakerOverlayFilter(adjustedUtterances, aspectRatio, inputVideoWidth, inputVideoHeight)
 - Uses RESOLUTION_PRESETS.overlay[aspectRatio] from getPresetConfig()
 - Renders drawbox background, drawtext name and wrapped role/party
-5) Captions (optional)
-- generateCaptionFilters(utterances, aspectRatio, inputVideoWidth, inputVideoHeight)
+- Uses adjustedUtterances from bridging to maintain sync with video segments
+6) Captions (optional)
+- generateCaptionFilters(adjustedUtterances, aspectRatio, inputVideoWidth, inputVideoHeight)
 - Uses RESOLUTION_PRESETS.caption[aspectRatio] from getPresetConfig()
 - Auto wraps and shrinks font to fit maxLines; draws drawtext with background box
-6) Concat + render
-- Build filter_complex to trim segments, concat, and apply combined filters
-7) Upload & finalize
+- Uses adjustedUtterances from bridging to maintain sync with video segments
+7) Concat + render
+- Build filter_complex to trim bridged segments, concat, and apply combined filters
+8) Upload & finalize
 - uploadToSpaces returns final URL
 - Optionally fetch Mux playback id
 
@@ -121,6 +132,8 @@ sequenceDiagram
 
 ### Key Functions & Utilities
 - Orchestration: generateHighlight(request, onProgress)
+  - bridgeUtteranceGaps(utterances, maxGapSeconds) - bridge small gaps between utterances
+  - mergeConsecutiveSegments(segments) - merge consecutive segments to optimize FFmpeg operations
 - Media ops:
   - getVideoResolution(videoPath)
   - getPresetConfig(resolution, aspectRatio) - unified resolution system
