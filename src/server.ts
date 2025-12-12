@@ -18,7 +18,6 @@ import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
-import { syncElasticsearch } from './tasks/syncElasticsearch.js';
 import devRouter from './routes/dev.js';
 import swaggerUi from 'swagger-ui-express';
 // Swagger will be imported after routes are defined
@@ -116,11 +115,6 @@ app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
 app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
   summary: 'Generate video highlight',
   description: 'Create video highlights from source media with visual enhancements'
-}));
-
-app.post('/syncElasticsearch', taskManager.registerTask(syncElasticsearch, {
-  summary: 'Sync with Elasticsearch',
-  description: 'Synchronize data with Elasticsearch index for search functionality'
 }));
 
 // Resolve task paths from Express routes, then load API Documentation

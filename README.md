@@ -26,7 +26,7 @@ The server supports the following processing tasks:
 - [`generateVoiceprint`](src/tasks/generateVoiceprint.ts) - Creates unique speaker voice fingerprints for identification
 
 ### Data Synchronization
-- [`syncElasticsearch`](src/tasks/syncElasticsearch.ts) - Triggers and monitors a data synchronization job between PostgreSQL and Elasticsearch.
+- [**PGSync**](docs/pgsync-setup.md) - Real-time change data capture that continuously syncs PostgreSQL to Elasticsearch
 
 The [`pipeline`](src/tasks/pipeline.ts) task orchestrates multiple tasks above in sequence, providing a complete end-to-end processing workflow.
 
@@ -155,9 +155,15 @@ The service uses environment variables for configuration. Not all variables are 
 - `PYANNOTE_API_TOKEN` - Required for speaker diarization
 - `PYANNOTE_DIARIZE_API_URL` - Pyannote API endpoint
 - `MOCK_PYANNOTE` - Enable mock mode for Pyannote (development only)
-- `ELASTICSEARCH_HOST` - Elasticsearch host URL
-- `ELASTICSEARCH_API_KEY` - Elasticsearch API key for the connector
-- `ELASTICSEARCH_CONNECTOR_ID` - The ID of the Elasticsearch connector
+
+### PGSync / Elasticsearch Configuration
+- `PG_URL` - PostgreSQL connection URL (format: `postgres://user:password@host:port/database`)
+- `ELASTICSEARCH_URL` - Elasticsearch host URL (e.g., `https://your-cluster.es.region.aws.elastic.cloud:443`)
+- `ELASTICSEARCH_API_KEY_ID` - Elasticsearch API key ID (first part before `:`)
+- `ELASTICSEARCH_API_KEY` - Elasticsearch API key secret (second part after `:`)
+- `SCHEMA_URL` - URL to remote PGSync schema.json file (e.g., GitHub Gist raw URL)
+
+See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 
 ### Task-Specific Configuration
 - `GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 20) - Maximum concurrent transcription tasks

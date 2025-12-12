@@ -1,9 +1,0 @@
-# This file is used to configure the elasticsearch connector for the opencouncil project.
-# It is used to connect to the elasticsearch instance and ingest the data into the elasticsearch index.
-elasticsearch:
-  host: ${ELASTICSEARCH_HOST}
-  api_key: ${ELASTICSEARCH_API_KEY}
-
-connectors:
-  - connector_id: ${ELASTICSEARCH_CONNECTOR_ID}
-    service_type: "postgresql" 
