@@ -11,7 +11,11 @@
     "test:upload": "curl -X POST http://localhost:3005/dev/test-upload"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
+    "@ai-sdk/anthropic": "^2.0.23",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.65.0",
+    "@opentelemetry/sdk-node": "^0.206.0",
+    "ai": "^5.0.60",
     "aws-sdk": "^2.1687.0",
     "axios": "^1.7.7",
     "chalk": "^4.1.2",
@@ -20,14 +24,17 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "ffmpeg-static": "^5.2.0",
+    "langfuse": "^3.38.5",
+    "langfuse-vercel": "^3.38.5",
     "mime": "^4.0.4",
     "node-fetch": "^3.3.2",
     "puppeteer": "^23.3.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "typescript": "^5.5.4",
+    "typescript-json-schema": "^0.65.1",
     "underscore": "^1.13.7",
-    "typescript-json-schema": "^0.65.1"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

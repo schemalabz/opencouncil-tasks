@@ -1,3 +1,6 @@
+// Initialize OpenTelemetry instrumentation FIRST (before other imports)
+import './instrumentation.js';
+
 import express from 'express';
 import dotenv from 'dotenv';
 import { pipeline } from './tasks/pipeline.js';
@@ -20,6 +23,8 @@ import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import devRouter from './routes/dev.js';
 import swaggerUi from 'swagger-ui-express';
+import { DevPayloadManager } from './tasks/utils/devPayloadManager.js';
+import { performStartupChecks } from './lib/startupChecks.js';
 // Swagger will be imported after routes are defined
 
 dotenv.config();
@@ -119,6 +124,11 @@ app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
 
 // Resolve task paths from Express routes, then load API Documentation
 taskManager.resolvePathsFromApp(app);
+
+// Initialize DevPayloadManager with valid task types for validation
+const registeredTasks = taskManager.getAllRegisteredTasks();
+const validTaskTypes = registeredTasks.map(({ metadata }) => metadata.path?.substring(1)).filter((path): path is string => Boolean(path));
+DevPayloadManager.initialize(validTaskTypes);
 import('./lib/swaggerConfig.js').then(({ swaggerSpec }) => {
     app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
         explorer: true,
@@ -249,6 +259,18 @@ process.on('SIGTERM', async () => {
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+
+    performStartupChecks();
+
+    // Log payload capture configuration
+    const payloadConfig = DevPayloadManager.getConfig();
+    if (payloadConfig.enabled) {
+        const taskTypes = payloadConfig.taskTypes === 'all' ? 'all task types' : payloadConfig.taskTypes.join(', ');
+        console.log(`📝 Payload capture: ENABLED for ${taskTypes}`);
+        console.log(`📁 Storage: ${payloadConfig.storage.baseDirectory} (max ${payloadConfig.storage.maxFilesPerTask} files/task)`);
+    } else {
+        console.log('📝 Payload capture: DISABLED');
+    }
 
     console.log('\nAvailable Endpoints:');
     (app as any)._router.stack.forEach((middleware: any) => {

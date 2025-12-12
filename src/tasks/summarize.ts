@@ -1,9 +1,15 @@
-import { aiChat, ResultWithUsage } from "../lib/ai.js";
-import { SummarizeRequest, SummarizeResult, RequestOnTranscript, SubjectContext } from "../types.js";
+import { aiChat, ResultWithUsage, Usage } from "../lib/ai.js";
+import { 
+    SummarizeRequest, 
+    SummarizeResult, 
+    RequestOnTranscript, 
+    ExtractedSubject,
+    speakerSegmentSummarySchema,
+    extractedSubjectSchema
+} from "../types.js";
 import { Task } from "./pipeline.js";
-import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
-import { ExtractedSubject, extractedSubjectToApiSubject } from "./processAgenda.js";
+import { extractedSubjectToApiSubject } from "./processAgenda.js";
 import { IdCompressor, formatTime } from "../utils.js";
 import { enhanceSubjectWithContext } from "../lib/sonar.js";
 dotenv.config();
@@ -153,7 +159,7 @@ type AiSummarizeResponse = {
 };
 
 async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerSegment[][], existingSubjects: ExtractedSubject[], requestedSubjects: SummarizeRequest['requestedSubjects'], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<ExtractedSubject[]>> {
-    const totalUsage: Anthropic.Messages.Usage = {
+    const totalUsage: Usage = {
         input_tokens: 0,
         output_tokens: 0,
         cache_creation_input_tokens: 0,
@@ -177,11 +183,12 @@ async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerS
             ${JSON.stringify(subjects, null, 2)}
             `;
 
+            // Use generateObject with output: 'array' - no need for prefill tricks!
             const response = await aiChat<ExtractedSubject[]>({
                 systemPrompt,
                 userPrompt,
-                prefillSystemResponse: "Δώσε τα ανανεωμένα subjects σε μορφή JSON array. Μην προσθέσεις σχόλια ή επεξηγήσεις μέσα στο JSON:\n[",
-                prependToResponse: "[",
+                schema: extractedSubjectSchema,
+                output: 'array'
             });
 
             if (!Array.isArray(response.result)) {
@@ -224,7 +231,7 @@ async function aiExtractSubjects(systemPrompt: string, transcriptParts: SpeakerS
 async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<AiSummarizeResponse[]>> {
     const responses: AiSummarizeResponse[] = [];
 
-    const totalUsage: Anthropic.Messages.Usage = {
+    const totalUsage: Usage = {
         input_tokens: 0,
         output_tokens: 0,
         cache_creation_input_tokens: 0,
@@ -234,15 +241,18 @@ async function aiSummarize(systemPrompt: string, userPrompts: string[], onProgre
     for (let i = 0; i < userPrompts.length; i++) {
         onProgress("extracting summaries", i / userPrompts.length);
         const userPrompt = userPrompts[i];
+        // Use generateObject with output: 'array' - no need for prefill tricks!
         const response = await aiChat<AiSummarizeResponse[]>({
             systemPrompt,
             userPrompt,
-            prefillSystemResponse: "Με βάση τις τοποθετήσεις των συμμετεχόντων, ακολουθούν οι περιλήψεις και οι θεματικές λεζάντες σε μορφή JSON: \n[",
-            prependToResponse: "[",
+            schema: speakerSegmentSummarySchema,
+            output: 'array'
         });
         responses.push(...response.result);
         totalUsage.input_tokens += response.usage.input_tokens;
         totalUsage.output_tokens += response.usage.output_tokens;
+        totalUsage.cache_creation_input_tokens = (totalUsage.cache_creation_input_tokens || 0) + (response.usage.cache_creation_input_tokens || 0);
+        totalUsage.cache_read_input_tokens = (totalUsage.cache_read_input_tokens || 0) + (response.usage.cache_read_input_tokens || 0);
         console.log(response);
     }
 

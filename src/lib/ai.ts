@@ -1,37 +1,62 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { generateText, generateObject } from 'ai';
+import type { ModelMessage } from 'ai';
+import { model } from './aiClient.js';
+import { z } from 'zod';
 import dotenv from 'dotenv';
-import path from 'path';
-import { promises as fs } from 'fs';
 import { fetchAdalineDeployment, submitAdalineLog } from './adaline.js';
+import { getSessionId, getTelemetryContext } from './telemetryContext.js';
 
 dotenv.config();
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-export type ResultWithUsage<T> = { result: T, usage: Anthropic.Messages.Usage };
-export const NO_USAGE: Anthropic.Messages.Usage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
-export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage) => ({
+/**
+ * Usage metrics from AI operations
+ * Supports both AI SDK v5 format (null) and legacy format (undefined) for cache tokens
+ */
+export type Usage = {
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens?: number | null;
+    cache_read_input_tokens?: number | null;
+};
+
+/**
+ * Result with usage metrics from AI operations
+ */
+export type ResultWithUsage<T> = { 
+    result: T;
+    usage: Usage;
+};
+
+/**
+ * Zero usage constant for initializing usage accumulation.
+ * Use as starting point when tracking usage across multiple AI calls.
+ */
+export const NO_USAGE: Usage = { 
+    input_tokens: 0, 
+    output_tokens: 0, 
+    cache_creation_input_tokens: 0, 
+    cache_read_input_tokens: 0 
+};
+
+/**
+ * Accumulate token usage across multiple AI calls.
+ * Essential for tracking total costs within a task that makes multiple AI calls.
+ * 
+ * @example
+ * let totalUsage = NO_USAGE;
+ * const result1 = await aiChat(...);
+ * totalUsage = addUsage(totalUsage, result1.usage);
+ */
+export const addUsage = (usage: Usage, otherUsage: Usage): Usage => ({
     input_tokens: usage.input_tokens + otherUsage.input_tokens,
     output_tokens: usage.output_tokens + otherUsage.output_tokens,
     cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
     cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
 });
-const maxTokens = 64000;
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
-async function logToFile(message: string, data?: any) {
-    const timestamp = new Date().toISOString();
-    let logEntry = `${timestamp} - ${message}`;
-    if (data) {
-        logEntry += `:\n${JSON.stringify(data, null, 2)}`;
-    }
-    logEntry += '\n---\n';
-    try {
-        await fs.appendFile(logFilePath, logEntry);
-    } catch (err) {
-        console.error('Failed to write to log file:', err);
-    }
-}
+// Maximum output tokens per AI call. When exceeded, automatic continuation is triggered.
+// See docs/ai-client.md for details on continuation logic, quality, and cost implications.
+const maxTokens = 64000;
 
 type AiChatOptions = {
     documentBase64?: string;
@@ -40,126 +65,251 @@ type AiChatOptions = {
     prefillSystemResponse?: string;
     prependToResponse?: string;
     parseJson?: boolean;
+    schema?: z.ZodType; // Optional Zod schema for structured output
+    output?: 'object' | 'array'; // Output type when using schema
 }
 
-async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
-    while (true) {
+/**
+ * Convert AI SDK usage format to our Usage type.
+ * Centralizes usage conversion to avoid duplication and inconsistencies.
+ */
+function convertUsage(sdkUsage: { inputTokens?: number; outputTokens?: number }): Usage {
+    return {
+        input_tokens: sdkUsage.inputTokens ?? 0,
+        output_tokens: sdkUsage.outputTokens ?? 0,
+        cache_creation_input_tokens: 0,
+        cache_read_input_tokens: 0
+    };
+}
+
+/**
+ * Build telemetry configuration for AI SDK calls.
+ * Centralizes telemetry setup to ensure consistent tracking across all AI operations.
+ */
+function buildTelemetryConfig(functionId: string, additionalMetadata?: Record<string, string>) {
+    const telemetryEnabled = process.env.ENABLE_TELEMETRY === 'true';
+    if (!telemetryEnabled) return undefined;
+
+    const sessionId = getSessionId();
+    const context = getTelemetryContext();
+    
+    // Build telemetry metadata (filter out undefined values)
+    const telemetryMetadata: Record<string, string> = Object.fromEntries(
+        Object.entries({
+            sessionId: sessionId,
+            taskType: context?.taskType,
+            taskId: context?.taskId,
+            ...additionalMetadata
+        }).filter(([_, value]) => value !== undefined)
+    ) as Record<string, string>;
+
+    // Build descriptive functionId with task type prefix
+    const fullFunctionId = context?.taskType ? `${context.taskType}.${functionId}` : functionId;
+
+    return {
+        isEnabled: true,
+        functionId: fullFunctionId,
+        metadata: telemetryMetadata
+    };
+}
+
+/**
+ * Handle token limit continuation for AI responses.
+ * When a response hits maxTokens, recursively continues generation using partial result as prefill.
+ * 
+ * @returns ResultWithUsage if continuation occurred, null if no continuation needed
+ */
+async function handleContinuation<T, R extends { finishReason: string; usage: any }>(
+    result: R,
+    getPartialContent: (result: R) => string,
+    options: AiChatOptions
+): Promise<ResultWithUsage<T> | null> {
+    if (result.finishReason !== 'length') {
+        return null; // No continuation needed
+    }
+
+    console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
+    console.log(`Attempting to continue with a longer response...`);
+    
+    const partialContent = getPartialContent(result);
+    const continuedPrefill = (options.prefillSystemResponse || '') + partialContent;
+    const continuedPrepend = (options.prependToResponse || '') + partialContent;
+    
+    const response2 = await aiChat<T>({ 
+        ...options,
+        prefillSystemResponse: continuedPrefill.trim(), 
+        prependToResponse: continuedPrepend.trim()
+    });
+    
+    return {
+        usage: addUsage(convertUsage(result.usage), response2.usage),
+        result: response2.result
+    };
+}
+
+/**
+ * Process text response: handle prepending and optional JSON parsing.
+ */
+function processTextResponse<T>(text: string, prependToResponse: string | undefined, parseJson: boolean): T {
+    let responseContent = text;
+    if (prependToResponse) {
+        responseContent = prependToResponse + responseContent;
+    }
+
+    if (parseJson) {
         try {
-            return await fn();
-        } catch (e: any) {
-            if (e?.error?.error?.type === 'rate_limit_error' && e.headers?.['anthropic-ratelimit-tokens-reset']) {
-                const resetTime = new Date(e.headers['anthropic-ratelimit-tokens-reset']);
-                const now = new Date();
-                const sleepTime = resetTime.getTime() - now.getTime() + 1000;
-                console.log(`Rate limit hit, sleeping until ${resetTime.toISOString()} (${sleepTime}ms)`);
-                await sleep(sleepTime);
-                continue;
-            }
+            return JSON.parse(responseContent) as T;
+        } catch (e) {
+            console.error(`Error parsing Claude response: ${responseContent.slice(0, 100)}`);
             throw e;
         }
+    } else {
+        return responseContent as T;
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true }: AiChatOptions): Promise<ResultWithUsage<T>> {
+/**
+ * Primary interface for AI operations with automatic continuation, retry, and observability.
+ * 
+ * Supports both unstructured text and schema-validated structured outputs. When responses
+ * exceed maxTokens (64K), automatic continuation preserves output quality while increasing
+ * token costs (partial response becomes input for next call).
+ * 
+ * @see docs/ai-client.md for architecture, continuation logic, and best practices
+ */
+export async function aiChat<T>({ 
+    systemPrompt, 
+    userPrompt, 
+    prefillSystemResponse, 
+    prependToResponse, 
+    documentBase64, 
+    parseJson = true,
+    schema,
+    output = 'object'
+}: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
-        console.log(`Sending message to claude...`);
-        let messages: Anthropic.Messages.MessageParam[] = [];
+        console.log(`Sending message to claude via AI SDK...`);
+        
+        // Build messages array - AI SDK expects ModelMessage format
+        const messages: ModelMessage[] = [];
+        
+        // Handle document attachments if provided
         if (documentBase64) {
+            // Use AI SDK's file part format for PDF attachments
             messages.push({
-                role: "user",
+                role: 'user',
                 content: [
                     {
-                        type: "document",
-                        source: {
-                            type: "base64",
-                            media_type: "application/pdf",
-                            data: documentBase64
-                        },
+                        type: 'file',
+                        data: documentBase64,  // Base64-encoded PDF data
+                        mediaType: 'application/pdf'
+                    },
+                    {
+                        type: 'text',
+                        text: userPrompt
                     }
                 ]
             });
-        }
-        messages.push({ "role": "user", "content": userPrompt });
-        if (prefillSystemResponse) {
-            messages.push({ "role": "assistant", "content": prefillSystemResponse });
-        }
-
-        const requestParams = {
-            model: "claude-sonnet-4-20250514",
-            max_tokens: maxTokens,
-            system: systemPrompt,
-            messages,
-            temperature: 0,
-        };
-
-        await logToFile("Claude Request", requestParams);
-
-        let response = await withRateLimitRetry(() =>
-            anthropic.messages.create(requestParams, {})
-        );
-
-        await logToFile("Claude Response", response);
-
-        if (!response.content || response.content.length !== 1) {
-            throw new Error("Expected 1 response from claude, got " + response.content?.length);
-        }
-
-        if (response.content[0].type !== "text") {
-            throw new Error("Expected text response from claude, got " + response.content[0].type);
-        }
-
-        if (response.stop_reason === "max_tokens") {
-            console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
-            console.log(`Attempting to continue with a longer response...`);
-            const response2 = await aiChat<T>({ systemPrompt, documentBase64, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim() });
-            return {
-                usage: {
-                    input_tokens: response.usage.input_tokens + response2.usage.input_tokens,
-                    output_tokens: response.usage.output_tokens + response2.usage.output_tokens,
-                    cache_creation_input_tokens: 0,
-                    cache_read_input_tokens: 0,
-                },
-                result: response2.result
-            }
-        }
-
-        let responseContent = response.content[0].text;
-        if (prependToResponse) {
-            responseContent = prependToResponse + responseContent;
-        }
-
-        let responseJson: T;
-        if (parseJson) {
-            try {
-                responseJson = JSON.parse(responseContent) as T;
-            } catch (e) {
-                console.error(`Error parsing Claude response: ${responseContent.slice(0, 100)}`);
-                await logToFile(`Error parsing Claude response: ${responseContent.slice(0, 100)}`, e);
-                throw e;
-            }
         } else {
-            responseJson = responseContent as T;
+            messages.push({
+                role: 'user',
+                content: userPrompt
+            });
+        }
+        
+        // Handle prefill for assistant response (used for JSON array continuation)
+        if (prefillSystemResponse) {
+            messages.push({
+                role: 'assistant',
+                content: prefillSystemResponse
+            });
         }
 
-        await logToFile("Parsed Result", responseJson);
+        // Build telemetry configuration
+        const baseFunctionId = schema && parseJson ? 'aiChat-generateObject' : 'aiChat-generateText';
+        const telemetryConfig = buildTelemetryConfig(baseFunctionId);
 
-        return {
-            usage: response.usage,
-            result: responseJson
-        };
+        // Use generateObject if schema provided and parseJson is true
+        if (schema && parseJson) {
+            const result = await generateObject({
+                model,
+                system: systemPrompt,
+                messages,
+                schema,
+                output,  // 'object' or 'array' - tells SDK how to structure the response
+                temperature: 0,
+                maxOutputTokens: maxTokens,
+                mode: 'json',
+                experimental_telemetry: telemetryConfig
+            });
+
+            // Handle max_tokens continuation for structured outputs
+            const continued = await handleContinuation<T, typeof result>(
+                result,
+                r => JSON.stringify(r.object), // Convert object to JSON for continuation
+                { systemPrompt, documentBase64, userPrompt, prefillSystemResponse, prependToResponse, parseJson, schema, output }
+            );
+            if (continued) return continued;
+
+            // Handle prependToResponse for partial results
+            let finalObject = result.object;
+            if (prependToResponse && Array.isArray(result.object)) {
+                // The prepend logic is already handled by prefillSystemResponse
+                // which makes the model continue an existing JSON array
+            }
+
+            return {
+                result: finalObject as T,
+                usage: convertUsage(result.usage)
+            };
+        } else {
+            // Use generateText for non-schema responses
+            const result = await generateText({
+                model,
+                system: systemPrompt,
+                messages,
+                temperature: 0,
+                maxOutputTokens: maxTokens,
+                experimental_telemetry: telemetryConfig
+            });
+
+            // Handle max_tokens continuation for text outputs
+            const continued = await handleContinuation<T, typeof result>(
+                result,
+                r => r.text, // Use text directly for continuation
+                { systemPrompt, documentBase64, userPrompt, prefillSystemResponse, prependToResponse, parseJson, schema }
+            );
+            if (continued) return continued;
+
+            // Process text response (prepend and parse if needed)
+            const responseJson = processTextResponse<T>(result.text, prependToResponse, parseJson);
+
+            return {
+                usage: convertUsage(result.usage),
+                result: responseJson
+            };
+        }
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);
-        await logToFile("Error in aiChat", e);
         throw e;
     }
 }
 
+/**
+ * Execute AI calls using versioned prompts from Adaline platform.
+ * 
+ * Enables external prompt management, A/B testing, and version control. Automatically
+ * benefits from retry middleware. Does not support continuation (use aiChat for that).
+ * 
+ * @see docs/ai-client.md for usage examples and best practices
+ */
 export async function aiWithAdaline<T>({ projectId, deploymentId, variables, parseJson = true }: { projectId: string, deploymentId?: string, variables: { [key: string]: string }, parseJson?: boolean }): Promise<ResultWithUsage<T>> {
     const deployment = await fetchAdalineDeployment(projectId, deploymentId);
     if (deployment.config.provider !== "anthropic") {
         throw new Error("Adaline deployment provider is not anthropic");
     }
 
+    // Validate message content modality
     for (const message of deployment.messages) {
         for (const content of message.content) {
             if (content.modality !== "text") {
@@ -168,12 +318,15 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         }
     }
 
+    // Validate variable modality
     for (const variable of deployment.variables) {
         if (variable.value.modality !== "text") {
             throw new Error(`Expected text modality in variable value, got ${variable.value.modality}`);
         }
     }
-    const messages = deployment.messages.map(msg => ({
+    
+    // Process messages with variable substitution
+    const processedMessages = deployment.messages.map(msg => ({
         role: msg.role as "user" | "assistant" | "system",
         content: msg.content.map(c => {
             let value = c.value;
@@ -184,59 +337,58 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         }).join('\n')
     }));
 
-    const requestParams = {
-        model: deployment.config.model,
-        messages: messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
-            msg.role === "user" || msg.role === "assistant"),
-        system: messages.find(msg => msg.role === "system")?.content,
-        max_tokens: deployment.config.settings.maxTokens,
+    // Build ModelMessage array for AI SDK
+    const messages: ModelMessage[] = processedMessages
+        .filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
+            msg.role === "user" || msg.role === "assistant")
+        .map(msg => ({
+            role: msg.role,
+            content: msg.content
+        }));
+    
+    const systemMessage = processedMessages.find(msg => msg.role === "system")?.content;
+
+    // Build telemetry configuration with Adaline project metadata
+    const telemetryConfig = buildTelemetryConfig('aiWithAdaline', { adalineProjectId: projectId });
+
+    // Use AI SDK (automatically benefits from retry middleware!)
+    const result = await generateText({
+        model,
+        system: systemMessage,
+        messages,
+        maxOutputTokens: deployment.config.settings.maxTokens,
         temperature: deployment.config.settings.temperature,
-    };
+        experimental_telemetry: telemetryConfig
+    });
 
-    await logToFile("Adaline Claude Request", requestParams);
+    const completion = result.text;
 
-    const response = await withRateLimitRetry(() =>
-        anthropic.messages.create(requestParams)
-    );
-
-    await logToFile("Adaline Claude Response", response);
-
-    if (!response.content || response.content.length !== 1) {
-        throw new Error("Expected 1 response from claude, got " + response.content?.length);
-    }
-
-    if (response.content[0].type !== "text") {
-        throw new Error("Expected text response from claude, got " + response.content[0].type);
-    }
-
-    const completion = response.content[0].text;
-
+    // Submit usage to Adaline
     submitAdalineLog({
         projectId: projectId,
         provider: deployment.config.provider,
         model: deployment.config.model,
         completion: completion,
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
+        inputTokens: result.usage.inputTokens ?? 0,
+        outputTokens: result.usage.outputTokens ?? 0,
         variables
     });
 
+    // Parse response if requested
     let responseJson: T;
     if (parseJson) {
         try {
             responseJson = JSON.parse(completion) as T;
         } catch (e) {
-            console.error(`Error parsing Claude response: ${completion.slice(0, 100)}`);
-            await logToFile(`Error parsing Claude response: ${completion.slice(0, 100)}`, e);
+            console.error(`Error parsing Adaline response: ${completion.slice(0, 100)}`);
             throw e;
         }
     } else {
         responseJson = completion as T;
     }
 
-    await logToFile("Adaline Parsed Result", responseJson);
     return {
-        usage: response.usage,
+        usage: convertUsage(result.usage),
         result: responseJson
     };
 }

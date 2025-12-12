@@ -1,8 +1,11 @@
 import express from 'express';
 import { Task } from '../tasks/pipeline.js';
-import { TaskUpdate } from '../types.js';
+import { TaskUpdate, TaskRequest } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
+import { DevPayloadManager } from '../tasks/utils/devPayloadManager.js';
+import { runWithTelemetryContext } from './telemetryContext.js';
+import { randomUUID } from 'crypto';
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -28,14 +31,19 @@ type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {
     version?: number
 };
 
-// Task queue item with all necessary information to run a task
-type QueuedTask<T, R> = {
+// Common parameters for task execution
+type TaskExecutionParams<T, R> = {
     task: Task<T, R>;
     input: T;
     callbackUrl: string;
     taskType: string;
-    createdAt: Date;
     version?: number;
+    capturePayload?: boolean;
+};
+
+// Task queue item with all necessary information to run a task
+type QueuedTask<T, R> = TaskExecutionParams<T, R> & {
+    createdAt: Date;
 };
 
 class TaskManager {
@@ -71,85 +79,100 @@ class TaskManager {
         while (this.runningTasks.size < this.maxParallelTasks && this.taskQueue.length > 0) {
             const nextTask = this.taskQueue.shift();
             if (nextTask) {
-                const { task, input, callbackUrl, taskType } = nextTask;
-                this.executeTask(task, input, callbackUrl, taskType);
+                this.executeTask(nextTask);
             }
         }
     }
 
-    private async executeTask<T, R>(
-        task: Task<T, R>,
-        input: T,
-        callbackUrl: string,
-        taskType: string,
-        version?: number
-    ): Promise<void> {
+    private async executeTask<T, R>(params: TaskExecutionParams<T, R>): Promise<void> {
+        const { 
+            task, 
+            input, 
+            callbackUrl, 
+            taskType, 
+            version, 
+            capturePayload = true 
+        } = params;
         const taskId = `task_${++this.taskCounter}`;
         const createdAt = new Date();
-        try {
-            this.runningTasks.set(taskId, {
-                status: "processing",
-                stage: "initializing",
-                progressPercent: 0,
-                createdAt,
-                lastUpdatedAt: createdAt,
-                taskType,
-                version
+        
+        // Create sessionId for Langfuse grouping (groups all AI calls in this task)
+        const sessionId = `${taskType}-${Date.now()}-${randomUUID().slice(0, 8)}`;
+        
+        // Capture payload with sessionId (if enabled)
+        if (capturePayload) {
+            DevPayloadManager.capture(taskType, input as any, sessionId).catch(error => {
+                console.error(`Failed to capture payload for ${taskType}:`, error);
             });
-
-            const result = await task(input, (stage, progressPercent) => {
-                const now = new Date();
-                const update: RunningTask = {
-                    status: "processing",
-                    stage,
-                    progressPercent,
-                    createdAt,
-                    lastUpdatedAt: now,
-                    taskType,
-                    version
-                };
-                this.runningTasks.set(taskId, update);
-                this.sendCallback(callbackUrl, update);
-            });
-
-            const finalUpdate: TaskUpdate<R> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
-                status: "success",
-                stage: "finished",
-                progressPercent: 100,
-                result,
-                createdAt,
-                lastUpdatedAt: new Date(),
-                taskType,
-                version
-            };
-            await this.sendCallback(callbackUrl, finalUpdate);
-        } catch (error: any) {
-            const errorUpdate: TaskUpdate<any> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
-                status: "error",
-                stage: "finished",
-                progressPercent: 100,
-                error: error.message,
-                createdAt,
-                lastUpdatedAt: new Date(),
-                taskType,
-                version
-            };
-            await this.sendCallback(callbackUrl, errorUpdate);
-            console.error('Error in task:', error);
-        } finally {
-            this.runningTasks.delete(taskId);
-            // Process the queue after a task finishes
-            this.processQueue();
         }
+        
+        // Run task within telemetry context
+        await runWithTelemetryContext(
+            { sessionId, taskType, taskId },
+            async () => {
+                try {
+                    this.runningTasks.set(taskId, {
+                        status: "processing",
+                        stage: "initializing",
+                        progressPercent: 0,
+                        createdAt,
+                        lastUpdatedAt: createdAt,
+                        taskType,
+                        version
+                    });
+                    
+                    console.log(`🔍 Task ${taskType} [${taskId}] - Langfuse sessionId: ${sessionId}`);
+
+                    const result = await task(input, (stage, progressPercent) => {
+                        const now = new Date();
+                        const update: RunningTask = {
+                            status: "processing",
+                            stage,
+                            progressPercent,
+                            createdAt,
+                            lastUpdatedAt: now,
+                            taskType,
+                            version
+                        };
+                        this.runningTasks.set(taskId, update);
+                        this.sendCallback(callbackUrl, update);
+                    });
+
+                    const finalUpdate: TaskUpdate<R> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
+                        status: "success",
+                        stage: "finished",
+                        progressPercent: 100,
+                        result,
+                        createdAt,
+                        lastUpdatedAt: new Date(),
+                        taskType,
+                        version
+                    };
+                    await this.sendCallback(callbackUrl, finalUpdate);
+                } catch (error: any) {
+                    const errorUpdate: TaskUpdate<any> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
+                        status: "error",
+                        stage: "finished",
+                        progressPercent: 100,
+                        error: error.message,
+                        createdAt,
+                        lastUpdatedAt: new Date(),
+                        taskType,
+                        version
+                    };
+                    await this.sendCallback(callbackUrl, errorUpdate);
+                    console.error('Error in task:', error);
+                } finally {
+                    this.runningTasks.delete(taskId);
+                    // Process the queue after a task finishes
+                    this.processQueue();
+                }
+            }
+        );
     }
 
-    public async runTaskWithCallback<T, R>(
-        task: Task<T, R>,
-        input: T,
-        callbackUrl: string,
-        taskType: string,
-        version?: number
-    ): Promise<void> {
+    public async runTaskWithCallback<T, R>(params: TaskExecutionParams<T, R>): Promise<void> {
+        const { task, input, callbackUrl, taskType, version, capturePayload = true } = params;
         // Check if we've reached the maximum number of parallel tasks
         if (this.runningTasks.size >= this.maxParallelTasks) {
             // Queue the task
@@ -159,7 +182,8 @@ class TaskManager {
                 callbackUrl,
                 taskType,
                 createdAt: new Date(),
-                version
+                version,
+                capturePayload // Preserve capturePayload flag for when task is dequeued
             };
             this.taskQueue.push(queuedTask);
             console.log(`Task ${taskType} queued. Current queue size: ${this.taskQueue.length}`);
@@ -176,7 +200,7 @@ class TaskManager {
             });
         } else {
             // Execute the task immediately
-            await this.executeTask(task, input, callbackUrl, taskType);
+            await this.executeTask({ task, input, callbackUrl, taskType, version, capturePayload });
         }
     }
 
@@ -218,23 +242,30 @@ class TaskManager {
         this.registerTaskMetadata(task, partialMetadata);
 
         // Create the handler and tag it with the task reference for later discovery
-        const handler = this.serveTask(task) as unknown as express.RequestHandler & { [key: symbol]: any };
+        const handler = this.serveTask(task);
         (handler as any)[ROUTE_TASK_SYMBOL] = task;
-        return handler;
+        return handler as express.RequestHandler;
     }
 
 
-    public serveTask<REQ, RES>(task: Task<REQ, RES>, version?: number) {
-        return (req: express.Request<{}, {}, REQ & { callbackUrl: string }>, res: express.Response) => {
+    public serveTask<REQ extends TaskRequest, RES>(
+        task: Task<REQ, RES>, 
+        options?: { version?: number; capturePayloads?: boolean }
+    ) {
+        return (req: express.Request<{}, {}, REQ>, res: express.Response) => {
             let taskType = req.path.substring(1);
 
-            this.runTaskWithCallback(
+            // Capture payload flag will be passed to executeTask where sessionId is available
+            const capturePayload = options?.capturePayloads !== false;
+
+            this.runTaskWithCallback({
                 task,
-                req.body,
-                req.body.callbackUrl,
+                input: req.body,
+                callbackUrl: req.body.callbackUrl,
                 taskType,
-                version
-            );
+                version: options?.version,
+                capturePayload
+            });
 
             const queueSize = this.taskQueue.length;
             const runningTasksCount = this.runningTasks.size;

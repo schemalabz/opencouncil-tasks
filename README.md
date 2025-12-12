@@ -171,4 +171,3 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 - `COBALT_API_BASE_URL` (default: http://cobalt-api:9000) - YouTube download service URL
   - For Docker setup, this points to the internal Docker network
   - For manual setup, point to your Cobalt API instance
-- `LOG_DIR` - Directory for log files

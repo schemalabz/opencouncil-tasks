@@ -1,7 +1,7 @@
 import { aiChat } from "../lib/ai.js";
 import { geocodeLocation } from "../lib/geocode.js";
 import { enhanceSubjectWithContext } from "../lib/sonar.js";
-import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
+import { ProcessAgendaRequest, ProcessAgendaResult, Subject, ExtractedSubject } from "../types.js";
 import { Task } from "./pipeline.js";
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
@@ -17,12 +17,14 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 
     const base64 = await downloadFileToBase64(request.agendaUrl);
 
+    // Use extractedSubjectSchema with output: 'array' instead of prefill tricks
+    const { extractedSubjectSchema } = await import("../types.js");
     const result = await aiChat<Omit<ExtractedSubject, "speakerSegments" | "highlightedUtteranceIds">[]>({
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
-        prefillSystemResponse: "Η απάντηση σου σε JSON: [",
-        prependToResponse: "[",
-        documentBase64: base64
+        documentBase64: base64,
+        schema: extractedSubjectSchema,
+        output: 'array'
     });
 
     const subjects = await Promise.all(
@@ -45,6 +47,12 @@ const downloadFileToBase64 = async (url: string) => {
     return base64;
 }
 
+/**
+ * Converts an AI-extracted subject (raw) to a final API Subject (geocoded + enhanced)
+ * ExtractedSubject → Subject transformation:
+ *   - locationText (string) → location (Location with coordinates)
+ *   - No context → context (added later by enhanceSubjectWithContext)
+ */
 export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, cityName: string): Promise<Subject> => {
     const locationLatLng = subject.locationText ? await geocodeLocation(subject.locationText + ", " + cityName) : null;
 
@@ -69,20 +77,6 @@ export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, ci
         topicLabel: subject.topicLabel,
         introducedByPersonId: subject.introducedByPersonId
     }
-}
-
-export type ExtractedSubject = {
-    name: string;
-    description: string;
-    agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
-    introducedByPersonId: string | null;
-    speakerSegments: {
-        speakerSegmentId: string;
-        summary: string | null;
-    }[];
-    highlightedUtteranceIds: string[];
-    locationText: string | null;
-    topicLabel: string | null;
 }
 
 export const getSystemPrompt = () => {
