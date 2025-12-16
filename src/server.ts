@@ -43,15 +43,29 @@ app.use(authMiddleware);
 // PUBLIC ENDPOINTS (No Authentication Required)
 // ============================================================================
 
-// Health check endpoint with version information
-app.get('/health', (req: express.Request, res: express.Response<HealthResponse>) => {
+// Health check endpoint with version information and service status
+app.get('/health', async (req: express.Request, res: express.Response<HealthResponse>) => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const services: { [key: string]: any } = {};
+    
+    // Check Cobalt health
+    try {
+        const cobaltUrl = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
+        const cobaltResponse = await fetch(cobaltUrl, { signal: AbortSignal.timeout(3000) });
+        services.cobalt = cobaltResponse.ok 
+            ? { status: 'healthy' as const, ...await cobaltResponse.json() }
+            : { status: 'unhealthy' as const, error: `HTTP ${cobaltResponse.status}` };
+    } catch (error) {
+        services.cobalt = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
+    }
+    
     res.status(200).json({ 
-        status: 'healthy', 
+        status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
         version: packageJson.version,
-        name: packageJson.name
+        name: packageJson.name,
+        services
     });
 });
 

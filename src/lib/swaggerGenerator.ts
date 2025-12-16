@@ -28,11 +28,11 @@ export function generateSwaggerPaths(): Record<string, any> {
     paths['/health'] = {
         get: {
             summary: 'Health check',
-            description: 'Check if the API is running and healthy, includes version information',
+            description: 'Check API health and service status',
             tags: ['System'],
             responses: {
                 '200': {
-                    description: 'Service is healthy',
+                    description: 'Service health information',
                     content: {
                         'application/json': {
                             schema: {
