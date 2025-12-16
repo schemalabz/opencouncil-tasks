@@ -12,27 +12,57 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    networks:
+      - cobalt
     depends_on:
+      - gluetun_cobalt_api
       - cobalt-api
       - redis
-      - pgsync
 
   cobalt-api:
-    image: ghcr.io/imputnet/cobalt:10
+    image: git.canine.tools/canine.tools/cobalt:api
     restart: unless-stopped
     container_name: cobalt-api
-    init: true
-    ports:
-      - 3002:9000/tcp
+    network_mode: service:gluetun_cobalt_api
     environment:
-      API_URL: "${COBALT_API_BASE_URL:-http://cobalt-api:9000}"
+      API_URL: "${COBALT_API_BASE_URL:-http://gluetun_cobalt_api:9000}"
       API_NAME: "opencouncil"
       DURATION_LIMIT: 36000
-      COOKIE_PATH: "/secrets/cookies.json"
+      COOKIE_PATH: "${COOKIE_PATH:-}"
+      CUSTOM_INNERTUBE_CLIENT: "WEB_EMBEDDED"
     labels:
         - com.centurylinklabs.watchtower.scope=cobalt
     volumes:
       - ./secrets:/secrets
+    healthcheck:
+      test: wget -nv --tries=1 --spider http://127.0.0.1:9000 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
+    depends_on:
+      - gluetun_cobalt_api
+
+  gluetun_cobalt_api:
+    image: qmcgaw/gluetun
+    container_name: gluetun_cobalt_api
+    restart: unless-stopped
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+    networks:
+      - cobalt
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      - VPN_SERVICE_PROVIDER=custom
+      - VPN_TYPE=wireguard
+      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP:-162.159.192.1}
+      - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-2408}
+      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
+      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
+      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
+      - WIREGUARD_ALLOWED_IPS=0.0.0.0/0,::/0
 
   redis:
     image: redis:7-alpine
@@ -70,3 +100,7 @@ services:
 
 x-buildkit:
   enabled: true
+
+networks:
+  cobalt:
+    external: true

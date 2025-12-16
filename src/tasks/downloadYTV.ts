@@ -7,7 +7,7 @@ import ffmpeg from 'ffmpeg-static';
 
 dotenv.config();
 
-const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
+const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://gluetun_cobalt_api:9000';
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {
     const outputDir = process.env.DATA_DIR || "./data";

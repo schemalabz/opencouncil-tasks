@@ -30,6 +30,9 @@ The server supports the following processing tasks:
 
 The [`pipeline`](src/tasks/pipeline.ts) task orchestrates multiple tasks above in sequence, providing a complete end-to-end processing workflow.
 
+For additional setup guides, see:
+- [**Cobalt Setup**](docs/cobalt-setup.md) - Configure YouTube downloading with authenticated cookies
+
 ## 🛠️ Development Setup
 
 ### Prerequisites
@@ -113,11 +116,39 @@ PUBLIC_URL=https://your-ngrok-url.ngrok.io
 
 ## CLI Interface
 
-The CLI interface provides direct access to individual tasks and starts its own server instance for handling callbacks. To see all available commands and their options, run:
+The CLI interface provides direct access to individual tasks and starts its own server instance for handling callbacks.
+
+### Using CLI with Docker (Recommended)
+
+To see all available commands:
 
 ```bash
-npm run cli -- --help
+docker compose run --rm app npm run cli -- --help
 ```
+
+Example - Download a YouTube video:
+
+```bash
+docker compose run --rm app npm run cli -- download-ytv "https://www.youtube.com/watch?v=VIDEO_ID"
+```
+
+**Note**: The `--` after `npm run cli` is required to pass arguments to the CLI script.
+
+**Important**: The CLI runs pre-built code from `dist/cli.js`. After making code changes, you must rebuild.
+
+### Using CLI Locally
+
+If running outside Docker, you have two options:
+
+```bash
+# Use pre-built code (faster, but requires manual build after changes)
+npm run cli -- --help
+
+# Build and run (automatically compiles TypeScript first)
+npm run cli:dev -- --help
+```
+
+**Tip**: Use `cli:dev` during development to ensure your changes are compiled.
 
 ## Configuration
 
@@ -171,4 +202,5 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 - `COBALT_API_BASE_URL` (default: http://cobalt-api:9000) - YouTube download service URL
   - For Docker setup, this points to the internal Docker network
   - For manual setup, point to your Cobalt API instance
+  - For YouTube cookie setup, see [Cobalt Setup Guide](docs/cobalt-setup.md)
 - `LOG_DIR` - Directory for log files
