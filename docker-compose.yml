@@ -54,6 +54,8 @@ services:
       - NET_ADMIN
     devices:
       - /dev/net/tun:/dev/net/tun
+    ports:
+      - "127.0.0.1:8888:8888"   # HTTP proxy for cookie extraction
     environment:
       - VPN_SERVICE_PROVIDER=custom
       - VPN_TYPE=wireguard
@@ -63,6 +65,8 @@ services:
       - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
       - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
       - WIREGUARD_ALLOWED_IPS=0.0.0.0/0,::/0
+      - HTTPPROXY=on            # Enable HTTP proxy
+      - HTTPPROXY_LOG=on        # Enable proxy logging
 
   redis:
     image: redis:7-alpine
