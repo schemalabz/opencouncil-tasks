@@ -30,7 +30,6 @@ services:
       API_URL: "${COBALT_API_BASE_URL:-http://cobalt-api:9000}"
       API_NAME: "opencouncil"
       DURATION_LIMIT: 36000
-      COOKIE_PATH: "${COOKIE_PATH:-}"
       CUSTOM_INNERTUBE_CLIENT: "WEB_EMBEDDED"
       # HTTP proxy configuration - tells Cobalt's Node.js to route traffic through Squid
       # Squid then forwards to the residential proxy (configured in squid.conf)

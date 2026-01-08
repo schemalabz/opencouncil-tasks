@@ -7,7 +7,6 @@ This guide covers setting up [Cobalt](https://github.com/imputnet/cobalt) for au
 [Cobalt](https://github.com/imputnet/cobalt) handles video downloads from YouTube and other platforms. This setup uses a **residential proxy** to route traffic through trusted residential IPs, bypassing YouTube's aggressive blocking.
 
 **Requirements:**
-- YouTube session cookies from your browser
 - Residential proxy credentials (HTTP/HTTPS or SOCKS5)
 - ~5 minutes to set up
 
@@ -137,124 +136,9 @@ docker compose restart proxy-forwarder cobalt-api
   - Check proxy has available bandwidth/sessions with your provider
   - Restart services: `docker compose restart proxy-forwarder cobalt-api`
 
-- **`error.api.youtube.login`** - Cookie issue (see Cookie Setup section below)
+- **`error.api.youtube.login`** - YouTube authentication issue (check proxy logs and verify residential proxy is working)
 
 - **Proxy forwarding but downloads fail** - Check cobalt-api logs: `docker compose logs cobalt-api | tail -50`
-
-## Setting Up YouTube Cookies
-
-YouTube requires authenticated cookies for downloading videos. With a residential proxy, the cookies you extract from your normal browser will work since the proxy handles routing through residential IPs.
-
-### Prerequisites
-
-- A Google/YouTube account (free account works)
-- Firefox, Chrome, or any modern browser with Developer Tools
-
-### Step 1: Extract Cookies from Browser
-
-This method requires **no browser extensions** - just built-in Developer Tools!
-
-1. **Open Firefox** (or Chrome/Brave) and go to [youtube.com](https://youtube.com)
-   - Sign in with your Google account
-   - Browse a few videos to establish a session
-
-2. **Open Developer Tools:**
-   - Press `F12` (or right-click → Inspect)
-
-3. **Go to the Network tab:**
-   - Click the **Network** tab in Developer Tools
-
-4. **Refresh the page:**
-   - Press `F5` or `Ctrl+R` (Windows/Linux) / `Cmd+R` (Mac)
-
-5. **Find the cookie header:**
-   - Scroll to the very top of the network requests list
-   - Click the first entry (usually `www.youtube.com` or the page itself)
-   - On the right panel, ensure **Headers** is selected
-   - Scroll down to the **Request Headers** section
-   - Find the line that says `Cookie:`
-
-6. **Copy the cookie value:**
-   - Right-click the **value** (the long text after `Cookie:`)
-   - Select **Copy Value**
-   - This gives you a string like: `VISITOR_INFO1_LIVE=k8...; SID=Fe...; HSID=A6...`
-
-**Visual guide:**
-```
-Network Tab → First Request → Headers → Request Headers
-├── Accept: text/html...
-├── Accept-Language: en-US...
-├── Cookie: VISITOR_INFO1_LIVE=...; SID=...; HSID=...   ← COPY THIS VALUE!
-├── Referer: https://www.youtube.com/
-└── User-Agent: Mozilla/5.0...
-```
-
-**Tip:** The cookie string is usually very long (500+ characters). Make sure you copy the entire value!
-
-### Step 2: Create cookies.json File
-
-Create `secrets/cookies.json` in your project root:
-
-```bash
-mkdir -p secrets
-nano secrets/cookies.json  # or use your preferred editor
-```
-
-**Required Format:**
-
-Paste the raw cookie string you copied into this simple JSON format:
-
-```json
-{
-    "youtube": [
-        "VISITOR_INFO1_LIVE=k8...; SID=Fe...; HSID=A6...; SSID=...; APISID=...; SAPISID=..."
-    ]
-}
-```
-
-**Important:**
-- **One long string:** Do not break the string into multiple lines. Keep it as one single line inside the quotes.
-- **Just the value:** Do not include the word `Cookie:` at the start - only the actual cookie values (e.g., `SID=...;`).
-- **Keep all cookies:** The string should contain all cookies from the browser request, separated by semicolons.
-
-**Example of a valid cookies.json:**
-```json
-{
-    "youtube": [
-        "VISITOR_INFO1_LIVE=abc123xyz; CONSENT=YES+cb.20210328-17-p0.en+FX+123; PREF=f4=4000000&tz=America.New_York; SID=g.a000abcdef; HSID=Ahij12345; SSID=Aklm67890; APISID=nop123456/Aqrs789012; SAPISID=tuv345678/Awxy901234"
-    ]
-}
-```
-
-See [Cobalt's cookie documentation](https://github.com/imputnet/cobalt/blob/main/docs/examples/cookies.example.json) for reference.
-
-### Step 3: Deploy and Restart
-
-**For remote servers**, copy the cookies file:
-```bash
-scp secrets/cookies.json user@your-server:/path/to/opencouncil-tasks/secrets/
-```
-
-**Then restart Cobalt:**
-```bash
-docker compose restart cobalt-api
-
-# Verify cookies loaded successfully
-docker compose logs cobalt-api
-```
-
-**Look for this confirmation:**
-```
-[✓] cookies loaded successfully!
-```
-
-**If downloads work:** Great! Your residential proxy is routing traffic correctly.
-
-**If you get `error.api.youtube.login`:** 
-- Verify your cookies are fresh (re-extract them)
-- Check proxy environment variable: `docker exec cobalt-api env | grep HTTP_PROXY`
-- Test proxy from host: `curl -x "$RESIDENTIAL_PROXY" https://api.ipify.org`
-- Ensure proxy credentials are correct in `.env` (check for typos/extra spaces)
 
 ## Testing
 
@@ -280,23 +164,13 @@ docker compose logs -f cobalt-api
 - Contains a valid video URL
 
 **Error indicators:**
-- `error.api.youtube.login` - Cookies invalid or expired (re-extract fresh cookies)
+- `error.api.youtube.login` - YouTube authentication issue (residential proxy should handle this)
 - `rate_limit` - Too many requests (wait, or check proxy rate limits)
 - `content.video.unavailable` - Video restricted/private
 - `fetch.fail` - Network, proxy, or YouTube blocking issue
-
-## Cookie Maintenance
-
-### When to Update Cookies
-
-- **Downloads start failing** - Cookies may have expired
-- **After 6-12 months** - YouTube sessions typically expire
-- **After password change** - Invalidates previous sessions
-- **Rate limiting errors** - Fresh cookies can help
 
 ## Resources
 
 - [Cobalt Documentation](https://github.com/imputnet/cobalt/blob/main/docs/run-an-instance.md)
 - [Cobalt API Reference](https://github.com/imputnet/cobalt/blob/main/docs/api.md)
-- [Cobalt Cookie Example](https://github.com/imputnet/cobalt/blob/main/docs/examples/cookies.example.json)
 - [Hosting Cobalt with YouTube Support using Cloudflare WARP](https://hyper.lol/blog/7) - Alternative approach we tried previously.
