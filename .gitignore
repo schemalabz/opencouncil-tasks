@@ -18,3 +18,4 @@ logs/
 # local env files
 .env*.local
 .env
+squid.conf

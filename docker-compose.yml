@@ -15,7 +15,6 @@ services:
     networks:
       - cobalt
     depends_on:
-      - gluetun_cobalt_api
       - cobalt-api
       - redis
 
@@ -23,13 +22,20 @@ services:
     image: git.canine.tools/canine.tools/cobalt:api
     restart: unless-stopped
     container_name: cobalt-api
-    network_mode: service:gluetun_cobalt_api
+    networks:
+      - cobalt
+    ports:
+      - "127.0.0.1:9000:9000"
     environment:
-      API_URL: "${COBALT_API_BASE_URL:-http://gluetun_cobalt_api:9000}"
+      API_URL: "${COBALT_API_BASE_URL:-http://cobalt-api:9000}"
       API_NAME: "opencouncil"
       DURATION_LIMIT: 36000
       COOKIE_PATH: "${COOKIE_PATH:-}"
       CUSTOM_INNERTUBE_CLIENT: "WEB_EMBEDDED"
+      # HTTP proxy configuration - tells Cobalt's Node.js to route traffic through Squid
+      # Squid then forwards to the residential proxy (configured in squid.conf)
+      HTTP_PROXY: "http://proxy-forwarder:3128"
+      HTTPS_PROXY: "http://proxy-forwarder:3128"
     labels:
         - com.centurylinklabs.watchtower.scope=cobalt
     volumes:
@@ -40,33 +46,24 @@ services:
       timeout: 5s
       retries: 2
     depends_on:
-      - gluetun_cobalt_api
+      proxy-forwarder:
+        condition: service_healthy
 
-  gluetun_cobalt_api:
-    image: qmcgaw/gluetun
-    container_name: gluetun_cobalt_api
+  proxy-forwarder:
+    image: ubuntu/squid
+    container_name: proxy-forwarder
     restart: unless-stopped
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
     networks:
       - cobalt
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun:/dev/net/tun
     ports:
-      - "127.0.0.1:8888:8888"   # HTTP proxy for cookie extraction
-    environment:
-      - VPN_SERVICE_PROVIDER=custom
-      - VPN_TYPE=wireguard
-      - WIREGUARD_ENDPOINT_IP=${WIREGUARD_ENDPOINT_IP:-162.159.192.1}
-      - WIREGUARD_ENDPOINT_PORT=${WIREGUARD_ENDPOINT_PORT:-2408}
-      - WIREGUARD_PUBLIC_KEY=${WIREGUARD_PUBLIC_KEY}
-      - WIREGUARD_PRIVATE_KEY=${WIREGUARD_PRIVATE_KEY}
-      - WIREGUARD_ADDRESSES=${WIREGUARD_ADDRESSES}
-      - WIREGUARD_ALLOWED_IPS=0.0.0.0/0,::/0
-      - HTTPPROXY=on            # Enable HTTP proxy
-      - HTTPPROXY_LOG=on        # Enable proxy logging
+      - "127.0.0.1:3128:3128"  # HTTP proxy port (for testing from host)
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf:ro
+    healthcheck:
+      test: squid -k check || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
 
   redis:
     image: redis:7-alpine
@@ -107,4 +104,4 @@ x-buildkit:
 
 networks:
   cobalt:
-    external: true
+    driver: bridge

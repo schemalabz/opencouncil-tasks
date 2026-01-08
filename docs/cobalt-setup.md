@@ -4,99 +4,153 @@ This guide covers setting up [Cobalt](https://github.com/imputnet/cobalt) for au
 
 ## Overview
 
-[Cobalt](https://github.com/imputnet/cobalt) handles video downloads from YouTube and other platforms. This setup uses **Cloudflare WARP** (via gluetun) to route traffic through trusted IPs with IPv6 support, bypassing YouTube's aggressive blocking.
+[Cobalt](https://github.com/imputnet/cobalt) handles video downloads from YouTube and other platforms. This setup uses a **residential proxy** to route traffic through trusted residential IPs, bypassing YouTube's aggressive blocking.
 
 **Requirements:**
 - YouTube session cookies from your browser
-- Cloudflare WARP credentials (WireGuard)
-- Docker with IPv6 enabled
-- ~10 minutes to set up
+- Residential proxy credentials (HTTP/HTTPS or SOCKS5)
+- ~5 minutes to set up
 
-**Architecture:** The `cobalt-api` service runs through `gluetun_cobalt_api` which provides the Cloudflare WARP tunnel. See `docker-compose.yml` for the complete configuration.
+**Architecture:** 
+1. **cobalt-api** uses `HTTP_PROXY` environment variable to route traffic to `proxy-forwarder:3128`
+2. **proxy-forwarder** (Squid) receives the traffic and forwards it to your residential proxy (configured in `squid.conf`)
+3. Your **residential proxy** routes traffic through residential IPs to YouTube
 
-## Cloudflare WARP Setup (Server Deployment)
+This three-tier setup ensures all Cobalt traffic appears to originate from residential IPs. See `docker-compose.yml` for the complete configuration.
 
-**Guide:** [Hosting Cobalt with YouTube Support](https://hyper.lol/blog/7)
+**Note:** While HTTP_PROXY environment variables can be unreliable in some Node.js applications, we've verified this approach works with Cobalt by monitoring the proxy logs (see verification steps below).
 
-YouTube blocks automated downloads. We bypass this by routing Cobalt through **Cloudflare WARP** using WireGuard, which provides trusted IPs and required IPv6 connectivity.
+## Residential Proxy Setup
+
+YouTube blocks automated downloads from datacenter IPs. Using a residential proxy provides:
+- **Residential IP addresses** - Trusted by YouTube
+- **Geographic flexibility** - Route through different regions
+- **No IPv6 complexity** - Works with standard HTTP/HTTPS
+- **Reliable setup** - Extract default Squid config and add your proxy credentials
+
+**Important notes:**
+- We extract the default Squid config from the container and add residential proxy forwarding to it
+- This approach works reliably on Digital Ocean droplets and other VPS providers
 
 ### Quick Setup
 
-**1. Enable IPv6 in Docker daemon:**
+**1. Configure residential proxy:**
+
+Your residential proxy provider should give you credentials in this format:
+```
+username:password@proxy-host:port
+```
+
 ```bash
-sudo tee /etc/docker/daemon.json > /dev/null <<EOF
-{
-  "ipv6": true,
-  "fixed-cidr-v6": "fd00::/80"
-}
+# 1. Use a temporary container to extract default Squid config
+docker run --rm --name temp-squid -d ubuntu/squid
+sleep 3
+
+# 2. Extract the default config
+docker exec temp-squid cat /etc/squid/squid.conf > squid.conf
+
+# 3. Stop the temporary container
+docker stop temp-squid
+
+# 4. Add your residential proxy configuration to the end
+cat >> squid.conf << 'EOF'
+
+# Residential proxy configuration
+cache_peer YOUR_PROXY_HOST parent YOUR_PROXY_PORT 0 no-query no-digest no-netdb-exchange connect-fail-limit=0 connect-timeout=1 default login=YOUR_USERNAME:YOUR_PASSWORD
+never_direct allow all
 EOF
-sudo systemctl restart docker
+
+# 5. Edit the file to add your actual credentials
+vim squid.conf  # Replace YOUR_PROXY_HOST, YOUR_PROXY_PORT, YOUR_USERNAME, YOUR_PASSWORD
 ```
 
-**2. Create IPv6-enabled network:**
+**Note:** The `squid.conf` file is in `.gitignore` to protect your credentials.
+
+**2. Start services:**
 ```bash
-docker network create --driver bridge --ipv6 --subnet fd00:c0ba:105::/64 cobalt
+docker compose up -d cobalt-api
 ```
 
-**3. Generate WireGuard credentials:**
+This will automatically start both `proxy-forwarder` (dependency) and `cobalt-api`.
+
+**3. Verify proxy is working:**
+
 ```bash
-wget https://github.com/ViRb3/wgcf/releases/download/v2.2.29/wgcf_2.2.29_linux_amd64
-chmod +x wgcf_2.2.29_linux_amd64
-./wgcf_2.2.29_linux_amd64 register
-./wgcf_2.2.29_linux_amd64 generate
-cat wgcf-profile.conf
+# Method 1: Check services are running
+docker compose ps proxy-forwarder cobalt-api
+# Both should show "running" status
+
+# Method 2: Compare IPs (quick verification)
+echo "Your server IP: $(curl -s https://api.ipify.org)"
+echo "Residential proxy IP: $(curl -x http://localhost:3128 -s https://api.ipify.org)"
+# These should be DIFFERENT - proxy IP should be residential
+# If this returns nothing, see troubleshooting below
+
+# Method 3: Make a test download and check proxy logs
+docker compose run --rm app npm run cli -- download-ytv "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+
+# Then check if the request went through the proxy
+docker compose logs proxy-forwarder --tail 50 2>&1 | grep -v "WARN\[" | grep -E "(youtube|googlevideo)"
+# Should show lines like:
+# TCP_TUNNEL/200 CONNECT youtube.com:443 - FIRSTUP_PARENT/67.213.121.89
+# TCP_TUNNEL/200 CONNECT googlevideo.com:443 - FIRSTUP_PARENT/67.213.121.89
+
 ```
 
-**4. Add to `.env` file:**
-```bash
-WIREGUARD_PUBLIC_KEY=<PublicKey from [Peer] section>
-WIREGUARD_PRIVATE_KEY=<PrivateKey from [Interface] section>
-WIREGUARD_ADDRESSES=<IPv4/32,IPv6/128 from Address line>
-```
-
-**Critical:** Include both IPv4 and IPv6 addresses from the `Address` line, separated by comma.
-
-**5. Start and verify:**
-```bash
-docker-compose up -d
-docker logs gluetun_cobalt_api | grep "Interface addresses" -A 3
-docker exec cobalt-api wget -qO- ifconfig.me  # Should show Cloudflare IP
-```
+**What to look for:**
+- Proxy test should return a **residential IP** (not your server's IP)
+- Proxy logs should show `CONNECT youtube.com:443 - FIRSTUP_PARENT/...` indicating traffic is being forwarded
+- The `FIRSTUP_PARENT` IP should be a residential IP from your proxy provider
 
 ### Troubleshooting
 
-If downloads fail with `error.api.fetch.critical`:
-- Verify IPv6 in container: `docker exec gluetun_cobalt_api ip -6 addr show | grep 2606`
-- Check Docker IPv6: `docker network inspect bridge | grep EnableIPv6`
-- Ensure cookies are configured (see below)
+**If the proxy test returns nothing:**
+
+```bash
+# 1. Check if proxy-forwarder is running
+docker compose ps proxy-forwarder
+# Should show "running" status
+
+# 2. Check proxy-forwarder logs for startup errors
+docker compose logs proxy-forwarder | tail -30
+# Look for "Accepting HTTP Socket connections" - means Squid started successfully
+
+# 3. Check if squid.conf has syntax errors
+docker compose logs proxy-forwarder | grep -i "error\|fatal"
+
+# 4. Verify port 3128 is listening
+docker exec proxy-forwarder netstat -tlnp | grep 3128
+# Should show: tcp 0.0.0.0:3128
+
+# 5. Test residential proxy directly (bypass Squid)
+curl -x "http://username:password@proxy-host:port" https://api.ipify.org
+# If this fails, your residential proxy credentials are wrong or proxy is down
+
+# 6. Restart services
+docker compose restart proxy-forwarder cobalt-api
+```
+
+**Other common issues:**
+
+- **`error.api.fetch.critical`** - Proxy or network issue
+  - Verify `squid.conf` has correct credentials (host, port, username, password)
+  - Check proxy has available bandwidth/sessions with your provider
+  - Restart services: `docker compose restart proxy-forwarder cobalt-api`
+
+- **`error.api.youtube.login`** - Cookie issue (see Cookie Setup section below)
+
+- **Proxy forwarding but downloads fail** - Check cobalt-api logs: `docker compose logs cobalt-api | tail -50`
 
 ## Setting Up YouTube Cookies
 
-YouTube requires authenticated cookies. With Cloudflare WARP, requests appear to originate from Cloudflare's IP addresses, which YouTube generally treats more leniently.
-
-**Try the simple method first:** Extract cookies from your local browser and test. Only if you get `error.api.youtube.login` errors, use the SSH proxy method below.
+YouTube requires authenticated cookies for downloading videos. With a residential proxy, the cookies you extract from your normal browser will work since the proxy handles routing through residential IPs.
 
 ### Prerequisites
 
 - A Google/YouTube account (free account works)
 - Firefox, Chrome, or any modern browser with Developer Tools
 
-### Step 1: Setup Browser Connection (Optional)
-
-**For most users with Cloudflare WARP:** Skip this step and extract cookies normally from your local browser.
-
-**If you encounter `error.api.youtube.login`**, create an SSH tunnel to extract cookies through your server's IP:
-
-```bash
-# Open SSH SOCKS proxy (keep this running)
-ssh -D 8080 -N user@your-server-ip
-```
-
-Configure your browser to use the proxy:
-- **Firefox:** Settings → Network Settings → Manual proxy → SOCKS Host: `localhost`, Port: `8080`
-- **Chrome:** Launch with: `google-chrome --proxy-server="socks5://localhost:8080"`
-
-### Step 2: Extract Cookies from Browser
+### Step 1: Extract Cookies from Browser
 
 This method requires **no browser extensions** - just built-in Developer Tools!
 
@@ -137,7 +191,7 @@ Network Tab → First Request → Headers → Request Headers
 
 **Tip:** The cookie string is usually very long (500+ characters). Make sure you copy the entire value!
 
-### Step 3: Create cookies.json File
+### Step 2: Create cookies.json File
 
 Create `secrets/cookies.json` in your project root:
 
@@ -174,7 +228,7 @@ Paste the raw cookie string you copied into this simple JSON format:
 
 See [Cobalt's cookie documentation](https://github.com/imputnet/cobalt/blob/main/docs/examples/cookies.example.json) for reference.
 
-### Step 4: Deploy and Restart
+### Step 3: Deploy and Restart
 
 **For remote servers**, copy the cookies file:
 ```bash
@@ -194,9 +248,13 @@ docker compose logs cobalt-api
 [✓] cookies loaded successfully!
 ```
 
-**If downloads work:** Great! The Cloudflare WARP setup is handling IP concerns.
+**If downloads work:** Great! Your residential proxy is routing traffic correctly.
 
-**If you get `error.api.youtube.login`:** Go back to Step 1 and extract cookies through the SSH proxy to match your server's IP.
+**If you get `error.api.youtube.login`:** 
+- Verify your cookies are fresh (re-extract them)
+- Check proxy environment variable: `docker exec cobalt-api env | grep HTTP_PROXY`
+- Test proxy from host: `curl -x "$RESIDENTIAL_PROXY" https://api.ipify.org`
+- Ensure proxy credentials are correct in `.env` (check for typos/extra spaces)
 
 ## Testing
 
@@ -222,10 +280,10 @@ docker compose logs -f cobalt-api
 - Contains a valid video URL
 
 **Error indicators:**
-- `error.api.youtube.login` - Cookies invalid or IP mismatch (see Remote Server Setup)
-- `rate_limit` - Too many requests (wait or use cookies)
+- `error.api.youtube.login` - Cookies invalid or expired (re-extract fresh cookies)
+- `rate_limit` - Too many requests (wait, or check proxy rate limits)
 - `content.video.unavailable` - Video restricted/private
-- `fetch.fail` - Network or YouTube blocking issue
+- `fetch.fail` - Network, proxy, or YouTube blocking issue
 
 ## Cookie Maintenance
 
@@ -241,3 +299,4 @@ docker compose logs -f cobalt-api
 - [Cobalt Documentation](https://github.com/imputnet/cobalt/blob/main/docs/run-an-instance.md)
 - [Cobalt API Reference](https://github.com/imputnet/cobalt/blob/main/docs/api.md)
 - [Cobalt Cookie Example](https://github.com/imputnet/cobalt/blob/main/docs/examples/cookies.example.json)
+- [Hosting Cobalt with YouTube Support using Cloudflare WARP](https://hyper.lol/blog/7) - Alternative approach we tried previously.
