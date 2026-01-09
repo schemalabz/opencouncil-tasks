@@ -11,28 +11,61 @@ services:
       - ./logs:/app/logs
     env_file:
       - .env
+    environment:
+      YTDLP_PROXY: "http://proxy-forwarder:3128"
     restart: unless-stopped
+    networks:
+      - cobalt
     depends_on:
-      - cobalt-api
-      - redis
-      - pgsync
+      proxy-forwarder:
+        condition: service_healthy
 
   cobalt-api:
-    image: ghcr.io/imputnet/cobalt:10
+    profiles: ["cobalt"]  # disabled by default; run with `--profile cobalt`
+    image: git.canine.tools/canine.tools/cobalt:api
     restart: unless-stopped
     container_name: cobalt-api
-    init: true
+    networks:
+      - cobalt
     ports:
-      - 3002:9000/tcp
+      - "127.0.0.1:9000:9000"
     environment:
       API_URL: "${COBALT_API_BASE_URL:-http://cobalt-api:9000}"
       API_NAME: "opencouncil"
       DURATION_LIMIT: 36000
-      COOKIE_PATH: "/secrets/cookies.json"
+      CUSTOM_INNERTUBE_CLIENT: "WEB_EMBEDDED"
+      # HTTP proxy configuration - tells Cobalt's Node.js to route traffic through Squid
+      # Squid then forwards to the residential proxy (configured in squid.conf)
+      HTTP_PROXY: "http://proxy-forwarder:3128"
+      HTTPS_PROXY: "http://proxy-forwarder:3128"
     labels:
         - com.centurylinklabs.watchtower.scope=cobalt
     volumes:
       - ./secrets:/secrets
+    healthcheck:
+      test: wget -nv --tries=1 --spider http://127.0.0.1:9000 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
+    depends_on:
+      proxy-forwarder:
+        condition: service_healthy
+
+  proxy-forwarder:
+    image: ubuntu/squid
+    container_name: proxy-forwarder
+    restart: unless-stopped
+    networks:
+      - cobalt
+    ports:
+      - "127.0.0.1:3128:3128"  # HTTP proxy port (for testing from host)
+    volumes:
+      - ./squid.conf:/etc/squid/squid.conf:ro
+    healthcheck:
+      test: squid -k check || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 2
 
   redis:
     image: redis:7-alpine
@@ -70,3 +103,7 @@ services:
 
 x-buildkit:
   enabled: true
+
+networks:
+  cobalt:
+    driver: bridge

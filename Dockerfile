@@ -26,7 +26,7 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 \
       --no-install-recommends \
-    && apt-get install -y tini ffmpeg \
+    && apt-get install -y tini ffmpeg curl \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r apify && useradd -rm -g apify -G audio,video apify
 
@@ -47,11 +47,19 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy built assets
 COPY --from=builder /app/dist ./dist
 
+# Download latest yt-dlp binary and make it user-owned
+RUN mkdir -p /app/bin \
+    && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /app/bin/yt-dlp \
+    && test -s /app/bin/yt-dlp || (echo "Failed to download yt-dlp" && exit 1) \
+    && chmod +x /app/bin/yt-dlp \
+    && chown apify:apify /app/bin/yt-dlp
+
 # Switch to the non-root user
 USER apify
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
+ENV YTDLP_BIN_PATH=/app/bin/yt-dlp
 
 # Expose the port the app runs on
 EXPOSE ${PORT}

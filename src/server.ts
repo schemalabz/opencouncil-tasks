@@ -8,6 +8,7 @@ import { getExpressAppWithCallbacks, getFromEnvOrFile, validateUrl, validateYout
 import { Diarization, TranscribeRequest, DiarizeResult, HealthResponse } from './types.js';
 import { authMiddleware } from './lib/auth.js';
 import fs from 'fs';
+import { spawnSync } from 'child_process';
 import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { diarize } from './tasks/diarize.js';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
@@ -43,15 +44,49 @@ app.use(authMiddleware);
 // PUBLIC ENDPOINTS (No Authentication Required)
 // ============================================================================
 
-// Health check endpoint with version information
-app.get('/health', (req: express.Request, res: express.Response<HealthResponse>) => {
+// Health check endpoint with version information and service status
+app.get('/health', async (req: express.Request, res: express.Response<HealthResponse>) => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+    const services: { [key: string]: any } = {};
+    const cobaltEnabled = process.env.COBALT_ENABLED === 'true';
+    const ytdlpBin = process.env.YTDLP_BIN_PATH || 'yt-dlp';
+    
+    // Check yt-dlp availability/version
+    try {
+        const result = spawnSync(ytdlpBin, ['--version'], { encoding: 'utf8', timeout: 3000 });
+        if (result.error) {
+            services.ytdlp = { status: 'unhealthy' as const, error: result.error.message };
+        } else if (result.status === 0) {
+            services.ytdlp = { status: 'healthy' as const, version: (result.stdout || '').trim() };
+        } else {
+            services.ytdlp = { status: 'unhealthy' as const, error: `exit ${result.status}`, stdout: result.stdout, stderr: result.stderr };
+        }
+    } catch (error) {
+        services.ytdlp = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
+    }
+
+    // Check Cobalt health only when enabled
+    if (!cobaltEnabled) {
+        services.cobalt = { status: 'disabled' as const };
+    } else {
+        try {
+            const cobaltUrl = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
+            const cobaltResponse = await fetch(cobaltUrl, { signal: AbortSignal.timeout(3000) });
+            services.cobalt = cobaltResponse.ok 
+                ? { status: 'healthy' as const, ...await cobaltResponse.json() }
+                : { status: 'unhealthy' as const, error: `HTTP ${cobaltResponse.status}` };
+        } catch (error) {
+            services.cobalt = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
+        }
+    }
+    
     res.status(200).json({ 
-        status: 'healthy', 
+        status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
         version: packageJson.version,
-        name: packageJson.name
+        name: packageJson.name,
+        services
     });
 });
 

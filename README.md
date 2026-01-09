@@ -86,15 +86,9 @@ npm install
 npm run dev
 ```
 
-Note: If you're not using a remote Cobalt API instance, you'll need to run the Cobalt API service separately:
-```
-COBALT_API_BASE_URL=http://localhost:3002 docker compose up cobalt-api
-```
+**Additional requirements for manual setup:**
 
-Then ensure your `.env` file has:
-```
-COBALT_API_BASE_URL=http://localhost:3002
-```
+- **yt-dlp binary** (required for YouTube downloads): Install via `pip install yt-dlp` or download from [yt-dlp releases](https://github.com/yt-dlp/yt-dlp/releases). Set `YTDLP_BIN_PATH` to the binary location if not in PATH.
 
 ## 🔄 Callback Server
 
@@ -113,11 +107,39 @@ PUBLIC_URL=https://your-ngrok-url.ngrok.io
 
 ## CLI Interface
 
-The CLI interface provides direct access to individual tasks and starts its own server instance for handling callbacks. To see all available commands and their options, run:
+The CLI interface provides direct access to individual tasks and starts its own server instance for handling callbacks.
+
+### Using CLI with Docker (Recommended)
+
+To see all available commands:
 
 ```bash
-npm run cli -- --help
+docker compose run --rm app npm run cli -- --help
 ```
+
+Example - Download a YouTube video:
+
+```bash
+docker compose run --rm app npm run cli -- download-ytv "https://www.youtube.com/watch?v=VIDEO_ID"
+```
+
+**Note**: The `--` after `npm run cli` is required to pass arguments to the CLI script.
+
+**Important**: The CLI runs pre-built code from `dist/cli.js`. After making code changes, you must rebuild.
+
+### Using CLI Locally
+
+If running outside Docker, you have two options:
+
+```bash
+# Use pre-built code (faster, but requires manual build after changes)
+npm run cli -- --help
+
+# Build and run (automatically compiles TypeScript first)
+npm run cli:dev -- --help
+```
+
+**Tip**: Use `cli:dev` during development to ensure your changes are compiled.
 
 ## Configuration
 
@@ -168,7 +190,11 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 ### Task-Specific Configuration
 - `GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 20) - Maximum concurrent transcription tasks
 - `PYANNOTE_MAX_CONCURRENT_DIARIZATIONS` (default: 5) - Maximum concurrent diarization tasks
-- `COBALT_API_BASE_URL` (default: http://cobalt-api:9000) - YouTube download service URL
-  - For Docker setup, this points to the internal Docker network
-  - For manual setup, point to your Cobalt API instance
+- `YTDLP_PROXY` (default: http://proxy-forwarder:3128) - Proxy for yt-dlp downloads (default downloader)
+  - yt-dlp is the default YouTube downloader, bundled in the Docker image
+  - See [Download Task Guide](docs/downloadYTV.md) for details
+- `COBALT_ENABLED` (default: false) - Enable Cobalt as alternative YouTube downloader
+  - Set to `true` to use Cobalt instead of yt-dlp
+  - Requires `COBALT_API_BASE_URL` and the cobalt-api service
+  - See [Proxy Setup Guide](docs/proxy-setup.md) for residential proxy configuration (works with both yt-dlp and Cobalt)
 - `LOG_DIR` - Directory for log files

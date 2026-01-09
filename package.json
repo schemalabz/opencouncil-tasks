@@ -7,7 +7,8 @@
     "build": "tsc",
     "dev": "nodemon --watch .env --watch src --exec \"tsx\" src/server.ts",
     "start": "node dist/server.js",
-    "cli": "tsc && node dist/cli.js",
+    "cli": "node dist/cli.js",
+    "cli:dev": "tsc && node dist/cli.js",
     "test:upload": "curl -X POST http://localhost:3005/dev/test-upload"
   },
   "dependencies": {
@@ -26,8 +27,9 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "typescript": "^5.5.4",
+    "typescript-json-schema": "^0.65.1",
     "underscore": "^1.13.7",
-    "typescript-json-schema": "^0.65.1"
+    "ytdlp-nodejs": "^2.3.5"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

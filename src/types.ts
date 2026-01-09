@@ -25,6 +25,9 @@ export interface HealthResponse {
     environment: string;
     version: string;
     name: string;
+    services?: {
+        [serviceName: string]: any;
+    };
 }
 
 export type MediaType = "audio" | "video";

@@ -4,10 +4,14 @@ import path from "path";
 import fs from "fs";
 import cp from "child_process";
 import ffmpeg from 'ffmpeg-static';
+import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 
 dotenv.config();
 
 const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
+const DEFAULT_VIDEO_QUALITY = "720";
+const YTDLP_BIN_PATH = process.env.YTDLP_BIN_PATH;
+const COBALT_ENABLED = process.env.COBALT_ENABLED === 'true'; // default off
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {
     const outputDir = process.env.DATA_DIR || "./data";
@@ -16,25 +20,74 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
         console.log(`Created output directory: ${outputDir}`);
     }
 
-    const { videoId, videoUrl, sourceType } = await getVideoIdAndUrl(youtubeUrl);
+    const { videoId, videoUrl, sourceType } = getVideoIdAndUrl(youtubeUrl);
     console.log(`Processing ${sourceType}: ${youtubeUrl}`);
     
     const audioOutputPath = path.join(outputDir, `${videoId}.mp3`);
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
+    let finalVideoPath = videoOutputPath;
 
-    await downloadUrl(videoUrl, videoOutputPath);
-    await extractSoundFromMP4(videoOutputPath, audioOutputPath);
+    // Check if video already exists and is valid
+    if (fs.existsSync(videoOutputPath)) {
+        const existingSize = fs.statSync(videoOutputPath).size;
+        if (existingSize > 0) {
+            console.log(`Using existing video file: ${formatBytes(existingSize)} -> ${path.basename(videoOutputPath)}`);
+            finalVideoPath = videoOutputPath;
+        } else {
+            // Remove empty file and continue with download
+            console.log(`Removing empty existing file and retrying download`);
+            fs.unlinkSync(videoOutputPath);
+        }
+    }
 
-    return { audioOnly: audioOutputPath, combined: videoOutputPath, sourceType };
+    // Only download if we don't have a valid existing file
+    const needsDownload = !fs.existsSync(videoOutputPath);
+    
+    if (needsDownload && sourceType === 'YouTube') {
+        if (COBALT_ENABLED) {
+            const cobaltUrl = await getCobaltStreamUrl(youtubeUrl, { videoQuality: DEFAULT_VIDEO_QUALITY });
+            await downloadUrl(cobaltUrl, videoOutputPath);
+            finalVideoPath = videoOutputPath;
+        } else {
+            finalVideoPath = await downloadWithYtDlp(youtubeUrl, videoOutputPath, videoId, onProgress);
+        }
+    } else if (needsDownload) {
+        await downloadUrl(videoUrl, videoOutputPath);
+        finalVideoPath = videoOutputPath;
+    }
+
+    const videoSize = fs.statSync(finalVideoPath).size;
+    if (videoSize === 0) {
+        throw new Error(`Download failed: video file is empty (0 bytes). URL: ${finalVideoPath}`);
+    }
+
+    console.log(`Video downloaded successfully: ${formatBytes(videoSize)}`);
+    await extractSoundFromMP4(finalVideoPath, audioOutputPath);
+
+    return { audioOnly: audioOutputPath, combined: finalVideoPath, sourceType };
 }
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
 
-const getVideoIdAndUrl = async (mediaUrl: string) => {
-    if (mediaUrl.includes("youtube.com")) {
-        const videoId = mediaUrl.split("v=")[1];
-        const videoUrl = await getCobaltStreamUrl(mediaUrl, { videoQuality: "360" });
-        return { videoId, videoUrl, sourceType: 'YouTube' };
+const getVideoIdAndUrl = (mediaUrl: string) => {
+    if (mediaUrl.includes("youtube.com") || mediaUrl.includes("youtu.be")) {
+        // Extract video ID from various YouTube URL formats
+        let videoId: string | undefined;
+        
+        if (mediaUrl.includes("youtube.com/watch")) {
+            const urlParams = new URL(mediaUrl).searchParams;
+            videoId = urlParams.get('v') || undefined;
+        } else if (mediaUrl.includes("youtu.be/")) {
+            videoId = mediaUrl.split("youtu.be/")[1]?.split(/[?&#/]/)[0];
+        } else if (mediaUrl.includes("youtube.com/embed/")) {
+            videoId = mediaUrl.split("youtube.com/embed/")[1]?.split(/[?&#/]/)[0];
+        }
+        
+        if (!videoId || videoId.length === 0) {
+            throw new Error(`Could not extract video ID from YouTube URL: ${mediaUrl}`);
+        }
+        
+        return { videoId, videoUrl: mediaUrl, sourceType: 'YouTube' };
     }
 
     // Check if it's from our CDN
@@ -48,6 +101,18 @@ const getVideoIdAndUrl = async (mediaUrl: string) => {
 }
 const FREQUENCY_FILTER = true;
 const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
+    // Validate input file exists and is not empty
+    if (!fs.existsSync(inputPath)) {
+        throw new Error(`Input file does not exist: ${inputPath}`);
+    }
+    
+    const inputSize = fs.statSync(inputPath).size;
+    if (inputSize === 0) {
+        throw new Error(`Input file is empty (0 bytes): ${inputPath}`);
+    }
+    
+    console.log(`Extracting audio from: ${path.basename(inputPath)} (${formatBytes(inputSize)})`);
+    
     const args = [
         '-i', inputPath,
         '-vn',  // No video
@@ -62,10 +127,15 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
         args.splice(args.length - 1, 0, '-af', 'highpass=f=200, lowpass=f=3000');
     }
 
-    console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
+    const ffmpegPath = ffmpeg as unknown as string | null;
+    if (!ffmpegPath) {
+        throw new Error('ffmpeg-static returned null - ffmpeg binary not available');
+    }
+
+    console.log(`Executing ffmpeg command: ${ffmpegPath} ${args.join(' ')}`);
 
     return new Promise<void>((resolve, reject) => {
-        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, args, {
+        const ffmpegProcess = cp.spawn(ffmpegPath as string, args, {
             windowsHide: true,
             stdio: ['pipe', 'pipe', 'pipe']
         });
@@ -165,49 +235,101 @@ const HEADERS = {
 
 
 const downloadUrl = async (url: string, outputPath: string) => {
-    if (fs.existsSync(outputPath)) {
-        const existingSize = fs.statSync(outputPath).size;
-        console.log(`Using existing file: ${formatBytes(existingSize)} -> ${path.basename(outputPath)}`);
-        return;
-    }
-
     console.log(`Downloading from: ${url}`);
-    const response = await fetch(url, { headers: HEADERS });
-    if (!response.ok) {
-        throw new Error(`HTTP error getting ${url}: status: ${response.status}`);
-    }
-
-    const writer = fs.createWriteStream(outputPath);
-    const reader = response.body?.getReader();
-
-    if (!reader) {
-        throw new Error("Unable to read response body");
-    }
-
-    let totalBytes = 0;
-    let lastLogTime = Date.now();
-
-    while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        writer.write(Buffer.from(value));
-        totalBytes += value.length;
-
-        const currentTime = Date.now();
-        if (currentTime - lastLogTime >= 5000) {
-            console.log(`  Downloading... ${formatBytes(totalBytes)}`);
-            lastLogTime = currentTime;
-        }
-    }
-
-    writer.end();
     
-    const finalSize = fs.statSync(outputPath).size;
-    console.log(`Downloaded video: ${formatBytes(finalSize)} -> ${path.basename(outputPath)}`);
+    let writer: fs.WriteStream | null = null;
+    
+    try {
+        const response = await fetch(url, { headers: HEADERS });
+        
+        if (!response.ok) {
+            const responseText = await response.text().catch(() => 'Unable to read response');
+            const truncatedResponse = responseText.length > 200 ? `${responseText.substring(0, 200)}...` : responseText;
+            throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}. Response: ${truncatedResponse}`);
+        }
+
+        // Check for file size from Cobalt headers
+        const contentLength = response.headers.get('content-length');
+        const estimatedLength = response.headers.get('estimated-content-length');
+        
+        if (contentLength) {
+            console.log(`Expected file size: ${formatBytes(parseInt(contentLength))}`);
+        } else if (estimatedLength) {
+            console.log(`Estimated file size: ${formatBytes(parseInt(estimatedLength))}`);
+        }
+
+        writer = fs.createWriteStream(outputPath);
+        // Attach error handler immediately so disk errors during writes are caught
+        const writeCompletion = new Promise<void>((resolve, reject) => {
+            writer!.once('finish', resolve);
+            writer!.once('error', (err) => {
+                reject(new Error(`Error writing file: ${err.message}`));
+            });
+        });
+        // Prevent unhandled rejection if the stream errors before we await it
+        writeCompletion.catch(() => {});
+        const reader = response.body?.getReader();
+
+        if (!reader) {
+            throw new Error("Unable to read response body - response.body is null");
+        }
+
+        let totalBytes = 0;
+        let lastLogTime = Date.now();
+
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+                break;
+            }
+
+            if (!value || value.length === 0) {
+                console.warn(`Warning: Received empty chunk during download`);
+                continue;
+            }
+
+            writer.write(Buffer.from(value));
+            totalBytes += value.length;
+
+            const currentTime = Date.now();
+            if (currentTime - lastLogTime >= 5000) {
+                console.log(`  Downloading... ${formatBytes(totalBytes)}`);
+                lastLogTime = currentTime;
+            }
+        }
+
+        writer.end();
+        
+        // Wait for file to be fully written (with timeout)
+        await Promise.race([
+            writeCompletion,
+            new Promise<void>((_, reject) =>
+                setTimeout(() => reject(new Error('Write stream timeout after 30 seconds')), 30000)
+            )
+        ]);
+        
+        const finalSize = fs.statSync(outputPath).size;
+        console.log(`Downloaded video: ${formatBytes(finalSize)} -> ${path.basename(outputPath)}`);
+        
+        if (finalSize === 0) {
+            throw new Error(`Post-download validation failed: file is empty (0 bytes). URL: ${url}`);
+        }
+    } catch (error) {
+        // Close the writer stream if it was created
+        if (writer) {
+            writer.destroy();
+        }
+        
+        // Clean up empty file on error
+        if (fs.existsSync(outputPath)) {
+            const size = fs.statSync(outputPath).size;
+            if (size === 0) {
+                fs.unlinkSync(outputPath);
+            }
+        }
+        throw error;
+    }
 }
 
 function formatBytes(bytes: number): string {
@@ -216,4 +338,58 @@ function formatBytes(bytes: number): string {
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+async function downloadWithYtDlp(
+    youtubeUrl: string,
+    outputPath: string,
+    videoId: string,
+    onProgress?: (...args: any[]) => void
+) {
+    const ytdlp = new YtDlp({
+        binaryPath: YTDLP_BIN_PATH || undefined,
+        // we still rely on ffmpeg-static for audio extraction; yt-dlp uses system ffmpeg only if needed
+    });
+
+    const proxy = process.env.YTDLP_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
+    const outputDir = path.dirname(outputPath);
+    const baseName = path.basename(outputPath, path.extname(outputPath));
+    const outputTemplate = path.join(outputDir, `${baseName}.%(ext)s`);
+
+    if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+    }
+
+    const ytOptions: FormatOptions<'videoonly'> = {
+        output: outputTemplate,
+        format: `bestvideo[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]/best`,
+        onProgress: (p: VideoProgress) => {
+            if (onProgress && p.total > 0) {
+                const pct = (p.downloaded / p.total) * 100;
+                const bytesInfo = ` (${formatBytes(p.downloaded)} / ${formatBytes(p.total)})`;
+                process.stdout.write(bytesInfo);
+                onProgress('yt-dlp', pct);
+            }
+        },
+        additionalOptions: ['--merge-output-format', 'mp4'],
+    };
+
+    // Use env proxy if available
+    if (proxy) {
+        ytOptions.proxy = proxy;
+    }
+
+    try {
+        console.log(`Downloading via yt-dlp: ${youtubeUrl}`);
+        await ytdlp.downloadAsync(youtubeUrl, ytOptions);
+
+        const expectedPath = path.join(outputDir, `${baseName}.mp4`);
+        if (!fs.existsSync(expectedPath)) {
+            throw new Error(`yt-dlp reported success but expected mp4 file not found: ${expectedPath}`);
+        }
+
+        return expectedPath;
+    } catch (err) {
+        throw new Error(`yt-dlp download failed: ${(err as Error).message}`);
+    }
 }
