@@ -30,9 +30,6 @@ The server supports the following processing tasks:
 
 The [`pipeline`](src/tasks/pipeline.ts) task orchestrates multiple tasks above in sequence, providing a complete end-to-end processing workflow.
 
-For additional setup guides, see:
-- [**Cobalt Setup**](docs/cobalt-setup.md) - Configure YouTube downloading with authenticated cookies
-
 ## 🛠️ Development Setup
 
 ### Prerequisites
@@ -89,15 +86,9 @@ npm install
 npm run dev
 ```
 
-Note: If you're not using a remote Cobalt API instance, you'll need to run the Cobalt API service separately:
-```
-COBALT_API_BASE_URL=http://localhost:3002 docker compose up cobalt-api
-```
+**Additional requirements for manual setup:**
 
-Then ensure your `.env` file has:
-```
-COBALT_API_BASE_URL=http://localhost:3002
-```
+- **yt-dlp binary** (required for YouTube downloads): Install via `pip install yt-dlp` or download from [yt-dlp releases](https://github.com/yt-dlp/yt-dlp/releases). Set `YTDLP_BIN_PATH` to the binary location if not in PATH.
 
 ## 🔄 Callback Server
 
@@ -199,8 +190,11 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 ### Task-Specific Configuration
 - `GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 20) - Maximum concurrent transcription tasks
 - `PYANNOTE_MAX_CONCURRENT_DIARIZATIONS` (default: 5) - Maximum concurrent diarization tasks
-- `COBALT_API_BASE_URL` (default: http://cobalt-api:9000) - YouTube download service URL
-  - For Docker setup, this points to the internal Docker network
-  - For manual setup, point to your Cobalt API instance
-  - For YouTube cookie setup, see [Cobalt Setup Guide](docs/cobalt-setup.md)
+- `YTDLP_PROXY` (default: http://proxy-forwarder:3128) - Proxy for yt-dlp downloads (default downloader)
+  - yt-dlp is the default YouTube downloader, bundled in the Docker image
+  - See [Download Task Guide](docs/downloadYTV.md) for details
+- `COBALT_ENABLED` (default: false) - Enable Cobalt as alternative YouTube downloader
+  - Set to `true` to use Cobalt instead of yt-dlp
+  - Requires `COBALT_API_BASE_URL` and the cobalt-api service
+  - See [Proxy Setup Guide](docs/proxy-setup.md) for residential proxy configuration (works with both yt-dlp and Cobalt)
 - `LOG_DIR` - Directory for log files

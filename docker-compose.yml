@@ -11,14 +11,17 @@ services:
       - ./logs:/app/logs
     env_file:
       - .env
+    environment:
+      YTDLP_PROXY: "http://proxy-forwarder:3128"
     restart: unless-stopped
     networks:
       - cobalt
     depends_on:
-      - cobalt-api
-      - redis
+      proxy-forwarder:
+        condition: service_healthy
 
   cobalt-api:
+    profiles: ["cobalt"]  # disabled by default; run with `--profile cobalt`
     image: git.canine.tools/canine.tools/cobalt:api
     restart: unless-stopped
     container_name: cobalt-api

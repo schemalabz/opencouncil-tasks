@@ -1,23 +1,25 @@
-# Cobalt Setup Guide
+# Residential Proxy Setup Guide
 
-This guide covers setting up [Cobalt](https://github.com/imputnet/cobalt) for automated YouTube video downloading.
+This guide covers setting up a residential proxy infrastructure using Squid as a forwarding proxy. This setup is used by both **yt-dlp** (default downloader) and **Cobalt** (optional alternative) to bypass YouTube's datacenter IP blocking.
+
+> **Note:** By default, this project uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for YouTube downloads. Both yt-dlp and Cobalt can benefit from this proxy setup when downloading from YouTube. See [Download Task Guide](./downloadYTV.md) for downloader configuration.
 
 ## Overview
 
-[Cobalt](https://github.com/imputnet/cobalt) handles video downloads from YouTube and other platforms. This setup uses a **residential proxy** to route traffic through trusted residential IPs, bypassing YouTube's aggressive blocking.
+[Cobalt](https://github.com/imputnet/cobalt) can handle video downloads from YouTube and other platforms. This setup uses a **residential proxy** to route traffic through trusted residential IPs, bypassing YouTube's aggressive blocking.
 
 **Requirements:**
 - Residential proxy credentials (HTTP/HTTPS or SOCKS5)
 - ~5 minutes to set up
 
 **Architecture:** 
-1. **cobalt-api** uses `HTTP_PROXY` environment variable to route traffic to `proxy-forwarder:3128`
+1. **Application** (yt-dlp or cobalt-api) uses proxy environment variable to route traffic to `proxy-forwarder:3128`
 2. **proxy-forwarder** (Squid) receives the traffic and forwards it to your residential proxy (configured in `squid.conf`)
 3. Your **residential proxy** routes traffic through residential IPs to YouTube
 
-This three-tier setup ensures all Cobalt traffic appears to originate from residential IPs. See `docker-compose.yml` for the complete configuration.
+This three-tier setup ensures all download traffic appears to originate from residential IPs. See `docker-compose.yml` for the complete configuration.
 
-**Note:** While HTTP_PROXY environment variables can be unreliable in some Node.js applications, we've verified this approach works with Cobalt by monitoring the proxy logs (see verification steps below).
+**Note:** This proxy setup works reliably with both yt-dlp (`YTDLP_PROXY` env var) and Cobalt (`HTTP_PROXY`/`HTTPS_PROXY` env vars). See verification steps below.
 
 ## Residential Proxy Setup
 
