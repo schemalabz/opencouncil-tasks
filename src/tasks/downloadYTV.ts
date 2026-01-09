@@ -24,6 +24,14 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
 
     await downloadUrl(videoUrl, videoOutputPath);
+    
+    // Validate downloaded file before proceeding
+    const videoSize = fs.statSync(videoOutputPath).size;
+    if (videoSize === 0) {
+        throw new Error(`Download failed: video file is empty (0 bytes). URL: ${videoUrl}`);
+    }
+    
+    console.log(`Video downloaded successfully: ${formatBytes(videoSize)}`);
     await extractSoundFromMP4(videoOutputPath, audioOutputPath);
 
     return { audioOnly: audioOutputPath, combined: videoOutputPath, sourceType };
@@ -49,6 +57,18 @@ const getVideoIdAndUrl = async (mediaUrl: string) => {
 }
 const FREQUENCY_FILTER = true;
 const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
+    // Validate input file exists and is not empty
+    if (!fs.existsSync(inputPath)) {
+        throw new Error(`Input file does not exist: ${inputPath}`);
+    }
+    
+    const inputSize = fs.statSync(inputPath).size;
+    if (inputSize === 0) {
+        throw new Error(`Input file is empty (0 bytes): ${inputPath}`);
+    }
+    
+    console.log(`Extracting audio from: ${path.basename(inputPath)} (${formatBytes(inputSize)})`);
+    
     const args = [
         '-i', inputPath,
         '-vn',  // No video
@@ -168,47 +188,106 @@ const HEADERS = {
 const downloadUrl = async (url: string, outputPath: string) => {
     if (fs.existsSync(outputPath)) {
         const existingSize = fs.statSync(outputPath).size;
-        console.log(`Using existing file: ${formatBytes(existingSize)} -> ${path.basename(outputPath)}`);
-        return;
+        if (existingSize > 0) {
+            console.log(`Using existing file: ${formatBytes(existingSize)} -> ${path.basename(outputPath)}`);
+            return;
+        } else {
+            // Remove empty file and retry
+            console.log(`Removing empty existing file and retrying download`);
+            fs.unlinkSync(outputPath);
+        }
     }
 
     console.log(`Downloading from: ${url}`);
-    const response = await fetch(url, { headers: HEADERS });
-    if (!response.ok) {
-        throw new Error(`HTTP error getting ${url}: status: ${response.status}`);
-    }
-
-    const writer = fs.createWriteStream(outputPath);
-    const reader = response.body?.getReader();
-
-    if (!reader) {
-        throw new Error("Unable to read response body");
-    }
-
-    let totalBytes = 0;
-    let lastLogTime = Date.now();
-
-    while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-            break;
-        }
-
-        writer.write(Buffer.from(value));
-        totalBytes += value.length;
-
-        const currentTime = Date.now();
-        if (currentTime - lastLogTime >= 5000) {
-            console.log(`  Downloading... ${formatBytes(totalBytes)}`);
-            lastLogTime = currentTime;
-        }
-    }
-
-    writer.end();
     
-    const finalSize = fs.statSync(outputPath).size;
-    console.log(`Downloaded video: ${formatBytes(finalSize)} -> ${path.basename(outputPath)}`);
+    let writer: fs.WriteStream | null = null;
+    
+    try {
+        const response = await fetch(url, { headers: HEADERS });
+        
+        if (!response.ok) {
+            const responseText = await response.text().catch(() => 'Unable to read response');
+            const truncatedResponse = responseText.length > 200 ? `${responseText.substring(0, 200)}...` : responseText;
+            throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}. Response: ${truncatedResponse}`);
+        }
+
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) {
+            console.log(`Expected file size: ${formatBytes(parseInt(contentLength))}`);
+        }
+
+        writer = fs.createWriteStream(outputPath);
+        // Attach error handler immediately so disk errors during writes are caught
+        const writeCompletion = new Promise<void>((resolve, reject) => {
+            writer!.once('finish', resolve);
+            writer!.once('error', (err) => {
+                reject(new Error(`Error writing file: ${err.message}`));
+            });
+        });
+        // Prevent unhandled rejection if the stream errors before we await it
+        writeCompletion.catch(() => {});
+        const reader = response.body?.getReader();
+
+        if (!reader) {
+            throw new Error("Unable to read response body - response.body is null");
+        }
+
+        let totalBytes = 0;
+        let lastLogTime = Date.now();
+
+        while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+                break;
+            }
+
+            if (!value || value.length === 0) {
+                console.warn(`Warning: Received empty chunk during download`);
+                continue;
+            }
+
+            writer.write(Buffer.from(value));
+            totalBytes += value.length;
+
+            const currentTime = Date.now();
+            if (currentTime - lastLogTime >= 5000) {
+                console.log(`  Downloading... ${formatBytes(totalBytes)}`);
+                lastLogTime = currentTime;
+            }
+        }
+
+        writer.end();
+        
+        // Wait for file to be fully written (with timeout)
+        await Promise.race([
+            writeCompletion,
+            new Promise<void>((_, reject) =>
+                setTimeout(() => reject(new Error('Write stream timeout after 30 seconds')), 30000)
+            )
+        ]);
+        
+        const finalSize = fs.statSync(outputPath).size;
+        console.log(`Downloaded video: ${formatBytes(finalSize)} -> ${path.basename(outputPath)}`);
+        
+        if (finalSize === 0) {
+            throw new Error(`Post-download validation failed: file is empty (0 bytes). URL: ${url}`);
+        }
+    } catch (error) {
+        // Close the writer stream if it was created
+        if (writer) {
+            writer.destroy();
+        }
+        
+        // Clean up empty file on error
+        if (fs.existsSync(outputPath)) {
+            const size = fs.statSync(outputPath).size;
+            if (size === 0) {
+                fs.unlinkSync(outputPath);
+            }
+        }
+        throw error;
+    }
 }
 
 function formatBytes(bytes: number): string {
