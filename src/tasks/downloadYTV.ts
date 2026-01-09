@@ -8,6 +8,7 @@ import ffmpeg from 'ffmpeg-static';
 dotenv.config();
 
 const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
+const DEFAULT_VIDEO_QUALITY = "720";
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {
     const outputDir = process.env.DATA_DIR || "./data";
@@ -33,7 +34,7 @@ const randomId = () => Math.random().toString(36).substring(2, 15);
 const getVideoIdAndUrl = async (mediaUrl: string) => {
     if (mediaUrl.includes("youtube.com")) {
         const videoId = mediaUrl.split("v=")[1];
-        const videoUrl = await getCobaltStreamUrl(mediaUrl, { videoQuality: "360" });
+        const videoUrl = await getCobaltStreamUrl(mediaUrl, { videoQuality: DEFAULT_VIDEO_QUALITY });
         return { videoId, videoUrl, sourceType: 'YouTube' };
     }
 
