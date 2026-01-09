@@ -211,9 +211,14 @@ const downloadUrl = async (url: string, outputPath: string) => {
             throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}. Response: ${truncatedResponse}`);
         }
 
+        // Check for file size from Cobalt headers
         const contentLength = response.headers.get('content-length');
+        const estimatedLength = response.headers.get('estimated-content-length');
+        
         if (contentLength) {
             console.log(`Expected file size: ${formatBytes(parseInt(contentLength))}`);
+        } else if (estimatedLength) {
+            console.log(`Estimated file size: ${formatBytes(parseInt(estimatedLength))}`);
         }
 
         writer = fs.createWriteStream(outputPath);
