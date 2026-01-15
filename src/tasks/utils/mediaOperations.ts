@@ -544,12 +544,19 @@ function normalizeUtteranceTimestamps(utterances: Array<{
  */
 function escapeTextForFFmpeg(text: string, aspectRatio: AspectRatio = 'default'): string {
     return text
+        // Escape backslashes first (before other escapes that add backslashes)
+        .replace(/\\/g, '\\\\')
+        // Escape square brackets to avoid filtergraph label parsing
+        .replace(/\[/g, '\\[')
+        .replace(/\]/g, '\\]')
+        // Escape commas (filter separators)
+        .replace(/,/g, '\\,')
+        // Escape semicolons (filterchain separators)
+        .replace(/;/g, '\\;')
         // Escape colons that would interfere with filter parsing
         .replace(/:/g, '\\:')
-        // Escape single quotes
-        .replace(/'/g, "\\'")
-        // Escape backslashes
-        .replace(/\\/g, '\\\\')
+        // Replace straight apostrophes to avoid drawtext quoting issues
+        .replace(/'/g, '’')
         // Escape percent signs (used for text expansion)
         .replace(/%/g, '\\%');
 }
@@ -989,7 +996,7 @@ export const downloadFile = async (url: string): Promise<string> => {
 /**
  * Split a media file into segments with optional video filters
  */
-export const getFileParts = (
+export const getFileParts = async (
     filePath: string,
     segments: SplitMediaFileRequest["parts"][number]["segments"],
     type: MediaType,
@@ -1045,7 +1052,27 @@ export const getFileParts = (
         }
     }
 
-    const args = ["-i", filePath, "-filter_complex", `${filterComplex}${filterComplexConcat}`];
+    // Build complete filter string
+    const fullFilterComplex = `${filterComplex}${filterComplexConcat}`;
+    
+    // Write filter to temporary file to avoid command line argument length limits (E2BIG error)
+    const filterScriptPath = path.join(dataDir, `${randomId}-filter.txt`);
+    await fs.promises.writeFile(filterScriptPath, fullFilterComplex);
+    
+    // Log filter complexity metrics for monitoring
+    const filterSizeKB = (fullFilterComplex.length / 1024).toFixed(2);
+    const baseArgsSize = JSON.stringify(["-i", filePath, "-filter_complex_script", filterScriptPath]).length;
+    console.log(`📊 Filter complexity: ${filterSizeKB} KB (${segments.length} segments, ${videoFilters ? 'with' : 'no'} video filters)`);
+    console.log(`📏 Command args size: ${(baseArgsSize / 1024).toFixed(2)} KB (using filter script to avoid E2BIG)`);
+    
+    // Debug: Log first and last parts of filter to help diagnose issues
+    console.log(`🔍 Filter preview (first 500 chars): ${fullFilterComplex.substring(0, 500)}...`);
+    if (fullFilterComplex.length > 1000) {
+        console.log(`🔍 Filter preview (last 500 chars): ...${fullFilterComplex.substring(fullFilterComplex.length - 500)}`);
+    }
+    console.log(`📁 Filter script written to: ${filterScriptPath}`);
+
+    const args = ["-i", filePath, "-filter_complex_script", filterScriptPath];
 
     if (type === "audio") {
         args.push("-map", finalAudioOutput, "-c:a", "libmp3lame", "-b:a", "128k");
@@ -1076,10 +1103,19 @@ export const getFileParts = (
 
         ffmpegProcess.on("close", code => {
             if (code === 0) {
+                // Clean up filter script file on success
+                try {
+                    fs.unlinkSync(filterScriptPath);
+                    console.log(`🧹 Cleaned up filter script: ${filterScriptPath}`);
+                } catch (e) {
+                    console.warn(`⚠️ Failed to clean up filter script ${filterScriptPath}:`, e);
+                }
                 console.log(`FFmpeg process completed successfully for output: ${outputFilePath}`);
                 resolve(outputFilePath);
             } else {
+                // Keep filter script file on failure for debugging
                 console.error(`FFmpeg process failed with code ${code}`);
+                console.error(`🔍 Filter script preserved for debugging: ${filterScriptPath}`);
                 console.error(`FFmpeg stdout: ${stdoutData}`);
                 console.error(`FFmpeg stderr: ${stderrData}`);
                 reject(new Error(`FFmpeg process exited with code ${code}`));
@@ -1087,7 +1123,9 @@ export const getFileParts = (
         });
 
         ffmpegProcess.on("error", err => {
+            // Keep filter script file on error for debugging
             console.error(`FFmpeg process error: ${err.message}`);
+            console.error(`🔍 Filter script preserved for debugging: ${filterScriptPath}`);
             reject(err);
         });
     });
