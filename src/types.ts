@@ -128,6 +128,26 @@ export interface SpeakerSegment {
     summary: string | null;
 }
 
+export interface SpeakerContribution {
+    speakerId: string;
+    text: string;  // Markdown with special reference links: [text](REF:UTTERANCE:id), [text](REF:PERSON:id), [text](REF:PARTY:id)
+}
+
+export enum DiscussionStatus {
+    ATTENDANCE = "ATTENDANCE",
+    SUBJECT_DISCUSSION = "SUBJECT_DISCUSSION",
+    VOTE = "VOTE",
+    OTHER = "OTHER"
+}
+
+export interface DiscussionRange {
+    id: string;                       // UUID to track range continuity across batches
+    startUtteranceId: string | null;  // null = starts before batch
+    endUtteranceId: string | null;    // null = continues after batch
+    status: DiscussionStatus;
+    subjectId: string | null;         // required for SUBJECT_DISCUSSION/VOTE
+}
+
 export interface Location {
     type: "point" | "lineString" | "polygon";
     text: string; // e.g. an area, an address, a road name
@@ -135,14 +155,16 @@ export interface Location {
 }
 
 export interface Subject {
+    id: string;  // Unique identifier for the subject (used for mapping utteranceDiscussionStatuses)
     name: string;
-    description: string;
+    description: string;  // Markdown with special reference links: [text](REF:UTTERANCE:id), [text](REF:PERSON:id), [text](REF:PARTY:id)
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
 
-    speakerSegments: SpeakerSegment[];
+    speakerContributions: SpeakerContribution[];
 
-    highlightedUtteranceIds: string[];
+    topicImportance: 'doNotNotify' | 'normal' | 'high';
+    proximityImportance: 'none' | 'near' | 'wide';
 
     location: Location | null;
 
@@ -202,6 +224,7 @@ export interface RequestOnTranscript extends TaskRequest {
         speakerName: string | null;
         speakerParty: string | null;
         speakerRole: string | null;
+        speakerId: string | null;  // personId from voiceprint matching
         speakerSegmentId: string;
         text: string;
         utterances: {
@@ -213,6 +236,7 @@ export interface RequestOnTranscript extends TaskRequest {
     }[];
     topicLabels: string[];
     cityName: string;
+    administrativeBodyName: string;  // e.g., "Δημοτικό Συμβούλιο"
     partiesWithPeople: {
         name: string;
         people: {
@@ -256,6 +280,12 @@ export interface SummarizeResult {
     }[];
 
     subjects: Subject[];
+
+    utteranceDiscussionStatuses: {
+        utteranceId: string;
+        status: DiscussionStatus;
+        subjectId: string | null;  // only for SUBJECT_DISCUSSION and VOTE
+    }[];
 }
 
 /*
@@ -348,7 +378,7 @@ export interface GenerateHighlightRequest extends TaskRequest {
         includeCaptions?: boolean;
         includeSpeakerOverlay?: boolean;
         aspectRatio?: AspectRatio;
-        
+
         // Social media formatting options (only used when aspectRatio is 'social-9x16')
         socialOptions?: {
             marginType?: 'blur' | 'solid';

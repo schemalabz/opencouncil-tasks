@@ -7,7 +7,11 @@ import { fetchAdalineDeployment, submitAdalineLog } from './adaline.js';
 dotenv.config();
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-export type ResultWithUsage<T> = { result: T, usage: Anthropic.Messages.Usage };
+export type ResultWithUsage<T> = {
+    result: T;
+    usage: Anthropic.Messages.Usage;
+    response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
+};
 export const NO_USAGE: Anthropic.Messages.Usage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
 export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage) => ({
     input_tokens: usage.input_tokens + otherUsage.input_tokens,
@@ -40,6 +44,7 @@ type AiChatOptions = {
     prefillSystemResponse?: string;
     prependToResponse?: string;
     parseJson?: boolean;
+    tools?: Anthropic.Messages.Tool[];
 }
 
 async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -60,7 +65,7 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude...`);
         let messages: Anthropic.Messages.MessageParam[] = [];
@@ -84,12 +89,13 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             messages.push({ "role": "assistant", "content": prefillSystemResponse });
         }
 
-        const requestParams = {
-            model: "claude-sonnet-4-20250514",
+        const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
+            model: "claude-sonnet-4-5-20250929",
             max_tokens: maxTokens,
             system: systemPrompt,
             messages,
             temperature: 0,
+            ...(tools && { tools })
         };
 
         await logToFile("Claude Request", requestParams);
@@ -100,18 +106,33 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
 
         await logToFile("Claude Response", response);
 
-        if (!response.content || response.content.length !== 1) {
-            throw new Error("Expected 1 response from claude, got " + response.content?.length);
+        // When using tools, response can have multiple content blocks
+        // Extract all text blocks
+        const textBlocks = response.content.filter(block => block.type === "text");
+
+        if (textBlocks.length === 0) {
+            throw new Error("Expected at least one text response from claude, got " + response.content.map(c => c.type).join(", "));
         }
 
-        if (response.content[0].type !== "text") {
+        // For backward compatibility, if there's only one content block and it's not text, throw error
+        if (!tools && response.content.length === 1 && response.content[0].type !== "text") {
             throw new Error("Expected text response from claude, got " + response.content[0].type);
         }
+
+        // Concatenate all text blocks
+        let responseText = textBlocks.map(block => block.text).join("");
 
         if (response.stop_reason === "max_tokens") {
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
-            const response2 = await aiChat<T>({ systemPrompt, documentBase64, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim() });
+            const response2 = await aiChat<T>({
+                systemPrompt,
+                documentBase64,
+                userPrompt,
+                prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
+                prependToResponse: ((prependToResponse || '') + responseText).trim(),
+                tools
+            });
             return {
                 usage: {
                     input_tokens: response.usage.input_tokens + response2.usage.input_tokens,
@@ -123,7 +144,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             }
         }
 
-        let responseContent = response.content[0].text;
+        let responseContent = responseText;
         if (prependToResponse) {
             responseContent = prependToResponse + responseContent;
         }
@@ -145,7 +166,8 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
 
         return {
             usage: response.usage,
-            result: responseJson
+            result: responseJson,
+            response: response
         };
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);

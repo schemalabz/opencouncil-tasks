@@ -84,6 +84,15 @@ export class IdCompressor {
     }
 
     /**
+     * Checks if a short ID exists in the compressor.
+     * @param shortId The short ID to check
+     * @returns True if the short ID exists, false otherwise
+     */
+    public hasShortId(shortId: string): boolean {
+        return this.shortIdToLong.has(shortId);
+    }
+
+    /**
      * Gets the long ID corresponding to a short ID.
      * @param shortId The short ID
      * @returns The corresponding long ID
@@ -107,5 +116,13 @@ export class IdCompressor {
         }
 
         return this.longIdToShort.get(longId)!;
+    }
+
+    /**
+     * Returns the number of compressed IDs in the compressor.
+     * @returns The number of ID mappings
+     */
+    public size(): number {
+        return this.longIdToShort.size;
     }
 }
