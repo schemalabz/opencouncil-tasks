@@ -24,7 +24,6 @@ services:
     profiles: ["cobalt"]  # disabled by default; run with `--profile cobalt`
     image: git.canine.tools/canine.tools/cobalt:api
     restart: unless-stopped
-    container_name: cobalt-api
     networks:
       - cobalt
     ports:
@@ -53,7 +52,6 @@ services:
 
   proxy-forwarder:
     image: ubuntu/squid
-    container_name: proxy-forwarder
     restart: unless-stopped
     networks:
       - cobalt
@@ -69,7 +67,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
     restart: unless-stopped
     command:
       - redis-server
@@ -83,7 +80,6 @@ services:
 
   pgsync:
     image: toluaina1/pgsync:latest
-    container_name: pgsync
     restart: unless-stopped
     env_file:
       - .env
