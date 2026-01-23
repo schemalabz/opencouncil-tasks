@@ -1,8 +1,8 @@
 import { aiChat } from "../lib/ai.js";
 import { geocodeLocation } from "../lib/geocode.js";
-import { enhanceSubjectWithContext } from "../lib/sonar.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
 import { Task } from "./pipeline.js";
+import { createHash } from 'crypto';
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
     console.log("Processing agenda request:", request);
@@ -17,7 +17,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 
     const base64 = await downloadFileToBase64(request.agendaUrl);
 
-    const result = await aiChat<Omit<ExtractedSubject, "speakerSegments" | "highlightedUtteranceIds">[]>({
+    const result = await aiChat<Omit<ExtractedSubject, "speakerContributions">[]>({
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
         prefillSystemResponse: "Η απάντηση σου σε JSON: [",
@@ -26,15 +26,22 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     });
 
     const subjects = await Promise.all(
-        result.result.map(s => extractedSubjectToApiSubject({ ...s, highlightedUtteranceIds: [], speakerSegments: [] },
+        result.result.map(s => extractedSubjectToApiSubject({ ...s, speakerContributions: [] },
             request.cityName))
     );
 
     console.log(`Extracted ${subjects.length} subjects`);
-    const enhancedSubjects = await Promise.all(subjects.map(s => enhanceSubjectWithContext({ subject: s, cityName: request.cityName, date: request.date })));
 
-    return { subjects: enhancedSubjects };
+    return { subjects };
 };
+
+// Generate stable UUID for subject based on its properties
+function generateSubjectUUID(subject: { name: string; description: string; agendaItemIndex?: number | string }): string {
+    const hash = createHash('sha256');
+    const agendaStr = subject.agendaItemIndex?.toString() || 'NO_AGENDA';
+    hash.update(subject.name + subject.description + agendaStr);
+    return hash.digest('hex').substring(0, 36);
+}
 
 const downloadFileToBase64 = async (url: string) => {
     console.log(`Downloading file from ${url}...`);
@@ -56,14 +63,13 @@ export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, ci
 
 
     return {
+        id: generateSubjectUUID(subject),  // Generate stable ID based on subject properties
         name: subject.name,
         description: subject.description,
         agendaItemIndex: subject.agendaItemIndex,
-        speakerSegments: subject.speakerSegments.map(seg => ({
-            speakerSegmentId: seg.speakerSegmentId,
-            summary: seg.summary
-        })),
-        highlightedUtteranceIds: subject.highlightedUtteranceIds,
+        speakerContributions: subject.speakerContributions,
+        topicImportance: 'normal',  // Default for agenda items
+        proximityImportance: subject.locationText ? 'near' : 'none',
         context: null,
         location,
         topicLabel: subject.topicLabel,
@@ -76,11 +82,10 @@ export type ExtractedSubject = {
     description: string;
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
-    speakerSegments: {
-        speakerSegmentId: string;
-        summary: string | null;
+    speakerContributions: {
+        speakerId: string;
+        text: string;
     }[];
-    highlightedUtteranceIds: string[];
     locationText: string | null;
     topicLabel: string | null;
 }

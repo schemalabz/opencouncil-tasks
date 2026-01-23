@@ -87,7 +87,7 @@ class TaskManager {
         const taskId = `task_${++this.taskCounter}`;
         const createdAt = new Date();
         try {
-            this.runningTasks.set(taskId, {
+            const initialUpdate: RunningTask = {
                 status: "processing",
                 stage: "initializing",
                 progressPercent: 0,
@@ -95,7 +95,11 @@ class TaskManager {
                 lastUpdatedAt: createdAt,
                 taskType,
                 version
-            });
+            };
+            this.runningTasks.set(taskId, initialUpdate);
+
+            // Send initial callback immediately
+            await this.sendCallback(callbackUrl, initialUpdate);
 
             const result = await task(input, (stage, progressPercent) => {
                 const now = new Date();
