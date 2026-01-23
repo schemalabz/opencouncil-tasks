@@ -150,7 +150,7 @@ const compressIds = (request: SummarizeRequest, idCompressor: IdCompressor) => {
             name: subj.name,
             description: subj.description,
             agendaItemIndex: subj.agendaItemIndex,
-            introducedByPersonId: subj.introducedByPersonId,
+            introducedByPersonId: subj.introducedByPersonId ? idCompressor.addLongId(subj.introducedByPersonId) : null,
             locationText: subj.location?.text || null,
             topicLabel: subj.topicLabel,
             topicImportance: subj.topicImportance,
@@ -366,6 +366,38 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 
         console.log(`\n   📝 Description (${subject.description.length} chars):`);
         console.log(`   ${subject.description}`);
+
+        // Count utterances per party for this subject
+        const subjectRanges = allDiscussionRanges.filter(
+            r => r.subjectId === subject.id && r.status === DiscussionStatus.SUBJECT_DISCUSSION
+        );
+        const utterancesByParty: Record<string, number> = {};
+        const utteranceIndex = buildUtteranceIndexMap(compressedRequest.transcript);
+
+        for (const range of subjectRanges) {
+            const startIndex = range.startUtteranceId ? utteranceIndex.get(range.startUtteranceId) ?? 0 : 0;
+            const endIndex = range.endUtteranceId ? utteranceIndex.get(range.endUtteranceId) ?? Infinity : Infinity;
+
+            for (const segment of compressedRequest.transcript) {
+                for (const utterance of segment.utterances) {
+                    const currentIndex = utteranceIndex.get(utterance.utteranceId);
+                    const inRange = currentIndex !== undefined && currentIndex >= startIndex && currentIndex <= endIndex;
+
+                    if (inRange) {
+                        const party = segment.speakerParty || 'Χωρίς Παράταξη';
+                        utterancesByParty[party] = (utterancesByParty[party] || 0) + 1;
+                    }
+                }
+            }
+        }
+
+        if (Object.keys(utterancesByParty).length > 0) {
+            console.log(`\n   🗳️  Utterances by Party:`);
+            const sortedParties = Object.entries(utterancesByParty).sort((a, b) => b[1] - a[1]);
+            sortedParties.forEach(([party, count]) => {
+                console.log(`      • ${party}: ${count} utterances`);
+            });
+        }
 
         if (subject.speakerContributions.length > 0) {
             console.log(`\n   💬 Speaker Contributions (${subject.speakerContributions.length}):`);
@@ -871,7 +903,7 @@ function getBatchProcessingSystemPrompt(metadata: {
 **Οδηγίες περίληψης:**
 - ΜΗΝ ξεκινάς με το όνομα ("Ο Παπαδόπουλος λέει...")
 - Γράψε σε γ' ενικό αν χρειάζεται ρήμα ("υποστηρίζει", "ανησυχεί")
-- Χρησιμοποίησε λέξεις του ομιλητή όπου είναι δυνατόν
+- Γράψε με φυσική, ευανάγνωστη γλώσσα
 - Εστίασε στα κύρια σημεία, όχι λεπτομέρειες
 
 **Labels (topicLabels):**
@@ -983,8 +1015,13 @@ type:
   * Απαιτούν απόφαση συμβουλίου
   * Εγκρίνονται/απορρίπτονται
 
-name: Σύντομος τίτλος 2-8 λέξεων
-Παραδείγματα: "Αντιπλημμυρικά έργα", "Προϋπολογισμός 2024", "Άδεια οικοδομής Λ. Μεσογείων 45"
+name: Σύντομος τίτλος 2-8 λέξεων που καταλαβαίνει ο μέσος πολίτης
+**ΚΡΙΣΙΜΟ:**
+- ΜΗΝ χρησιμοποιείς άγνωστα/τεχνικά ακρωνύμια (π.χ. ΠΔΕ, ΚΥΑ, ΣΒΑΚ)
+- Γνωστά ακρωνύμια είναι OK (ΚΑΠΗ, ΚΔΑΠ, ΟΤΑ, κλπ)
+- ΜΗΝ χρησιμοποιείς τεχνικούς/νομικούς όρους χωρίς εξήγηση
+- Χρησιμοποίησε απλή, καθημερινή γλώσσα
+Παραδείγματα: "Αντιπλημμυρικά έργα", "Προϋπολογισμός 2024", "Άδεια οικοδομής Λ. Μεσογείων 45", "Σύμβαση πετρελαίου για ΚΑΠΗ"
 
 description: 2-3 προτάσεις με φυσική ροή σε μορφή **Markdown με λίγα references**
 
