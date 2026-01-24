@@ -167,11 +167,64 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     // Phase 4: Convert discussion ranges to per-utterance statuses
     console.log('');
     console.log('📋 PHASE 4: Converting ranges to utterance statuses');
+
+    // Validate ranges before conversion
+    console.log('🔍 Validating ranges before conversion...');
+    const subjectDiscussionRanges = allDiscussionRanges.filter(r => r.status === DiscussionStatus.SUBJECT_DISCUSSION);
+    console.log(`   • Total ranges: ${allDiscussionRanges.length}`);
+    console.log(`   • SUBJECT_DISCUSSION ranges: ${subjectDiscussionRanges.length}`);
+
+    // Check for unclosed ranges
+    const unclosedSubjectRanges = subjectDiscussionRanges.filter(r => r.endUtteranceId === null);
+    if (unclosedSubjectRanges.length > 0) {
+        console.warn(`   ⚠️  Found ${unclosedSubjectRanges.length} unclosed SUBJECT_DISCUSSION ranges!`);
+        unclosedSubjectRanges.forEach(r => {
+            const subject = enrichedSubjects.find(s => s.id === r.subjectId);
+            console.warn(`      - Range ${r.id}: ${subject?.name || r.subjectId} (no end utterance)`);
+        });
+    }
+
+    // Check for overlapping ranges
+    const rangesBySubject = new Map<string, typeof subjectDiscussionRanges>();
+    subjectDiscussionRanges.forEach(r => {
+        if (!r.subjectId) return;
+        if (!rangesBySubject.has(r.subjectId)) {
+            rangesBySubject.set(r.subjectId, []);
+        }
+        rangesBySubject.get(r.subjectId)!.push(r);
+    });
+
+    rangesBySubject.forEach((ranges, subjectId) => {
+        const subject = enrichedSubjects.find(s => s.id === subjectId);
+        console.log(`   • Subject "${subject?.name}": ${ranges.length} ranges`);
+    });
+
     const utteranceDiscussionStatuses = convertRangesToUtteranceStatuses(
         allDiscussionRanges,
         compressedRequest.transcript
     );
     console.log(`✅ Generated statuses for ${utteranceDiscussionStatuses.length} utterances`);
+
+    // Verify distribution of utterances across subjects
+    const utterancesBySubjectId = new Map<string, number>();
+    utteranceDiscussionStatuses.forEach(u => {
+        if (u.status === DiscussionStatus.SUBJECT_DISCUSSION && u.subjectId) {
+            utterancesBySubjectId.set(u.subjectId, (utterancesBySubjectId.get(u.subjectId) || 0) + 1);
+        }
+    });
+
+    console.log('');
+    console.log('🔍 Utterance distribution verification:');
+    console.log(`   • Total SUBJECT_DISCUSSION utterances: ${utteranceDiscussionStatuses.filter(u => u.status === DiscussionStatus.SUBJECT_DISCUSSION).length}`);
+    console.log(`   • Unique subjects with utterances: ${utterancesBySubjectId.size}`);
+
+    if (utterancesBySubjectId.size > 0) {
+        console.log('   • Distribution per subject:');
+        utterancesBySubjectId.forEach((count, subjectId) => {
+            const subject = enrichedSubjects.find(s => s.id === subjectId);
+            console.log(`      - ${count} utterances: ${subject?.name || subjectId}`);
+        });
+    }
 
     console.log('');
     console.log('🎯 FINAL RESULTS:');
