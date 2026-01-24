@@ -1,9 +1,10 @@
-import { aiChat } from "../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
 import { Task } from "./pipeline.js";
 import { generateSubjectUUID } from "../utils.js";
+import { logUsage } from "../lib/usageLogging.js";
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
     console.log("Processing agenda request:", request);
@@ -26,7 +27,9 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         documentBase64: base64
     });
 
-    const subjects = await Promise.all(
+    // Track usage from enrichment
+    let enrichmentUsage = NO_USAGE;
+    const enrichmentResults = await Promise.all(
         result.result.map(s => extractedSubjectToApiSubject(
             { ...s, speakerContributions: [] },
             request.cityName,
@@ -34,7 +37,15 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         ))
     );
 
+    // Extract subjects and accumulate usage
+    const subjects = enrichmentResults.map(r => {
+        enrichmentUsage = addUsage(enrichmentUsage, r.usage);
+        return r.result;
+    });
+
     console.log(`Extracted ${subjects.length} subjects`);
+    logUsage('Extraction usage', result.usage);
+    logUsage('Enrichment usage', enrichmentUsage);
 
     return { subjects };
 };
@@ -52,7 +63,7 @@ export const extractedSubjectToApiSubject = async (
     subject: ExtractedSubject,
     cityName: string,
     date: string
-): Promise<Subject> => {
+) => {
     const id = generateSubjectUUID(subject, 36);
 
     const input: EnrichmentInput = {
