@@ -44,14 +44,15 @@ export interface BatchProcessingResult {
         labels: string[];
         type: "SUBSTANTIAL" | "PROCEDURAL";
     }[];
+    subjects: SubjectInProgress[];
     ranges: {
         id: string;  // UUID for range
         start: string | null;  // compressed utteranceId
         end: string | null;    // null = range is "open" (continues beyond batch)
         status: DiscussionStatus;
         subjectId: string | null;  // compressed subject UUID
+        rangeSummary: string;  // 1 sentence summary of what's discussed in this range
     }[];
-    subjects: SubjectInProgress[];
     discussionSummary?: string;  // 3-4 sentence summary of where the discussion is now
 }
 

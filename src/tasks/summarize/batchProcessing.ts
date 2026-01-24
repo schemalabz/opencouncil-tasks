@@ -461,21 +461,6 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                             additionalProperties: false
                         }
                     },
-                    ranges: {
-                        type: "array",
-                        items: {
-                            type: "object",
-                            properties: {
-                                id: { type: "string" },
-                                start: { type: ["string", "null"] },
-                                end: { type: ["string", "null"] },
-                                status: { type: "string", enum: ["ATTENDANCE", "SUBJECT_DISCUSSION", "VOTE", "OTHER"] },
-                                subjectId: { type: ["string", "null"] }
-                            },
-                            required: ["id", "start", "end", "status", "subjectId"],
-                            additionalProperties: false
-                        }
-                    },
                     subjects: {
                         type: "array",
                         items: {
@@ -508,9 +493,25 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                             additionalProperties: false
                         }
                     },
+                    ranges: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                id: { type: "string" },
+                                start: { type: ["string", "null"] },
+                                end: { type: ["string", "null"] },
+                                status: { type: "string", enum: ["ATTENDANCE", "SUBJECT_DISCUSSION", "VOTE", "OTHER"] },
+                                subjectId: { type: ["string", "null"] },
+                                rangeSummary: { type: "string" }
+                            },
+                            required: ["id", "start", "end", "status", "subjectId", "rangeSummary"],
+                            additionalProperties: false
+                        }
+                    },
                     discussionSummary: { type: "string" }
                 },
-                required: ["segmentSummaries", "ranges", "subjects"],
+                required: ["segmentSummaries", "subjects", "ranges"],
                 additionalProperties: false
             }
         },
