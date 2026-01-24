@@ -86,7 +86,10 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
 
 /**
  * Convert discussion ranges to per-utterance status mapping.
- * Note: If ranges overlap, first matching range (by chronological order) wins.
+ * Note: If ranges overlap, the most specific matching range wins based on:
+ * 1. SUBJECT_DISCUSSION status is preferred over OTHER
+ * 2. Later start index (more specific range)
+ * 3. Closed ranges (with endUtteranceId) over open ranges
  */
 export function convertRangesToUtteranceStatuses(
     ranges: DiscussionRange[],
@@ -123,20 +126,35 @@ export function convertRangesToUtteranceStatuses(
 
     // Assign status to each utterance
     for (const utterance of allUtterances) {
-        // Find the range this utterance belongs to
+        // Find the BEST matching range for this utterance (not just first)
         let assignedRange: DiscussionRange | null = null;
         const currentIndex = utteranceIndex.get(utterance.utteranceId);
 
         if (currentIndex !== undefined) {
+            let bestMatch: { range: DiscussionRange; startIndex: number; endIndex: number } | null = null;
+
+            // Collect all matching ranges and find the best one
             for (const { range, startIndex, endIndex } of sortedRanges) {
                 // Use numerical comparison on indices instead of string comparison on IDs
                 const inRange = currentIndex >= startIndex && currentIndex <= endIndex;
 
                 if (inRange) {
-                    assignedRange = range;
-                    break; // First match wins (ranges should not overlap)
+                    // Choose best match based on specificity:
+                    // 1. Prefer SUBJECT_DISCUSSION over OTHER
+                    // 2. Prefer ranges with later start (more specific)
+                    // 3. Prefer closed ranges over open (have definite end)
+
+                    if (!bestMatch ||
+                        (range.status === DiscussionStatus.SUBJECT_DISCUSSION && bestMatch.range.status !== DiscussionStatus.SUBJECT_DISCUSSION) ||
+                        (range.status === bestMatch.range.status && startIndex > bestMatch.startIndex) ||
+                        (range.status === bestMatch.range.status && startIndex === bestMatch.startIndex && range.endUtteranceId !== null && bestMatch.range.endUtteranceId === null)
+                    ) {
+                        bestMatch = { range, startIndex, endIndex };
+                    }
                 }
             }
+
+            assignedRange = bestMatch?.range ?? null;
         }
 
         // Assign status (default to OTHER if no range found)
