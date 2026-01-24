@@ -1,5 +1,5 @@
 import { SubjectContext } from '../types.js';
-import { aiChat } from './ai.js';
+import { aiChat, ResultWithUsage, NO_USAGE } from './ai.js';
 
 /**
  * Use Claude's web search capability to find relevant context about a subject
@@ -11,7 +11,7 @@ export async function getSubjectContextWithClaude(params: {
   cityName: string;
   administrativeBodyName: string;
   date: string;
-}): Promise<SubjectContext> {
+}): Promise<ResultWithUsage<SubjectContext>> {
   try {
     const systemPrompt = `You are a helpful assistant that provides background context for Greek citizens reading about municipal council meeting topics.
 
@@ -102,14 +102,22 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
     contextText = contextText.replace(/Πηγές:[\s\S]*$/i, '');
 
     return {
-      text: contextText.trim(),
-      citationUrls
+      result: {
+        text: contextText.trim(),
+        citationUrls
+      },
+      usage: result.usage,
+      response: result.response
     };
   } catch (error) {
     console.error('Error getting subject context with Claude:', error);
     return {
-      text: "",
-      citationUrls: []
+      result: {
+        text: "",
+        citationUrls: []
+      },
+      usage: NO_USAGE,
+      response: undefined
     };
   }
 }
