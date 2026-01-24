@@ -12,10 +12,9 @@ import {
 import { Task } from "./pipeline.js";
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
-import { IdCompressor, formatTime } from "../utils.js";
-import { getSubjectContextWithClaude } from "../lib/claudeSearch.js";
-import { geocodeLocation } from "../lib/geocode.js";
-import { createHash } from 'crypto';
+import { IdCompressor, formatTime, generateSubjectUUID } from "../utils.js";
+import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
+import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 dotenv.config();
 
 type SpeakerSegment = Omit<SummarizeRequest['transcript'][number], 'utterances'>;
@@ -120,14 +119,6 @@ interface BatchProcessingResult {
     }[];
     subjects: SubjectInProgress[];
     discussionSummary?: string;  // 3-4 sentence summary of where the discussion is now
-}
-// Generate stable deterministic ID for subject based on its properties
-// Returns full SHA256 hash (not a UUID format, but deterministic and unique)
-function generateSubjectUUID(subject: { name: string; description: string; agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA" }): string {
-    const hash = createHash('sha256');
-    const agendaStr = subject.agendaItemIndex.toString();
-    hash.update(subject.name + subject.description + agendaStr);
-    return hash.digest('hex'); // Return full hash, not truncated
 }
 
 const compressIds = (request: SummarizeRequest, idCompressor: IdCompressor) => {
@@ -1110,54 +1101,7 @@ introducedByPersonId: Ο εισηγητής που παρουσιάζει το �
 
 topicLabel: Ένα από: ${metadata.topicLabels.join(", ")}, ή null
 
-**topicImportance - ΠΡΟΣΟΧΗ: Μη χρησιμοποιείς "high" εύκολα!**
-
-"doNotNotify" - ΔΕΝ στέλνεται ειδοποίηση:
-✓ Έγκριση πρακτικών προηγούμενης συνεδρίασης
-✓ Διορισμοί επιτροπών
-✓ Τυπικές διαδικαστικές εγκρίσεις
-✓ Ανακοινώσεις χωρίς απόφαση
-
-"normal" - Κανονική ειδοποίηση (ΠΡΟΕΠΙΛΟΓΗ):
-✓ Άδειες οικοδομής
-✓ Συντήρηση πάρκων
-✓ Τοπικές υποδομές
-✓ Προμήθειες εξοπλισμού
-✓ Χρηματοδότηση τμημάτων
-✓ Τα περισσότερα συνηθισμένα θέματα
-
-"high" - Υψηλή σημασία (ΣΠΑΝΙΟ - μόνο 1-2 ανά συνεδρίαση):
-✓ Δημοτικός προϋπολογισμός
-✓ Φορολογία (αύξηση/μείωση)
-✓ Μεγάλες υποδομές (μετρό, αυτοκινητόδρομοι)
-✓ Κρίσιμες υπηρεσίες (σχολεία, νοσοκομεία, ασφάλεια)
-✓ City-wide ordinances που επηρεάζουν όλους
-
-Κριτήρια για "high":
-1. Επηρεάζει ΟΛΟΥΣ τους δημότες ΚΑΙ
-2. Η συζήτηση ήταν πολύ ουσιαστική (όχι απλή έγκριση) ΚΑΙ
-3. Έχει σημαντικό αντίκτυπο (οικονομικό, κοινωνικό, ασφάλεια)
-
-**proximityImportance - Γεωγραφική ακτίνα:**
-
-"none" - Δεν έχει τοποθεσία:
-✓ Προϋπολογισμός
-✓ City-wide πολιτικές
-✓ Διοικητικά θέματα
-✓ Οτιδήποτε χωρίς locationText
-
-"near" - 250m ακτίνα (ΠΡΟΕΠΙΛΟΓΗ αν υπάρχει τοποθεσία):
-✓ Μεμονωμένη άδεια οικοδομής
-✓ Μία επιχείρηση
-✓ Επισκευή συγκεκριμένου δρόμου
-✓ Τοπικό πάρκο
-
-"wide" - 1000m ακτίνα:
-✓ Πολυώροφο κτίριο (>6 ορόφους)
-✓ Αυτοκινητόδρομος/μεγάλος δρόμος
-✓ Χώρος εκδηλώσεων με όχληση (γήπεδο, συναυλιακός χώρος)
-✓ Εργοστάσιο/βιομηχανική εγκατάσταση
-✓ Δίκτυο (π.χ. "ποδηλατόδρομοι σε 5 συνοικίες")
+${IMPORTANCE_GUIDELINES}
 
 ═══════════════════════════════════════════════════════════════════════════
 ΠΑΡΑΔΕΙΓΜΑ ΑΠΟΚΡΙΣΗΣ
@@ -1593,43 +1537,21 @@ async function enrichSubject(
     administrativeBodyName: string,
     date: string
 ): Promise<Subject> {
-    // Geocode location
-    let location: Subject['location'] = null;
-    if (subject.locationText) {
-        try {
-            const locationLatLng = await geocodeLocation(subject.locationText + ", " + cityName);
-            if (locationLatLng) {
-                location = {
-                    text: subject.locationText,
-                    type: "point" as const,
-                    coordinates: [[locationLatLng.lat, locationLatLng.lng]]
-                };
-            }
-        } catch (error) {
-            console.error("Error geocoding location:", error);
-        }
-    }
+    const input: EnrichmentInput = {
+        name: subject.name,
+        description: subject.description,
+        locationText: subject.locationText,
+        topicImportance: subject.topicImportance,
+        proximityImportance: subject.proximityImportance,
+        topicLabel: subject.topicLabel,
+        agendaItemIndex: subject.agendaItemIndex ?? "OUT_OF_AGENDA",
+        introducedByPersonId: subject.introducedByPersonId,
+        speakerContributions: subject.speakerContributions
+    };
 
-    // Get context with Claude API web search
-    const context = await getSubjectContextWithClaude({
-        subjectName: subject.name,
-        subjectDescription: subject.description,
+    return enrichSubjectData(input, subject.id, {
         cityName,
         administrativeBodyName,
         date
     });
-
-    return {
-        id: subject.id,  // Compressed ID, will be decompressed in decompressIds
-        name: subject.name,
-        description: subject.description,
-        agendaItemIndex: subject.agendaItemIndex ?? "OUT_OF_AGENDA",
-        introducedByPersonId: subject.introducedByPersonId,
-        speakerContributions: subject.speakerContributions,
-        topicImportance: subject.topicImportance,
-        proximityImportance: subject.proximityImportance,
-        location,
-        topicLabel: subject.topicLabel,
-        context
-    };
 }
