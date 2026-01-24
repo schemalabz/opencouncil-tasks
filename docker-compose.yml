@@ -56,7 +56,7 @@ services:
     networks:
       - cobalt
     ports:
-      - "127.0.0.1:3128:3128"  # HTTP proxy port (for testing from host)
+      - "127.0.0.1:${PROXY_PORT:-3128}:3128"  # HTTP proxy port (configurable via PROXY_PORT env var)
     volumes:
       - ./squid.conf:/etc/squid/squid.conf:ro
     healthcheck:
