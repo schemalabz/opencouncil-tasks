@@ -217,7 +217,31 @@ export async function generateSpeakerContributionsInBatches(
     }
 
     console.log(`   ✓ All batches completed: ${allContributions.length} total contributions`);
-    return { contributions: allContributions, usage: totalUsage };
+
+    // Deduplicate contributions by speakerId (safety net)
+    const contributionsBySpeaker = new Map<string, SpeakerContribution>();
+    const duplicates: string[] = [];
+
+    for (const contrib of allContributions) {
+        if (contributionsBySpeaker.has(contrib.speakerId)) {
+            duplicates.push(contrib.speakerId);
+        } else {
+            contributionsBySpeaker.set(contrib.speakerId, contrib);
+        }
+    }
+
+    if (duplicates.length > 0) {
+        console.warn(`   ⚠️  Detected ${duplicates.length} duplicate speaker contributions (keeping first occurrence):`);
+        const uniqueDuplicates = [...new Set(duplicates)];
+        uniqueDuplicates.forEach(speakerId => {
+            console.warn(`      - Speaker: ${speakerId}`);
+        });
+    }
+
+    const deduplicatedContributions = Array.from(contributionsBySpeaker.values());
+    console.log(`   📊 After deduplication: ${deduplicatedContributions.length} unique contributions`);
+
+    return { contributions: deduplicatedContributions, usage: totalUsage };
 }
 
 /**
