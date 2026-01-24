@@ -59,6 +59,7 @@ type AiChatOptions = {
     parseJson?: boolean;
     tools?: Anthropic.Messages.Tool[];
     outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
+    cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
 }
 
 async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -79,11 +80,14 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude...`);
         if (outputFormat) {
             console.log(`Using structured outputs (JSON schema)`);
+        }
+        if (cacheSystemPrompt) {
+            console.log(`Using prompt caching for system prompt`);
         }
 
         let messages: Anthropic.Messages.MessageParam[] = [];
@@ -109,10 +113,20 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             messages.push({ "role": "assistant", "content": prefillSystemResponse });
         }
 
+        // Convert system prompt to array format with cache control if caching is enabled
+        const systemPromptParam: string | Anthropic.Messages.TextBlockParam[] =
+            cacheSystemPrompt
+                ? [{
+                    type: "text",
+                    text: systemPrompt,
+                    cache_control: { type: "ephemeral" }
+                  }]
+                : systemPrompt;
+
         const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
             model: model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929",
             max_tokens: maxTokens,
-            system: systemPrompt,
+            system: systemPromptParam,
             messages,
             temperature: 0,
             ...(tools && { tools }),
@@ -158,7 +172,8 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 userPrompt,
                 prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
                 prependToResponse: ((prependToResponse || '') + responseText).trim(),
-                tools
+                tools,
+                cacheSystemPrompt  // Preserve caching on continuation
             });
             return {
                 usage: addUsage(response.usage, response2.usage),

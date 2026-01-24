@@ -300,7 +300,8 @@ ${fullDiscussion}
                     required: ["speakerContributions"],
                     additionalProperties: false
                 }
-            }
+            },
+            cacheSystemPrompt: true  // Cache system prompt across speaker batches
         });
 
         return {

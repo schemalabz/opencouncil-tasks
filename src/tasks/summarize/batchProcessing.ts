@@ -443,7 +443,8 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
         systemPrompt,
         userPrompt,
         prefillSystemResponse: "Αναλύω το batch και παράγω τα αποτελέσματα σε JSON:\n{",
-        prependToResponse: "{"
+        prependToResponse: "{",
+        cacheSystemPrompt: true  // Cache system prompt across batches
     });
 
     return { result: response.result, usage: response.usage };
