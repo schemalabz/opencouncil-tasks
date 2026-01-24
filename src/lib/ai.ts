@@ -129,15 +129,21 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             temperature: 0,
             ...(tools && { tools }),
             ...(outputFormat && {
-                betas: ["structured-outputs-2025-11-13"],
                 output_format: outputFormat
             })
         };
 
         await logToFile("Claude Request", requestParams);
 
+        // Prepare request options with beta headers if needed
+        const requestOptions: Anthropic.RequestOptions = outputFormat ? {
+            headers: {
+                'anthropic-beta': 'structured-outputs-2025-11-13'
+            }
+        } : {};
+
         let response = await withRateLimitRetry(() =>
-            anthropic.messages.create(requestParams, {})
+            anthropic.messages.create(requestParams, requestOptions)
         );
 
         await logToFile("Claude Response", response);
