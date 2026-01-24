@@ -1,8 +1,9 @@
 import { aiChat } from "../lib/ai.js";
-import { geocodeLocation } from "../lib/geocode.js";
+import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
+import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
 import { Task } from "./pipeline.js";
-import { createHash } from 'crypto';
+import { generateSubjectUUID } from "../utils.js";
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
     console.log("Processing agenda request:", request);
@@ -26,22 +27,17 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     });
 
     const subjects = await Promise.all(
-        result.result.map(s => extractedSubjectToApiSubject({ ...s, speakerContributions: [] },
-            request.cityName))
+        result.result.map(s => extractedSubjectToApiSubject(
+            { ...s, speakerContributions: [] },
+            request.cityName,
+            request.date
+        ))
     );
 
     console.log(`Extracted ${subjects.length} subjects`);
 
     return { subjects };
 };
-
-// Generate stable UUID for subject based on its properties
-function generateSubjectUUID(subject: { name: string; description: string; agendaItemIndex?: number | string }): string {
-    const hash = createHash('sha256');
-    const agendaStr = subject.agendaItemIndex?.toString() || 'NO_AGENDA';
-    hash.update(subject.name + subject.description + agendaStr);
-    return hash.digest('hex').substring(0, 36);
-}
 
 const downloadFileToBase64 = async (url: string) => {
     console.log(`Downloading file from ${url}...`);
@@ -52,29 +48,29 @@ const downloadFileToBase64 = async (url: string) => {
     return base64;
 }
 
-export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, cityName: string): Promise<Subject> => {
-    const locationLatLng = subject.locationText ? await geocodeLocation(subject.locationText + ", " + cityName) : null;
+export const extractedSubjectToApiSubject = async (
+    subject: ExtractedSubject,
+    cityName: string,
+    date: string
+): Promise<Subject> => {
+    const id = generateSubjectUUID(subject, 36);
 
-    const location = subject.locationText && locationLatLng ? {
-        text: subject.locationText,
-        type: "point" as const,
-        coordinates: [[locationLatLng.lat, locationLatLng.lng]]
-    } : null;
-
-
-    return {
-        id: generateSubjectUUID(subject),  // Generate stable ID based on subject properties
+    const input: EnrichmentInput = {
         name: subject.name,
         description: subject.description,
-        agendaItemIndex: subject.agendaItemIndex,
-        speakerContributions: subject.speakerContributions,
-        topicImportance: 'normal',  // Default for agenda items
-        proximityImportance: subject.locationText ? 'near' : 'none',
-        context: null,
-        location,
+        locationText: subject.locationText,
+        topicImportance: subject.topicImportance,
+        proximityImportance: subject.proximityImportance,
         topicLabel: subject.topicLabel,
-        introducedByPersonId: subject.introducedByPersonId
-    }
+        agendaItemIndex: subject.agendaItemIndex,
+        introducedByPersonId: subject.introducedByPersonId,
+        speakerContributions: subject.speakerContributions
+    };
+
+    return enrichSubjectData(input, id, {
+        cityName,
+        date
+    });
 }
 
 export type ExtractedSubject = {
@@ -88,6 +84,8 @@ export type ExtractedSubject = {
     }[];
     locationText: string | null;
     topicLabel: string | null;
+    topicImportance: 'doNotNotify' | 'normal' | 'high';
+    proximityImportance: 'none' | 'near' | 'wide';
 }
 
 export const getSystemPrompt = () => {
@@ -96,22 +94,32 @@ export const getSystemPrompt = () => {
 {
     name: string; // Ένας σύντομος τίτλος για το θέμα (2-6 λέξεις)
     description: string;  // 2-5 προτάσεις με μια σύντομη, απλή και περιεκτική περιγραφή του θέματος
+                          // ΣΗΜΑΝΤΙΚΟ: Αυτή είναι ημερήσια διάταξη για ΜΕΛΛΟΝΤΙΚΗ συνεδρίαση που δεν έχει γίνει ακόμα.
+                          // Γράψε την περιγραφή με ουδέτερο χρόνο που δείχνει ότι το θέμα ΘΑ συζητηθεί (όχι ότι συζητείται τώρα).
+                          // ✓ Σωστά: "Το θέμα αφορά...", "Θα εξεταστεί...", "Προς έγκριση η..."
+                          // ✗ Λάθος: "Συζητούνται...", "Εγκρίνεται...", "Παρουσιάζεται..."
     agendaItemIndex: number | null; // Ο αριθμός που συνοδεύει το θέμα στο έγγραφο της ημερήσιας διάταξης, αν υπάρχει
-    locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος. Αν το θέμα δεν έχει τοποθεσία, ή αφορά ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου), τότε null 
-    introducedByPersonId: string | null; // Το id του εισηγητή του θέματος, αν αναφέρετε σαφώς στη διάταξη 
+    locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος. Αν το θέμα δεν έχει τοποθεσία, ή αφορά ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου), τότε null
+    introducedByPersonId: string | null; // Το id του εισηγητή του θέματος, αν αναφέρετε σαφώς στη διάταξη
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
+    topicImportance: 'doNotNotify' | 'normal' | 'high'; // Η σημασία του θέματος για ειδοποιήσεις
+    proximityImportance: 'none' | 'near' | 'wide'; // Η γεωγραφική ακτίνα επιρροής του θέματος
 };
+
+${IMPORTANCE_GUIDELINES}
 
 Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.`;
 }
 
 export const getUserPrompt = (agendaPdfBase64: string, cityName: string, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: string[]) => {
-    return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}. Όλα τα θέματα αφορούν τη πόλη.
+    return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.
 
-    Τα άτομα που συμμετέχουν στη συνεδρίαση, και μπορεί να είναι εισηγητές θεμάτων, είναι τα εξής:
-    ${JSON.stringify(people, null, 2)}
+ΣΗΜΑΝΤΙΚΟ: Η συνεδρίαση ΔΕΝ έχει γίνει ακόμα - αυτή είναι η ημερήσια διάταξη για μελλοντική συνεδρίαση. Γράψε τις περιγραφές με τρόπο που δείχνει ότι αυτά είναι θέματα ΠΡΟΣ συζήτηση, όχι θέματα που συζητούνται αυτή τη στιγμή.
 
-    Τα topic labels που μπορεί να έχουν τα θέματα είναι: ${topicLabels.join(", ")}
+Τα άτομα που συμμετέχουν στη συνεδρίαση, και μπορεί να είναι εισηγητές θεμάτων, είναι τα εξής:
+${JSON.stringify(people, null, 2)}
 
-    Παρακαλώ να εξάγεις ΟΛΑ τα θέματα από αυτό το έγγραφο.`;
+Τα topic labels που μπορεί να έχουν τα θέματα είναι: ${topicLabels.join(", ")}
+
+Παρακαλώ να εξάγεις ΟΛΑ τα θέματα από αυτό το έγγραφο.`;
 }
