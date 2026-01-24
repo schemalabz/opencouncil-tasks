@@ -442,8 +442,78 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
     const response = await aiChat<BatchProcessingResult>({
         systemPrompt,
         userPrompt,
-        prefillSystemResponse: "Αναλύω το batch και παράγω τα αποτελέσματα σε JSON:\n{",
-        prependToResponse: "{",
+        outputFormat: {
+            type: "json_schema",
+            schema: {
+                type: "object",
+                properties: {
+                    segmentSummaries: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                id: { type: "string" },
+                                summary: { type: "string" },
+                                labels: { type: "array", items: { type: "string" } },
+                                type: { type: "string", enum: ["SUBSTANTIAL", "PROCEDURAL"] }
+                            },
+                            required: ["id", "summary", "labels", "type"],
+                            additionalProperties: false
+                        }
+                    },
+                    ranges: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                id: { type: "string" },
+                                start: { type: ["string", "null"] },
+                                end: { type: ["string", "null"] },
+                                status: { type: "string", enum: ["ATTENDANCE", "SUBJECT_DISCUSSION", "VOTE", "OTHER"] },
+                                subjectId: { type: ["string", "null"] }
+                            },
+                            required: ["id", "start", "end", "status", "subjectId"],
+                            additionalProperties: false
+                        }
+                    },
+                    subjects: {
+                        type: "array",
+                        items: {
+                            type: "object",
+                            properties: {
+                                id: { type: "string" },
+                                type: { type: "string", enum: ["IN_AGENDA", "BEFORE_AGENDA", "OUT_OF_AGENDA"] },
+                                agendaItemIndex: { type: ["number", "string"] },
+                                name: { type: "string" },
+                                description: { type: "string" },
+                                topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
+                                proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
+                                introducedByPersonId: { type: ["string", "null"] },
+                                locationText: { type: ["string", "null"] },
+                                topicLabel: { type: ["string", "null"] },
+                                speakerContributions: {
+                                    type: "array",
+                                    items: {
+                                        type: "object",
+                                        properties: {
+                                            speakerId: { type: "string" },
+                                            text: { type: "string" }
+                                        },
+                                        required: ["speakerId", "text"],
+                                        additionalProperties: false
+                                    }
+                                }
+                            },
+                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "speakerContributions"],
+                            additionalProperties: false
+                        }
+                    },
+                    discussionSummary: { type: "string" }
+                },
+                required: ["segmentSummaries", "ranges", "subjects"],
+                additionalProperties: false
+            }
+        },
         cacheSystemPrompt: true  // Cache system prompt across batches
     });
 
