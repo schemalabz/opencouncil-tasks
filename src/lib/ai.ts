@@ -12,12 +12,23 @@ export type ResultWithUsage<T> = {
     usage: Anthropic.Messages.Usage;
     response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
 };
-export const NO_USAGE: Anthropic.Messages.Usage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
-export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage) => ({
+export const NO_USAGE: Anthropic.Messages.Usage = {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_creation_input_tokens: null,
+    cache_read_input_tokens: null,
+    cache_creation: null,
+    server_tool_use: null,
+    service_tier: null
+};
+export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage): Anthropic.Messages.Usage => ({
     input_tokens: usage.input_tokens + otherUsage.input_tokens,
     output_tokens: usage.output_tokens + otherUsage.output_tokens,
     cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
     cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
+    cache_creation: null,  // Don't aggregate cache_creation details
+    server_tool_use: null, // Don't aggregate server_tool_use details
+    service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
 });
 const maxTokens = 64000;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -45,6 +56,7 @@ type AiChatOptions = {
     prependToResponse?: string;
     parseJson?: boolean;
     tools?: Anthropic.Messages.Tool[];
+    outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
 }
 
 async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -65,9 +77,13 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude...`);
+        if (outputFormat) {
+            console.log(`Using structured outputs (JSON schema)`);
+        }
+
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({
@@ -85,7 +101,9 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             });
         }
         messages.push({ "role": "user", "content": userPrompt });
-        if (prefillSystemResponse) {
+
+        // Only use prefill if NOT using structured outputs (they're incompatible)
+        if (prefillSystemResponse && !outputFormat) {
             messages.push({ "role": "assistant", "content": prefillSystemResponse });
         }
 
@@ -95,7 +113,11 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             system: systemPrompt,
             messages,
             temperature: 0,
-            ...(tools && { tools })
+            ...(tools && { tools }),
+            ...(outputFormat && {
+                betas: ["structured-outputs-2025-11-13"],
+                output_format: outputFormat
+            })
         };
 
         await logToFile("Claude Request", requestParams);
@@ -105,6 +127,8 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         );
 
         await logToFile("Claude Response", response);
+
+        console.log(`Claude stop_reason: ${response.stop_reason}, tokens: ${response.usage.output_tokens}/${maxTokens}`);
 
         // When using tools, response can have multiple content blocks
         // Extract all text blocks
@@ -134,12 +158,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
                 tools
             });
             return {
-                usage: {
-                    input_tokens: response.usage.input_tokens + response2.usage.input_tokens,
-                    output_tokens: response.usage.output_tokens + response2.usage.output_tokens,
-                    cache_creation_input_tokens: 0,
-                    cache_read_input_tokens: 0,
-                },
+                usage: addUsage(response.usage, response2.usage),
                 result: response2.result
             }
         }
@@ -154,8 +173,16 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             try {
                 responseJson = JSON.parse(responseContent) as T;
             } catch (e) {
-                console.error(`Error parsing Claude response: ${responseContent.slice(0, 100)}`);
-                await logToFile(`Error parsing Claude response: ${responseContent.slice(0, 100)}`, e);
+                console.error(`Error parsing Claude response (length: ${responseContent.length} chars)`);
+                console.error(`First 200 chars: ${responseContent.slice(0, 200)}`);
+                console.error(`Last 200 chars: ${responseContent.slice(-200)}`);
+                await logToFile(`JSON Parse Error - Full response (${responseContent.length} chars)`, {
+                    error: e,
+                    responseStart: responseContent.slice(0, 500),
+                    responseEnd: responseContent.slice(-500),
+                    stopReason: response.stop_reason,
+                    outputTokens: response.usage.output_tokens
+                });
                 throw e;
             }
         } else {

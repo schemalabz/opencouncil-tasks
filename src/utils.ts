@@ -107,6 +107,24 @@ export class IdCompressor {
     }
 
     /**
+     * Gets the long ID corresponding to a short ID, throwing an error if not found.
+     * Use this for critical decompression where silent failures would cause data corruption.
+     * @param shortId The short ID
+     * @returns The corresponding long ID
+     * @throws Error if the short ID is not found
+     */
+    public getLongIdOrThrow(shortId: string): string {
+        if (!this.shortIdToLong.has(shortId)) {
+            const available = Array.from(this.shortIdToLong.keys()).slice(0, 10).join(', ');
+            throw new Error(
+                `Short ID ${shortId} not found in IdCompressor.\n` +
+                `Available IDs (showing first 10): ${available}...`
+            );
+        }
+        return this.shortIdToLong.get(shortId)!;
+    }
+
+    /**
      * Gets the short ID corresponding to a long ID.
      * @param longId The long ID
      * @returns The corresponding short ID
@@ -153,4 +171,22 @@ export function generateSubjectUUID(
     const fullHash = hash.digest('hex');
 
     return truncate ? fullHash.substring(0, truncate) : fullHash;
+}
+
+/**
+ * Format token count with appropriate unit (tokens, k tokens, M tokens).
+ * Examples: "800 tokens", "83.2k tokens", "1.2M tokens"
+ * @param tokens The number of tokens
+ * @returns Formatted string
+ */
+export function formatTokenCount(tokens: number): string {
+    if (tokens < 1000) {
+        return `${tokens} tokens`;
+    } else if (tokens < 1_000_000) {
+        const k = tokens / 1000;
+        return `${k.toFixed(1)}k tokens`;
+    } else {
+        const m = tokens / 1_000_000;
+        return `${m.toFixed(1)}M tokens`;
+    }
 }
