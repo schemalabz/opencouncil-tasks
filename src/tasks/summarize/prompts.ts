@@ -349,6 +349,12 @@ export function getSpeakerContributionsSystemPrompt(administrativeBodyName?: str
 Κάθε contribution είναι μια σύντομη περίληψη (3-5 προτάσεις) της θέσης του συμβούλου επί του θέματος,
 σε μορφή **Markdown με ειδικά reference links**.
 
+**ΚΡΙΣΙΜΟ - ΕΝΑ CONTRIBUTION ΑΝΑ ΟΜΙΛΗΤΗ:**
+Κάθε ομιλητής (speakerId) πρέπει να εμφανίζεται ΑΚΡΙΒΩΣ ΜΙΑ ΦΟΡΑ στο speakerContributions array.
+Αν ένας ομιλητής έχει πολλαπλές τοποθετήσεις ή μιλάει για διάφορα σημεία,
+ΣΥΝΔΥΑΣΕ όλα τα επιχειρήματά του σε ΕΝΑ συνεκτικό contribution.
+ΜΗΝ δημιουργήσεις πολλαπλά contributions για τον ίδιο speakerId.
+
 **ΣΗΜΑΝΤΙΚΟ - ΠΛΗΡΗΣ ΠΛΑΙΣΙΟ:**
 Σου δίνεται:
 1. Τα utterances ΚΑΘΕ συμβούλου (οργανωμένα ανά speakerId)
