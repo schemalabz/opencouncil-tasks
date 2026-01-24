@@ -1,6 +1,7 @@
 import fs from 'fs';
 import express, { Router } from 'express';
 import { CallbackServer } from './lib/CallbackServer.js';
+import { createHash } from 'crypto';
 
 export const tryGetFromEnvOrFile = (key: string, path: string) => {
     if (process.env[key]) {
@@ -125,4 +126,31 @@ export class IdCompressor {
     public size(): number {
         return this.longIdToShort.size;
     }
+}
+
+/**
+ * Generates a stable UUID for a subject based on its properties using SHA-256.
+ * The same subject content will always generate the same UUID.
+ *
+ * @param subject Object containing subject properties
+ * @param subject.name The subject name
+ * @param subject.description The subject description
+ * @param subject.agendaItemIndex Optional agenda item index (number, string, or special values)
+ * @param truncate Optional: truncate hash to specified length (default: full 64 chars)
+ * @returns A stable hash-based UUID
+ */
+export function generateSubjectUUID(
+    subject: {
+        name: string;
+        description: string;
+        agendaItemIndex?: number | string | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
+    },
+    truncate?: number
+): string {
+    const hash = createHash('sha256');
+    const agendaStr = subject.agendaItemIndex?.toString() || 'NO_AGENDA';
+    hash.update(subject.name + subject.description + agendaStr);
+    const fullHash = hash.digest('hex');
+
+    return truncate ? fullHash.substring(0, truncate) : fullHash;
 }

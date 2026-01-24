@@ -27,16 +27,12 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
 - Do NOT include meta-commentary like "Θα ψάξω για..." or "Ας δούμε..."
 - Do NOT discuss what was said IN THE MEETING - only provide EXTERNAL context
 - Start DIRECTLY with the actual background information
-- Use numbered citations [1], [2], [3] etc. inline in the text
-- At the end, include a "Πηγές:" section with numbered references
+- Write natural prose - citations will be added automatically by the system
+- Do NOT manually add citation numbers like [1], [2], [3]
+- Do NOT include a "Πηγές:" or "Sources:" section
 
 **Example format:**
-Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 [1] που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού [2]...
-
-**Πηγές:**
-1. [Νόμος 4555/2018](https://example.gov.gr)
-2. [Υπουργική Απόφαση 2019](https://example.gov.gr)
-3. [Ανάλυση από ΤΕΕ](https://example.org)`;
+Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού και την υλικοτεχνική υποδομή. Οι πρόσφατες αλλαγές στην νομοθεσία στοχεύουν στη βελτίωση της ποιότητας των παρεχόμενων υπηρεσιών.`;
 
     const userPrompt = `Παράθεσε ΕΞΩΤΕΡΙΚΟ πλαίσιο για πολίτες που διαβάζουν για αυτό το θέμα που συζητήθηκε σε συνεδρίαση ${params.administrativeBodyName}.
 
@@ -51,8 +47,9 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
 - Γιατί είναι σημαντικό
 
 ΜΗΝ αναφέρεις τι είπαν στη συνεδρίαση - μόνο εξωτερικό πλαίσιο.
-Χρησιμοποίησε αριθμημένες αναφορές [1], [2], [3] στο κείμενο.
-Τέλειωσε με "Πηγές:" και numbered list.
+Γράψε φυσικό κείμενο - οι πηγές θα προστεθούν αυτόματα από το σύστημα.
+ΜΗΝ προσθέσεις χειροκίνητα αριθμούς αναφορών [1], [2], [3].
+ΜΗΝ συμπεριλάβεις τμήμα "Πηγές:" ή "Sources:".
 
 Ξεκίνα την απάντησή σου ΑΠΕΥΘΕΙΑΣ με το πλαίσιο - ΧΩΡΙΣ μετα-σχόλια.`;
 
@@ -69,19 +66,25 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
     });
 
     // Extract text and citations from response
-    let contextText = result.result;
+    // Web search responses have multiple text blocks with citations on individual blocks
+    let contextText = '';
     const citationUrls: string[] = [];
 
-    // Extract citations if available
     if (result.response) {
       for (const block of result.response.content) {
-        if (block.type === "text" && 'citations' in block && Array.isArray(block.citations)) {
-          for (const citation of block.citations) {
-            // web_search_result_location is not yet typed in SDK, use type assertion
-            if ((citation as any).type === "web_search_result_location" && (citation as any).url) {
-              const url = (citation as any).url;
-              if (!citationUrls.includes(url)) {
-                citationUrls.push(url);
+        // Concatenate all text blocks to build the full response
+        if (block.type === "text") {
+          contextText += (block as any).text || '';
+
+          // Extract citations from this text block
+          if ('citations' in block && Array.isArray(block.citations)) {
+            for (const citation of block.citations) {
+              // web_search_result_location citations include the URL
+              if ((citation as any).type === "web_search_result_location" && (citation as any).url) {
+                const url = (citation as any).url;
+                if (!citationUrls.includes(url)) {
+                  citationUrls.push(url);
+                }
               }
             }
           }
@@ -89,17 +92,14 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
       }
     }
 
-    // If no citations were found in the response, try to extract URLs from markdown links
-    if (citationUrls.length === 0) {
-      const urlRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
-      let match;
-      while ((match = urlRegex.exec(contextText)) !== null) {
-        const url = match[2];
-        if (!citationUrls.includes(url)) {
-          citationUrls.push(url);
-        }
-      }
+    // Fallback: if response structure wasn't as expected, use the result string
+    if (!contextText) {
+      contextText = result.result;
     }
+
+    // Clean up any remaining "Πηγές:" sections that might have been added
+    contextText = contextText.replace(/\*\*Πηγές:\*\*[\s\S]*$/i, '');
+    contextText = contextText.replace(/Πηγές:[\s\S]*$/i, '');
 
     return {
       text: contextText.trim(),
