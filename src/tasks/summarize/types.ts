@@ -40,6 +40,16 @@ export interface SubjectInProgress {
 }
 
 /**
+ * Direct utterance-to-status mapping (replaces range boundaries).
+ * Each utterance is explicitly tagged with its discussion status and subject.
+ */
+export interface UtteranceStatus {
+    utteranceId: string;  // compressed utteranceId
+    status: DiscussionStatus;
+    subjectId: string | null;  // compressed subject UUID (null for ATTENDANCE/OTHER)
+}
+
+/**
  * Result from batch processing a transcript chunk.
  */
 export interface BatchProcessingResult {
@@ -50,15 +60,8 @@ export interface BatchProcessingResult {
         type: "SUBSTANTIAL" | "PROCEDURAL";
     }[];
     subjects: SubjectInProgress[];
-    ranges: {
-        id: string;  // UUID for range
-        start: string | null;  // compressed utteranceId
-        end: string | null;    // null = range is "open" (continues beyond batch)
-        status: DiscussionStatus;
-        subjectId: string | null;  // compressed subject UUID
-        rangeSummary: string;  // 1 sentence summary of what's discussed in this range
-    }[];
-    discussionSummary?: string;  // 3-4 sentence summary of where the discussion is now
+    utteranceStatuses: UtteranceStatus[];  // Direct utterance tagging (replaces ranges)
+    meetingProgressSummary?: string;  // 2-4 sentence summary of meeting progress for next batch context
 }
 
 /**
