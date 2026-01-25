@@ -142,9 +142,9 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             }
         } : {};
 
-        let response = await withRateLimitRetry(() =>
-            anthropic.messages.create(requestParams, requestOptions)
-        );
+        // Use .stream() helper for long requests (>10 minutes) - it handles accumulation automatically
+        const stream = anthropic.messages.stream(requestParams, requestOptions);
+        const response = await stream.finalMessage();
 
         await logToFile("Claude Response", response);
 
