@@ -29,7 +29,8 @@ export const compressIds = (request: SummarizeRequest, idCompressor: IdCompresso
             locationText: subj.location?.text || null,
             topicLabel: subj.topicLabel,
             topicImportance: subj.topicImportance,
-            proximityImportance: subj.proximityImportance
+            proximityImportance: subj.proximityImportance,
+            discussedIn: subj.discussedIn ? idCompressor.addLongId(subj.discussedIn) : null
         };
     });
 
@@ -60,6 +61,7 @@ export const decompressIds = (
             id: idCompressor.getLongId(s.id),  // Decompress subject ID
             description: decompressReferencesInMarkdown(s.description, idCompressor),  // Decompress references in description
             introducedByPersonId: s.introducedByPersonId ? idCompressor.getLongId(s.introducedByPersonId) : null,  // Decompress person ID
+            discussedIn: s.discussedIn ? idCompressor.getLongId(s.discussedIn) : null,  // Decompress discussedIn subject ID
             speakerContributions: s.speakerContributions
                 .filter(c => {
                     if (!c.text) {

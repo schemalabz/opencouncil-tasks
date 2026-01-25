@@ -56,17 +56,42 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('💬 PHASE 2: Speaker Contributions');
     onProgress("speaker_contributions", 0);
     let phase2Usage = NO_USAGE;
+
+    // Count and skip secondary subjects
+    const secondarySubjects = subjects.filter(s => s.discussedIn !== null);
+    const primarySubjects = subjects.filter(s => s.discussedIn === null);
+
+    if (secondarySubjects.length > 0) {
+        console.log(`   ℹ️  Skipping ${secondarySubjects.length} secondary subjects (discussed jointly):`);
+        secondarySubjects.forEach(s => {
+            const primary = subjects.find(p => p.id === s.discussedIn);
+            console.log(`      • "${s.name}" → discussed in "${primary?.name}"`);
+        });
+        console.log();
+    }
+
+    console.log(`   Processing ${primarySubjects.length} primary subjects...`);
+
     for (let i = 0; i < subjects.length; i++) {
-        console.log(`   Processing subject ${i + 1}/${subjects.length}: "${subjects[i].name}"`);
+        const subject = subjects[i];
+
+        // Skip secondary subjects - they were discussed jointly
+        if (subject.discussedIn !== null) {
+            console.log(`   [${i + 1}/${subjects.length}] Skipping "${subject.name}" (discussed in primary subject ${subject.discussedIn})`);
+            subject.speakerContributions = [];  // Ensure empty
+            continue;
+        }
+
+        console.log(`   [${i + 1}/${subjects.length}] Processing subject: "${subject.name}"`);
         onProgress("speaker_contributions", i / subjects.length);
         const { contributions, usage } = await generateSpeakerContributions(
-            subjects[i],
+            subject,
             allDiscussionRanges,
             compressedRequest.transcript,
             idCompressor,
             request.administrativeBodyName
         );
-        subjects[i].speakerContributions = contributions;
+        subject.speakerContributions = contributions;
         phase2Usage = addUsage(phase2Usage, usage);
         console.log(`      → Generated ${contributions.length} speaker contributions`);
     }
@@ -267,7 +292,8 @@ async function enrichSubject(
         topicLabel: subject.topicLabel,
         agendaItemIndex: subject.agendaItemIndex ?? "OUT_OF_AGENDA",
         introducedByPersonId: subject.introducedByPersonId,
-        speakerContributions: subject.speakerContributions
+        speakerContributions: subject.speakerContributions,
+        discussedIn: subject.discussedIn
     };
 
     return enrichSubjectData(input, subject.id, {
