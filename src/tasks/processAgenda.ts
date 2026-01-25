@@ -75,7 +75,8 @@ export const extractedSubjectToApiSubject = async (
         topicLabel: subject.topicLabel,
         agendaItemIndex: subject.agendaItemIndex,
         introducedByPersonId: subject.introducedByPersonId,
-        speakerContributions: subject.speakerContributions
+        speakerContributions: subject.speakerContributions,
+        discussedIn: null  // Agenda items are always independent initially
     };
 
     return enrichSubjectData(input, id, {
@@ -129,6 +130,12 @@ export const getUserPrompt = (agendaPdfBase64: string, cityName: string, date: s
 
 Τα άτομα που συμμετέχουν στη συνεδρίαση, και μπορεί να είναι εισηγητές θεμάτων, είναι τα εξής:
 ${JSON.stringify(people, null, 2)}
+
+ΣΗΜΑΝΤΙΚΟ - Αντιστοίχιση εισηγητών:
+- Η ημερήσια διάταξη συχνά αναφέρει εισηγητές με ΡΟΛΟ (π.χ. "ΕΙΣΗΓΗΤΗΣ: ΔΗΜΑΡΧΟΣ", "ΕΙΣΗΓΗΤΗΣ: ΑΝΤΙΔΗΜΑΡΧΟΣ")
+- Βρες το άτομο στη λίστα με το αντίστοιχο role (case-insensitive: "ΔΗΜΑΡΧΟΣ" = "Δήμαρχος")
+- Χρησιμοποίησε το id του ατόμου, όχι το όνομα του ρόλου
+- Αν δεν βρίσκεις αντιστοίχιση, βάλε null
 
 Τα topic labels που μπορεί να έχουν τα θέματα είναι: ${topicLabels.join(", ")}
 
