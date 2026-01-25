@@ -7,13 +7,28 @@ import { fetchAdalineDeployment, submitAdalineLog } from './adaline.js';
 dotenv.config();
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-export type ResultWithUsage<T> = { result: T, usage: Anthropic.Messages.Usage };
-export const NO_USAGE: Anthropic.Messages.Usage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
-export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage) => ({
+export type ResultWithUsage<T> = {
+    result: T;
+    usage: Anthropic.Messages.Usage;
+    response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
+};
+export const NO_USAGE: Anthropic.Messages.Usage = {
+    input_tokens: 0,
+    output_tokens: 0,
+    cache_creation_input_tokens: null,
+    cache_read_input_tokens: null,
+    cache_creation: null,
+    server_tool_use: null,
+    service_tier: null
+};
+export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage): Anthropic.Messages.Usage => ({
     input_tokens: usage.input_tokens + otherUsage.input_tokens,
     output_tokens: usage.output_tokens + otherUsage.output_tokens,
     cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
     cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
+    cache_creation: null,  // Don't aggregate cache_creation details
+    server_tool_use: null, // Don't aggregate server_tool_use details
+    service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
 });
 const maxTokens = 64000;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -40,6 +55,9 @@ type AiChatOptions = {
     prefillSystemResponse?: string;
     prependToResponse?: string;
     parseJson?: boolean;
+    tools?: Anthropic.Messages.Tool[];
+    outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
+    cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
 }
 
 async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -60,9 +78,10 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude...`);
+
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({
@@ -80,50 +99,86 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             });
         }
         messages.push({ "role": "user", "content": userPrompt });
-        if (prefillSystemResponse) {
+
+        // Only use prefill if NOT using structured outputs (they're incompatible)
+        if (prefillSystemResponse && !outputFormat) {
             messages.push({ "role": "assistant", "content": prefillSystemResponse });
         }
 
-        const requestParams = {
-            model: "claude-sonnet-4-20250514",
+        // Convert system prompt to array format with cache control if caching is enabled
+        const systemPromptParam: string | Anthropic.Messages.TextBlockParam[] =
+            cacheSystemPrompt
+                ? [{
+                    type: "text",
+                    text: systemPrompt,
+                    cache_control: { type: "ephemeral" }
+                  }]
+                : systemPrompt;
+
+        const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
+            model: "claude-sonnet-4-5-20250929",
             max_tokens: maxTokens,
-            system: systemPrompt,
+            system: systemPromptParam,
             messages,
             temperature: 0,
+            ...(tools && { tools }),
+            ...(outputFormat && {
+                output_format: outputFormat
+            })
         };
 
         await logToFile("Claude Request", requestParams);
 
-        let response = await withRateLimitRetry(() =>
-            anthropic.messages.create(requestParams, {})
-        );
+        // Prepare request options with beta headers if needed
+        const requestOptions: Anthropic.RequestOptions = outputFormat ? {
+            headers: {
+                'anthropic-beta': 'structured-outputs-2025-11-13'
+            }
+        } : {};
+
+        // Use .stream() helper for long requests (>10 minutes) - it handles accumulation automatically
+        const stream = anthropic.messages.stream(requestParams, requestOptions);
+        const response = await stream.finalMessage();
 
         await logToFile("Claude Response", response);
 
-        if (!response.content || response.content.length !== 1) {
-            throw new Error("Expected 1 response from claude, got " + response.content?.length);
+        console.log(`Claude stop_reason: ${response.stop_reason}, tokens: ${response.usage.output_tokens}/${maxTokens}`);
+
+        // When using tools, response can have multiple content blocks
+        // Extract all text blocks
+        const textBlocks = response.content.filter(block => block.type === "text");
+
+        if (textBlocks.length === 0) {
+            throw new Error("Expected at least one text response from claude, got " + response.content.map(c => c.type).join(", "));
         }
 
-        if (response.content[0].type !== "text") {
+        // For backward compatibility, if there's only one content block and it's not text, throw error
+        if (!tools && response.content.length === 1 && response.content[0].type !== "text") {
             throw new Error("Expected text response from claude, got " + response.content[0].type);
         }
+
+        // Concatenate all text blocks
+        let responseText = textBlocks.map(block => block.text).join("");
 
         if (response.stop_reason === "max_tokens") {
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
-            const response2 = await aiChat<T>({ systemPrompt, documentBase64, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim() });
+            const response2 = await aiChat<T>({
+                systemPrompt,
+                documentBase64,
+                userPrompt,
+                prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
+                prependToResponse: ((prependToResponse || '') + responseText).trim(),
+                tools,
+                cacheSystemPrompt  // Preserve caching on continuation
+            });
             return {
-                usage: {
-                    input_tokens: response.usage.input_tokens + response2.usage.input_tokens,
-                    output_tokens: response.usage.output_tokens + response2.usage.output_tokens,
-                    cache_creation_input_tokens: 0,
-                    cache_read_input_tokens: 0,
-                },
+                usage: addUsage(response.usage, response2.usage),
                 result: response2.result
             }
         }
 
-        let responseContent = response.content[0].text;
+        let responseContent = responseText;
         if (prependToResponse) {
             responseContent = prependToResponse + responseContent;
         }
@@ -133,8 +188,16 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             try {
                 responseJson = JSON.parse(responseContent) as T;
             } catch (e) {
-                console.error(`Error parsing Claude response: ${responseContent.slice(0, 100)}`);
-                await logToFile(`Error parsing Claude response: ${responseContent.slice(0, 100)}`, e);
+                console.error(`Error parsing Claude response (length: ${responseContent.length} chars)`);
+                console.error(`First 200 chars: ${responseContent.slice(0, 200)}`);
+                console.error(`Last 200 chars: ${responseContent.slice(-200)}`);
+                await logToFile(`JSON Parse Error - Full response (${responseContent.length} chars)`, {
+                    error: e,
+                    responseStart: responseContent.slice(0, 500),
+                    responseEnd: responseContent.slice(-500),
+                    stopReason: response.stop_reason,
+                    outputTokens: response.usage.output_tokens
+                });
                 throw e;
             }
         } else {
@@ -145,7 +208,8 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
 
         return {
             usage: response.usage,
-            result: responseJson
+            result: responseJson,
+            response: response
         };
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);

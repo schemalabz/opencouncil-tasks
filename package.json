@@ -12,7 +12,7 @@
     "test:upload": "curl -X POST http://localhost:3005/dev/test-upload"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
+    "@anthropic-ai/sdk": "^0.71.2",
     "aws-sdk": "^2.1687.0",
     "axios": "^1.7.7",
     "chalk": "^4.1.2",

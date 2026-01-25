@@ -19,3 +19,4 @@ logs/
 .env*.local
 .env
 squid.conf
+src/tasks/summarize.ts
