@@ -4,45 +4,44 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { DiscussionRange, DiscussionStatus, SpeakerContribution } from "../../types.js";
+import { DiscussionStatus, SpeakerContribution } from "../../types.js";
 import { IdCompressor, formatTime, formatTokenCount } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE } from "../../lib/ai.js";
 import { getSpeakerContributionsSystemPrompt } from "./prompts.js";
-import { CompressedTranscript, SubjectInProgress, ExtractedUtterances } from "./types.js";
-import { buildUtteranceIndexMap } from "./utils.js";
+import { CompressedTranscript, SubjectInProgress, ExtractedUtterances, UtteranceStatus } from "./types.js";
 
 /**
- * Generate speaker contributions from discussion ranges.
- * Finds relevant ranges, extracts utterances, and generates summaries.
+ * Generate speaker contributions from utterance statuses.
+ * Finds relevant utterances, extracts them, and generates summaries.
  */
 export async function generateSpeakerContributions(
     subject: SubjectInProgress,
-    allRanges: DiscussionRange[],
+    allUtteranceStatuses: UtteranceStatus[],
     transcript: CompressedTranscript,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
 ): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage }> {
-    // Find ranges for this subject
-    const relevantRanges = allRanges.filter(r =>
-        r.subjectId === subject.id &&
-        r.status === DiscussionStatus.SUBJECT_DISCUSSION
+    // Find utterance statuses for this subject
+    const relevantStatuses = allUtteranceStatuses.filter(s =>
+        s.subjectId === subject.id &&
+        s.status === DiscussionStatus.SUBJECT_DISCUSSION
     );
 
-    if (relevantRanges.length === 0) {
-        console.log(`   ⚠️  Subject "${subject.name}": No SUBJECT_DISCUSSION ranges found`);
+    if (relevantStatuses.length === 0) {
+        console.log(`   ⚠️  Subject "${subject.name}": No SUBJECT_DISCUSSION utterances found`);
         return { contributions: [], usage: NO_USAGE };
     }
 
-    console.log(`   🔍 Subject "${subject.name}" has ${relevantRanges.length} relevant ranges`);
+    console.log(`   🔍 Subject "${subject.name}" has ${relevantStatuses.length} relevant utterances`);
 
     // Extract utterances with full context
-    const { utterancesBySpeaker, allSubjectUtterances } = extractAndGroupUtterances(relevantRanges, transcript);
+    const { utterancesBySpeaker, allSubjectUtterances } = extractAndGroupUtterances(relevantStatuses, transcript);
 
     const speakerCount = Object.keys(utterancesBySpeaker).length;
     console.log(`   🔍 Extracted ${allSubjectUtterances.length} total utterances from ${speakerCount} speakers`);
 
     if (allSubjectUtterances.length === 0) {
-        console.log(`   ⚠️  Subject "${subject.name}": No utterances found in ranges!`);
+        console.log(`   ⚠️  Subject "${subject.name}": No utterances found!`);
         return { contributions: [], usage: NO_USAGE };
     }
 
@@ -62,11 +61,12 @@ export async function generateSpeakerContributions(
 }
 
 /**
- * Extract and group utterances by speaker from discussion ranges.
+ * Extract and group utterances by speaker from utterance statuses.
  * Returns both grouped utterances and full chronological list.
+ * Much simpler than range-based extraction - just filter by utteranceId set.
  */
 export function extractAndGroupUtterances(
-    ranges: DiscussionRange[],
+    utteranceStatuses: UtteranceStatus[],
     transcript: CompressedTranscript
 ): ExtractedUtterances {
     const utterancesBySpeaker: Record<string, Array<{ utteranceId: string; text: string }>> = {};
@@ -78,49 +78,80 @@ export function extractAndGroupUtterances(
         timestamp: number;
     }> = [];
 
-    // Build chronological index map for utterances
-    const utteranceIndex = buildUtteranceIndexMap(transcript);
+    // Create a set of relevant utterance IDs for fast lookup
+    const relevantUtteranceIds = new Set(utteranceStatuses.map(s => s.utteranceId));
 
-    for (const range of ranges) {
-        // Get range boundary indices
-        const startIndex = range.startUtteranceId
-            ? utteranceIndex.get(range.startUtteranceId) ?? 0
-            : 0;
-        const endIndex = range.endUtteranceId
-            ? utteranceIndex.get(range.endUtteranceId) ?? Infinity
-            : Infinity;
+    console.log(`   🔍 Filtering ${relevantUtteranceIds.size} relevant utterances from transcript...`);
 
-        for (const segment of transcript) {
-            for (const utterance of segment.utterances) {
-                // Check if utterance is in range using INDICES
-                const currentIndex = utteranceIndex.get(utterance.utteranceId);
-                const inRange = currentIndex !== undefined &&
-                                currentIndex >= startIndex &&
-                                currentIndex <= endIndex;
+    // Track which utterances we've already seen to prevent duplicates
+    const seenUtterances = new Map<string, string | null>();
+    const duplicateUtterances: Array<{ utteranceId: string; firstSpeaker: string | null; duplicateSpeaker: string | null }> = [];
 
-                if (inRange) {
-                    // Add to all utterances (for full context)
-                    allSubjectUtterances.push({
-                        utteranceId: utterance.utteranceId,
-                        text: utterance.text,
-                        speakerId: segment.speakerId,
-                        speakerName: segment.speakerName,
-                        timestamp: utterance.startTimestamp
-                    });
+    // Simple direct filtering: just check if utterance ID is in the set
+    for (const segment of transcript) {
+        for (const utterance of segment.utterances) {
+            if (relevantUtteranceIds.has(utterance.utteranceId)) {
+                // VALIDATION: Check if we've already seen this utterance
+                const previousSpeakerId = seenUtterances.get(utterance.utteranceId);
 
-                    // Add to speaker-specific group (if speaker exists)
-                    if (segment.speakerId) {
-                        if (!utterancesBySpeaker[segment.speakerId]) {
-                            utterancesBySpeaker[segment.speakerId] = [];
-                        }
-                        utterancesBySpeaker[segment.speakerId].push({
+                if (previousSpeakerId !== undefined) {
+                    // This utterance was already processed
+                    if (previousSpeakerId !== segment.speakerId) {
+                        // CRITICAL: Same utterance attributed to different speakers!
+                        duplicateUtterances.push({
                             utteranceId: utterance.utteranceId,
-                            text: utterance.text
+                            firstSpeaker: previousSpeakerId,
+                            duplicateSpeaker: segment.speakerId
                         });
                     }
+                    // Skip this duplicate utterance
+                    continue;
+                }
+
+                // Mark this utterance as seen with its speaker
+                seenUtterances.set(utterance.utteranceId, segment.speakerId);
+
+                // Add to all utterances (for full context)
+                allSubjectUtterances.push({
+                    utteranceId: utterance.utteranceId,
+                    text: utterance.text,
+                    speakerId: segment.speakerId,
+                    speakerName: segment.speakerName,
+                    timestamp: utterance.startTimestamp
+                });
+
+                // Add to speaker-specific group (if speaker exists)
+                if (segment.speakerId) {
+                    if (!utterancesBySpeaker[segment.speakerId]) {
+                        utterancesBySpeaker[segment.speakerId] = [];
+                    }
+                    utterancesBySpeaker[segment.speakerId].push({
+                        utteranceId: utterance.utteranceId,
+                        text: utterance.text
+                    });
                 }
             }
         }
+    }
+
+    // Report duplicate utterances with different speakers
+    if (duplicateUtterances.length > 0) {
+        console.warn(`   ⚠️  CRITICAL: Found ${duplicateUtterances.length} duplicate utterances attributed to different speakers!`);
+        console.warn(`   This indicates corrupted/duplicate data in the transcript.`);
+
+        // Group duplicates by speakers to show patterns
+        const speakerPairs = new Map<string, number>();
+        for (const dup of duplicateUtterances) {
+            const key = `${dup.firstSpeaker} vs ${dup.duplicateSpeaker}`;
+            speakerPairs.set(key, (speakerPairs.get(key) || 0) + 1);
+        }
+
+        console.warn(`   Speaker pair conflicts:`);
+        for (const [pair, count] of speakerPairs.entries()) {
+            console.warn(`      - ${pair}: ${count} utterances`);
+        }
+
+        console.warn(`   → Keeping first occurrence and skipping duplicates`);
     }
 
     // Sort all utterances by timestamp to maintain chronological order
@@ -328,8 +359,30 @@ ${fullDiscussion}
             cacheSystemPrompt: true  // Cache system prompt across speaker batches
         });
 
+        // VALIDATION: Verify all returned speakerIds exist in the input
+        const validSpeakerIds = new Set(Object.keys(utterancesBySpeaker));
+        const invalidContributions: SpeakerContribution[] = [];
+        const validContributions: SpeakerContribution[] = [];
+
+        for (const contrib of result.result.speakerContributions) {
+            if (!validSpeakerIds.has(contrib.speakerId)) {
+                console.warn(`   ⚠️  LLM returned contribution for unknown speakerId: ${contrib.speakerId}`);
+                console.warn(`      This speaker was not in the input data!`);
+                invalidContributions.push(contrib);
+            } else {
+                validContributions.push(contrib);
+            }
+        }
+
+        if (invalidContributions.length > 0) {
+            console.warn(`   🚨 CRITICAL: LLM hallucinated ${invalidContributions.length} speaker contributions!`);
+            console.warn(`   Valid speakers in input: ${Array.from(validSpeakerIds).join(', ')}`);
+            console.warn(`   Invalid speakerIds returned: ${invalidContributions.map(c => c.speakerId).join(', ')}`);
+            console.warn(`   → Filtering out invalid contributions`);
+        }
+
         return {
-            contributions: result.result.speakerContributions,
+            contributions: validContributions,
             usage: result.usage
         };
     } catch (error) {

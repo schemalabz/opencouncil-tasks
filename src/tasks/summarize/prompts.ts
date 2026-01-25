@@ -251,121 +251,114 @@ discussedIn:
 ${IMPORTANCE_GUIDELINES}
 
 ═══════════════════════════════════════════════════════════════════════════
-ΜΕΡΟΣ 3: DISCUSSION RANGES
+ΜΕΡΟΣ 3: UTTERANCE TAGGING (Ταξινόμηση Utterances)
 ═══════════════════════════════════════════════════════════════════════════
 
-Τα ranges είναι συνεχείς ακολουθίες utterances με το ίδιο status.
-Χωρίζουν την συζήτηση σε ενότητες, και συνδέουν κάποια utterances με subjects.
-Ένα range μπορεί να έχει utterances και από διαφορετικούς ομιλητές -- εκφράζει απλά το
-στάδιο / κατάσταση της συζήτησης.
+Για ΚΑΘΕ utterance στο batch, εκχώρησε ένα discussion status και subjectId.
+Αυτό αντικαθιστά το σύστημα "ranges" με απευθείας ταξινόμηση κάθε utterance.
 
-ΚΡΙΣΙΜΗ ΡΟΗ ΕΡΓΑΣΙΑΣ - Πώς συνδέονται subjects και ranges:
+ΚΡΙΣΙΜΗ ΡΟΗ ΕΡΓΑΣΙΑΣ - Πώς συνδέονται subjects και utterance statuses:
 
 ΒΗΜΑ 1: Διάβασε το transcript batch
 ΒΗΜΑ 2: Εντόπισε ουσιαστικές συζητήσεις
 ΒΗΜΑ 3: Για κάθε συζήτηση:
    - Αν αφορά ΥΠΑΡΧΟΝ subject (από agenda ή προηγούμενο batch): χρησιμοποίησε το υπάρχον subject ID
    - Αν αφορά ΝΕΟ θέμα (προ/εκτός ημερησίας): ΔΗΜΙΟΥΡΓΗΣΕ νέο subject (BEFORE_AGENDA ή OUT_OF_AGENDA)
-ΒΗΜΑ 4: ΔΗΜΙΟΥΡΓΗΣΕ SUBJECT_DISCUSSION range με subjectId = το ID του subject
+ΒΗΜΑ 4: ΓΙΑ ΚΑΘΕ utterance, εκχώρησε status και subjectId
 
 ΠΑΡΑΔΕΙΓΜΑ Α - Νέο θέμα προ ημερησίας:
 Βλέπεις: "Ανακοίνωση για κυκλοφοριακό πρόβλημα στη Μεσογείων. Ο δήμαρχος εξηγεί..."
 → ΜΕΡΟΣ 2: δημιούργησε subject {id: "new-001", name: "Κυκλοφοριακό Μεσογείων", type: BEFORE_AGENDA, ...}
-→ ΜΕΡΟΣ 3: δημιούργησε range {status: SUBJECT_DISCUSSION, subjectId: "new-001", ...}
+→ ΜΕΡΟΣ 3: ταξινόμησε κάθε utterance: {utteranceId: "utt-123", status: "SUBJECT_DISCUSSION", subjectId: "new-001"}
 
 ΠΑΡΑΔΕΙΓΜΑ Β - Υπάρχον θέμα από agenda:
 Βλέπεις: "Θέμα 1ο: Προϋπολογισμός 2026..." (και υπάρχει ήδη subject με id "subj-001" για θέμα 1ο)
 → ΜΕΡΟΣ 2: ΜΗΝ δημιουργήσεις νέο! (το subject ήδη υπάρχει)
-→ ΜΕΡΟΣ 3: δημιούργησε range {status: SUBJECT_DISCUSSION, subjectId: "subj-001", ...} 
+→ ΜΕΡΟΣ 3: ταξινόμησε κάθε utterance: {utteranceId: "utt-456", status: "SUBJECT_DISCUSSION", subjectId: "subj-001"}
 
 ΚΑΛΥΨΗ:
-- Κάθε utterance ανήκει σε ακριβώς ένα range
-- Χωρίς κενά, χωρίς επικαλύψεις
+- Κάθε utterance ΠΡΕΠΕΙ να εμφανιστεί ΑΚΡΙΒΩΣ ΜΙΑ ΦΟΡΑ στο utteranceStatuses array
+- Κανένα utterance δεν παραλείπεται
+- Κανένα utterance δεν εμφανίζεται δύο φορές
 
-ΣΥΓΧΩΝΕΥΣΗ ΔΙΑΔΟΧΙΚΩΝ RANGES - ΚΡΙΣΙΜΟ:
+ΧΡΗΣΗ MEETING PROGRESS SUMMARY:
 
-Δύο διαδοχικά ranges συγχωνεύονται σε ένα αν:
-- Έχουν το ίδιο status (π.χ. OTHER → OTHER)
-- Έχουν το ίδιο status ΚΑΙ το ίδιο subjectId (π.χ. SUBJECT_DISCUSSION Θέμα Α → SUBJECT_DISCUSSION Θέμα Α)
-- Σύντομες παρεμβάσεις (1-3 utterances) δεν σπάνε το range:
-  SUBJECT_DISCUSSION (Θέμα Α) + OTHER ("Παρακαλώ τάξη") + SUBJECT_DISCUSSION (Θέμα Α) = ΕΝΑ range SUBJECT_DISCUSSION (Θέμα Α)
+Αν σου δίνεται "ΠΛΑΙΣΙΟ ΣΥΝΕΔΡΙΑΣΗΣ (από προηγούμενο batch)", χρησιμοποίησέ το για να κατανοήσεις:
+- Αν η συνεδρίαση είναι ακόμα στην "προ ημερησίας διάταξη" ή έχει περάσει στην κανονική ημερήσια διάταξη
+- Ποια θέματα συζητήθηκαν πρόσφατα
+- Αν υπάρχει θέμα που συνεχίζεται από το προηγούμενο batch
 
-Νέο range μόνο όταν:
-- Αλλάζει το θέμα (νέο subjectId)
-- Αλλάζει το status σε διαφορετικό
-- Εκτεταμένες διαδικαστικές παρεμβάσεις (>5 utterances)
+ΣΗΜΑΝΤΙΚΟ: Μην ταξινομείς utterances από την ημερήσια διάταξη ως BEFORE_AGENDA επειδή συζητούνται μετά από "προ ημερησίας" θέματα.
+Χρησιμοποίησε το meeting progress summary για να διακρίνεις που βρίσκεται η συνεδρίαση.
 
 STATUS ΤΥΠΟΙ:
 
 ATTENDANCE:
 - Λήψη παρουσιών
 - subjectId: null
+- Παράδειγμα: {utteranceId: "utt-001", status: "ATTENDANCE", subjectId: null}
 
 VOTE:
 - Ψηφοφορία/καταμέτρηση ψήφων
 - subjectId: το subject που ψηφίζεται
+- Παράδειγμα: {utteranceId: "utt-200", status: "VOTE", subjectId: "subj-003"}
 
 SUBJECT_DISCUSSION:
-- Ολόκληρη η συζήτηση ενός θέματος (ΝΕΟ ή ΥΠΑΡΧΟΝ)
+- Utterances που αφορούν συγκεκριμένο θέμα (ΝΕΟ ή ΥΠΑΡΧΟΝ)
 - subjectId: το subject που συζητείται (ΠΡΕΠΕΙ να υπάρχει στη λίστα subjects του ΜΕΡΟΣ 2)
 - Περιλαμβάνει: ανακοίνωση θέματος, εισήγηση, ερωτήσεις, τοποθετήσεις
 - Περιλαμβάνει: σύντομες διαδικαστικές παρεμβάσεις (1-3 utterances) μέσα στη συζήτηση
 - ΔΕΝ περιλαμβάνει: άνοιγμα συνεδρίασης, λήψη παρουσιών, χαιρετισμούς εκτός θέματος
-- ΑΝ ΒΛΕΠΕΙΣ ΣΥΖΗΤΗΣΗ: δημιούργησε subject + SUBJECT_DISCUSSION range (όχι μόνο OTHER)
+- ΑΝ ΒΛΕΠΕΙΣ ΣΥΖΗΤΗΣΗ: δημιούργησε subject + ταξινόμησε utterances ως SUBJECT_DISCUSSION
+- Παράδειγμα: {utteranceId: "utt-100", status: "SUBJECT_DISCUSSION", subjectId: "subj-002"}
 
 OTHER:
 - Διαδικαστικά που δεν αφορούν συγκεκριμένο θέμα (χαιρετισμοί, τυπικές ανακοινώσεις)
 - subjectId: null
 - ΠΡΟΣΟΧΗ: ΜΗΝ χρησιμοποιείς OTHER για ουσιαστικές συζητήσεις - δημιούργησε subject!
+- Παράδειγμα: {utteranceId: "utt-010", status: "OTHER", subjectId: null}
 
-Το range κλείνει (end) όταν:
-- Αλλάζει το θέμα
-- Αρχίζει ψηφοφορία
-- Εκτεταμένες διαδικαστικές παρεμβολές (>5 utterances)
+ΠΕΔΙΑ utteranceStatus:
 
-ΠΕΔΙΑ RANGE:
+utteranceId (ΥΠΟΧΡΕΩΤΙΚΟ):
+- Το compressed utteranceId από το input batch
+- ΠΡΕΠΕΙ να είναι ΑΚΡΙΒΩΣ το ID από το batch - μην εφεύρεις νέα IDs
 
-id:
-- Μοναδικό UUID για νέα ranges
-- Το ίδιο id αν συνεχίζεις ανοιχτό range από προηγούμενο batch
+status (ΥΠΟΧΡΕΩΤΙΚΟ):
+- Ένα από: "ATTENDANCE", "SUBJECT_DISCUSSION", "VOTE", "OTHER"
 
-start:
-- utteranceId όπου αρχίζει το range
-- null αν το range συνεχίζει από προηγούμενο batch
-
-end:
-- utteranceId όπου τελειώνει το range
-- null αν το range συνεχίζεται στο επόμενο batch
-- Το πολύ ΕΝΑ range με end = null
-
-rangeSummary (ΥΠΟΧΡΕΩΤΙΚΟ):
-- 1 πρόταση: τι ΠΡΑΓΜΑΤΙΚΑ συζητείται
-- Παραδείγματα: "Συζήτηση για χρηματοδότηση κέντρων υγείας", "Λήψη παρουσιών", "Ψηφοφορία επί προϋπολογισμού"
-- ΚΡΙΣΙΜΟ: το rangeSummary πρέπει να ταιριάζει με το subjectId
-- Αν το summary μιλάει για Θέμα Χ αλλά το subjectId είναι Θέμα Ψ, κάτι είναι λάθος
-
-subjectId:
+subjectId (ΥΠΟΧΡΕΩΤΙΚΟ, αλλά μπορεί να είναι null):
 - Για SUBJECT_DISCUSSION και VOTE: το id του subject (από ΥΠΑΡΧΟΝΤΑ subjects ή ΝΕΑ subjects που δημιουργείς στο ΜΕΡΟΣ 2)
 - Για ATTENDANCE και OTHER: null
-- ΚΡΙΣΙΜΟ: ΟΛΕΣ οι utterances του range μιλούν για αυτό το subject
-- Αν το range "ξεχειλίζει" σε άλλο θέμα, το range πρέπει να μικρύνει
+- ΚΡΙΣΙΜΟ: Το utterance ΠΡΑΓΜΑΤΙΚΑ μιλάει για αυτό το subject
+- Αν το utterance αλλάζει θέμα, άλλαξε το subjectId
 
-Συνέχεια από προηγούμενο batch:
-- Αν υπάρχει ανοιχτό range (end = null) που συνεχίζεται: χρησιμοποίησε το ίδιο range id, start = null
-- Αν άλλαξε το θέμα: κλείσε το παλιό range (end = τελευταίο utterance παλιού θέματος), άνοιξε νέο
+MEETING PROGRESS SUMMARY (ΝΕΟ ΠΕΔΙΟ):
+
+Στο τέλος της επεξεργασίας, δημιούργησε ένα σύντομο (2-4 προτάσεις) meeting progress summary που περιγράφει:
+- Που βρίσκεται η συνεδρίαση (προ ημερησίας, ημερήσια διάταξη θέμα X, κ.λπ.)
+- Ποια θέματα συζητήθηκαν σε αυτό το batch
+- Αν κάποιο θέμα συνεχίζεται και στο επόμενο batch
+
+Παράδειγμα meeting progress summary:
+"Η συνεδρίαση ξεκίνησε με παρουσίες και προ ημερησίας διάταξη. Συζητήθηκαν 2 θέματα προ ημερησίας: ανακοίνωση για γραφείο ενεργειακής φτώχειας και ερώτημα για γεωργικά. Τώρα αρχίζει η κανονική ημερήσια διάταξη με θέμα 1ο: αντικατάσταση μελών Δ.Σ. Αθήνα Υγεία."
+
+Αυτό το summary θα χρησιμοποιηθεί για το επόμενο batch ως πλαίσιο.
 
 ═══════════════════════════════════════════════════════════════════════════
-ΣΗΜΑΝΤΙΚΕΣ ΣΗΜΕΙΩΣΕΙ΅
+ΣΗΜΑΝΤΙΚΕΣ ΣΗΜΕΙΩΣΕΙΣ
 ═══════════════════════════════════════════════════════════════════════════
 
 Βεβαιώσου ότι:
 - Δεν υπάρχουν διπλότυπα ή πολύ παρόμοια subjects (παρόμοια θέματα με διαφορετικά IDs)
-- Δεν υπάρχουν διαδοχικά ranges με το ίδιο status ή το ίδιο (status, subjectId), γιατί θα έπρεπε να είναι ενωμένα
-- Κάθε utterance ανήκει σε ένα μόνο range (χωρίς επικαλύψεις)
-- Το rangeSummary ταιριάζει με το subjectId
-- SUBJECT_DISCUSSION ξεκινάει από την ανακοίνωση του θέματος, όχι από παρουσίες/άνοιγμα συνεδρίασης
-- Αν υπάρχει ανοιχτό range από προηγούμενο batch: το πρώτο range έχει start = null και το ίδιο range id
-- Αν ΔΕΝ υπάρχει ανοιχτό range: το πρώτο range έχει start = utteranceId (όχι null)
+- ΚΑΘΕ utterance από το batch εμφανίζεται ΑΚΡΙΒΩΣ ΜΙΑ ΦΟΡΑ στο utteranceStatuses array
+- Κανένα utterance δεν παραλείπεται
+- Κανένα utterance δεν εμφανίζεται δύο φορές
+- Τα utteranceIds στα utteranceStatuses είναι ΑΚΡΙΒΩΣ τα IDs από το input (μην εφεύρεις νέα)
+- Utterances για SUBJECT_DISCUSSION έχουν subjectId που ΥΠΑΡΧΕΙ στη λίστα subjects
+- Utterances για ATTENDANCE και OTHER έχουν subjectId = null
+- SUBJECT_DISCUSSION utterances ξεκινούν από την ανακοίνωση του θέματος, όχι από παρουσίες/άνοιγμα
+- Το meeting progress summary περιγράφει σωστά που βρίσκεται η συνεδρίαση (προ vs κανονική ημερήσια διάταξη)
 
 ${metadata.additionalInstructions || ''}
 
