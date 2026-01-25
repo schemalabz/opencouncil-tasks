@@ -158,6 +158,23 @@ export async function processBatchesWithState(
             }
         }
 
+        // VALIDATION: Preserve introducedByPersonId from existing subjects
+        // Bug fix: LLM often changes introducers to the chair who merely announces the subject
+        console.log(`\n   🔒 Preserving introducers from existing subjects...`);
+        const previousSubjects = conversationState.subjects;
+        for (const subject of batchResult.subjects) {
+            const previousSubject = previousSubjects.find(s => s.id === subject.id);
+            if (previousSubject && previousSubject.introducedByPersonId !== null) {
+                if (subject.introducedByPersonId !== previousSubject.introducedByPersonId) {
+                    console.warn(`      ⚠️  LLM changed introducer for "${subject.name}"`);
+                    console.warn(`         Original: ${previousSubject.introducedByPersonId}`);
+                    console.warn(`         LLM changed to: ${subject.introducedByPersonId}`);
+                    console.warn(`         → Restoring original introducer`);
+                    subject.introducedByPersonId = previousSubject.introducedByPersonId;
+                }
+            }
+        }
+
         // VALIDATION: Verify ALL range subject IDs are registered in IdCompressor
         console.log(`\n   🔑 ID Registration Validation:`);
         const rangeSubjectIds = new Set(batchResult.ranges.map(r => r.subjectId).filter(Boolean));
@@ -187,7 +204,8 @@ export async function processBatchesWithState(
             startUtteranceId: r.start,
             endUtteranceId: r.end,
             status: r.status,
-            subjectId: r.subjectId
+            subjectId: r.subjectId,
+            rangeSummary: r.rangeSummary  // Keep for logging
         }));
 
         // VALIDATION: If continuing an open range, ensure consistency
@@ -246,6 +264,7 @@ export async function processBatchesWithState(
                 const endInfo = r.endUtteranceId === null ? 'OPEN (continues to next)' : `ends at ${r.endUtteranceId}`;
                 console.log(`      ${idx + 1}. ${statusEmoji} ${r.status}${subjectInfo}`);
                 console.log(`         ${startInfo} → ${endInfo}`);
+                console.log(`         Summary: "${r.rangeSummary}"`);
             });
         }
 
@@ -264,6 +283,55 @@ export async function processBatchesWithState(
             batchResult.subjects.forEach((s, idx) => {
                 console.log(`      ${idx + 1}. ${s.id} - "${s.name}"`);
             });
+        }
+
+        // VALIDATION: Ensure ranges don't point to secondary subjects
+        console.log(`\n   🔗 Validating joint discussion subjects...`);
+        const secondarySubjects = batchResult.subjects.filter(s => s.discussedIn !== null);
+        const primarySubjects = batchResult.subjects.filter(s => s.discussedIn === null);
+
+        if (secondarySubjects.length > 0) {
+            console.log(`      Found ${secondarySubjects.length} secondary subjects in joint discussions:`);
+
+            // Group by primary subject
+            const groupedByPrimary = new Map<string, string[]>();
+            for (const secondary of secondarySubjects) {
+                if (!groupedByPrimary.has(secondary.discussedIn!)) {
+                    groupedByPrimary.set(secondary.discussedIn!, []);
+                }
+                groupedByPrimary.get(secondary.discussedIn!)!.push(secondary.name);
+            }
+
+            // Log the groups
+            groupedByPrimary.forEach((secondaries, primaryId) => {
+                const primarySubject = batchResult.subjects.find(s => s.id === primaryId);
+                console.log(`      Primary: "${primarySubject?.name}" (${primaryId})`);
+                console.log(`         Secondary subjects: ${secondaries.join(', ')}`);
+            });
+
+            // Check for invalid ranges pointing to secondary subjects
+            const invalidRanges = newRanges.filter(r =>
+                r.subjectId &&
+                (r.status === DiscussionStatus.SUBJECT_DISCUSSION || r.status === DiscussionStatus.VOTE) &&
+                secondarySubjects.some(s => s.id === r.subjectId)
+            );
+
+            if (invalidRanges.length > 0) {
+                console.warn(`      ⚠️  CRITICAL: Found ${invalidRanges.length} ranges pointing to secondary subjects!`);
+                console.warn(`      This violates the joint discussion model.`);
+
+                for (const range of invalidRanges) {
+                    const secondary = secondarySubjects.find(s => s.id === range.subjectId);
+                    const primary = batchResult.subjects.find(s => s.id === secondary?.discussedIn);
+
+                    console.warn(`         Range ${range.id} points to secondary "${secondary?.name}"`);
+                    console.warn(`         Should point to primary "${primary?.name}" (${primary?.id})`);
+                    console.warn(`         → Auto-correcting to primary subject`);
+
+                    // Auto-correct the range
+                    range.subjectId = secondary!.discussedIn;
+                }
+            }
         }
 
         // Merge ranges: if a new range continues from previous (start=null), replace the old one
@@ -290,6 +358,27 @@ export async function processBatchesWithState(
 
         if (continuedRanges.length > 0) {
             console.log(`\n   🔄 Replaced ${continuedRanges.length} continued range(s) from previous batch`);
+        }
+
+        // VALIDATION: Ensure all existing subjects are preserved, even if not discussed
+        // Bug fix: Undiscussed agenda items were being dropped
+        console.log(`\n   📋 Checking for undiscussed subjects...`);
+        const discussedSubjectIds = new Set(batchResult.subjects.map(s => s.id));
+        const undiscussedSubjects = conversationState.subjects.filter(s => !discussedSubjectIds.has(s.id));
+
+        if (undiscussedSubjects.length > 0) {
+            console.log(`      Found ${undiscussedSubjects.length} undiscussed subjects - preserving with low priority:`);
+            for (const subject of undiscussedSubjects) {
+                console.log(`         • "${subject.name}" (ID: ${subject.id})`);
+                // Preserve subject but mark with lowest importance to prevent notifications
+                batchResult.subjects.push({
+                    ...subject,
+                    discussedIn: subject.discussedIn || null,  // PRESERVE discussedIn if set
+                    speakerContributions: [],
+                    topicImportance: 'doNotNotify',
+                    proximityImportance: 'none'
+                });
+            }
         }
 
         conversationState = {
@@ -428,14 +517,15 @@ ${JSON.stringify(batch, null, 2)}
 ${metadata.requestedSubjects && metadata.requestedSubjects.length > 0 ?
             `Αν στο παραπάνω transcript αναφέρεται κάποιο από τα ακόλουθα θέματα, είναι σημαντικό να το συμπεριλάβεις: ${metadata.requestedSubjects.join(', ')}` : ''}
 
-Η τρέχουσα λίστα subjects (χρησιμοποίησε το ίδιο ID και ΔΙΑΤΗΡΗΣΕ τα type/agendaItemIndex/introducedByPersonId):
+Η τρέχουσα λίστα subjects (χρησιμοποίησε το ίδιο ID και ΔΙΑΤΗΡΗΣΕ τα type/agendaItemIndex/introducedByPersonId/discussedIn):
 ${JSON.stringify(conversationState.subjects.map(s => ({
                 id: s.id,
                 name: s.name,
                 description: s.description,
                 type: s.type,
                 agendaItemIndex: s.agendaItemIndex,
-                introducedByPersonId: s.introducedByPersonId
+                introducedByPersonId: s.introducedByPersonId,
+                discussedIn: s.discussedIn
             })), null, 2)}
 `;
 
@@ -476,6 +566,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 introducedByPersonId: { type: ["string", "null"] },
                                 locationText: { type: ["string", "null"] },
                                 topicLabel: { type: ["string", "null"] },
+                                discussedIn: { type: ["string", "null"] },
                                 speakerContributions: {
                                     type: "array",
                                     items: {
@@ -489,7 +580,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                     }
                                 }
                             },
-                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "speakerContributions"],
+                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "discussedIn", "speakerContributions"],
                             additionalProperties: false
                         }
                     },

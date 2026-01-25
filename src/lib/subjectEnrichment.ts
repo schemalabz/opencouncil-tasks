@@ -17,6 +17,7 @@ export interface EnrichmentInput {
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
     speakerContributions: { speakerId: string; text: string; }[];
+    discussedIn: string | null;
 }
 
 /**
@@ -96,7 +97,8 @@ export async function enrichSubjectData(
             proximityImportance: input.proximityImportance,
             location,
             topicLabel: input.topicLabel,
-            context
+            context,
+            discussedIn: input.discussedIn
         },
         usage
     };

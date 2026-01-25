@@ -80,6 +80,7 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
         introducedByPersonId: s.introducedByPersonId,
         locationText: s.locationText,
         topicLabel: s.topicLabel,
+        discussedIn: s.discussedIn || null,  // Preserve if set, otherwise null
         speakerContributions: []
     }));
 }

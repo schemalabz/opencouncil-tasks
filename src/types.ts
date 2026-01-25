@@ -170,6 +170,11 @@ export interface Subject {
 
     topicLabel: string | null;
     context: SubjectContext | null;
+
+    // Reference to primary subject if this was discussed jointly with other subjects
+    // null for subjects discussed independently or primary subjects in a joint discussion
+    // Set to the primary subject's ID for secondary subjects in a joint discussion
+    discussedIn: string | null;
 }
 
 export interface ProcessAgendaResult {

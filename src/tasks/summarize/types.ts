@@ -32,6 +32,11 @@ export interface SubjectInProgress {
     locationText: string | null;
     topicLabel: string | null;
     speakerContributions: SpeakerContribution[];  // Will be populated after batch processing
+
+    // Reference to primary subject if discussed jointly with other subjects
+    // null for primary subjects or independently-discussed subjects
+    // ID of primary subject for secondary subjects in joint discussion
+    discussedIn: string | null;
 }
 
 /**

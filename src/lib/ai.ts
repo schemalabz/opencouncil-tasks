@@ -81,12 +81,6 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
 export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude...`);
-        if (outputFormat) {
-            console.log(`Using structured outputs (JSON schema)`);
-        }
-        if (cacheSystemPrompt) {
-            console.log(`Using prompt caching for system prompt`);
-        }
 
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
