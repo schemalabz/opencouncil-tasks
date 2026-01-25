@@ -185,8 +185,8 @@ export async function generateSpeakerContributionsInBatches(
     const totalSpeakers = speakerIds.length;
 
     // Configuration
-    const INITIAL_BATCH_SIZE = 5;  // Start with 5 speakers per batch
-    const MIN_BATCH_SIZE = 2;      // Minimum batch size for retry
+    const INITIAL_BATCH_SIZE = 15;  // Start with 15 speakers per batch
+    const MIN_BATCH_SIZE = 2;       // Minimum batch size for retry
 
     console.log(`   📦 Processing ${totalSpeakers} speakers in batches (batch size: ${INITIAL_BATCH_SIZE})`);
 

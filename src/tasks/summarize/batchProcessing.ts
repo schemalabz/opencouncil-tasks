@@ -122,13 +122,15 @@ export async function processBatchesWithState(
         }
 
         // Update utterance statuses to use the corrected subject IDs
+        let statusIdsUpdated = 0;
         for (const status of batchResult.utteranceStatuses) {
             if (status.subjectId && idMapping.has(status.subjectId)) {
-                const oldId = status.subjectId;
-                const newId = idMapping.get(status.subjectId)!;
-                status.subjectId = newId;
-                console.log(`   🔄 Updated utterance status subjectId: ${oldId} -> ${newId}`);
+                status.subjectId = idMapping.get(status.subjectId)!;
+                statusIdsUpdated++;
             }
+        }
+        if (statusIdsUpdated > 0) {
+            console.log(`   🔄 Updated ${statusIdsUpdated} utterance status subjectIds to use proper compressed IDs`);
         }
 
         // VALIDATION: Preserve introducedByPersonId from existing subjects
@@ -336,6 +338,18 @@ export async function processBatchesWithState(
                 if (entries.filter(e => e.subjectId !== null).length > 5) {
                     console.log(`         • ... and ${entries.filter(e => e.subjectId !== null).length - 5} more subjects`);
                 }
+            }
+
+            // Show all subjects for VOTE (usually not many)
+            if (status === DiscussionStatus.VOTE) {
+                entries.forEach(entry => {
+                    if (entry.subjectId) {
+                        const subject = conversationState.subjects.find(s => s.id === entry.subjectId);
+                        console.log(`         • "${subject?.name || 'Unknown'}" [${entry.subjectId}]: ${entry.count} utterances`);
+                    } else {
+                        console.log(`         • ⚠️  (no subject - INVALID): ${entry.count} utterances`);
+                    }
+                });
             }
         }
 
