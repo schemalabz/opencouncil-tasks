@@ -181,22 +181,56 @@ export async function processBatchesWithState(
             console.log(`      ${idx + 1}. [${s.id}] "${s.name}"`);
         });
 
-        // Log utterance status distribution
+        // Log utterance status distribution (THIS BATCH ONLY)
         const statusCounts = new Map<string, number>();
         for (const status of batchResult.utteranceStatuses) {
             const key = `${status.status}${status.subjectId ? `:${status.subjectId}` : ''}`;
             statusCounts.set(key, (statusCounts.get(key) || 0) + 1);
         }
 
-        console.log(`\n   📊 Utterance status distribution:`);
+        console.log(`\n   📊 Utterance status distribution (this batch):`);
+        console.log(`      Total utterances in this batch: ${batchResult.utteranceStatuses.length}`);
+
+        // Group by status type for better organization
+        const byStatus = new Map<DiscussionStatus, Array<{ subjectId: string | null; count: number }>>();
+
         for (const [key, count] of statusCounts.entries()) {
             const [statusStr, subjectId] = key.split(':');
-            const statusEmoji = getStatusEmoji(statusStr as DiscussionStatus);
-            if (subjectId) {
-                const subject = batchResult.subjects.find(s => s.id === subjectId);
-                console.log(`      ${statusEmoji} ${statusStr} - "${subject?.name || 'Unknown'}": ${count} utterances`);
-            } else {
-                console.log(`      ${statusEmoji} ${statusStr}: ${count} utterances`);
+            const status = statusStr as DiscussionStatus;
+            if (!byStatus.has(status)) {
+                byStatus.set(status, []);
+            }
+            byStatus.get(status)!.push({ subjectId: subjectId || null, count });
+        }
+
+        // Sort entries within each status by count (descending)
+        for (const [status, entries] of byStatus.entries()) {
+            entries.sort((a, b) => b.count - a.count);
+        }
+
+        // Display organized by status type
+        const statusDisplayOrder: DiscussionStatus[] = [
+            DiscussionStatus.ATTENDANCE,
+            DiscussionStatus.SUBJECT_DISCUSSION,
+            DiscussionStatus.VOTE,
+            DiscussionStatus.OTHER
+        ];
+
+        for (const status of statusDisplayOrder) {
+            const entries = byStatus.get(status);
+            if (!entries) continue;
+
+            const statusEmoji = getStatusEmoji(status);
+            const totalForStatus = entries.reduce((sum, e) => sum + e.count, 0);
+            console.log(`      ${statusEmoji} ${status} (${totalForStatus} total):`);
+
+            for (const entry of entries) {
+                if (entry.subjectId) {
+                    const subject = batchResult.subjects.find(s => s.id === entry.subjectId);
+                    console.log(`         • "${subject?.name || 'Unknown'}" [${entry.subjectId}]: ${entry.count} utterances`);
+                } else {
+                    console.log(`         • (no subject): ${entry.count} utterances`);
+                }
             }
         }
 
@@ -250,6 +284,60 @@ export async function processBatchesWithState(
 
         // Simple concatenation: just add all new utterance statuses to the accumulated list
         conversationState.allUtteranceStatuses.push(...batchResult.utteranceStatuses);
+
+        // Log cumulative distribution across ALL batches processed so far
+        console.log(`\n   📈 CUMULATIVE utterance status distribution (all batches so far):`);
+        console.log(`      Total utterances across all batches: ${conversationState.allUtteranceStatuses.length}`);
+
+        const cumulativeCounts = new Map<string, number>();
+        for (const status of conversationState.allUtteranceStatuses) {
+            const key = `${status.status}${status.subjectId ? `:${status.subjectId}` : ''}`;
+            cumulativeCounts.set(key, (cumulativeCounts.get(key) || 0) + 1);
+        }
+
+        const cumulativeByStatus = new Map<DiscussionStatus, Array<{ subjectId: string | null; count: number }>>();
+        for (const [key, count] of cumulativeCounts.entries()) {
+            const [statusStr, subjectId] = key.split(':');
+            const status = statusStr as DiscussionStatus;
+            if (!cumulativeByStatus.has(status)) {
+                cumulativeByStatus.set(status, []);
+            }
+            cumulativeByStatus.get(status)!.push({ subjectId: subjectId || null, count });
+        }
+
+        // Sort by count
+        for (const entries of cumulativeByStatus.values()) {
+            entries.sort((a, b) => b.count - a.count);
+        }
+
+        // Display top subjects per status
+        const statusOrder: DiscussionStatus[] = [
+            DiscussionStatus.ATTENDANCE,
+            DiscussionStatus.SUBJECT_DISCUSSION,
+            DiscussionStatus.VOTE,
+            DiscussionStatus.OTHER
+        ];
+
+        for (const status of statusOrder) {
+            const entries = cumulativeByStatus.get(status);
+            if (!entries) continue;
+
+            const statusEmoji = getStatusEmoji(status);
+            const totalForStatus = entries.reduce((sum, e) => sum + e.count, 0);
+            console.log(`      ${statusEmoji} ${status}: ${totalForStatus} utterances`);
+
+            // Show top 5 subjects for SUBJECT_DISCUSSION
+            if (status === DiscussionStatus.SUBJECT_DISCUSSION) {
+                const subjectEntries = entries.filter(e => e.subjectId !== null).slice(0, 5);
+                subjectEntries.forEach(entry => {
+                    const subject = conversationState.subjects.find(s => s.id === entry.subjectId);
+                    console.log(`         • "${subject?.name || 'Unknown'}" [${entry.subjectId}]: ${entry.count} utterances`);
+                });
+                if (entries.filter(e => e.subjectId !== null).length > 5) {
+                    console.log(`         • ... and ${entries.filter(e => e.subjectId !== null).length - 5} more subjects`);
+                }
+            }
+        }
 
         // VALIDATION: Ensure all existing subjects are preserved, even if not discussed
         // Bug fix: Undiscussed agenda items were being dropped
