@@ -371,7 +371,7 @@ async function downloadWithYtDlp(
                 onProgress('yt-dlp', pct);
             }
         },
-        additionalOptions: ['--merge-output-format', 'mp4'],
+        additionalOptions: ['--merge-output-format', 'mp4', '--js-runtimes', 'node'],
     };
 
     // Use env proxy if available
