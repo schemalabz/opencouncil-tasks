@@ -30,7 +30,8 @@ This guide covers setting up [PGSync](https://github.com/toluaina/pgsync) for re
 - ✅ Set `max_slot_wal_keep_size` to 15-25% of your disk (e.g., 15GB for 60GB disk)
 - ✅ Set up automated WAL monitoring with Discord alerts (see [WAL Monitoring](#wal-monitoring-setup))
 - ✅ A **"lost"** WAL status means the slot must be reset and data re-synced
-- ✅ Inactive slots accumulate WAL - ensure PGSync is always running
+- ✅ Inactive slots are **normal** for PGSync's polling model - only worry if WAL is growing
+- ⚠️ **After every bootstrap/re-index**: Grant app access to `_view` (see [Post-Bootstrap](#post-bootstrap-grant-app-access))
 
 
 ### Health Check Commands
@@ -200,12 +201,18 @@ docker compose exec redis redis-cli FLUSHALL
 #    Use longer timeout and smaller chunks if you have semantic_text fields
 docker compose run --rm -e ELASTICSEARCH_TIMEOUT=120 -e ELASTICSEARCH_CHUNK_SIZE=50 pgsync --bootstrap
 
-# 4. Start the daemon for continuous sync
+# 4. CRITICAL: Grant app access to _view (required after every bootstrap!)
+#    Replace 'your_app_user' with your app's database user
+psql "$PG_URL" -c "GRANT SELECT ON public._view TO your_app_user;"
+
+# 5. Start the daemon for continuous sync
 docker compose up -d pgsync
 
-# 5. Verify it's running
+# 6. Verify it's running
 docker compose logs -f pgsync
 ```
+
+> ⚠️ **Don't skip step 4!** Bootstrap creates a `_view` materialized view that PGSync's triggers reference. Your app's database user needs SELECT permission on it, otherwise you'll get `permission denied for materialized view _view` errors when modifying data.
 
 **Note:** If bootstrap times out but documents are being indexed, just re-run the bootstrap command - it resumes from the Redis checkpoint.
 
@@ -322,7 +329,10 @@ curl -X DELETE "$ELASTICSEARCH_URL/subjects" \
   -H "Authorization: ApiKey $(echo -n $ELASTICSEARCH_API_KEY_ID:$ELASTICSEARCH_API_KEY | base64)"
 
 # Run bootstrap to recreate slot and re-index
-docker compose run --rm pgsync --bootstrap
+docker compose run --rm -e ELASTICSEARCH_TIMEOUT=120 -e ELASTICSEARCH_CHUNK_SIZE=50 pgsync --bootstrap
+
+# CRITICAL: Re-grant app access to _view (bootstrap recreates it)
+psql "$PG_URL" -c "GRANT SELECT ON public._view TO your_app_user;"
 
 # Then start the daemon
 docker compose up -d pgsync
@@ -483,6 +493,102 @@ SELECT pg_drop_replication_slot('test_wal_monitor');
 DROP TABLE IF EXISTS wal_monitor_test;
 ```
 
+
+## Troubleshooting
+
+### "permission denied for materialized view _view" error
+
+```
+PostgresError { code: "42501", message: "permission denied for materialized view _view" }
+```
+
+**Cause:** Your app's database user doesn't have SELECT permission on PGSync's internal `_view` materialized view. This happens after bootstrap/re-indexing because PGSync drops and recreates `_view`.
+
+**Fix:**
+```sql
+-- Grant SELECT on _view to your app's database user
+GRANT SELECT ON public._view TO your_app_user;
+```
+
+This must be done **after every bootstrap/re-index**.
+
+### "Replication slot does not exist" error
+
+```
+RuntimeError: Replication slot "production_subjects" does not exist.
+Make sure you have run the "bootstrap" command.
+```
+
+**Cause:** The daemon (`-d`) expects the slot to exist, but it was dropped or never created.
+
+**Fix:** Run bootstrap first:
+```bash
+docker compose run --rm pgsync --bootstrap
+psql "$PG_URL" -c "GRANT SELECT ON public._view TO your_app_user;"
+docker compose up -d pgsync
+```
+
+### "must be owner of relation" error
+
+```
+psycopg2.errors.InsufficientPrivilege: must be owner of relation TableName
+```
+
+**Cause:** PGSync needs to drop triggers from a previous run, but the pgsync user doesn't own the tables.
+
+**Fix:** Grant the table owner role to pgsync:
+```sql
+-- Find the table owner
+SELECT tableowner FROM pg_tables WHERE tablename = 'TableName';
+
+-- Grant that role to pgsync (replace 'owner_role')
+GRANT owner_role TO pgsync;
+```
+
+Then retry bootstrap.
+
+### "permission denied for schema aiven_extras" error
+
+**Cause:** Older PGSync versions tried to use `aiven_extras` schema on DigitalOcean/Aiven databases.
+
+**Fix:** Pull the latest PGSync image:
+```bash
+docker pull toluaina1/pgsync:latest
+docker compose run --rm pgsync --bootstrap
+psql "$PG_URL" -c "GRANT SELECT ON public._view TO your_app_user;"
+```
+
+### Elasticsearch timeout during bootstrap
+
+```
+elasticsearch.exceptions.ConnectionTimeout: ConnectionTimeout caused by - ReadTimeoutError
+```
+
+**Cause:** Bulk indexing is slow, often due to `semantic_text` fields requiring ML inference.
+
+**Fix:** Increase timeout and reduce chunk size:
+```bash
+docker compose run --rm \
+  -e ELASTICSEARCH_TIMEOUT=180 \
+  -e ELASTICSEARCH_CHUNK_SIZE=20 \
+  pgsync --bootstrap
+```
+
+Documents are still being indexed even when it times out - just re-run the command until it completes.
+
+### PGSync daemon keeps restarting
+
+Check logs for the actual error:
+```bash
+docker compose logs --tail=100 pgsync
+```
+
+Common causes:
+- Elasticsearch auth issues (check API key)
+- Database connection issues (check PG_URL)
+- Missing replication slot (run bootstrap first)
+
+---
 
 ## How WAL and Replication Slots Work
 
