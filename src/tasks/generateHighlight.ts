@@ -8,7 +8,7 @@ import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, gene
  * When segments are continuous (end of one = start of next), merge them into single ranges
  * This reduces the number of trim+concat operations FFmpeg needs to perform
  */
-function mergeConsecutiveSegments(
+export function mergeConsecutiveSegments(
   segments: Array<{ startTimestamp: number; endTimestamp: number }>
 ): Array<{ startTimestamp: number; endTimestamp: number }> {
   if (segments.length === 0) {
@@ -47,7 +47,7 @@ function mergeConsecutiveSegments(
  * Returns both the video segments (for FFmpeg) and adjusted utterances (for captions/overlays sync)
  * Merges consecutive segments to simplify FFmpeg operations
  */
-function bridgeUtteranceGaps(
+export function bridgeUtteranceGaps(
   utterances: GenerateHighlightRequest['parts'][0]['utterances'],
   maxGapSeconds: number = 2.0
 ): {
