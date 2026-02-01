@@ -65,6 +65,7 @@ Test contracts, not wiring. Pure functions that parse, format, transform, or com
     });
   });
   ```
+- **Pipeline / orchestration tests:** Use the `createPipeline(deps)` factory to inject stub tasks. Each stub is a `vi.fn(async () => cannedData)`. This lets you test ordering, data flow, and error propagation without real I/O. Follow this pattern for any future pipeline or orchestration function.
 - **Parameterized tests:** Use `it.each` for input/output tables
 - **Commands:**
   ```bash
@@ -81,6 +82,7 @@ These files serve as reference for style and scope:
 - **`src/tasks/downloadYTV.test.ts`** — `getVideoIdAndUrl`, `formatBytes`
 - **`src/tasks/generateHighlight.test.ts`** — `mergeConsecutiveSegments`, `bridgeUtteranceGaps`
 - **`src/tasks/utils/mediaOperations.test.ts`** — `normalizeUtteranceTimestamps`, `escapeTextForFFmpeg`, `wrapTextByPixelWidth`, `calculateOptimalFontSizeWithStartAndCap`, `getPresetConfig`, `generateSocialFilter`, `generateBlurredMarginFilter`, `generateSolidMarginFilter`, `calculateSpeakerDisplaySegments`, `wrapSpeakerText`, `formatSpeakerInfo`
+- **`src/tasks/pipeline.test.ts`** — pipeline orchestration integration tests via `createPipeline(deps)` with stubbed tasks (happy path, CDN skip, progress stages, error propagation, data flow)
 
 ### What We Explicitly Skip
 
@@ -88,7 +90,6 @@ These files serve as reference for style and scope:
 - **HTTP downloads** — network-dependent, flaky
 - **Express routes** — integration-level concern
 - **External API calls** — requires credentials and live services
-- **Pipeline orchestration** — wiring logic that changes with requirements
 
 ## Commits & PRs
 

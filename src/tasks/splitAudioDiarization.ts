@@ -7,13 +7,13 @@ import { Diarization } from "../types.js";
 import { formatTime } from "../utils.js";
 
 
-interface SplitAudioArgs {
+export interface SplitAudioArgs {
     file: string;
     diarization: Diarization;
     maxDuration: number;
 }
 
-interface AudioSegment {
+export interface AudioSegment {
     path: string;
     startTime: number;
 }
