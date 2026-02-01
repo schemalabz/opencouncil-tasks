@@ -43,12 +43,13 @@ Test contracts, not wiring. Pure functions that parse, format, transform, or com
 
 - Stateless pure functions: parsing, formatting, string construction, math, data transforms
 - Any function whose correctness can be verified with `f(input) === expectedOutput`
+- Pipeline orchestration — via dependency injection with stubbed tasks (see pattern below)
 
-**DO NOT test:**
+**DO NOT test (in unit tests):**
 
 - Anything that touches the filesystem, network, or spawns processes (e.g. ffmpeg)
 - Express routes, external API calls, database queries
-- Pipeline orchestration (`pipeline.ts`)
+- These are covered by the smoke test instead (see below)
 
 **When adding a new pure function** that is file-private, export it so it can be tested.
 
@@ -57,6 +58,7 @@ Test contracts, not wiring. Pure functions that parse, format, transform, or com
 - **Test runner:** Vitest
 - **File location:** Colocated — `foo.ts` → `foo.test.ts`
 - **Imports:** Use `.js` extensions (ESM requirement)
+- **Type checking:** Run `npm run typecheck` — Vitest skips type checking for speed, so `tsc --noEmit` catches errors that tests won't
 - **Structure:**
   ```ts
   describe('functionName', () => {
@@ -69,22 +71,51 @@ Test contracts, not wiring. Pure functions that parse, format, transform, or com
 - **Parameterized tests:** Use `it.each` for input/output tables
 - **Commands:**
   ```bash
-  npm test                              # single run
-  npm run test:watch                    # watch mode
+  npm test                              # unit tests (single run)
+  npm run test:watch                    # unit tests (watch mode)
+  npm run typecheck                     # type checking (catches errors vitest misses)
   npx vitest run --reporter=verbose     # verbose output
   ```
 
+### Smoke Test (End-to-End)
+
+The smoke test runs the full pipeline against a real YouTube video, exercising downloads, external AI services (Gladia, Pyannote), storage (MinIO), and the callback server.
+
+```bash
+# Fully automated — starts MinIO + ngrok, runs pipeline, validates result, cleans up
+./scripts/smoke.sh
+
+# Custom video
+./scripts/smoke.sh "https://youtube.com/watch?v=..."
+
+# Save full output
+./scripts/smoke.sh -O result.json
+```
+
+**Prerequisites:**
+- Nix dev shell (`nix develop`) — provides MinIO, ngrok, node, npm
+- ngrok authenticated (`ngrok config add-authtoken <token>`)
+- `.env` with API keys for Gladia, Pyannote
+
+The script handles everything else: starts MinIO with a fresh data directory, opens an ngrok tunnel, configures env vars, runs the pipeline, validates the result shape, and tears down services on exit.
+
+Run this after significant pipeline changes or when onboarding to verify the full stack works.
+
 ### What's Currently Tested
 
-These files serve as reference for style and scope:
+**Unit tests** (fast, no network, run in CI):
 
 - **`src/utils.test.ts`** — `IdCompressor`, `validateUrl`, `validateYoutubeUrl`, `formatTime`
 - **`src/tasks/downloadYTV.test.ts`** — `getVideoIdAndUrl`, `formatBytes`
 - **`src/tasks/generateHighlight.test.ts`** — `mergeConsecutiveSegments`, `bridgeUtteranceGaps`
 - **`src/tasks/utils/mediaOperations.test.ts`** — `normalizeUtteranceTimestamps`, `escapeTextForFFmpeg`, `wrapTextByPixelWidth`, `calculateOptimalFontSizeWithStartAndCap`, `getPresetConfig`, `generateSocialFilter`, `generateBlurredMarginFilter`, `generateSolidMarginFilter`, `calculateSpeakerDisplaySegments`, `wrapSpeakerText`, `formatSpeakerInfo`
-- **`src/tasks/pipeline.test.ts`** — pipeline orchestration integration tests via `createPipeline(deps)` with stubbed tasks (happy path, CDN skip, progress stages, error propagation, data flow)
+- **`src/tasks/pipeline.test.ts`** — pipeline orchestration via `createPipeline(deps)` with stubbed tasks (happy path, CDN skip, progress stages, error propagation, data flow)
 
-### What We Explicitly Skip
+**Smoke test** (slow, requires network + API keys, run manually):
+
+- **`scripts/smoke.sh`** — full pipeline end-to-end: YouTube download → ffmpeg → MinIO upload → Pyannote diarization → Gladia transcription → result validation
+
+### What We Explicitly Skip (in Unit Tests)
 
 - **FFmpeg execution** — requires binaries and real media files
 - **HTTP downloads** — network-dependent, flaky

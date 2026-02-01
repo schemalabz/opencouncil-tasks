@@ -3,9 +3,10 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, nixpkgs-unstable }:
     let
       systems = [
         "x86_64-linux"
@@ -15,13 +16,21 @@
       ];
 
       forAllSystems =
-        f: nixpkgs.lib.genAttrs systems (system: f system (import nixpkgs { inherit system; }));
+        f: nixpkgs.lib.genAttrs systems (system: f system (import nixpkgs { inherit system; }) (import nixpkgs-unstable {
+          inherit system;
+          config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs-unstable.lib.getName pkg) [
+            "ngrok"
+          ];
+        }));
     in {
-      devShells = forAllSystems (_system: pkgs: {
+      devShells = forAllSystems (_system: pkgs: pkgs-unstable: {
         default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            nodejs
-            nodePackages.npm
+          buildInputs = [
+            pkgs.nodejs
+            pkgs.nodePackages.npm
+            pkgs.minio
+            pkgs.minio-client
+            pkgs-unstable.ngrok
           ];
 
           shellHook = ''

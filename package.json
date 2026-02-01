@@ -10,8 +10,10 @@
     "cli": "node dist/cli.js",
     "cli:dev": "tsc && node dist/cli.js",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "test:watch": "vitest",
-    "test:upload": "curl -X POST http://localhost:3005/dev/test-upload"
+    "test:upload": "curl -X POST http://localhost:3005/dev/test-upload",
+    "smoke": "tsc && node dist/cli.js smoke"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
