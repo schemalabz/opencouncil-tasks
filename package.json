@@ -9,7 +9,11 @@
     "start": "node dist/server.js",
     "cli": "node dist/cli.js",
     "cli:dev": "tsc && node dist/cli.js",
-    "test:upload": "curl -X POST http://localhost:3005/dev/test-upload"
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "test:watch": "vitest",
+    "test:upload": "curl -X POST http://localhost:3005/dev/test-upload",
+    "smoke": "tsc && node dist/cli.js smoke"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
@@ -38,7 +42,8 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@types/underscore": "^1.11.15",
     "nodemon": "^3.1.10",
-    "tsx": "^4.20.3"
+    "tsx": "^4.20.3",
+    "vitest": "^3.0.0"
   },
   "engines": {
     "node": "^20.11.1"

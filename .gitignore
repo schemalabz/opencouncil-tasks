@@ -19,3 +19,6 @@ logs/
 .env*.local
 .env
 squid.conf
+
+# Local MinIO data (smoke tests)
+.minio-data/

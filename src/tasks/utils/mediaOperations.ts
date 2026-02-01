@@ -141,7 +141,7 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
  * Handles 9:16 aspect ratio by finding corresponding 16:9 preset
  * Uses sequential fallback (first available preset) if exact match not found
  */
-function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
+export function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
     config: ResolutionPreset;
     dimensions: { width: number; height: number };
 } {
@@ -276,7 +276,7 @@ export function generateSocialFilter(
  * Generate filter for solid color margins
  * Size-agnostic approach using relative scaling
  */
-function generateSolidMarginFilter(
+export function generateSolidMarginFilter(
     zoomFactor: number,
     backgroundColor: string,
     inputVideoWidth: number,
@@ -321,7 +321,7 @@ function generateSolidMarginFilter(
  * Generate filter for blurred background margins
  * Size-agnostic approach using relative scaling
  */
-function generateBlurredMarginFilter(
+export function generateBlurredMarginFilter(
     zoomFactor: number,
     inputVideoWidth: number,
     inputVideoHeight: number
@@ -350,7 +350,7 @@ function generateBlurredMarginFilter(
 }
 
 
-function calculateOptimalFontSizeWithStartAndCap(
+export function calculateOptimalFontSizeWithStartAndCap(
     text: string,
     aspectRatio: AspectRatio,
     startFontSize: number,
@@ -396,7 +396,7 @@ function calculateOptimalFontSizeWithStartAndCap(
 }
 
 // Pixel-based wrapper used by resolution presets
-function wrapTextByPixelWidth(text: string, fontSize: number, availableWidthPx: number): string {
+export function wrapTextByPixelWidth(text: string, fontSize: number, availableWidthPx: number): string {
     const words = text.split(' ');
     const lines: string[] = [];
     let currentLine = '';
@@ -506,7 +506,7 @@ export async function generateCaptionFilters(
  * Normalize utterance timestamps for concatenated highlight timeline
  * When utterances are concatenated, each segment becomes sequential in the output
  */
-function normalizeUtteranceTimestamps(utterances: Array<{
+export function normalizeUtteranceTimestamps(utterances: Array<{
     text: string;
     startTimestamp: number;
     endTimestamp: number;
@@ -542,7 +542,7 @@ function normalizeUtteranceTimestamps(utterances: Array<{
  * Escape text for safe use in FFmpeg drawtext filter
  * Text should already be wrapped with newlines from calculateOptimalFontSize
  */
-function escapeTextForFFmpeg(text: string, aspectRatio: AspectRatio = 'default'): string {
+export function escapeTextForFFmpeg(text: string, aspectRatio: AspectRatio = 'default'): string {
     return text
         // Escape backslashes first (before other escapes that add backslashes)
         .replace(/\\/g, '\\\\')
@@ -580,7 +580,7 @@ interface SpeakerDisplaySegment {
  * Format speaker information for display
  * Returns primary text (name) and secondary text (role, party)
  */
-function formatSpeakerInfo(speaker?: GenerateHighlightRequest['parts'][0]['utterances'][0]['speaker']): SpeakerInfo {
+export function formatSpeakerInfo(speaker?: GenerateHighlightRequest['parts'][0]['utterances'][0]['speaker']): SpeakerInfo {
     const name = speaker?.name || 'Unknown Speaker';
     
     return {
@@ -595,7 +595,7 @@ function formatSpeakerInfo(speaker?: GenerateHighlightRequest['parts'][0]['utter
  * Calculate when to show speaker overlays based on display mode
  * Handles both 'always' mode and 'on_speaker_change' mode
  */
-function calculateSpeakerDisplaySegments(
+export function calculateSpeakerDisplaySegments(
     utterances: Array<{
         text: string;
         startTimestamp: number;
@@ -649,7 +649,7 @@ function calculateSpeakerDisplaySegments(
  * Wrap speaker text (role/party) to fit within the overlay box
  * Simple character-based wrapping
  */
-function wrapSpeakerText(text: string, isSocial: boolean): string {
+export function wrapSpeakerText(text: string, isSocial: boolean): string {
     // Character limits based on aspect ratio
     const maxCharsPerLine = isSocial ? 25 : 35;
     

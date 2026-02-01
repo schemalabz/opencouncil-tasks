@@ -5,7 +5,7 @@ import { gladiaTranscriber } from "../lib/GladiaTranscribe.js";
 
 dotenv.config();
 
-interface TranscribeArgs {
+export interface TranscribeArgs {
     segments: { url: string; start: number }[];
     customVocabulary?: string[];
     customPrompt?: string;

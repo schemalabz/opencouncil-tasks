@@ -4,10 +4,12 @@ import { Transcript } from "../types.js";
 dotenv.config();
 
 const GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS = parseInt(process.env.GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS || '20', 10);
-const gladiaKey = process.env.GLADIA_API_KEY;
-
-if (!gladiaKey) {
-    throw new Error("GLADIA_API_KEY is not set in the environment variables");
+function getGladiaKey(): string {
+    const key = process.env.GLADIA_API_KEY;
+    if (!key) {
+        throw new Error("GLADIA_API_KEY is not set in the environment variables");
+    }
+    return key;
 }
 
 type TranscribeRequest = {
@@ -80,7 +82,7 @@ class GladiaTranscriber {
         };
         const gladiaUrl = "https://api.gladia.io/v2/transcription/";
         const headers = {
-            "x-gladia-key": gladiaKey,
+            "x-gladia-key": getGladiaKey(),
             "Content-Type": "application/json",
         };
 

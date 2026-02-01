@@ -69,7 +69,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
 
-const getVideoIdAndUrl = (mediaUrl: string) => {
+export const getVideoIdAndUrl = (mediaUrl: string) => {
     if (mediaUrl.includes("youtube.com") || mediaUrl.includes("youtu.be")) {
         // Extract video ID from various YouTube URL formats
         let videoId: string | undefined;
@@ -332,7 +332,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
     }
 }
 
-function formatBytes(bytes: number): string {
+export function formatBytes(bytes: number): string {
     if (bytes < 1024) return bytes + " B";
     const k = 1024;
     const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];

@@ -9,15 +9,23 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
-import { getExpressAppWithCallbacks } from './utils.js';
+import { getExpressAppWithCallbacks, isUsingMinIO } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 import { DiarizeResult } from './types.js';
+import devRouter from './routes/dev.js';
 const program = new Command();
 const app = getExpressAppWithCallbacks();
-const port = process.env.PORT || 3000;
+
+// Mount MinIO file-serving routes when using local storage (needed for smoke tests)
+if (isUsingMinIO()) {
+    app.use('/dev', devRouter);
+}
+const port = process.env.CLI_PORT || 0; // 0 = OS assigns a free port
 const server = app.listen(port, () => {
-    console.log(`Callback server listening on port ${port}`);
+    const addr = server.address();
+    const boundPort = typeof addr === 'object' && addr ? addr.port : port;
+    console.log(`Callback server listening on port ${boundPort}`);
 });
 
 program
@@ -231,6 +239,115 @@ program
         }
     });
 
+
+const DEFAULT_SMOKE_TEST_VIDEO = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
+
+program
+    .command('smoke [youtubeUrl]')
+    .description('Run a full pipeline smoke test and validate the result')
+    .option('-O, --output-file <file>', 'Save full result to a JSON file')
+    .option('--skip-preflight', 'Skip the callback server reachability check')
+    .action(async (youtubeUrl: string | undefined, options: { outputFile?: string; skipPreflight?: boolean }) => {
+        const url = youtubeUrl || process.env.SMOKE_TEST_VIDEO_URL || DEFAULT_SMOKE_TEST_VIDEO;
+        console.log(`Running smoke test with: ${url}\n`);
+
+        // Preflight: verify callback server is reachable from the outside
+        if (!options.skipPreflight) {
+            const publicUrl = process.env.PUBLIC_URL;
+            if (!publicUrl) {
+                console.error('PUBLIC_URL is not set. The pipeline requires a publicly reachable callback server');
+                console.error('for external services (Gladia, Pyannote) to post results back.\n');
+                console.error('Options:');
+                console.error('  1. Start ngrok:  ngrok http <port>');
+                console.error('  2. Set PUBLIC_URL=https://your-ngrok-url.ngrok.io');
+                console.error('  3. Run:  npm run smoke\n');
+                console.error('Or use scripts/smoke.sh to automate ngrok setup.');
+                console.error('Use --skip-preflight to bypass this check.');
+                server.close();
+                process.exitCode = 1;
+                return;
+            }
+
+            // Self-test: hit our own callback endpoint to verify reachability
+            const addr = server.address();
+            const localPort = typeof addr === 'object' && addr ? addr.port : 0;
+            const testId = `preflight-${Date.now()}`;
+            console.log(`Preflight: checking callback server reachability...`);
+            console.log(`  Local server on port ${localPort}, PUBLIC_URL=${publicUrl}`);
+            try {
+                const resp = await fetch(`${publicUrl}/callback/${testId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ test: true }),
+                    signal: AbortSignal.timeout(10000),
+                });
+                // 404 is expected (no callback registered for this ID) — it means the server is reachable
+                if (resp.status === 404) {
+                    console.log('  Callback server is reachable\n');
+                } else {
+                    console.log(`  Callback server responded with ${resp.status} (expected 404, but server is reachable)\n`);
+                }
+            } catch (error) {
+                const msg = error instanceof Error ? error.message : String(error);
+                console.error(`  Callback server is NOT reachable: ${msg}\n`);
+                console.error('Ensure ngrok (or equivalent tunnel) is running and PUBLIC_URL is correct.');
+                console.error('Use --skip-preflight to bypass this check.');
+                server.close();
+                process.exitCode = 1;
+                return;
+            }
+        }
+
+        const startTime = Date.now();
+        try {
+            const result = await pipeline(
+                { youtubeUrl: url },
+                (stage: string, progressPercent: number) => {
+                    process.stdout.write(`\r  [${stage}] ${progressPercent.toFixed(2)}%`);
+                }
+            );
+            process.stdout.write('\n\n');
+
+            // Validate result shape
+            const checks: [string, boolean][] = [
+                ['has videoUrl',    typeof result.videoUrl === 'string' && result.videoUrl.length > 0],
+                ['has audioUrl',    typeof result.audioUrl === 'string' && result.audioUrl.length > 0],
+                ['has muxPlaybackId', typeof result.muxPlaybackId === 'string' && result.muxPlaybackId.length > 0],
+                ['has transcript',  result.transcript != null],
+                ['has utterances',  Array.isArray(result.transcript?.transcription?.utterances) && result.transcript.transcription.utterances.length > 0],
+                ['has speakers',    Array.isArray(result.transcript?.transcription?.speakers)],
+            ];
+
+            let allPassed = true;
+            for (const [label, passed] of checks) {
+                const icon = passed ? 'PASS' : 'FAIL';
+                console.log(`  [${icon}] ${label}`);
+                if (!passed) allPassed = false;
+            }
+
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.log(`\nCompleted in ${elapsed}s`);
+
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+                console.log(`Result saved to ${options.outputFile}`);
+            }
+
+            if (!allPassed) {
+                console.error('\nSmoke test FAILED — some checks did not pass');
+                process.exitCode = 1;
+            } else {
+                console.log('\nSmoke test PASSED');
+            }
+        } catch (error) {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+            console.error(`\nSmoke test FAILED after ${elapsed}s`);
+            console.error(error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
 
 program.parse(process.argv);
 

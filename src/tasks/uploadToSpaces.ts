@@ -8,7 +8,7 @@ import mime from 'mime/lite';
 import { isUsingMinIO } from '../utils.js';
 dotenv.config();
 
-interface UploadFilesArgs {
+export interface UploadFilesArgs {
     files: string | string[];
     spacesPath: string;
 }
