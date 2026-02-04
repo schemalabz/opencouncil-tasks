@@ -340,12 +340,64 @@ export function formatBytes(bytes: number): string {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+async function updateYtDlp(): Promise<void> {
+    const binaryPath = YTDLP_BIN_PATH || 'yt-dlp';
+    console.log('Checking for yt-dlp updates...');
+
+    return new Promise((resolve) => {
+        const updateProcess = cp.spawn(binaryPath, ['-U'], {
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        updateProcess.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        updateProcess.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        updateProcess.on('close', (code) => {
+            if (code === 0) {
+                // Check if actually updated or already up-to-date
+                if (stdout.includes('Updating to') || stdout.includes('Updated yt-dlp')) {
+                    console.log('yt-dlp updated successfully');
+                } else {
+                    console.log('yt-dlp is up to date');
+                }
+            } else {
+                // Log but don't fail - we can still try with existing version
+                console.warn(`yt-dlp update check failed (code ${code}): ${stderr || stdout}`);
+            }
+            resolve();
+        });
+
+        updateProcess.on('error', (err) => {
+            console.warn(`yt-dlp update check error: ${err.message}`);
+            resolve();
+        });
+
+        // Timeout after 30 seconds
+        setTimeout(() => {
+            updateProcess.kill();
+            console.warn('yt-dlp update check timed out');
+            resolve();
+        }, 30000);
+    });
+}
+
 async function downloadWithYtDlp(
     youtubeUrl: string,
     outputPath: string,
     videoId: string,
     onProgress?: (...args: any[]) => void
 ) {
+    // Try to update yt-dlp before downloading
+    await updateYtDlp();
+
     const ytdlp = new YtDlp({
         binaryPath: YTDLP_BIN_PATH || undefined,
         // we still rely on ffmpeg-static for audio extraction; yt-dlp uses system ffmpeg only if needed
