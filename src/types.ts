@@ -390,3 +390,52 @@ export interface GenerateVoiceprintResult {
     voiceprint: string; // Voiceprint embedding vector in base64
     duration: number; // Duration of the audio
 }
+
+/*
+ * Task: Poll Decisions (Diavgeia)
+ */
+
+export interface PollDecisionsRequest extends TaskRequest {
+    meetingDate: string; // ISO date of the meeting
+    diavgeiaUid: string; // Organization UID on Diavgeia
+    diavgeiaUnitId?: string; // Optional unit ID (e.g., "81689" for ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ)
+    subjects: Array<{
+        subjectId: string;
+        name: string;
+    }>;
+}
+
+export interface PollDecisionsResult {
+    matches: Array<{
+        subjectId: string;
+        ada: string; // Unique Diavgeia decision identifier
+        decisionTitle: string; // Title of the decision in Diavgeia
+        pdfUrl: string;
+        protocolNumber: string;
+        issueDate: string; // ISO date when decision was published on Diavgeia
+        matchConfidence: number; // 0-1 confidence score
+    }>;
+    unmatchedSubjects: Array<{
+        subjectId: string;
+        name: string;
+        reason: string;
+    }>;
+    ambiguousSubjects: Array<{
+        subjectId: string;
+        name: string;
+        candidates: Array<{
+            ada: string;
+            pdfUrl: string;
+            title: string;
+            similarity: number;
+        }>;
+    }>;
+    metadata?: {
+        diavgeiaUid: string;
+        query: object;
+        fetchedCount: number;
+        matchedCount: number;
+        unmatchedCount: number;
+        ambiguousCount: number;
+    };
+}
