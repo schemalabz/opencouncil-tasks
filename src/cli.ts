@@ -8,6 +8,7 @@ import { uploadToSpaces, deleteFromSpacesByPrefix, checkSpacesConnection } from 
 import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
+import { pollDecisions } from './tasks/pollDecisions.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -252,6 +253,174 @@ program
         }
     });
 
+
+program
+    .command('poll-decisions')
+    .description('Poll decisions from Diavgeia and match them to meeting subjects')
+    .option('-d, --meeting-date <date>', 'Meeting date in ISO format (YYYY-MM-DD)')
+    .option('-u, --org-uid <uid>', 'Diavgeia organization UID')
+    .option('--unit-id <unitIds>', 'Comma-separated Diavgeia unit IDs (e.g., 81689,81690)')
+    .option('-s, --subjects-file <file>', 'JSON file (export format or subjects array)')
+    .option('-O, --output-file <file>', 'Output file for the result')
+    .option('--test', 'Use test subjects (for quick testing)')
+    .action(async (options: {
+        meetingDate?: string;
+        orgUid?: string;
+        unitId?: string;
+        subjectsFile?: string;
+        outputFile?: string;
+        test?: boolean;
+    }) => {
+        let subjects: Array<{ subjectId: string; name: string }>;
+        let meetingDate = options.meetingDate;
+        let orgUid = options.orgUid;
+        let unitIds: string[] | undefined = options.unitId
+            ? options.unitId.split(',').map(s => s.trim()).filter(Boolean)
+            : undefined;
+
+        if (options.subjectsFile) {
+            let fileContent: unknown;
+            try {
+                fileContent = JSON.parse(fs.readFileSync(options.subjectsFile, 'utf-8'));
+            } catch (error) {
+                console.error(`Error parsing subjects file: ${error instanceof Error ? error.message : error}`);
+                server.close();
+                process.exitCode = 1;
+                return;
+            }
+
+            // Handle export format with meeting metadata
+            if (fileContent && typeof fileContent === 'object' && 'meeting' in fileContent && 'subjects' in fileContent) {
+                const exportFile = fileContent as { meeting: Record<string, unknown>; subjects: unknown };
+                if (!Array.isArray(exportFile.subjects)) {
+                    console.error('Error: subjects field must be an array');
+                    server.close();
+                    process.exitCode = 1;
+                    return;
+                }
+                const invalidItem = exportFile.subjects.find(
+                    (s: unknown) => !s || typeof s !== 'object' || typeof (s as any).subjectId !== 'string' || typeof (s as any).name !== 'string'
+                );
+                if (invalidItem) {
+                    console.error('Error: each subject must have "subjectId" and "name" string fields');
+                    server.close();
+                    process.exitCode = 1;
+                    return;
+                }
+                subjects = exportFile.subjects as Array<{ subjectId: string; name: string }>;
+                const meeting = exportFile.meeting;
+                // Use meeting metadata from file if not overridden by CLI args
+                if (!options.meetingDate && meeting.date) {
+                    if (typeof meeting.date !== 'string') {
+                        console.error('Error: meeting.date must be a string');
+                        server.close();
+                        process.exitCode = 1;
+                        return;
+                    }
+                    meetingDate = meeting.date;
+                }
+                if (!options.orgUid && meeting.diavgeiaOrgUid) {
+                    if (typeof meeting.diavgeiaOrgUid !== 'string') {
+                        console.error('Error: meeting.diavgeiaOrgUid must be a string');
+                        server.close();
+                        process.exitCode = 1;
+                        return;
+                    }
+                    orgUid = meeting.diavgeiaOrgUid;
+                }
+                if (!options.unitId && meeting.diavgeiaUnitIds) {
+                    if (!Array.isArray(meeting.diavgeiaUnitIds) || meeting.diavgeiaUnitIds.some((id: unknown) => typeof id !== 'string')) {
+                        console.error('Error: meeting.diavgeiaUnitIds must be an array of strings');
+                        server.close();
+                        process.exitCode = 1;
+                        return;
+                    }
+                    unitIds = meeting.diavgeiaUnitIds as string[];
+                } else if (!options.unitId && meeting.diavgeiaUnitId) {
+                    // Backwards compat with old export files
+                    unitIds = [meeting.diavgeiaUnitId as string];
+                }
+                console.log(`Loaded export file: ${meeting.administrativeBody || 'Unknown body'}`);
+            } else if (Array.isArray(fileContent)) {
+                // Simple array format
+                const invalidItem = fileContent.find(
+                    (s: unknown) => !s || typeof s !== 'object' || typeof (s as any).subjectId !== 'string' || typeof (s as any).name !== 'string'
+                );
+                if (invalidItem) {
+                    console.error('Error: each subject must have "subjectId" and "name" string fields');
+                    server.close();
+                    process.exitCode = 1;
+                    return;
+                }
+                subjects = fileContent;
+            } else {
+                console.error('Error: Invalid subjects file format');
+                server.close();
+                process.exitCode = 1;
+                return;
+            }
+        } else if (options.test) {
+            // Test subjects for quick testing
+            subjects = [
+                { subjectId: 'test-1', name: 'Έγκριση προϋπολογισμού' },
+                { subjectId: 'test-2', name: 'Ορισμός επιτροπής' },
+            ];
+            console.log('Using test subjects:', subjects);
+        } else {
+            console.error('Error: Either --subjects-file or --test is required');
+            server.close();
+            process.exitCode = 1;
+            return;
+        }
+
+        if (!meetingDate || !orgUid) {
+            console.error('Error: Meeting date and org UID are required (via CLI args or export file)');
+            server.close();
+            process.exitCode = 1;
+            return;
+        }
+
+        console.log(`Polling decisions for org ${orgUid} from ${meetingDate}`);
+        if (unitIds?.length) {
+            console.log(`Unit IDs: ${unitIds.join(', ')}`);
+        }
+        console.log(`Number of subjects: ${subjects.length}`);
+
+        try {
+            const result = await pollDecisions(
+                {
+                    callbackUrl: '', // Not used for CLI
+                    meetingDate,
+                    diavgeiaUid: orgUid,
+                    diavgeiaUnitIds: unitIds,
+                    subjects,
+                },
+                (stage: string, progressPercent: number) => {
+                    process.stdout.write(`\r[${stage}] ${progressPercent.toFixed(2)}%`);
+                }
+            );
+            process.stdout.write('\n');
+
+            console.log('\n--- Results ---');
+            console.log(`Matched: ${result.matches.length}`);
+            console.log(`Unmatched: ${result.unmatchedSubjects.length}`);
+            console.log(`Ambiguous: ${result.ambiguousSubjects.length}`);
+            console.log(`Total decisions fetched: ${result.metadata?.fetchedCount || 0}`);
+
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+                console.log(`\nResult saved to ${options.outputFile}`);
+            } else {
+                console.log('\nFull result:');
+                console.log(JSON.stringify(result, null, 2));
+            }
+        } catch (error) {
+            console.error('\nError polling decisions:', error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
 
 const DEFAULT_SMOKE_TEST_VIDEO = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 

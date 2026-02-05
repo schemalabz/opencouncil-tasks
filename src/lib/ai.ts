@@ -15,7 +15,6 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
     cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
 });
-const maxTokens = 64000;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
@@ -33,6 +32,16 @@ async function logToFile(message: string, data?: any) {
     }
 }
 
+const MODEL_IDS = {
+    sonnet: "claude-sonnet-4-20250514",
+    haiku: "claude-haiku-4-5-20251001",
+} as const;
+
+const MODEL_MAX_TOKENS = {
+    sonnet: 64000,
+    haiku: 8192,
+} as const;
+
 type AiChatOptions = {
     documentBase64?: string;
     systemPrompt: string;
@@ -40,6 +49,7 @@ type AiChatOptions = {
     prefillSystemResponse?: string;
     prependToResponse?: string;
     parseJson?: boolean;
+    model?: keyof typeof MODEL_IDS;
 }
 
 async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
@@ -60,9 +70,11 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, model = 'sonnet' }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
-        console.log(`Sending message to claude...`);
+        const modelId = MODEL_IDS[model];
+        const modelMaxTokens = MODEL_MAX_TOKENS[model];
+        console.log(`Sending message to ${modelId}...`);
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({
@@ -85,8 +97,8 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         }
 
         const requestParams = {
-            model: "claude-sonnet-4-20250514",
-            max_tokens: maxTokens,
+            model: modelId,
+            max_tokens: modelMaxTokens,
             system: systemPrompt,
             messages,
             temperature: 0,
@@ -109,9 +121,9 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
         }
 
         if (response.stop_reason === "max_tokens") {
-            console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
+            console.log(`Claude stopped because it reached the max tokens of ${modelMaxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
-            const response2 = await aiChat<T>({ systemPrompt, documentBase64, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim() });
+            const response2 = await aiChat<T>({ systemPrompt, documentBase64, userPrompt, prefillSystemResponse: (prefillSystemResponse + response.content[0].text).trim(), prependToResponse: (prependToResponse + response.content[0].text).trim(), model });
             return {
                 usage: {
                     input_tokens: response.usage.input_tokens + response2.usage.input_tokens,
