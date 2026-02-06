@@ -8,6 +8,7 @@ import { uploadToSpaces } from './tasks/uploadToSpaces.js';
 import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
+import { pollDecisions } from './tasks/pollDecisions.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -239,6 +240,117 @@ program
         }
     });
 
+
+program
+    .command('poll-decisions')
+    .description('Poll decisions from Diavgeia and match them to meeting subjects')
+    .option('-d, --meeting-date <date>', 'Meeting date in ISO format (YYYY-MM-DD)')
+    .option('-u, --org-uid <uid>', 'Diavgeia organization UID')
+    .option('--unit-id <unitId>', 'Diavgeia unit ID (e.g., 81689 for ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ)')
+    .option('-s, --subjects-file <file>', 'JSON file (export format or subjects array)')
+    .option('-O, --output-file <file>', 'Output file for the result')
+    .option('--test', 'Use test subjects (for quick testing)')
+    .action(async (options: {
+        meetingDate?: string;
+        orgUid?: string;
+        unitId?: string;
+        subjectsFile?: string;
+        outputFile?: string;
+        test?: boolean;
+    }) => {
+        let subjects: Array<{ subjectId: string; name: string }>;
+        let meetingDate = options.meetingDate;
+        let orgUid = options.orgUid;
+        let unitId = options.unitId;
+
+        if (options.subjectsFile) {
+            const fileContent = JSON.parse(fs.readFileSync(options.subjectsFile, 'utf-8'));
+
+            // Handle export format with meeting metadata
+            if (fileContent.meeting && fileContent.subjects) {
+                subjects = fileContent.subjects;
+                // Use meeting metadata from file if not overridden by CLI args
+                if (!options.meetingDate && fileContent.meeting.date) {
+                    meetingDate = fileContent.meeting.date;
+                }
+                if (!options.orgUid && fileContent.meeting.diavgeiaOrgUid) {
+                    orgUid = fileContent.meeting.diavgeiaOrgUid;
+                }
+                if (!options.unitId && fileContent.meeting.diavgeiaUnitId) {
+                    unitId = fileContent.meeting.diavgeiaUnitId;
+                }
+                console.log(`Loaded export file: ${fileContent.meeting.administrativeBody || 'Unknown body'}`);
+            } else if (Array.isArray(fileContent)) {
+                // Simple array format
+                subjects = fileContent;
+            } else {
+                console.error('Error: Invalid subjects file format');
+                server.close();
+                process.exitCode = 1;
+                return;
+            }
+        } else if (options.test) {
+            // Test subjects for quick testing
+            subjects = [
+                { subjectId: 'test-1', name: 'Έγκριση προϋπολογισμού' },
+                { subjectId: 'test-2', name: 'Ορισμός επιτροπής' },
+            ];
+            console.log('Using test subjects:', subjects);
+        } else {
+            console.error('Error: Either --subjects-file or --test is required');
+            server.close();
+            process.exitCode = 1;
+            return;
+        }
+
+        if (!meetingDate || !orgUid) {
+            console.error('Error: Meeting date and org UID are required (via CLI args or export file)');
+            server.close();
+            process.exitCode = 1;
+            return;
+        }
+
+        console.log(`Polling decisions for org ${orgUid} from ${meetingDate}`);
+        if (unitId) {
+            console.log(`Unit ID: ${unitId}`);
+        }
+        console.log(`Number of subjects: ${subjects.length}`);
+
+        try {
+            const result = await pollDecisions(
+                {
+                    callbackUrl: '', // Not used for CLI
+                    meetingDate,
+                    diavgeiaUid: orgUid,
+                    diavgeiaUnitId: unitId,
+                    subjects,
+                },
+                (stage: string, progressPercent: number) => {
+                    process.stdout.write(`\r[${stage}] ${progressPercent.toFixed(2)}%`);
+                }
+            );
+            process.stdout.write('\n');
+
+            console.log('\n--- Results ---');
+            console.log(`Matched: ${result.matches.length}`);
+            console.log(`Unmatched: ${result.unmatchedSubjects.length}`);
+            console.log(`Ambiguous: ${result.ambiguousSubjects.length}`);
+            console.log(`Total decisions fetched: ${result.metadata?.fetchedCount || 0}`);
+
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
+                console.log(`\nResult saved to ${options.outputFile}`);
+            } else {
+                console.log('\nFull result:');
+                console.log(JSON.stringify(result, null, 2));
+            }
+        } catch (error) {
+            console.error('\nError polling decisions:', error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
 
 const DEFAULT_SMOKE_TEST_VIDEO = "https://www.youtube.com/watch?v=3ugZUq9nm4Y";
 

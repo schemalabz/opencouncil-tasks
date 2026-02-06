@@ -15,6 +15,7 @@ import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
+import { pollDecisions } from './tasks/pollDecisions.js';
 import devRouter from './routes/dev.js';
 import swaggerUi from 'swagger-ui-express';
 // Swagger will be imported after routes are defined
@@ -146,6 +147,11 @@ app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
 app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
   summary: 'Generate video highlight',
   description: 'Create video highlights from source media with visual enhancements'
+}));
+
+app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
+  summary: 'Poll decisions from Diavgeia',
+  description: 'Fetch decisions from the Greek Government Transparency portal and match them to meeting subjects'
 }));
 
 // Resolve task paths from Express routes, then load API Documentation
