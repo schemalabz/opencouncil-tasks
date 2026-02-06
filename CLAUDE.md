@@ -24,6 +24,7 @@ npm test                              # unit tests (vitest)
 - **Always use `.js` extensions in imports** (ESM requirement, even for .ts files)
 - Colocated tests: `foo.ts` → `foo.test.ts`
 - Conventional commits: `feat:`, `fix:`, `refactor:`, `test:`, `chore:`, `docs:`
+- **Do NOT add `Co-Authored-By` lines to commits**
 
 ## Architecture
 
