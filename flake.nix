@@ -159,13 +159,13 @@ EOF
           };
 
           config = mkIf cfg.enable {
-            # Ensure the user/group exist (they may already exist from opencouncil-preview module)
+            # Ensure the user/group exist (use mkDefault so opencouncil-preview module can override)
             users.users.${cfg.user} = {
-              isSystemUser = true;
-              group = cfg.group;
-              home = "/var/lib/opencouncil-previews";  # Shared home for both services
-              createHome = true;
-              shell = pkgs.bash;
+              isSystemUser = mkDefault true;
+              group = mkDefault cfg.group;
+              home = mkDefault "/var/lib/opencouncil-previews";  # Shared home for both services
+              createHome = mkDefault true;
+              shell = mkDefault pkgs.bash;
             };
 
             users.groups.${cfg.group} = {};
