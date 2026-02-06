@@ -76,7 +76,7 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
         }
     }
     
-    res.status(200).json({ 
+    res.status(200).json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',

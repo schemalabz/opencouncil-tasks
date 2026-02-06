@@ -1,6 +1,6 @@
 import path from "path";
 import cp from "child_process";
-import ffmpeg from "ffmpeg-static";
+import { ffmpegPath } from '../../lib/ffmpegPath.js';
 import fs from "fs";
 import { promisify } from "util";
 import { uploadToSpaces } from "../uploadToSpaces.js";
@@ -1082,10 +1082,11 @@ export const getFileParts = async (
 
     args.push("-y", outputFilePath);
 
-    console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(" ")}`);
+    const ffmpegBin = ffmpegPath();
+    console.log(`Executing ffmpeg command: ${ffmpegBin} ${args.join(" ")}`);
 
     return new Promise((resolve, reject) => {
-        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, args, {
+        const ffmpegProcess = cp.spawn(ffmpegBin, args, {
             windowsHide: true,
             stdio: ["pipe", "pipe", "pipe"],
         });

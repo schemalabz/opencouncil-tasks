@@ -2,7 +2,7 @@ import { Task } from "./pipeline.js";
 import fs from "fs";
 import path from "path";
 import cp from "child_process";
-import ffmpeg from 'ffmpeg-static';
+import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { Diarization } from "../types.js";
 import { formatTime } from "../utils.js";
 
@@ -170,9 +170,10 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
 
         args.push(absoluteOutput);
 
-        console.log(`Executing ffmpeg command: ${ffmpeg} ${args.join(' ')}`);
+        const ffmpegBin = ffmpegPath();
+        console.log(`Executing ffmpeg command: ${ffmpegBin} ${args.join(' ')}`);
 
-        const ffmpegProcess = cp.spawn(ffmpeg as unknown as string, args, {
+        const ffmpegProcess = cp.spawn(ffmpegBin, args, {
             windowsHide: true,
             stdio: ['pipe', 'pipe', 'pipe']
         });

@@ -72,7 +72,9 @@ let program: TJS.Program | null = null;
 let schemas: { [key: string]: TJS.Definition } = {};
 
 // Disk-based cache configuration
-const CACHE_DIR = path.join(process.cwd(), 'data', '.cache');
+// Use DATA_DIR env var if set (for production/Nix deployments), otherwise use cwd
+const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+const CACHE_DIR = path.join(dataDir, '.cache');
 const CACHE_FILE = path.join(CACHE_DIR, 'schema-cache.json');
 
 // Ensure cache directory exists

@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import cp from "child_process";
-import ffmpeg from 'ffmpeg-static';
+import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 
 dotenv.config();
@@ -127,15 +127,12 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
         args.splice(args.length - 1, 0, '-af', 'highpass=f=200, lowpass=f=3000');
     }
 
-    const ffmpegPath = ffmpeg as unknown as string | null;
-    if (!ffmpegPath) {
-        throw new Error('ffmpeg-static returned null - ffmpeg binary not available');
-    }
+    const ffmpegBin = ffmpegPath();
 
-    console.log(`Executing ffmpeg command: ${ffmpegPath} ${args.join(' ')}`);
+    console.log(`Executing ffmpeg command: ${ffmpegBin} ${args.join(' ')}`);
 
     return new Promise<void>((resolve, reject) => {
-        const ffmpegProcess = cp.spawn(ffmpegPath as string, args, {
+        const ffmpegProcess = cp.spawn(ffmpegBin, args, {
             windowsHide: true,
             stdio: ['pipe', 'pipe', 'pipe']
         });
