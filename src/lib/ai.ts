@@ -172,6 +172,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
                 prependToResponse: ((prependToResponse || '') + responseText).trim(),
                 tools,
+                outputFormat,  // Preserve structured outputs on continuation
                 cacheSystemPrompt  // Preserve caching on continuation
             });
             return {
