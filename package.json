@@ -46,7 +46,7 @@
     "@types/underscore": "^1.11.15",
     "nodemon": "^3.1.10",
     "tsx": "^4.20.3",
-    "vitest": "^3.0.0"
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": "^20.11.1"
