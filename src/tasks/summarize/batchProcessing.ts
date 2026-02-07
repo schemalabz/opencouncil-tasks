@@ -43,7 +43,7 @@ export async function processBatchesWithState(
     allUtteranceStatuses: UtteranceStatus[];
     usage: Anthropic.Messages.Usage;
 }> {
-    const batches = splitTranscript(request.transcript, 130000);
+    const batches = splitTranscript(request.transcript, 120000);
 
     let conversationState = {
         subjects: initializeSubjectsFromExisting(request.existingSubjects),
