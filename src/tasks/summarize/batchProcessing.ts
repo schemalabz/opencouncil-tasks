@@ -458,6 +458,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
 `;
 
     const response = await aiChat<BatchProcessingResult>({
+        model: "claude-opus-4-6",
         systemPrompt,
         userPrompt,
         outputFormat: {

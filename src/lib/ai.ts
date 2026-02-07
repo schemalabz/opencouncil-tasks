@@ -49,6 +49,7 @@ async function logToFile(message: string, data?: any) {
 }
 
 type AiChatOptions = {
+    model?: string;
     documentBase64?: string;
     systemPrompt: string;
     userPrompt: string;
@@ -78,7 +79,7 @@ async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     try {
         console.log(`Sending message to claude...`);
 
@@ -116,7 +117,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
                 : systemPrompt;
 
         const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
-            model: "claude-sonnet-4-5-20250929",
+            model: model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929",
             max_tokens: maxTokens,
             system: systemPromptParam,
             messages,
@@ -164,6 +165,7 @@ export async function aiChat<T>({ systemPrompt, userPrompt, prefillSystemRespons
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
             const response2 = await aiChat<T>({
+                model,
                 systemPrompt,
                 documentBase64,
                 userPrompt,
