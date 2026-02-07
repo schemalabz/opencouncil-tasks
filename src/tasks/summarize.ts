@@ -13,6 +13,7 @@ import { compressIds, decompressIds } from "./summarize/compression.js";
 import { logUsage, logMultiPhaseUsage } from "../lib/usageLogging.js";
 import { processBatchesWithState } from "./summarize/batchProcessing.js";
 import { generateSpeakerContributions } from "./summarize/speakerContributions.js";
+import { mergeSubjects } from "./summarize/mergeSubjects.js";
 import { SubjectInProgress } from "./summarize/types.js";
 dotenv.config();
 
@@ -41,7 +42,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('');
     console.log('📝 PHASE 1: Batch Processing');
     onProgress("batch_processing", 0);
-    const { speakerSegmentSummaries, subjects, allUtteranceStatuses, usage: phase1Usage } =
+    let { speakerSegmentSummaries, subjects, allUtteranceStatuses, usage: phase1Usage } =
         await processBatchesWithState(compressedRequest, idCompressor, onProgress);
 
     console.log(`✅ Batch processing complete:`);
@@ -49,6 +50,20 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log(`   • Subjects extracted: ${subjects.length}`);
     console.log(`   • Utterance statuses: ${allUtteranceStatuses.length}`);
     logUsage('Phase 1 tokens', phase1Usage);
+
+    // Phase 1.5: Merge duplicate/fragmented subjects across batches
+    console.log('');
+    console.log('🔀 PHASE 1.5: Subject Merge');
+    onProgress("subject_merge", 0);
+    const mergeResult = await mergeSubjects(subjects, allUtteranceStatuses);
+    subjects = mergeResult.subjects;
+    allUtteranceStatuses = mergeResult.allUtteranceStatuses;
+    const phase1_5Usage = mergeResult.usage;
+    if (mergeResult.mergeCount > 0) {
+        console.log(`   Subjects after merge: ${subjects.length}`);
+    }
+    logUsage('Phase 1.5 tokens', phase1_5Usage);
+    onProgress("subject_merge", 1);
 
     // Phase 2: Generate speaker contributions from discussion ranges
     console.log('');
@@ -220,6 +235,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     // Calculate and display total token usage
     logMultiPhaseUsage('📊 TOTAL TOKEN USAGE', [
         { label: 'Phase 1 (Batch Processing)', usage: phase1Usage },
+        { label: 'Phase 1.5 (Subject Merge)', usage: phase1_5Usage },
         { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage },
         { label: 'Phase 3 (Enrichment)', usage: phase3Usage }
     ]);
