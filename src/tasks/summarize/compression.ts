@@ -65,13 +65,14 @@ export const decompressIds = (
             speakerContributions: s.speakerContributions
                 .filter(c => {
                     if (!c.text) {
-                        console.warn(`⚠️  Subject "${s.name}": Filtering out contribution with undefined text for speaker ${c.speakerId}`);
+                        console.warn(`⚠️  Subject "${s.name}": Filtering out contribution with undefined text for speaker ${c.speakerId || c.speakerName}`);
                         return false;
                     }
                     return true;
                 })
                 .map(c => ({
-                    speakerId: idCompressor.getLongId(c.speakerId),
+                    speakerId: c.speakerId ? idCompressor.getLongId(c.speakerId) : null,
+                    speakerName: c.speakerName,
                     text: decompressReferencesInMarkdown(c.text, idCompressor)
                 }))
         })),

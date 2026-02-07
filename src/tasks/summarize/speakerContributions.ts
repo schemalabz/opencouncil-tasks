@@ -120,12 +120,14 @@ export function extractAndGroupUtterances(
                     timestamp: utterance.startTimestamp
                 });
 
-                // Add to speaker-specific group (if speaker exists)
-                if (segment.speakerId) {
-                    if (!utterancesBySpeaker[segment.speakerId]) {
-                        utterancesBySpeaker[segment.speakerId] = [];
+                // Add to speaker-specific group
+                // Use speakerId if available, otherwise fall back to speakerName
+                const speakerKey = segment.speakerId || (segment.speakerName ? `name:${segment.speakerName}` : null);
+                if (speakerKey) {
+                    if (!utterancesBySpeaker[speakerKey]) {
+                        utterancesBySpeaker[speakerKey] = [];
                     }
-                    utterancesBySpeaker[segment.speakerId].push({
+                    utterancesBySpeaker[speakerKey].push({
                         utteranceId: utterance.utteranceId,
                         text: utterance.text
                     });
@@ -238,9 +240,11 @@ export async function generateSpeakerContributionsInBatches(
 
             // If batch size is already at minimum, generate fallback contributions
             console.error(`   ⚠️  Batch ${batchNumber} failed even at minimum batch size. Generating fallback contributions.`);
-            for (const speakerId of batchSpeakerIds) {
+            for (const key of batchSpeakerIds) {
+                const isNameBased = key.startsWith('name:');
                 allContributions.push({
-                    speakerId,
+                    speakerId: isNameBased ? null : key,
+                    speakerName: isNameBased ? key.slice(5) : null,
                     text: "Σφάλμα κατά τη δημιουργία περίληψης."
                 });
             }
@@ -249,23 +253,24 @@ export async function generateSpeakerContributionsInBatches(
 
     console.log(`   ✓ All batches completed: ${allContributions.length} total contributions`);
 
-    // Deduplicate contributions by speakerId (safety net)
+    // Deduplicate contributions by speaker key (safety net)
     const contributionsBySpeaker = new Map<string, SpeakerContribution>();
     const duplicates: string[] = [];
 
     for (const contrib of allContributions) {
-        if (contributionsBySpeaker.has(contrib.speakerId)) {
-            duplicates.push(contrib.speakerId);
+        const key = contrib.speakerId || `name:${contrib.speakerName}`;
+        if (contributionsBySpeaker.has(key)) {
+            duplicates.push(key);
         } else {
-            contributionsBySpeaker.set(contrib.speakerId, contrib);
+            contributionsBySpeaker.set(key, contrib);
         }
     }
 
     if (duplicates.length > 0) {
         console.warn(`   ⚠️  Detected ${duplicates.length} duplicate speaker contributions (keeping first occurrence):`);
         const uniqueDuplicates = [...new Set(duplicates)];
-        uniqueDuplicates.forEach(speakerId => {
-            console.warn(`      - Speaker: ${speakerId}`);
+        uniqueDuplicates.forEach(key => {
+            console.warn(`      - Speaker: ${key}`);
         });
     }
 
@@ -294,10 +299,20 @@ export async function generateAllSpeakerContributionsInOneCall(
 ): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage }> {
     const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName);
 
+    // Build a mapping from speaker keys to their display names
+    // For name-based keys (name:Παπαδόπουλος), extract the name
+    const speakerKeyToName = new Map<string, string | null>();
+    for (const u of allSubjectUtterances) {
+        const key = u.speakerId || (u.speakerName ? `name:${u.speakerName}` : null);
+        if (key && !speakerKeyToName.has(key)) {
+            speakerKeyToName.set(key, u.speakerName);
+        }
+    }
+
     // Build speakers list with their utterances
     const speakersList = Object.entries(utterancesBySpeaker)
-        .map(([speakerId, utterances]) => `
-**Speaker: ${speakerId}**
+        .map(([speakerKey, utterances]) => `
+**Speaker: ${speakerKey}**
 ${utterances.map(u => `- [${u.utteranceId}] "${u.text}"`).join('\n')}
 `).join('\n\n');
 
@@ -361,24 +376,31 @@ ${fullDiscussion}
         });
 
         // VALIDATION: Verify all returned speakerIds exist in the input
-        const validSpeakerIds = new Set(Object.keys(utterancesBySpeaker));
+        const validSpeakerKeys = new Set(Object.keys(utterancesBySpeaker));
         const invalidContributions: SpeakerContribution[] = [];
         const validContributions: SpeakerContribution[] = [];
 
         for (const contrib of result.result.speakerContributions) {
-            if (!validSpeakerIds.has(contrib.speakerId)) {
-                console.warn(`   ⚠️  LLM returned contribution for unknown speakerId: ${contrib.speakerId}`);
+            const key = contrib.speakerId!;
+            if (!validSpeakerKeys.has(key)) {
+                console.warn(`   ⚠️  LLM returned contribution for unknown speaker key: ${key}`);
                 console.warn(`      This speaker was not in the input data!`);
                 invalidContributions.push(contrib);
             } else {
-                validContributions.push(contrib);
+                // Map speaker key back to proper speakerId/speakerName
+                const isNameBased = key.startsWith('name:');
+                validContributions.push({
+                    speakerId: isNameBased ? null : key,
+                    speakerName: speakerKeyToName.get(key) || (isNameBased ? key.slice(5) : null),
+                    text: contrib.text
+                });
             }
         }
 
         if (invalidContributions.length > 0) {
             console.warn(`   🚨 CRITICAL: LLM hallucinated ${invalidContributions.length} speaker contributions!`);
-            console.warn(`   Valid speakers in input: ${Array.from(validSpeakerIds).join(', ')}`);
-            console.warn(`   Invalid speakerIds returned: ${invalidContributions.map(c => c.speakerId).join(', ')}`);
+            console.warn(`   Valid speakers in input: ${Array.from(validSpeakerKeys).join(', ')}`);
+            console.warn(`   Invalid speaker keys returned: ${invalidContributions.map(c => c.speakerId).join(', ')}`);
             console.warn(`   → Filtering out invalid contributions`);
         }
 
@@ -390,8 +412,9 @@ ${fullDiscussion}
         console.error("Error generating speaker contributions:", error);
         // Return fallback contributions for all speakers
         return {
-            contributions: Object.keys(utterancesBySpeaker).map(speakerId => ({
-                speakerId,
+            contributions: Object.keys(utterancesBySpeaker).map(key => ({
+                speakerId: key.startsWith('name:') ? null : key,
+                speakerName: speakerKeyToName.get(key) || (key.startsWith('name:') ? key.slice(5) : null),
                 text: "Σφάλμα κατά τη δημιουργία περίληψης."
             })),
             usage: NO_USAGE

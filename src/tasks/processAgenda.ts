@@ -91,7 +91,8 @@ export type ExtractedSubject = {
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
     speakerContributions: {
-        speakerId: string;
+        speakerId: string | null;
+        speakerName: string | null;
         text: string;
     }[];
     locationText: string | null;

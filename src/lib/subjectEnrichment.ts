@@ -16,7 +16,7 @@ export interface EnrichmentInput {
     topicLabel: string | null;
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
-    speakerContributions: { speakerId: string; text: string; }[];
+    speakerContributions: { speakerId: string | null; speakerName: string | null; text: string; }[];
     discussedIn: string | null;
 }
 
