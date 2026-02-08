@@ -50,6 +50,7 @@ export const decompressIds = (
     idCompressor: IdCompressor
 ): SummarizeResult => {
     return {
+        version: 1,
         speakerSegmentSummaries: result.speakerSegmentSummaries.map(s => ({
             speakerSegmentId: idCompressor.getLongId(s.id),
             summary: s.summary,

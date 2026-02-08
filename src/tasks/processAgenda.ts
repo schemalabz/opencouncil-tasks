@@ -47,7 +47,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     logUsage('Extraction usage', result.usage);
     logUsage('Enrichment usage', enrichmentUsage);
 
-    return { subjects };
+    return { version: 1, subjects };
 };
 
 const downloadFileToBase64 = async (url: string) => {
