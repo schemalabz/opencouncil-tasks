@@ -233,6 +233,17 @@ See `src/lib/DiavgeiaClient.ts` for our implementation with:
 - Date normalization
 - TypeScript interfaces
 
+## Utilities
+
+**Municipality Lookup Script:** `scripts/diavgeia-lookup.ts`
+
+Look up municipality organization UIDs and unit IDs by name:
+```bash
+npx tsx scripts/diavgeia-lookup.ts <query>      # Search by name
+npx tsx scripts/diavgeia-lookup.ts --all        # Fetch all municipalities
+npx tsx scripts/diavgeia-lookup.ts --all --json # JSON output for bulk export
+```
+
 ## Related Documentation
 
 - **Task implementation:** `docs/pollDecisions.md` - How the pollDecisions task uses this API
