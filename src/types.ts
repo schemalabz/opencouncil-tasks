@@ -181,7 +181,6 @@ export interface Subject {
 }
 
 export interface ProcessAgendaResult {
-    version: 1;
     subjects: Subject[];
 }
 
@@ -281,7 +280,6 @@ export interface SummarizeRequest extends RequestOnTranscript {
 }
 
 export interface SummarizeResult {
-    version: 1;
     speakerSegmentSummaries: {
         speakerSegmentId: string;
         topicLabels: string[];
