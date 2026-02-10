@@ -133,6 +133,20 @@ export async function processBatchesWithState(
             console.log(`   🔄 Updated ${statusIdsUpdated} utterance status subjectIds to use proper compressed IDs`);
         }
 
+        // Update discussedIn references to use the corrected subject IDs
+        let discussedInUpdated = 0;
+        for (const subject of batchResult.subjects) {
+            if (subject.discussedIn && idMapping.has(subject.discussedIn)) {
+                const oldDiscussedIn = subject.discussedIn;
+                subject.discussedIn = idMapping.get(subject.discussedIn)!;
+                console.log(`   🔄 Updated discussedIn for "${subject.name}": ${oldDiscussedIn} -> ${subject.discussedIn}`);
+                discussedInUpdated++;
+            }
+        }
+        if (discussedInUpdated > 0) {
+            console.log(`   🔄 Updated ${discussedInUpdated} subject discussedIn references to use proper compressed IDs`);
+        }
+
         // VALIDATION: Preserve introducedByPersonId from existing subjects
         // Bug fix: LLM often changes introducers to the chair who merely announces the subject
         console.log(`\n   🔒 Preserving introducers from existing subjects...`);
@@ -275,7 +289,14 @@ export async function processBatchesWithState(
                     const primary = batchResult.subjects.find(s => s.id === secondary?.discussedIn);
 
                     console.warn(`         Utterance ${status.utteranceId} points to secondary "${secondary?.name}"`);
-                    console.warn(`         Should point to primary "${primary?.name}" (${primary?.id})`);
+
+                    // Validate that the primary subject exists before auto-correcting
+                    if (!primary) {
+                        console.error(`         ⚠️  Primary subject ${secondary?.discussedIn} not found! Keeping original subjectId.`);
+                        continue;
+                    }
+
+                    console.warn(`         Should point to primary "${primary.name}" (${primary.id})`);
                     console.warn(`         → Auto-correcting to primary subject`);
 
                     // Auto-correct the status

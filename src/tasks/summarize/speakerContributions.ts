@@ -195,13 +195,16 @@ export async function generateSpeakerContributionsInBatches(
     const allContributions: SpeakerContribution[] = [];
     let totalUsage = NO_USAGE;
     let currentBatchSize = INITIAL_BATCH_SIZE;
+    let batchNumber = 0;
 
-    for (let i = 0; i < speakerIds.length; i += currentBatchSize) {
+    // Use while loop for proper batch size management during retries
+    let i = 0;
+    while (i < speakerIds.length) {
+        batchNumber++;
         const batchSpeakerIds = speakerIds.slice(i, i + currentBatchSize);
-        const batchNumber = Math.floor(i / currentBatchSize) + 1;
         const totalBatches = Math.ceil(speakerIds.length / currentBatchSize);
 
-        console.log(`   📦 Processing batch ${batchNumber}/${totalBatches} (${batchSpeakerIds.length} speakers)`);
+        console.log(`   📦 Processing batch ${batchNumber}/${totalBatches} (${batchSpeakerIds.length} speakers, starting at index ${i})`);
 
         // Create a subset with only this batch's speakers
         const batchUtterancesBySpeaker: Record<string, Array<{ utteranceId: string; text: string }>> = {};
@@ -223,6 +226,8 @@ export async function generateSpeakerContributionsInBatches(
             totalUsage = addUsage(totalUsage, batchUsage);
             console.log(`   ✓ Batch ${batchNumber} completed: ${batchContributions.length} contributions generated (${formatTokenCount(batchUsage.input_tokens)} input, ${formatTokenCount(batchUsage.output_tokens)} output)`);
 
+            // Move forward by the actual number of speakers processed
+            i += batchSpeakerIds.length;
             // Reset batch size on success (in case it was reduced due to previous failures)
             currentBatchSize = INITIAL_BATCH_SIZE;
 
@@ -234,7 +239,7 @@ export async function generateSpeakerContributionsInBatches(
                 const newBatchSize = Math.max(MIN_BATCH_SIZE, Math.floor(currentBatchSize / 2));
                 console.log(`   🔄 Retrying with smaller batch size: ${newBatchSize}`);
                 currentBatchSize = newBatchSize;
-                i -= currentBatchSize;  // Reprocess this batch with new size
+                // Don't increment i - retry same position with smaller batch
                 continue;
             }
 
@@ -248,6 +253,8 @@ export async function generateSpeakerContributionsInBatches(
                     text: "Σφάλμα κατά τη δημιουργία περίληψης."
                 });
             }
+            // Move forward past the failed batch
+            i += batchSpeakerIds.length;
         }
     }
 

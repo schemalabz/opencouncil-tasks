@@ -49,7 +49,8 @@ export function splitTranscript(transcript: any[], maxLengthChars: number) {
 
     for (const item of transcript) {
         const itemLength = JSON.stringify(item).length;
-        if (currentPartLength + itemLength > maxLengthChars) {
+        // Only push current batch if it has items (prevents empty batches when first item exceeds limit)
+        if (currentPartLength + itemLength > maxLengthChars && currentPart.length > 0) {
             parts.push(currentPart);
             currentPart = [];
             currentPartLength = 0;
