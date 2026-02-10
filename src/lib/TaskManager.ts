@@ -11,6 +11,7 @@ export interface TaskMetadata {
   description: string;
   tags?: string[];
   security?: boolean; // defaults to true
+  version?: number;
 }
 
 // Global task registry - maps task functions to their metadata
@@ -215,14 +216,14 @@ class TaskManager {
     ): express.RequestHandler {
         // Register metadata without path for now; we'll resolve path from Express later
         // Default security to true if not specified
-        const partialMetadata: TaskMetadata = { 
+        const partialMetadata: TaskMetadata = {
             security: true, // default to secure
-            ...metadata 
+            ...metadata
         };
         this.registerTaskMetadata(task, partialMetadata);
 
         // Create the handler and tag it with the task reference for later discovery
-        const handler = this.serveTask(task) as unknown as express.RequestHandler & { [key: symbol]: any };
+        const handler = this.serveTask(task, metadata.version) as unknown as express.RequestHandler & { [key: symbol]: any };
         (handler as any)[ROUTE_TASK_SYMBOL] = task;
         return handler;
     }
