@@ -72,8 +72,8 @@ class TaskManager {
         while (this.runningTasks.size < this.maxParallelTasks && this.taskQueue.length > 0) {
             const nextTask = this.taskQueue.shift();
             if (nextTask) {
-                const { task, input, callbackUrl, taskType } = nextTask;
-                this.executeTask(task, input, callbackUrl, taskType);
+                const { task, input, callbackUrl, taskType, version } = nextTask;
+                this.executeTask(task, input, callbackUrl, taskType, version);
             }
         }
     }
@@ -181,7 +181,7 @@ class TaskManager {
             });
         } else {
             // Execute the task immediately
-            await this.executeTask(task, input, callbackUrl, taskType);
+            await this.executeTask(task, input, callbackUrl, taskType, version);
         }
     }
 
