@@ -62,17 +62,39 @@ type AiChatOptions = {
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
 }
 
-async function withRateLimitRetry<T>(fn: () => Promise<T>): Promise<T> {
+function isTransientError(e: any): boolean {
+    // Socket closed by remote (e.g. Anthropic server timeout, load balancer disconnect)
+    if (e?.cause?.code === 'UND_ERR_SOCKET') return true;
+    // Anthropic SDK wraps socket errors as "terminated"
+    if (e?.message === 'terminated' || e?.cause?.message === 'terminated') return true;
+    // Connection reset
+    if (e?.code === 'ECONNRESET' || e?.cause?.code === 'ECONNRESET') return true;
+    return false;
+}
+
+const MAX_TRANSIENT_RETRIES = 2;
+
+async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
+    let transientRetries = 0;
     while (true) {
         try {
             return await fn();
         } catch (e: any) {
+            // Rate limit: wait for reset time
             if (e?.error?.error?.type === 'rate_limit_error' && e.headers?.['anthropic-ratelimit-tokens-reset']) {
                 const resetTime = new Date(e.headers['anthropic-ratelimit-tokens-reset']);
                 const now = new Date();
                 const sleepTime = resetTime.getTime() - now.getTime() + 1000;
                 console.log(`Rate limit hit, sleeping until ${resetTime.toISOString()} (${sleepTime}ms)`);
                 await sleep(sleepTime);
+                continue;
+            }
+            // Transient connection errors: retry with backoff
+            if (isTransientError(e) && transientRetries < MAX_TRANSIENT_RETRIES) {
+                transientRetries++;
+                const backoffMs = transientRetries * 5000;
+                console.log(`Transient connection error (attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES}), retrying in ${backoffMs}ms...`);
+                await sleep(backoffMs);
                 continue;
             }
             throw e;
@@ -139,8 +161,11 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         } : {};
 
         // Use .stream() helper for long requests (>10 minutes) - it handles accumulation automatically
-        const stream = anthropic.messages.stream(requestParams, requestOptions);
-        const response = await stream.finalMessage();
+        // Wrap in withRetry to handle transient connection errors (socket closures, etc.)
+        const response = await withRetry(async () => {
+            const stream = anthropic.messages.stream(requestParams, requestOptions);
+            return stream.finalMessage();
+        });
 
         await logToFile("Claude Response", response);
 
@@ -263,7 +288,7 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
 
     await logToFile("Adaline Claude Request", requestParams);
 
-    const response = await withRateLimitRetry(() =>
+    const response = await withRetry(() =>
         anthropic.messages.create(requestParams)
     );
 
