@@ -4,17 +4,18 @@ import { Command } from 'commander';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
 import { pipeline } from './tasks/pipeline.js';
 import { downloadYTV } from './tasks/downloadYTV.js';
-import { uploadToSpaces } from './tasks/uploadToSpaces.js';
+import { uploadToSpaces, deleteFromSpacesByPrefix, checkSpacesConnection } from './tasks/uploadToSpaces.js';
 import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
-import { getExpressAppWithCallbacks, isUsingMinIO } from './utils.js';
+import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 import { DiarizeResult } from './types.js';
 import devRouter from './routes/dev.js';
-import { getMuxPlaybackId } from './lib/mux.js';
+import { getMuxPlaybackId, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
+import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
 
 const program = new Command();
 const app = getExpressAppWithCallbacks();
@@ -186,8 +187,9 @@ program
     .command('mux-playback-id <videoUrl>')
     .description('Create a Mux asset for a video URL and return its playback ID')
     .action(async (videoUrl: string) => {
-        const playbackId = await getMuxPlaybackId(videoUrl);
-        console.log(playbackId);
+        const { playbackId, assetId } = await getMuxPlaybackId(videoUrl);
+        console.log(`Playback ID: ${playbackId}`);
+        console.log(`Asset ID: ${assetId}`);
         server.close();
     });
 
@@ -309,6 +311,27 @@ program
             }
         }
 
+        const usingRealSpaces = hasRealSpacesCredentials();
+        const usingRealMux = hasMuxCredentials();
+        console.log('=== Smoke Test Configuration ===');
+        console.log(`  Storage:  ${usingRealSpaces ? 'DigitalOcean Spaces' : 'MinIO (local)'}`);
+        console.log(`  Mux:      ${usingRealMux ? 'Real' : 'Mock (no credentials)'}`);
+        console.log('================================\n');
+
+        // Preflight: verify S3 storage is reachable
+        try {
+            console.log('Preflight: checking S3 storage connection...');
+            await checkSpacesConnection();
+            console.log('  S3 storage is reachable\n');
+        } catch (error) {
+            const msg = error instanceof Error ? error.message : String(error);
+            console.error(`  S3 storage is NOT reachable: ${msg}\n`);
+            console.error('Check your DO_SPACES_ENDPOINT, DO_SPACES_KEY, DO_SPACES_SECRET, and DO_SPACES_BUCKET settings.');
+            server.close();
+            process.exitCode = 1;
+            return;
+        }
+
         const startTime = Date.now();
         try {
             const result = await pipeline(
@@ -324,9 +347,11 @@ program
                 ['has videoUrl',    typeof result.videoUrl === 'string' && result.videoUrl.length > 0],
                 ['has audioUrl',    typeof result.audioUrl === 'string' && result.audioUrl.length > 0],
                 ['has muxPlaybackId', typeof result.muxPlaybackId === 'string' && result.muxPlaybackId.length > 0],
+                ['has muxAssetId',  typeof result.muxAssetId === 'string' && result.muxAssetId.length > 0],
                 ['has transcript',  result.transcript != null],
                 ['has utterances',  Array.isArray(result.transcript?.transcription?.utterances) && result.transcript.transcription.utterances.length > 0],
                 ['has speakers',    Array.isArray(result.transcript?.transcription?.speakers)],
+                ['uses real Mux',   usingRealMux ? !result.muxPlaybackId.startsWith('MOCK') : result.muxPlaybackId.startsWith('MOCK')],
             ];
 
             let allPassed = true;
@@ -334,6 +359,28 @@ program
                 const icon = passed ? 'PASS' : 'FAIL';
                 console.log(`  [${icon}] ${label}`);
                 if (!passed) allPassed = false;
+            }
+
+            // Clean up Mux asset if we used real credentials
+            if (usingRealMux && result.muxAssetId && !result.muxAssetId.startsWith('MOCK')) {
+                try {
+                    console.log(`\nCleaning up Mux asset: ${result.muxAssetId}`);
+                    await deleteMuxAsset(result.muxAssetId);
+                } catch (cleanupErr) {
+                    console.warn(`Warning: Mux cleanup failed: ${cleanupErr instanceof Error ? cleanupErr.message : cleanupErr}`);
+                }
+            }
+
+            // Clean up S3 objects if we used real DO Spaces
+            if (usingRealSpaces) {
+                try {
+                    const { videoId } = getVideoIdAndUrl(url);
+                    console.log(`\nCleaning up S3 objects for videoId: ${videoId}`);
+                    await deleteFromSpacesByPrefix(`audio/${videoId}`);
+                    await deleteFromSpacesByPrefix(`council-meeting-videos/${videoId}`);
+                } catch (cleanupErr) {
+                    console.warn(`Warning: S3 cleanup failed: ${cleanupErr instanceof Error ? cleanupErr.message : cleanupErr}`);
+                }
             }
 
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);

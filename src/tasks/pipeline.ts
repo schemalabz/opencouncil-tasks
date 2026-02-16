@@ -8,7 +8,7 @@ import { transcribe } from "./transcribe.js";
 import { type TranscribeArgs } from "./transcribe.js";
 import { uploadToSpaces } from "./uploadToSpaces.js";
 import { type UploadFilesArgs } from "./uploadToSpaces.js";
-import { getMuxPlaybackId } from "../lib/mux.js";
+import { getMuxPlaybackId, type MuxResult } from "../lib/mux.js";
 import _ from 'underscore';
 import dotenv from "dotenv";
 
@@ -23,7 +23,7 @@ export type PipelineDeps = {
     splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]>;
     transcribe: Task<TranscribeArgs, Transcript>;
     applyDiarization: Task<{ diarization: Diarization; speakers: DiarizationSpeaker[]; transcript: Transcript }, TranscriptWithSpeakerIdentification>;
-    getMuxPlaybackId: (videoUrl: string) => Promise<string>;
+    getMuxPlaybackId: (videoUrl: string) => Promise<MuxResult>;
 };
 
 export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeResult> {
@@ -91,10 +91,12 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
         onProgress("finished", 100); //lfgggg
 
         console.log("All done");
+        const muxResult = await deps.getMuxPlaybackId(videoUrl);
         return {
             videoUrl,
             audioUrl,
-            muxPlaybackId: await deps.getMuxPlaybackId(videoUrl),
+            muxPlaybackId: muxResult.playbackId,
+            muxAssetId: muxResult.assetId,
             transcript: diarizedTranscript
         };
     };

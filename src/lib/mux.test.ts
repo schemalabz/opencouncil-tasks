@@ -1,17 +1,15 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
-// vi.hoisted runs before imports — set env vars and create mocks
-const { mockIsUsingMinIO } = vi.hoisted(() => {
+// vi.hoisted runs before imports — set env vars for the "has credentials" tests
+const { savedTokenId, savedTokenSecret } = vi.hoisted(() => {
+    const savedTokenId = process.env.MUX_TOKEN_ID;
+    const savedTokenSecret = process.env.MUX_TOKEN_SECRET;
     process.env.MUX_TOKEN_ID = "test-token-id";
     process.env.MUX_TOKEN_SECRET = "test-token-secret";
-    return { mockIsUsingMinIO: vi.fn(() => false) };
+    return { savedTokenId, savedTokenSecret };
 });
 
-vi.mock("../utils.js", () => ({
-    isUsingMinIO: mockIsUsingMinIO,
-}));
-
-import { getMuxPlaybackId } from "./mux.js";
+import { getMuxPlaybackId, deleteMuxAsset } from "./mux.js";
 
 function createResponse(ok: boolean, body: unknown, status?: number): Response {
     return {
@@ -32,20 +30,28 @@ describe("getMuxPlaybackId", () => {
 
     beforeEach(() => {
         fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("unmocked fetch"));
-        mockIsUsingMinIO.mockReturnValue(false);
+        process.env.MUX_TOKEN_ID = "test-token-id";
+        process.env.MUX_TOKEN_SECRET = "test-token-secret";
     });
 
     afterEach(() => {
         vi.restoreAllMocks();
         vi.useRealTimers();
+        // Restore original env vars
+        if (savedTokenId !== undefined) process.env.MUX_TOKEN_ID = savedTokenId;
+        else delete process.env.MUX_TOKEN_ID;
+        if (savedTokenSecret !== undefined) process.env.MUX_TOKEN_SECRET = savedTokenSecret;
+        else delete process.env.MUX_TOKEN_SECRET;
     });
 
-    it("returns a mock playback ID when using MinIO", async () => {
-        mockIsUsingMinIO.mockReturnValue(true);
+    it("returns mock result when credentials are missing", async () => {
+        delete process.env.MUX_TOKEN_ID;
+        delete process.env.MUX_TOKEN_SECRET;
 
         const result = await getMuxPlaybackId("https://example.com/video.mp4");
 
-        expect(result).toMatch(/^MOCK_/);
+        expect(result.playbackId).toMatch(/^MOCK_/);
+        expect(result.assetId).toMatch(/^MOCK_ASSET_/);
         expect(fetchSpy).not.toHaveBeenCalled();
     });
 
@@ -56,14 +62,14 @@ describe("getMuxPlaybackId", () => {
             .rejects.toThrow("Mux asset creation failed (HTTP 400): Bad Request");
     });
 
-    it("returns playback ID when asset is immediately ready", async () => {
+    it("returns MuxResult when asset is immediately ready", async () => {
         fetchSpy
             .mockResolvedValueOnce(createResponse(true, MUX_ASSET))
             .mockResolvedValueOnce(createResponse(true, { data: { status: "ready" } }));
 
         const result = await getMuxPlaybackId("https://example.com/video.mp4");
 
-        expect(result).toBe("playback-abc");
+        expect(result).toEqual({ playbackId: "playback-abc", assetId: "asset-123" });
         expect(fetchSpy).toHaveBeenCalledTimes(2);
 
         // Verify POST request
@@ -90,7 +96,7 @@ describe("getMuxPlaybackId", () => {
         await vi.advanceTimersByTimeAsync(5_000);
 
         const result = await promise;
-        expect(result).toBe("playback-abc");
+        expect(result).toEqual({ playbackId: "playback-abc", assetId: "asset-123" });
         expect(fetchSpy).toHaveBeenCalledTimes(4); // 1 POST + 3 GETs
     });
 
@@ -127,5 +133,51 @@ describe("getMuxPlaybackId", () => {
         const assertion = expect(promise).rejects.toThrow("did not become ready within 10 minutes");
         await vi.advanceTimersByTimeAsync(10 * 60 * 1_000 + 1);
         await assertion;
+    });
+});
+
+describe("deleteMuxAsset", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let fetchSpy: any;
+
+    beforeEach(() => {
+        fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("unmocked fetch"));
+        process.env.MUX_TOKEN_ID = "test-token-id";
+        process.env.MUX_TOKEN_SECRET = "test-token-secret";
+    });
+
+    afterEach(() => {
+        vi.restoreAllMocks();
+        if (savedTokenId !== undefined) process.env.MUX_TOKEN_ID = savedTokenId;
+        else delete process.env.MUX_TOKEN_ID;
+        if (savedTokenSecret !== undefined) process.env.MUX_TOKEN_SECRET = savedTokenSecret;
+        else delete process.env.MUX_TOKEN_SECRET;
+    });
+
+    it("deletes the asset successfully", async () => {
+        fetchSpy.mockResolvedValueOnce(createResponse(true, "", 204));
+
+        await deleteMuxAsset("asset-123");
+
+        expect(fetchSpy).toHaveBeenCalledOnce();
+        const [url, init] = fetchSpy.mock.calls[0];
+        expect(url).toBe("https://api.mux.com/video/v1/assets/asset-123");
+        expect((init as RequestInit).method).toBe("DELETE");
+    });
+
+    it("skips deletion when no credentials", async () => {
+        delete process.env.MUX_TOKEN_ID;
+        delete process.env.MUX_TOKEN_SECRET;
+
+        await deleteMuxAsset("asset-123");
+
+        expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it("throws on non-OK response", async () => {
+        fetchSpy.mockResolvedValueOnce(createResponse(false, "Not Found", 404));
+
+        await expect(deleteMuxAsset("asset-123"))
+            .rejects.toThrow("Mux asset deletion failed (HTTP 404): Not Found");
     });
 });

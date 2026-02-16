@@ -106,3 +106,71 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
 
     return uploadedUrls;
 };
+
+export const checkSpacesConnection = async (): Promise<void> => {
+    const spacesEndpoint = new S3({
+        endpoint: process.env.DO_SPACES_ENDPOINT,
+        accessKeyId: process.env.DO_SPACES_KEY,
+        secretAccessKey: process.env.DO_SPACES_SECRET,
+        region: "fra1",
+        ...(isUsingMinIO() && {
+            s3ForcePathStyle: true,
+            signatureVersion: 'v4'
+        })
+    });
+
+    const bucketName = process.env.DO_SPACES_BUCKET;
+    if (!bucketName) {
+        throw new Error('DO_SPACES_BUCKET is not set');
+    }
+
+    await spacesEndpoint.headBucket({ Bucket: bucketName }).promise();
+};
+
+export const deleteFromSpacesByPrefix = async (prefix: string): Promise<void> => {
+    const spacesEndpoint = new S3({
+        endpoint: process.env.DO_SPACES_ENDPOINT,
+        accessKeyId: process.env.DO_SPACES_KEY,
+        secretAccessKey: process.env.DO_SPACES_SECRET,
+        region: "fra1",
+        ...(isUsingMinIO() && {
+            s3ForcePathStyle: true,
+            signatureVersion: 'v4'
+        })
+    });
+
+    const bucketName = process.env.DO_SPACES_BUCKET;
+    if (!bucketName) {
+        console.warn('Warning: DO_SPACES_BUCKET not set, skipping S3 cleanup');
+        return;
+    }
+
+    try {
+        const listed = await spacesEndpoint.listObjectsV2({
+            Bucket: bucketName,
+            Prefix: prefix,
+        }).promise();
+
+        const objects = listed.Contents;
+        if (!objects || objects.length === 0) {
+            console.log(`  No objects found with prefix "${prefix}"`);
+            return;
+        }
+
+        const keys = objects
+            .map(obj => obj.Key)
+            .filter((key): key is string => key != null);
+
+        console.log(`  Deleting ${keys.length} object(s) with prefix "${prefix}"`);
+
+        await spacesEndpoint.deleteObjects({
+            Bucket: bucketName,
+            Delete: {
+                Objects: keys.map(Key => ({ Key })),
+                Quiet: true,
+            },
+        }).promise();
+    } catch (error) {
+        console.warn(`Warning: S3 cleanup for prefix "${prefix}" failed: ${error instanceof Error ? error.message : error}`);
+    }
+};

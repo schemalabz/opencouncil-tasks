@@ -54,6 +54,12 @@ export const isUsingMinIO = (): boolean => {
     return endpoint?.includes('minio') || endpoint?.includes('localhost') || false;
 };
 
+export const hasRealSpacesCredentials = (): boolean => {
+    const endpoint = process.env.DO_SPACES_ENDPOINT;
+    if (!endpoint) return false;
+    return !endpoint.includes('minio') && !endpoint.includes('localhost');
+};
+
 /**
  * Utility class for compressing long IDs into shorter ones and vice versa.
  * Maintains a bidirectional mapping between long and short IDs.

@@ -39,7 +39,7 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
         ]),
         transcribe: vi.fn(async () => fakeTranscript),
         applyDiarization: vi.fn(async () => fakeDiarizedTranscript),
-        getMuxPlaybackId: vi.fn(async () => "mux-playback-id-123"),
+        getMuxPlaybackId: vi.fn(async () => ({ playbackId: "mux-playback-id-123", assetId: "mux-asset-id-456" })),
         ...overrides,
     };
 }
@@ -60,6 +60,7 @@ describe("createPipeline", () => {
             videoUrl: "https://cdn.example.com/video.mp4",
             audioUrl: "https://cdn.example.com/audio-0.wav",
             muxPlaybackId: "mux-playback-id-123",
+            muxAssetId: "mux-asset-id-456",
             transcript: fakeDiarizedTranscript,
         });
 

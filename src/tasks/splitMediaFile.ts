@@ -39,7 +39,9 @@ export const splitMediaFile: Task<
 
     // Only generate muxPlaybackId for video parts
     if (type === "video") {
-      partResult.muxPlaybackId = await getMuxPlaybackId(result.url);
+      const muxResult = await getMuxPlaybackId(result.url);
+      partResult.muxPlaybackId = muxResult.playbackId;
+      partResult.muxAssetId = muxResult.assetId;
     }
 
     results.push(partResult);

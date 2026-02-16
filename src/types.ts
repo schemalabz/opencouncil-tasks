@@ -64,6 +64,7 @@ export interface TranscribeResult {
     videoUrl: string;
     audioUrl: string;
     muxPlaybackId: string;
+    muxAssetId: string;
     transcript: TranscriptWithSpeakerIdentification;
 }
 
@@ -317,6 +318,7 @@ export interface SplitMediaFileResult {
         startTimestamp: number;
         endTimestamp: number;
         muxPlaybackId?: string;
+        muxAssetId?: string;
     }[];
 }
 
@@ -365,6 +367,7 @@ export interface GenerateHighlightResult {
         id: string; // highlightId
         url: string;
         muxPlaybackId?: string;
+        muxAssetId?: string;
         duration: number;
         startTimestamp: number;
         endTimestamp: number;

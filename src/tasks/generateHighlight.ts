@@ -214,7 +214,9 @@ export const generateHighlight: Task<
 
     // Generate Mux playback ID for video highlights
     if (media.type === "video") {
-      highlightResult.muxPlaybackId = await getMuxPlaybackId(result.url);
+      const muxResult = await getMuxPlaybackId(result.url);
+      highlightResult.muxPlaybackId = muxResult.playbackId;
+      highlightResult.muxAssetId = muxResult.assetId;
       partProgress(95);
     }
 

@@ -17,12 +17,25 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Source .env early to detect credentials
+if [[ -f "$PROJECT_DIR/.env" ]]; then
+    set -a; source "$PROJECT_DIR/.env"; set +a
+fi
+
 # Ports
 CLI_PORT="${CLI_PORT:-9876}"
 MINIO_PORT="${MINIO_PORT:-9100}"
 MINIO_CONSOLE_PORT="${MINIO_CONSOLE_PORT:-9101}"
 MINIO_BUCKET="opencouncil-dev"
 MINIO_DATA_DIR="${PROJECT_DIR}/.minio-data"
+
+# Detect if real DO Spaces credentials are available
+USE_REAL_SPACES=false
+if [[ -n "${DO_SPACES_ENDPOINT:-}" ]] && \
+   [[ "$DO_SPACES_ENDPOINT" != *"minio"* ]] && \
+   [[ "$DO_SPACES_ENDPOINT" != *"localhost"* ]]; then
+    USE_REAL_SPACES=true
+fi
 
 cleanup() {
     echo ""
@@ -41,49 +54,62 @@ trap cleanup EXIT
 
 # ── Check prerequisites ──────────────────────────────────────────────────────
 
-for cmd in ngrok minio mc node npm; do
+for cmd in ngrok node npm; do
     if ! command -v "$cmd" &>/dev/null; then
         echo "Error: $cmd is not installed. Run 'nix develop' first."
         exit 1
     fi
 done
 
-# ── Start MinIO ──────────────────────────────────────────────────────────────
-
-rm -rf "$MINIO_DATA_DIR"
-mkdir -p "$MINIO_DATA_DIR"
-
-echo "Starting MinIO on port $MINIO_PORT..."
-MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin \
-    minio server "$MINIO_DATA_DIR" \
-    --address ":$MINIO_PORT" \
-    --console-address ":$MINIO_CONSOLE_PORT" \
-    --quiet 2>/dev/null &
-MINIO_PID=$!
-
-# Wait for MinIO to be ready
-for i in $(seq 1 20); do
-    if curl -sf "http://localhost:$MINIO_PORT/minio/health/live" >/dev/null 2>&1; then
-        break
-    fi
-    if ! kill -0 "$MINIO_PID" 2>/dev/null; then
-        echo "Error: MinIO exited unexpectedly."
-        exit 1
-    fi
-    sleep 0.5
-done
-
-if ! curl -sf "http://localhost:$MINIO_PORT/minio/health/live" >/dev/null 2>&1; then
-    echo "Error: MinIO did not become healthy after 10s."
-    exit 1
+if [[ "$USE_REAL_SPACES" != "true" ]]; then
+    for cmd in minio mc; do
+        if ! command -v "$cmd" &>/dev/null; then
+            echo "Error: $cmd is not installed. Run 'nix develop' first."
+            exit 1
+        fi
+    done
 fi
 
-echo "MinIO is ready."
+# ── Start MinIO (only when not using real DO Spaces) ─────────────────────────
 
-# Create bucket if it doesn't exist
-mc alias set smoke-minio "http://localhost:$MINIO_PORT" minioadmin minioadmin --quiet 2>/dev/null
-mc mb --ignore-existing "smoke-minio/$MINIO_BUCKET" --quiet 2>/dev/null
-echo "Bucket '$MINIO_BUCKET' ready."
+if [[ "$USE_REAL_SPACES" == "true" ]]; then
+    echo "Using real DigitalOcean Spaces (skipping MinIO)"
+else
+    rm -rf "$MINIO_DATA_DIR"
+    mkdir -p "$MINIO_DATA_DIR"
+
+    echo "Starting MinIO on port $MINIO_PORT..."
+    MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin \
+        minio server "$MINIO_DATA_DIR" \
+        --address ":$MINIO_PORT" \
+        --console-address ":$MINIO_CONSOLE_PORT" \
+        --quiet 2>/dev/null &
+    MINIO_PID=$!
+
+    # Wait for MinIO to be ready
+    for i in $(seq 1 20); do
+        if curl -sf "http://localhost:$MINIO_PORT/minio/health/live" >/dev/null 2>&1; then
+            break
+        fi
+        if ! kill -0 "$MINIO_PID" 2>/dev/null; then
+            echo "Error: MinIO exited unexpectedly."
+            exit 1
+        fi
+        sleep 0.5
+    done
+
+    if ! curl -sf "http://localhost:$MINIO_PORT/minio/health/live" >/dev/null 2>&1; then
+        echo "Error: MinIO did not become healthy after 10s."
+        exit 1
+    fi
+
+    echo "MinIO is ready."
+
+    # Create bucket if it doesn't exist
+    mc alias set smoke-minio "http://localhost:$MINIO_PORT" minioadmin minioadmin --quiet 2>/dev/null
+    mc mb --ignore-existing "smoke-minio/$MINIO_BUCKET" --quiet 2>/dev/null
+    echo "Bucket '$MINIO_BUCKET' ready."
+fi
 
 # ── Start ngrok ──────────────────────────────────────────────────────────────
 
@@ -144,12 +170,20 @@ echo "Using clean data directory: data/smoke-test/"
 echo ""
 cd "$PROJECT_DIR"
 
-PUBLIC_URL="$NGROK_URL" \
-CLI_PORT="$CLI_PORT" \
-DATA_DIR="$SMOKE_DATA_DIR" \
-DO_SPACES_ENDPOINT="http://localhost:$MINIO_PORT" \
-DO_SPACES_KEY="minioadmin" \
-DO_SPACES_SECRET="minioadmin" \
-DO_SPACES_BUCKET="$MINIO_BUCKET" \
-CDN_BASE_URL="$NGROK_URL/dev/files/$MINIO_BUCKET" \
-    npm run smoke -- "$@"
+if [[ "$USE_REAL_SPACES" == "true" ]]; then
+    # Let DO_SPACES_* and CDN_BASE_URL come from .env
+    PUBLIC_URL="$NGROK_URL" \
+    CLI_PORT="$CLI_PORT" \
+    DATA_DIR="$SMOKE_DATA_DIR" \
+        npm run smoke -- "$@"
+else
+    PUBLIC_URL="$NGROK_URL" \
+    CLI_PORT="$CLI_PORT" \
+    DATA_DIR="$SMOKE_DATA_DIR" \
+    DO_SPACES_ENDPOINT="http://localhost:$MINIO_PORT" \
+    DO_SPACES_KEY="minioadmin" \
+    DO_SPACES_SECRET="minioadmin" \
+    DO_SPACES_BUCKET="$MINIO_BUCKET" \
+    CDN_BASE_URL="$NGROK_URL/dev/files/$MINIO_BUCKET" \
+        npm run smoke -- "$@"
+fi
