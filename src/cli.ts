@@ -14,6 +14,8 @@ import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 import { DiarizeResult } from './types.js';
 import devRouter from './routes/dev.js';
+import { getMuxPlaybackId } from './lib/mux.js';
+
 const program = new Command();
 const app = getExpressAppWithCallbacks();
 
@@ -177,6 +179,15 @@ program
 
         console.log('Transcribed audio');
         console.log(result);
+        server.close();
+    });
+
+program
+    .command('mux-playback-id <videoUrl>')
+    .description('Create a Mux asset for a video URL and return its playback ID')
+    .action(async (videoUrl: string) => {
+        const playbackId = await getMuxPlaybackId(videoUrl);
+        console.log(playbackId);
         server.close();
     });
 
