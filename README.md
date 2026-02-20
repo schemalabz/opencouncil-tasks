@@ -176,7 +176,6 @@ The service uses environment variables for configuration. Not all variables are 
 - `PERPLEXITY_API_KEY` - Required for agenda processing
 - `MUX_TOKEN_ID` and `MUX_TOKEN_SECRET` - Required for video processing
 - `GOOGLE_API_KEY` - Required for geocoding
-- `ADALINE_SECRET` - Secret for Adaline service integration
 - `PYANNOTE_API_TOKEN` - Required for speaker diarization
 - `PYANNOTE_DIARIZE_API_URL` - Pyannote API endpoint
 - `MOCK_PYANNOTE` - Enable mock mode for Pyannote (development only)

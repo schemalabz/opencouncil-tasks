@@ -2,7 +2,6 @@ import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import path from 'path';
 import { promises as fs } from 'fs';
-import { fetchAdalineDeployment, submitAdalineLog } from './adaline.js';
 
 dotenv.config();
 
@@ -247,89 +246,3 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
     }
 }
 
-export async function aiWithAdaline<T>({ projectId, deploymentId, variables, parseJson = true }: { projectId: string, deploymentId?: string, variables: { [key: string]: string }, parseJson?: boolean }): Promise<ResultWithUsage<T>> {
-    const deployment = await fetchAdalineDeployment(projectId, deploymentId);
-    if (deployment.config.provider !== "anthropic") {
-        throw new Error("Adaline deployment provider is not anthropic");
-    }
-
-    for (const message of deployment.messages) {
-        for (const content of message.content) {
-            if (content.modality !== "text") {
-                throw new Error(`Expected text modality in message content, got ${content.modality}`);
-            }
-        }
-    }
-
-    for (const variable of deployment.variables) {
-        if (variable.value.modality !== "text") {
-            throw new Error(`Expected text modality in variable value, got ${variable.value.modality}`);
-        }
-    }
-    const messages = deployment.messages.map(msg => ({
-        role: msg.role as "user" | "assistant" | "system",
-        content: msg.content.map(c => {
-            let value = c.value;
-            for (const [varName, varValue] of Object.entries(variables)) {
-                value = value.replace(new RegExp(`{${varName}}`, 'g'), varValue);
-            }
-            return value;
-        }).join('\n')
-    }));
-
-    const requestParams = {
-        model: deployment.config.model,
-        messages: messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
-            msg.role === "user" || msg.role === "assistant"),
-        system: messages.find(msg => msg.role === "system")?.content,
-        max_tokens: deployment.config.settings.maxTokens,
-        temperature: deployment.config.settings.temperature,
-    };
-
-    await logToFile("Adaline Claude Request", requestParams);
-
-    const response = await withRetry(() =>
-        anthropic.messages.create(requestParams)
-    );
-
-    await logToFile("Adaline Claude Response", response);
-
-    if (!response.content || response.content.length !== 1) {
-        throw new Error("Expected 1 response from claude, got " + response.content?.length);
-    }
-
-    if (response.content[0].type !== "text") {
-        throw new Error("Expected text response from claude, got " + response.content[0].type);
-    }
-
-    const completion = response.content[0].text;
-
-    submitAdalineLog({
-        projectId: projectId,
-        provider: deployment.config.provider,
-        model: deployment.config.model,
-        completion: completion,
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-        variables
-    });
-
-    let responseJson: T;
-    if (parseJson) {
-        try {
-            responseJson = JSON.parse(completion) as T;
-        } catch (e) {
-            console.error(`Error parsing Claude response: ${completion.slice(0, 100)}`);
-            await logToFile(`Error parsing Claude response: ${completion.slice(0, 100)}`, e);
-            throw e;
-        }
-    } else {
-        responseJson = completion as T;
-    }
-
-    await logToFile("Adaline Parsed Result", responseJson);
-    return {
-        usage: response.usage,
-        result: responseJson
-    };
-}
