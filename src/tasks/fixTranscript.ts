@@ -83,7 +83,7 @@ async function processSpeakerSegment(segment: FixTranscriptRequest['transcript']
     const userPrompt = buildUserPrompt(cityName, partiesWithPeople, segment.speakerName || "(unknown)", utterancesText);
 
     const result = await aiChat<string>({
-        model: "claude-sonnet-4-6-latest",
+        model: "claude-sonnet-4-6",
         systemPrompt,
         userPrompt,
         parseJson: false
