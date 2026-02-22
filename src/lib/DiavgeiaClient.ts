@@ -3,7 +3,7 @@
  * https://diavgeia.gov.gr/api/help
  */
 
-const DIAVGEIA_API_BASE = 'https://diavgeia.gov.gr/opendata';
+const DIAVGEIA_API_BASE = 'https://diavgeia.gov.gr/luminapi/opendata';
 
 // Raw API response types (as returned by the Diavgeia API)
 interface DiavgeiaApiDecision {
@@ -11,7 +11,9 @@ interface DiavgeiaApiDecision {
     subject: string;
     protocolNumber: string;
     issueDate: number; // Timestamp in milliseconds
+    publishTimestamp: number; // When published to Diavgeia (ms)
     organizationId: string;
+    unitIds: string[];
     decisionTypeId: string;
     thematicCategoryIds: string[];
     documentUrl: string;
@@ -33,9 +35,11 @@ export interface DiavgeiaDecision {
     subject: string; // Decision subject/title
     protocolNumber: string; // Protocol number
     issueDate: string; // ISO date string when the decision was issued
+    publishDate: string; // ISO date string when published to Diavgeia
     decisionTypeId: string; // e.g., "Β.2.2", "2.4.7.1"
     thematicCategoryIds: string[];
     organizationId: string;
+    unitIds: string[]; // Organizational units this decision belongs to
     documentUrl: string; // URL to the PDF document
     url: string; // URL to the decision page on Diavgeia
 }
@@ -94,9 +98,11 @@ export class DiavgeiaClient {
             subject: d.subject,
             protocolNumber: d.protocolNumber,
             issueDate: new Date(d.issueDate).toISOString().split('T')[0],
+            publishDate: new Date(d.publishTimestamp).toISOString().split('T')[0],
             decisionTypeId: d.decisionTypeId,
             thematicCategoryIds: d.thematicCategoryIds || [],
             organizationId: d.organizationId,
+            unitIds: d.unitIds || [],
             documentUrl: d.documentUrl,
             url: d.url,
         }));
