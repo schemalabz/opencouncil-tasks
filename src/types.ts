@@ -25,6 +25,7 @@ export interface HealthResponse {
     environment: string;
     version: string;
     name: string;
+    authenticated?: boolean;
     services?: {
         [serviceName: string]: any;
     };
