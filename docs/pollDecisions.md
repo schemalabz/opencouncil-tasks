@@ -117,6 +117,54 @@ flowchart TD
   - "LLM matching" (70%)
   - "complete" (100%)
 
+### Automated Polling (Cron Job)
+
+The opencouncil frontend has a cron endpoint that automatically polls Diavgeia for recent meetings with unlinked subjects. This server can run the cron script to call that endpoint on a schedule.
+
+#### Prerequisites
+
+1. The opencouncil deployment must have `CRON_SECRET` set in its environment
+2. Add `CRON_TARGET_URL` and `CRON_SECRET` to this server's `.env`:
+   ```
+   CRON_TARGET_URL=https://opencouncil.gr
+   CRON_SECRET=<same secret as the opencouncil deployment>
+   ```
+
+#### Setup
+
+1. **Test the script manually first:**
+   ```bash
+   ./scripts/poll-decisions-cron.sh
+   ```
+
+2. **Install the cron job** (runs every 12 hours):
+   ```bash
+   crontab -e
+   ```
+   Add this line:
+   ```
+   0 0,12 * * * /path/to/opencouncil-tasks/scripts/poll-decisions-cron.sh >> /path/to/opencouncil-tasks/logs/poll-decisions-cron.log 2>&1
+   ```
+   Replace `/path/to/opencouncil-tasks` with the actual absolute path on the server.
+
+3. **Verify the cron job was saved:**
+   ```bash
+   crontab -l
+   ```
+
+4. **Create the logs directory:**
+   ```bash
+   mkdir -p logs
+   ```
+
+#### Monitoring
+
+- **Check logs:**
+  ```bash
+  tail -f logs/poll-decisions-cron.log
+  ```
+- **Check polling stats** from the opencouncil admin UI at `/admin/diavgeia`.
+
 ### Related Documentation
 
 - **API Reference:** See `docs/diavgeia-api-guide.md` for comprehensive Diavgeia API documentation including endpoints, filtering strategies, unit IDs, and common gotchas.
