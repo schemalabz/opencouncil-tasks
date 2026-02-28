@@ -101,6 +101,9 @@ function findBestMatch(
         }
 
         const normalizedDecision = normalizeText(decision.subject);
+        if (normalizedDecision.length === 0) {
+            continue;
+        }
 
         // Check for exact match (after normalization)
         if (normalizedSubject === normalizedDecision) {
@@ -225,6 +228,52 @@ Return ONLY a JSON array (no explanation text), one object per subject:
     }
 }
 
+/**
+ * Use LLM to resolve a conflict: which subject better matches a decision?
+ */
+async function resolveConflict(
+    unmatchedSubject: { subjectId: string; name: string },
+    linkedSubject: { subjectId: string; name: string; existingDecision?: { ada: string; decisionTitle: string } },
+    decision: DiavgeiaDecision,
+): Promise<{ winner: 'unmatched' | 'linked'; reason: string }> {
+    const systemPrompt = `You are a Greek municipal council decision matcher. You must determine which of two agenda subjects better corresponds to a Diavgeia decision.
+
+Greek text may have different word forms (inflections) - focus on the semantic meaning, not exact word matches.
+
+Return ONLY a JSON object: {"winner": "A" or "B", "reason": "brief explanation"}`;
+
+    const userPrompt = `Which subject better matches this decision?
+
+DECISION (ADA: ${decision.ada}):
+"${decision.subject}"
+
+SUBJECT A (currently unmatched):
+"${unmatchedSubject.name}"
+
+SUBJECT B (currently linked to this decision):
+"${linkedSubject.name}"
+
+Return ONLY JSON: {"winner": "A" or "B", "reason": "..."}`;
+
+    try {
+        const { result } = await aiChat<{ winner: 'A' | 'B'; reason: string }>({
+            systemPrompt,
+            userPrompt,
+            model: 'haiku',
+            prefillSystemResponse: '{',
+            prependToResponse: '{',
+        });
+        return {
+            winner: result.winner === 'A' ? 'unmatched' : 'linked',
+            reason: result.reason,
+        };
+    } catch (error) {
+        console.error('LLM conflict resolution failed:', error);
+        // Default to keeping the existing assignment
+        return { winner: 'linked', reason: 'LLM conflict resolution failed, keeping existing assignment' };
+    }
+}
+
 export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = async (request, onProgress) => {
     console.log("Polling decisions from Diavgeia:", {
         diavgeiaUid: request.diavgeiaUid,
@@ -267,16 +316,29 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     onProgress("matching subjects", 50);
 
-    // Track which decisions have been matched
+    // Partition subjects into linked (already have a decision) and unlinked
+    const linkedSubjects = request.subjects.filter(s => s.existingDecision);
+    const unlinkedSubjects = request.subjects.filter(s => !s.existingDecision);
+
+    // Build lookup of linked ADAs for conflict detection after matching
+    const linkedByAda = new Map(
+        linkedSubjects
+            .filter(s => s.existingDecision)
+            .map(s => [s.existingDecision!.ada, s]),
+    );
+
+    // Track which decisions have been matched (between unlinked subjects only —
+    // linked ADAs are NOT excluded so matching can find the best candidate freely)
     const usedDecisions = new Set<string>();
 
     // Results
     const matches: PollDecisionsResult['matches'] = [];
+    const reassignments: PollDecisionsResult['reassignments'] = [];
     const unmatchedSubjects: PollDecisionsResult['unmatchedSubjects'] = [];
     const ambiguousSubjects: PollDecisionsResult['ambiguousSubjects'] = [];
 
-    // First pass: find high-confidence matches
-    for (const subject of request.subjects) {
+    // First pass: find high-confidence matches (only for unlinked subjects)
+    for (const subject of unlinkedSubjects) {
         const bestMatch = findBestMatch(subject.name, decisions, usedDecisions);
 
         if (bestMatch && bestMatch.similarity >= HIGH_CONFIDENCE_THRESHOLD) {
@@ -372,10 +434,48 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         unmatchedSubjects.push(...stillUnmatched);
     }
 
+    // Third pass: conflict resolution — check if any new match collides with
+    // a decision already held by a linked subject
+    const conflictingMatches = matches.filter(m => linkedByAda.has(m.ada));
+    if (conflictingMatches.length > 0) {
+        onProgress("conflict resolution", 90);
+
+        for (const match of conflictingMatches) {
+            const linked = linkedByAda.get(match.ada)!;
+            const newSubject = unlinkedSubjects.find(s => s.subjectId === match.subjectId)!;
+
+            const decision = decisions.find(d => d.ada === match.ada)!;
+            const llmResult = await resolveConflict(newSubject, linked, decision);
+
+            if (llmResult.winner === 'unmatched') {
+                // New match wins — record reassignment, keep match in results
+                reassignments.push({
+                    ada: match.ada,
+                    fromSubjectId: linked.subjectId,
+                    toSubjectId: match.subjectId,
+                    reason: llmResult.reason,
+                });
+                console.log(`  Conflict resolved: ADA ${match.ada} reassigned from "${linked.name}" to "${newSubject.name}": ${llmResult.reason}`);
+            } else {
+                // Linked subject keeps the decision — remove match, add to unmatched
+                const idx = matches.indexOf(match);
+                matches.splice(idx, 1);
+                usedDecisions.delete(match.ada);
+                unmatchedSubjects.push({
+                    subjectId: match.subjectId,
+                    name: newSubject.name,
+                    reason: `ADA ${match.ada} already correctly assigned to another subject: ${llmResult.reason}`,
+                });
+                console.log(`  Conflict resolved: ADA ${match.ada} stays with "${linked.name}", not "${newSubject.name}": ${llmResult.reason}`);
+            }
+        }
+    }
+
     onProgress("complete", 100);
 
     return {
         matches,
+        reassignments,
         unmatchedSubjects,
         ambiguousSubjects,
         metadata: {

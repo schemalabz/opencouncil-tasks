@@ -406,6 +406,10 @@ export interface PollDecisionsRequest extends TaskRequest {
     subjects: Array<{
         subjectId: string;
         name: string;
+        existingDecision?: {
+            ada: string;
+            decisionTitle: string;
+        };
     }>;
 }
 
@@ -418,6 +422,12 @@ export interface PollDecisionsResult {
         protocolNumber: string;
         issueDate: string; // ISO date when decision was published on Diavgeia
         matchConfidence: number; // 0-1 confidence score
+    }>;
+    reassignments: Array<{
+        ada: string;
+        fromSubjectId: string;
+        toSubjectId: string;
+        reason: string;
     }>;
     unmatchedSubjects: Array<{
         subjectId: string;
