@@ -6,6 +6,18 @@ Refer to [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, testing con
 
 opencouncil-tasks — TypeScript service that orchestrates media processing pipelines: YouTube download, audio extraction (ffmpeg), speaker diarization (Pyannote), transcription (Gladia), and video hosting (Mux). Express server with a CLI interface.
 
+## Development Environment
+
+This project uses [Nix](https://nixos.org/) to manage development dependencies. All shell commands (`npm`, `npx`, `node`, etc.) must be run inside the Nix development shell.
+
+**Prefix all commands with `nix develop --command`**, for example:
+```bash
+nix develop --command npm run typecheck
+nix develop --command npm test
+```
+
+If you open an interactive shell session first (`nix develop`), subsequent commands in that session don't need the prefix.
+
 ## Quick reference
 
 ```bash
