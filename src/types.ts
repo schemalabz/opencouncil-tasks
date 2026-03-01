@@ -420,7 +420,7 @@ export interface PollDecisionsResult {
         decisionTitle: string; // Title of the decision in Diavgeia
         pdfUrl: string;
         protocolNumber: string;
-        issueDate: string; // ISO date when decision was published on Diavgeia
+        publishDate: string; // ISO date when decision was published on Diavgeia
         matchConfidence: number; // 0-1 confidence score
     }>;
     reassignments: Array<{

@@ -348,7 +348,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 decisionTitle: bestMatch.decision.subject,
                 pdfUrl: bestMatch.decision.documentUrl,
                 protocolNumber: bestMatch.decision.protocolNumber,
-                issueDate: bestMatch.decision.issueDate,
+                publishDate: bestMatch.decision.publishDate,
                 matchConfidence: bestMatch.similarity,
             });
             usedDecisions.add(bestMatch.decision.ada);
@@ -415,7 +415,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                         decisionTitle: decision.subject,
                         pdfUrl: decision.documentUrl,
                         protocolNumber: decision.protocolNumber,
-                        issueDate: decision.issueDate,
+                        publishDate: decision.publishDate,
                         matchConfidence: llmResult.confidence === 'high' ? 0.85 : 0.6,
                     });
                     usedDecisions.add(decision.ada);
