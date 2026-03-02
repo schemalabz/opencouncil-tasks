@@ -5,7 +5,7 @@ import cors from 'cors';
 import { taskManager } from './lib/TaskManager.js';
 import { getExpressAppWithCallbacks, validateUrl } from './utils.js';
 import { TranscribeRequest, HealthResponse } from './types.js';
-import { authMiddleware } from './lib/auth.js';
+import { authMiddleware, verifyBearerToken } from './lib/auth.js';
 import fs from 'fs';
 import { spawnSync } from 'child_process';
 import { summarize } from './tasks/summarize.js';
@@ -15,6 +15,7 @@ import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
+import { pollDecisions } from './tasks/pollDecisions.js';
 import devRouter from './routes/dev.js';
 import swaggerUi from 'swagger-ui-express';
 // Swagger will be imported after routes are defined
@@ -76,12 +77,18 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
         }
     }
     
+    // If a Bearer token was provided, report whether it's valid.
+    // Omitted entirely when no token is sent (plain health check).
+    const hasAuthHeader = req.headers.authorization?.startsWith('Bearer ');
+    const authenticated = hasAuthHeader ? verifyBearerToken(req) : undefined;
+
     res.status(200).json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
         version: packageJson.version,
         name: packageJson.name,
+        ...(authenticated !== undefined && { authenticated }),
         services
     });
 });
@@ -146,6 +153,11 @@ app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
 app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
   summary: 'Generate video highlight',
   description: 'Create video highlights from source media with visual enhancements'
+}));
+
+app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
+  summary: 'Poll decisions from Diavgeia',
+  description: 'Fetch decisions from the Greek Government Transparency portal and match them to meeting subjects'
 }));
 
 // Resolve task paths from Express routes, then load API Documentation

@@ -25,6 +25,9 @@ The server supports the following processing tasks:
 - [`applyDiarization`](src/tasks/applyDiarization.ts) - Applies speaker identification to existing transcripts
 - [`generateVoiceprint`](src/tasks/generateVoiceprint.ts) - Creates unique speaker voice fingerprints for identification
 
+### Diavgeia Integration
+- [`pollDecisions`](docs/pollDecisions.md) - Fetches decisions from the Diavgeia (Greek Government Transparency) API and matches them to meeting agenda subjects using text similarity and LLM fallback
+
 ### Data Synchronization
 - [**PGSync**](docs/pgsync-setup.md) - Real-time change data capture that continuously syncs PostgreSQL to Elasticsearch
 

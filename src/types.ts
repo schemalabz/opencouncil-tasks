@@ -25,6 +25,7 @@ export interface HealthResponse {
     environment: string;
     version: string;
     name: string;
+    authenticated?: boolean;
     services?: {
         [serviceName: string]: any;
     };
@@ -392,4 +393,63 @@ export interface GenerateVoiceprintResult {
     audioUrl: string; // URL to the extracted audio
     voiceprint: string; // Voiceprint embedding vector in base64
     duration: number; // Duration of the audio
+}
+
+/*
+ * Task: Poll Decisions (Diavgeia)
+ */
+
+export interface PollDecisionsRequest extends TaskRequest {
+    meetingDate: string; // ISO date of the meeting
+    diavgeiaUid: string; // Organization UID on Diavgeia
+    diavgeiaUnitIds?: string[]; // Optional unit IDs (e.g., ["81689"] for ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ)
+    subjects: Array<{
+        subjectId: string;
+        name: string;
+        existingDecision?: {
+            ada: string;
+            decisionTitle: string;
+        };
+    }>;
+}
+
+export interface PollDecisionsResult {
+    matches: Array<{
+        subjectId: string;
+        ada: string; // Unique Diavgeia decision identifier
+        decisionTitle: string; // Title of the decision in Diavgeia
+        pdfUrl: string;
+        protocolNumber: string;
+        publishDate: string; // ISO date when decision was published on Diavgeia
+        matchConfidence: number; // 0-1 confidence score
+    }>;
+    reassignments: Array<{
+        ada: string;
+        fromSubjectId: string;
+        toSubjectId: string;
+        reason: string;
+    }>;
+    unmatchedSubjects: Array<{
+        subjectId: string;
+        name: string;
+        reason: string;
+    }>;
+    ambiguousSubjects: Array<{
+        subjectId: string;
+        name: string;
+        candidates: Array<{
+            ada: string;
+            pdfUrl: string;
+            title: string;
+            similarity: number;
+        }>;
+    }>;
+    metadata?: {
+        diavgeiaUid: string;
+        query: object;
+        fetchedCount: number;
+        matchedCount: number;
+        unmatchedCount: number;
+        ambiguousCount: number;
+    };
 }

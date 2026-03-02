@@ -120,3 +120,13 @@ export const createAuthMiddleware = (config?: AuthConfig) => {
  * This is a convenience function for the most common use case
  */
 export const authMiddleware = createAuthMiddleware();
+
+/**
+ * Check if a request carries a valid Bearer token.
+ * Useful for public endpoints (like /health) that optionally report auth status.
+ */
+export const verifyBearerToken = (req: express.Request): boolean => {
+    const config = createAuthConfig();
+    const token = extractBearerToken(req);
+    return token !== null && validateToken(token, config.tokens);
+};
