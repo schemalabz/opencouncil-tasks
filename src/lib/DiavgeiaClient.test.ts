@@ -265,6 +265,73 @@ describe('DiavgeiaClient', () => {
         });
     });
 
+    describe('retry behavior', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        const searchParams = {
+            organizationUid: '6104',
+            fromDate: '2024-12-01',
+            toDate: '2024-12-31',
+        };
+
+        function advanceRetryTimers() {
+            // Flush the sleep promise by advancing past the max possible delay
+            return vi.advanceTimersByTimeAsync(10000);
+        }
+
+        it('retries on 503 and eventually succeeds', async () => {
+            fetchSpy
+                .mockResolvedValueOnce({ ok: false, status: 503, statusText: 'Service Temporarily Unavailable' })
+                .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(makeApiResponse([makeApiDecision()])) });
+
+            const promise = client.searchDecisions(searchParams);
+            await advanceRetryTimers();
+            const result = await promise;
+
+            expect(fetchSpy).toHaveBeenCalledTimes(2);
+            expect(result.decisions[0].ada).toBe('ΨΘ82ΩΡΦ-7ΑΙ');
+        });
+
+        it('retries on 429 and eventually succeeds', async () => {
+            fetchSpy
+                .mockResolvedValueOnce({ ok: false, status: 429, statusText: 'Too Many Requests' })
+                .mockResolvedValueOnce({ ok: true, json: () => Promise.resolve(makeApiResponse([makeApiDecision()])) });
+
+            const promise = client.searchDecisions(searchParams);
+            await advanceRetryTimers();
+            const result = await promise;
+
+            expect(fetchSpy).toHaveBeenCalledTimes(2);
+            expect(result.decisions[0].ada).toBe('ΨΘ82ΩΡΦ-7ΑΙ');
+        });
+
+        it('throws after max retries exhausted', async () => {
+            fetchSpy.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Temporarily Unavailable' });
+
+            const promise = client.searchDecisions(searchParams);
+            promise.catch(() => {}); // prevent unhandled rejection during timer advancement
+
+            await vi.runAllTimersAsync();
+
+            await expect(promise).rejects.toThrow('Diavgeia API error: 503 Service Temporarily Unavailable');
+            expect(fetchSpy).toHaveBeenCalledTimes(4); // 1 initial + 3 retries
+        });
+
+        it('does not retry on non-retryable errors', async () => {
+            fetchSpy.mockResolvedValueOnce({ ok: false, status: 500, statusText: 'Internal Server Error' });
+
+            await expect(client.searchDecisions(searchParams))
+                .rejects.toThrow('Diavgeia API error: 500 Internal Server Error');
+            expect(fetchSpy).toHaveBeenCalledTimes(1);
+        });
+    });
+
     describe('fetchAllDecisions', () => {
         it('returns all decisions from a single page', async () => {
             fetchSpy.mockResolvedValueOnce({

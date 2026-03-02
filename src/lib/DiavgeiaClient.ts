@@ -5,6 +5,12 @@
 
 const DIAVGEIA_API_BASE = 'https://diavgeia.gov.gr/luminapi/opendata';
 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+const RETRYABLE_STATUS_CODES = new Set([429, 502, 503, 504]);
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+
 // Raw API response types (as returned by the Diavgeia API)
 interface DiavgeiaApiDecision {
     ada: string;
@@ -45,6 +51,27 @@ export interface DiavgeiaDecision {
 }
 
 export class DiavgeiaClient {
+    private async fetchWithRetry(url: string, init?: RequestInit): Promise<Response> {
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+            const response = await fetch(url, init);
+
+            if (response.ok) {
+                return response;
+            }
+
+            if (!RETRYABLE_STATUS_CODES.has(response.status) || attempt === MAX_RETRIES) {
+                throw new Error(`Diavgeia API error: ${response.status} ${response.statusText}`);
+            }
+
+            const delay = BASE_DELAY_MS * Math.pow(2, attempt) * (0.5 + Math.random() * 0.5);
+            console.log(`Diavgeia API returned ${response.status}, retrying (attempt ${attempt + 1}/${MAX_RETRIES}) after ${Math.round(delay)}ms...`);
+            await sleep(delay);
+        }
+
+        // Unreachable, but satisfies TypeScript
+        throw new Error('fetchWithRetry: unexpected code path');
+    }
+
     /**
      * Search for decisions from an organization around a specific date
      */
@@ -79,16 +106,12 @@ export class DiavgeiaClient {
         const url = `${DIAVGEIA_API_BASE}/search?${queryParams}`;
         console.log(`Fetching Diavgeia decisions: ${url}`);
 
-        const response = await fetch(url, {
+        const response = await this.fetchWithRetry(url, {
             headers: {
                 'Accept': 'application/json',
             },
             signal: AbortSignal.timeout(30000), // 30 second timeout
         });
-
-        if (!response.ok) {
-            throw new Error(`Diavgeia API error: ${response.status} ${response.statusText}`);
-        }
 
         const data: DiavgeiaApiResponse = await response.json();
 
@@ -127,6 +150,10 @@ export class DiavgeiaClient {
         const maxPages = 100; // Safety limit to prevent infinite loops
 
         while (page < maxPages) {
+            if (page > 0) {
+                await sleep(200);
+            }
+
             const response = await this.searchDecisions({
                 ...params,
                 page,
