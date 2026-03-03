@@ -220,7 +220,7 @@ Return ONLY a JSON array (no explanation text), one object per subject:
         const { result } = await aiChat<LLMMatchResult[]>({
             systemPrompt,
             userPrompt,
-            model: 'haiku',
+            model: 'claude-haiku-4-5-20251001',
             prefillSystemResponse: '[',
             prependToResponse: '[',
         });
@@ -262,7 +262,7 @@ Return ONLY JSON: {"winner": "A" or "B", "reason": "..."}`;
         const { result } = await aiChat<{ winner: 'A' | 'B'; reason: string }>({
             systemPrompt,
             userPrompt,
-            model: 'haiku',
+            model: 'claude-haiku-4-5-20251001',
             prefillSystemResponse: '{',
             prependToResponse: '{',
         });
