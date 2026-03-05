@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --watch .env --watch src --exec \"tsx\" src/server.ts",
+    "dev": "./scripts/dev.sh",
     "start": "node dist/server.js",
     "cli": "node dist/cli.js",
     "cli:dev": "tsc && node dist/cli.js",
