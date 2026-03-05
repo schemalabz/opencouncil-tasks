@@ -17,6 +17,7 @@ import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import devRouter from './routes/dev.js';
+import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
 // Swagger will be imported after routes are defined
 
@@ -176,6 +177,12 @@ import('./lib/swaggerConfig.js').then(({ swaggerSpec }) => {
     }));
     console.log('📚 API Documentation available at /docs');
 });
+
+// ============================================================================
+// FILE UPLOAD ENDPOINT
+// ============================================================================
+
+app.use('/upload-video', uploadRouter);
 
 // ============================================================================
 // DEVELOPMENT ROUTES
