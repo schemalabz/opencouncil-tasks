@@ -3,6 +3,7 @@ import { geocodeLocation } from "../lib/geocode.js";
 import { enhanceSubjectWithContext } from "../lib/sonar.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
 import { Task } from "./pipeline.js";
+import mammoth from "mammoth";
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
     console.log("Processing agenda request:", request);
@@ -11,19 +12,36 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         throw new Error("Agenda is required");
     }
 
-    if (!request.agendaUrl.endsWith(".pdf")) {
-        throw new Error("Agenda must be a PDF file");
+    const agendaUrlLower = request.agendaUrl.toLowerCase();
+    if (!agendaUrlLower.endsWith(".pdf") && !agendaUrlLower.endsWith(".docx")) {
+        throw new Error("Agenda must be a PDF or DOCX file");
     }
 
-    const base64 = await downloadFileToBase64(request.agendaUrl);
+    const isDocx = agendaUrlLower.endsWith(".docx");
+    const fileBuffer = await downloadFileToBuffer(request.agendaUrl);
 
-    const result = await aiChat<Omit<ExtractedSubject, "speakerSegments" | "highlightedUtteranceIds">[]>({
-        systemPrompt: getSystemPrompt(),
-        userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
-        prefillSystemResponse: "Η απάντηση σου σε JSON: [",
-        prependToResponse: "[",
-        documentBase64: base64
-    });
+    let aiChatOptions;
+    if (isDocx) {
+        const { value: text } = await mammoth.extractRawText({ buffer: fileBuffer });
+        console.log(\`Extracted \${text.length} characters from DOCX\`);
+        aiChatOptions = {
+            systemPrompt: getSystemPrompt(),
+            userPrompt: getUserPrompt(null, request.cityName, request.date, request.people, request.topicLabels, text),
+            prefillSystemResponse: "Η απάντησή σου σε JSON: [",
+            prependToResponse: "[",
+        };
+    } else {
+        const base64 = fileBuffer.toString("base64");
+        aiChatOptions = {
+            systemPrompt: getSystemPrompt(),
+            userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
+            prefillSystemResponse: "Η απάντησή σου σε JSON: [",
+            prependToResponse: "[",
+            documentBase64: base64,
+        };
+    }
+
+    const result = await aiChat<Omit<ExtractedSubject, "speakerSegments" | "highlightedUtteranceIds">[]>(aiChatOptions);
 
     const subjects = await Promise.all(
         result.result.map(s => extractedSubjectToApiSubject({ ...s, highlightedUtteranceIds: [], speakerSegments: [] },
@@ -36,13 +54,13 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     return { subjects: enhancedSubjects };
 };
 
-const downloadFileToBase64 = async (url: string) => {
+const downloadFileToBuffer = async (url: string): Promise<Buffer> => {
     console.log(`Downloading file from ${url}...`);
     const response = await fetch(url);
     const arrayBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    console.log(`Downloaded file to base64: ${base64.length} bytes`);
-    return base64;
+    const buffer = Buffer.from(arrayBuffer);
+    console.log(`Downloaded file: ${buffer.length} bytes`);
+    return buffer;
 }
 
 export const extractedSubjectToApiSubject = async (subject: ExtractedSubject, cityName: string): Promise<Subject> => {
@@ -86,6 +104,11 @@ export type ExtractedSubject = {
 }
 
 export const getSystemPrompt = () => {
+    const docxSection = docxText ? `
+
+Content of the agenda document:
+
+${docxText}` : "";
     return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων στην Ελλάδα. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένας πίνακας (array) με objects με το ακόλουθο structure:
 
 {
@@ -97,10 +120,10 @@ export const getSystemPrompt = () => {
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
 };
 
-Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.`;
+Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.${docxSection}`;
 }
 
-export const getUserPrompt = (agendaPdfBase64: string, cityName: string, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: string[]) => {
+export const getUserPrompt = (agendaPdfBase64: string | null, cityName: string, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: string[], docxText?: string) => {
     return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}. Όλα τα θέματα αφορούν τη πόλη.
 
     Τα άτομα που συμμετέχουν στη συνεδρίαση, και μπορεί να είναι εισηγητές θεμάτων, είναι τα εξής:
