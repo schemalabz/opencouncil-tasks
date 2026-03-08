@@ -154,6 +154,7 @@ export interface Subject {
 
 export interface ProcessAgendaResult {
     subjects: Subject[];
+    message?: string;
 }
 
 /*

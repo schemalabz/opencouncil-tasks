@@ -15,8 +15,10 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         throw new Error("Agenda must be a PDF file");
     }
 
+    onProgress("downloading agenda", 10);
     const base64 = await downloadFileToBase64(request.agendaUrl);
 
+    onProgress("extracting subjects from agenda", 30);
     const result = await aiChat<Omit<ExtractedSubject, "speakerSegments" | "highlightedUtteranceIds">[]>({
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
@@ -25,12 +27,20 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         documentBase64: base64
     });
 
+    if (!result.result || result.result.length === 0) {
+        console.log("No subjects found in the agenda");
+        onProgress("completed — no subjects found in agenda", 100);
+        return { subjects: [], message: "No subjects found in the agenda" };
+    }
+
+    console.log(`Extracted ${result.result.length} subjects`);
+    onProgress("geocoding and processing subjects", 60);
     const subjects = await Promise.all(
         result.result.map(s => extractedSubjectToApiSubject({ ...s, highlightedUtteranceIds: [], speakerSegments: [] },
             request.cityName))
     );
 
-    console.log(`Extracted ${subjects.length} subjects`);
+    onProgress("enhancing subjects with context", 80);
     const enhancedSubjects = await Promise.all(subjects.map(s => enhanceSubjectWithContext({ subject: s, cityName: request.cityName, date: request.date })));
 
     return { subjects: enhancedSubjects };
