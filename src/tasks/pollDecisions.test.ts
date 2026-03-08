@@ -1,12 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { DiavgeiaDecision } from "../lib/DiavgeiaClient.js";
+import type { Decision } from '@schemalabs/diavgeia-cli';
 import type { PollDecisionsRequest } from "../types.js";
 
-// Mock diavgeiaClient
-vi.mock("../lib/DiavgeiaClient.js", () => ({
-    diavgeiaClient: {
-        fetchAllDecisions: vi.fn(async () => []),
-    },
+// Mock diavgeia-cli
+const { mockSearchAll } = vi.hoisted(() => ({
+    mockSearchAll: vi.fn(),
+}));
+vi.mock('@schemalabs/diavgeia-cli', () => ({
+    Diavgeia: vi.fn(() => ({ searchAll: mockSearchAll })),
+    msToISODate: (ms: number) => new Date(ms).toISOString().split('T')[0],
 }));
 
 // Mock aiChat
@@ -14,26 +16,37 @@ vi.mock("../lib/ai.js", () => ({
     aiChat: vi.fn(async () => ({ result: [], usage: { input_tokens: 0, output_tokens: 0 } })),
 }));
 
-import { diavgeiaClient } from "../lib/DiavgeiaClient.js";
 import { aiChat } from "../lib/ai.js";
 import { pollDecisions } from "./pollDecisions.js";
 
-const mockFetchAll = vi.mocked(diavgeiaClient.fetchAllDecisions);
 const mockAiChat = vi.mocked(aiChat);
 const noopProgress = vi.fn();
 const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
 
-function makeDecision(overrides: Partial<DiavgeiaDecision> & { ada: string; subject: string }): DiavgeiaDecision {
+async function* asyncIter<T>(items: T[]): AsyncIterable<T> {
+    for (const item of items) yield item;
+}
+
+function makeDecision(overrides: Partial<Decision> & { ada: string; subject: string }): Decision {
     return {
         protocolNumber: "1/2025",
-        issueDate: "2025-01-15",
-        publishDate: "2025-01-16",
+        issueDate: 1736899200000,        // 2025-01-15
+        publishTimestamp: 1736985600000,  // 2025-01-16
+        submissionTimestamp: 1736985600000,
         decisionTypeId: "Β.2.2",
         thematicCategoryIds: [],
         organizationId: "6104",
         unitIds: [],
+        signerIds: [],
+        extraFieldValues: {},
+        status: 'PUBLISHED',
+        versionId: 'v1',
+        correctedVersionId: null,
         documentUrl: `https://diavgeia.gov.gr/doc/${overrides.ada}`,
+        documentChecksum: null,
         url: `https://diavgeia.gov.gr/decision/view/${overrides.ada}`,
+        attachments: [],
+        privateData: false,
         ...overrides,
     };
 }
@@ -50,6 +63,7 @@ function makeRequest(overrides: Partial<PollDecisionsRequest> = {}): PollDecisio
 
 beforeEach(() => {
     vi.clearAllMocks();
+    mockSearchAll.mockReturnValue(asyncIter([]));
     // Default: LLM returns no matches
     mockAiChat.mockResolvedValue({ result: [], usage: noUsage });
 });
@@ -61,7 +75,7 @@ describe("pollDecisions - matching behavior", () => {
             subject: "Έγκριση προϋπολογισμού 2025",
         });
 
-        mockFetchAll.mockResolvedValue([D1]);
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
 
         const result = await pollDecisions(
             makeRequest({
@@ -92,7 +106,7 @@ describe("pollDecisions - matching behavior", () => {
             protocolNumber: "2/2025",
         });
 
-        mockFetchAll.mockResolvedValue([D1, D2]);
+        mockSearchAll.mockReturnValue(asyncIter([D1, D2]));
 
         const result = await pollDecisions(
             makeRequest({
@@ -120,7 +134,7 @@ describe("pollDecisions - matching behavior", () => {
             subject: "Έγκριση προϋπολογισμού 2025",
         });
 
-        mockFetchAll.mockResolvedValue([D1]);
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
 
         const result = await pollDecisions(
             makeRequest({
@@ -145,7 +159,7 @@ describe("pollDecisions - conflict resolution", () => {
             subject: "Παράταση προθεσμίας του έργου ανάπλασης",
         });
 
-        mockFetchAll.mockResolvedValue([D1]);
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
 
         // B matches D1 in the first pass (high word coverage).
         // Conflict resolution detects the collision and calls LLM.
@@ -190,7 +204,7 @@ describe("pollDecisions - conflict resolution", () => {
             subject: "Έγκριση προϋπολογισμού 2025",
         });
 
-        mockFetchAll.mockResolvedValue([D1]);
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
 
         // B matches D1 in first pass (exact match). Conflict resolution: linked wins.
         mockAiChat.mockResolvedValueOnce({
@@ -226,7 +240,7 @@ describe("pollDecisions - conflict resolution", () => {
             subject: "Άλλη απόφαση",
         });
 
-        mockFetchAll.mockResolvedValue([D2]);
+        mockSearchAll.mockReturnValue(asyncIter([D2]));
 
         // LLM matching pass for unmatched B (D2 is available)
         mockAiChat.mockResolvedValueOnce({
@@ -272,7 +286,7 @@ describe("pollDecisions - mixed scenario", () => {
             protocolNumber: "3/2025",
         });
 
-        mockFetchAll.mockResolvedValue([D1, D2, D3]);
+        mockSearchAll.mockReturnValue(asyncIter([D1, D2, D3]));
 
         // Flow:
         // First pass: subC ("Παράταση έργου ανάπλασης") matches D1 (word coverage).

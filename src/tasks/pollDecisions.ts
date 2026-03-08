@@ -1,7 +1,10 @@
-import { diavgeiaClient, DiavgeiaDecision } from "../lib/DiavgeiaClient.js";
+import { Diavgeia, msToISODate } from '@schemalabs/diavgeia-cli';
+import type { Decision } from '@schemalabs/diavgeia-cli';
 import { PollDecisionsRequest, PollDecisionsResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import { aiChat } from "../lib/ai.js";
+
+const client = new Diavgeia();
 
 /**
  * Normalize text for comparison:
@@ -75,7 +78,7 @@ function wordCoverage(text1: string, text2: string): number {
 }
 
 interface MatchCandidate {
-    decision: DiavgeiaDecision;
+    decision: Decision;
     similarity: number;
     isExactMatch: boolean;
 }
@@ -85,7 +88,7 @@ interface MatchCandidate {
  */
 function findBestMatch(
     subjectName: string,
-    decisions: DiavgeiaDecision[],
+    decisions: Decision[],
     usedDecisions: Set<string>
 ): MatchCandidate | null {
     const normalizedSubject = normalizeText(subjectName);
@@ -174,7 +177,7 @@ interface LLMMatchResult {
  */
 async function llmMatchSubjects(
     unmatchedSubjects: Array<{ subjectId: string; name: string }>,
-    availableDecisions: DiavgeiaDecision[]
+    availableDecisions: Decision[]
 ): Promise<LLMMatchResult[]> {
     if (unmatchedSubjects.length === 0 || availableDecisions.length === 0) {
         return [];
@@ -234,7 +237,7 @@ Return ONLY a JSON array (no explanation text), one object per subject:
 async function resolveConflict(
     unmatchedSubject: { subjectId: string; name: string },
     linkedSubject: { subjectId: string; name: string; existingDecision?: { ada: string; decisionTitle: string } },
-    decision: DiavgeiaDecision,
+    decision: Decision,
 ): Promise<{ winner: 'unmatched' | 'linked'; reason: string }> {
     const systemPrompt = `You are a Greek municipal council decision matcher. You must determine which of two agenda subjects better corresponds to a Diavgeia decision.
 
@@ -296,15 +299,15 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     // Fetch decisions from Diavgeia — one request per unit ID, deduplicated by ADA
     const unitIds = request.diavgeiaUnitIds?.length ? request.diavgeiaUnitIds : [undefined];
     const seenAdas = new Set<string>();
-    const decisions: DiavgeiaDecision[] = [];
+    const decisions: Decision[] = [];
     for (const unitId of unitIds) {
-        const batch = await diavgeiaClient.fetchAllDecisions({
-            organizationUid: request.diavgeiaUid,
-            fromDate,
-            toDate,
-            unitId,
-        });
-        for (const d of batch) {
+        for await (const d of client.searchAll({
+            org: request.diavgeiaUid,
+            from_issue_date: fromDate,
+            to_issue_date: toDate,
+            unit: unitId,
+            status: 'PUBLISHED',
+        })) {
             if (!seenAdas.has(d.ada)) {
                 seenAdas.add(d.ada);
                 decisions.push(d);
@@ -348,7 +351,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 decisionTitle: bestMatch.decision.subject,
                 pdfUrl: bestMatch.decision.documentUrl,
                 protocolNumber: bestMatch.decision.protocolNumber,
-                publishDate: bestMatch.decision.publishDate,
+                publishDate: msToISODate(bestMatch.decision.publishTimestamp),
                 matchConfidence: bestMatch.similarity,
             });
             usedDecisions.add(bestMatch.decision.ada);
@@ -415,7 +418,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                         decisionTitle: decision.subject,
                         pdfUrl: decision.documentUrl,
                         protocolNumber: decision.protocolNumber,
-                        publishDate: decision.publishDate,
+                        publishDate: msToISODate(decision.publishTimestamp),
                         matchConfidence: llmResult.confidence === 'high' ? 0.85 : 0.6,
                     });
                     usedDecisions.add(decision.ada);
