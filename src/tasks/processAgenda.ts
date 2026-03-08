@@ -25,7 +25,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         const { value: text } = await mammoth.extractRawText({ buffer: fileBuffer });
         console.log(\`Extracted \${text.length} characters from DOCX\`);
         aiChatOptions = {
-            systemPrompt: getSystemPrompt(),
+            systemPrompt: getSystemPrompt(text),
             userPrompt: getUserPrompt(null, request.cityName, request.date, request.people, request.topicLabels, text),
             prefillSystemResponse: "Η απάντησή σου σε JSON: [",
             prependToResponse: "[",
@@ -57,6 +57,9 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 const downloadFileToBuffer = async (url: string): Promise<Buffer> => {
     console.log(`Downloading file from ${url}...`);
     const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to download file: HTTP ${response.status} ${response.statusText}`);
+    }
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     console.log(`Downloaded file: ${buffer.length} bytes`);
@@ -103,7 +106,7 @@ export type ExtractedSubject = {
     topicLabel: string | null;
 }
 
-export const getSystemPrompt = () => {
+export const getSystemPrompt = (docxText?: string) => {
     const docxSection = docxText ? `
 
 Content of the agenda document:
