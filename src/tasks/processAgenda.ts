@@ -29,7 +29,6 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 
     if (!result.result || result.result.length === 0) {
         console.log("No subjects found in the agenda");
-        onProgress("completed — no subjects found in agenda", 100);
         return { subjects: [], message: "No subjects found in the agenda" };
     }
 
