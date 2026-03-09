@@ -1029,26 +1029,34 @@ export const getFileParts = async (
     let finalVideoOutput = "[outv]";
     let finalAudioOutput = "[outa]";
     
+    // Loudness normalization filter to match YouTube levels (-14 LUFS)
+    // This ensures OpenCouncil audio volume is consistent with other platforms
+    const loudnormFilter = 'loudnorm=I=-14:TP=-1.5:LRA=11';
+
     if (type === "audio") {
-        // Audio-only: concat directly to final output [outa]
+        // Audio-only: concat → loudnorm → final output [outa]
         filterComplexConcat =
-            segments.map((_, index) => `[a${index}]`).join("") + `concat=n=${segments.length}:v=0:a=1[outa]`;
+            segments.map((_, index) => `[a${index}]`).join("") +
+            `concat=n=${segments.length}:v=0:a=1[concata];[concata]${loudnormFilter}[outa]`;
     } else {
         // Video: concat to intermediate outputs [concatv][concata] for potential further processing
         filterComplexConcat =
             segments.map((_, index) => `[v${index}][a${index}]`).join("") +
             `concat=n=${segments.length}:v=1:a=1[concatv][concata]`;
-        
+
+        // Apply loudnorm to audio stream
+        filterComplexConcat += `;[concata]${loudnormFilter}[norma]`;
+
         // Apply video filters if provided
         if (videoFilters && type === "video") {
-            // Chain: [concatv] → video filters → [outv], audio passes through as [concata]
+            // Chain: [concatv] → video filters → [outv], audio normalized as [norma]
             filterComplexConcat += `;[concatv]${videoFilters}[outv]`;
             finalVideoOutput = "[outv]";
-            finalAudioOutput = "[concata]";
+            finalAudioOutput = "[norma]";
         } else {
-            // No filters: use intermediate concat outputs directly
+            // No video filters: use concat video directly, audio normalized
             finalVideoOutput = "[concatv]";
-            finalAudioOutput = "[concata]";
+            finalAudioOutput = "[norma]";
         }
     }
 

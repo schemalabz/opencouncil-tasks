@@ -100,19 +100,21 @@ export const getVideoIdAndUrl = (mediaUrl: string) => {
     return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL' };
 }
 const FREQUENCY_FILTER = true;
+// Target loudness for audio normalization (YouTube uses -14 LUFS)
+const LOUDNORM_TARGET_LUFS = -14;
 const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
     // Validate input file exists and is not empty
     if (!fs.existsSync(inputPath)) {
         throw new Error(`Input file does not exist: ${inputPath}`);
     }
-    
+
     const inputSize = fs.statSync(inputPath).size;
     if (inputSize === 0) {
         throw new Error(`Input file is empty (0 bytes): ${inputPath}`);
     }
-    
+
     console.log(`Extracting audio from: ${path.basename(inputPath)} (${formatBytes(inputSize)})`);
-    
+
     const args = [
         '-i', inputPath,
         '-vn',  // No video
@@ -123,9 +125,15 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
         outputPath
     ];
 
+    // Build audio filter chain: frequency filter (for transcription) + loudness normalization
+    const audioFilters: string[] = [];
     if (FREQUENCY_FILTER) {
-        args.splice(args.length - 1, 0, '-af', 'highpass=f=200, lowpass=f=3000');
+        audioFilters.push('highpass=f=200', 'lowpass=f=3000');
     }
+    // Normalize loudness to match YouTube levels (-14 LUFS)
+    // This ensures OpenCouncil audio volume is consistent with other platforms
+    audioFilters.push(`loudnorm=I=${LOUDNORM_TARGET_LUFS}:TP=-1.5:LRA=11`);
+    args.splice(args.length - 1, 0, '-af', audioFilters.join(','));
 
     const ffmpegBin = ffmpegPath();
 
