@@ -196,18 +196,22 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         }).join('\n')
     }));
 
+    const systemMessage = messages.find(msg => msg.role === "system")?.content;
+    const nonSystemMessages = messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
+        msg.role === "user" || msg.role === "assistant");
+    const maxTokens = deployment.config.settings.maxTokens;
+
     const requestParams = {
         model: deployment.config.model,
-        messages: messages.filter((msg): msg is { role: "user" | "assistant"; content: string; } =>
-            msg.role === "user" || msg.role === "assistant"),
-        system: messages.find(msg => msg.role === "system")?.content,
-        max_tokens: deployment.config.settings.maxTokens,
+        messages: nonSystemMessages,
+        system: systemMessage,
+        max_tokens: maxTokens,
         temperature: deployment.config.settings.temperature,
     };
 
     await logToFile("Adaline Claude Request", requestParams);
 
-    const response = await withRateLimitRetry(() =>
+    let response = await withRateLimitRetry(() =>
         anthropic.messages.create(requestParams)
     );
 
@@ -221,15 +225,57 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
         throw new Error("Expected text response from claude, got " + response.content[0].type);
     }
 
-    const completion = response.content[0].text;
+    // Handle max_tokens truncation by continuing the response.
+    // Without this, long speaker segments (common after ~1 hour of session audio)
+    // produce truncated output that fails the utterance count check in
+    // processSpeakerSegment, causing those paragraphs to be silently skipped.
+    let completion = response.content[0].text;
+    let totalUsage = { ...response.usage };
+
+    while (response.stop_reason === "max_tokens") {
+        console.log(`Adaline Claude stopped at max_tokens (${maxTokens}), continuing response...`);
+        await logToFile("Adaline Claude continuing truncated response", { completionLengthSoFar: completion.length });
+
+        const continuationMessages: { role: "user" | "assistant"; content: string }[] = [
+            ...nonSystemMessages,
+            { role: "assistant" as const, content: completion }
+        ];
+
+        const continuationParams = {
+            model: deployment.config.model,
+            messages: continuationMessages,
+            system: systemMessage,
+            max_tokens: maxTokens,
+            temperature: deployment.config.settings.temperature,
+        };
+
+        await logToFile("Adaline Claude Continuation Request", continuationParams);
+
+        response = await withRateLimitRetry(() =>
+            anthropic.messages.create(continuationParams)
+        );
+
+        await logToFile("Adaline Claude Continuation Response", response);
+
+        if (!response.content || response.content.length !== 1) {
+            throw new Error("Expected 1 response from claude continuation, got " + response.content?.length);
+        }
+
+        if (response.content[0].type !== "text") {
+            throw new Error("Expected text response from claude continuation, got " + response.content[0].type);
+        }
+
+        completion += response.content[0].text;
+        totalUsage = addUsage(totalUsage, response.usage);
+    }
 
     submitAdalineLog({
         projectId: projectId,
         provider: deployment.config.provider,
         model: deployment.config.model,
         completion: completion,
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
+        inputTokens: totalUsage.input_tokens,
+        outputTokens: totalUsage.output_tokens,
         variables
     });
 
@@ -248,7 +294,7 @@ export async function aiWithAdaline<T>({ projectId, deploymentId, variables, par
 
     await logToFile("Adaline Parsed Result", responseJson);
     return {
-        usage: response.usage,
+        usage: totalUsage,
         result: responseJson
     };
 }
