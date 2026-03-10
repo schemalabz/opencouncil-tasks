@@ -26,7 +26,11 @@ const generateMockId = (prefix: string): string => {
     return `${prefix}_${timestamp}_${random}`;
 };
 
-export const getMuxPlaybackId = async (videoUrl: string): Promise<MuxResult> => {
+/**
+ * Create a Mux asset and return the playback ID + asset ID immediately,
+ * without waiting for the asset to become ready.
+ */
+export const createMuxAsset = async (videoUrl: string): Promise<MuxResult> => {
     const creds = getMuxCredentials();
 
     // If no Mux credentials, return mock IDs
@@ -56,8 +60,6 @@ export const getMuxPlaybackId = async (videoUrl: string): Promise<MuxResult> => 
     const playbackId: string = data.data.playback_ids[0].id;
     console.log(`Mux asset created: ${assetId}, playback ID: ${playbackId}`);
 
-    await pollAssetStatus(assetId, creds.authHeader);
-
     return { playbackId, assetId };
 };
 
@@ -77,34 +79,3 @@ export const deleteMuxAsset = async (assetId: string): Promise<void> => {
 
     console.log(`Mux asset deleted: ${assetId}`);
 };
-
-const POLL_INTERVAL_MS = 5_000;
-const POLL_TIMEOUT_MS = 10 * 60 * 1_000; // 10 minutes
-
-async function pollAssetStatus(assetId: string, authHeader: string): Promise<void> {
-    const deadline = Date.now() + POLL_TIMEOUT_MS;
-
-    while (Date.now() < deadline) {
-        const res = await fetch(`${MUX_ASSETS_URL}/${assetId}`, {
-            headers: { Authorization: authHeader },
-        });
-
-        if (!res.ok) {
-            const body = await res.text();
-            throw new Error(`Mux asset status check failed (HTTP ${res.status}): ${body}`);
-        }
-
-        const json = await res.json();
-        const status: string = json.data.status;
-        console.log(`Mux asset ${assetId} status: ${status}`);
-
-        if (status === "ready") return;
-        if (status === "errored") {
-            throw new Error(`Mux asset ${assetId} errored: ${JSON.stringify(json.data.errors)}`);
-        }
-
-        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-    }
-
-    throw new Error(`Mux asset ${assetId} did not become ready within ${POLL_TIMEOUT_MS / 60_000} minutes`);
-}

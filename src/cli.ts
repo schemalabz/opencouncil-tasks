@@ -15,7 +15,7 @@ import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 import { DiarizeResult } from './types.js';
 import devRouter from './routes/dev.js';
-import { getMuxPlaybackId, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
+import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
 
 const program = new Command();
@@ -188,7 +188,7 @@ program
     .command('mux-playback-id <videoUrl>')
     .description('Create a Mux asset for a video URL and return its playback ID')
     .action(async (videoUrl: string) => {
-        const { playbackId, assetId } = await getMuxPlaybackId(videoUrl);
+        const { playbackId, assetId } = await createMuxAsset(videoUrl);
         console.log(`Playback ID: ${playbackId}`);
         console.log(`Asset ID: ${assetId}`);
         server.close();

@@ -8,7 +8,7 @@ import { transcribe } from "./transcribe.js";
 import { type TranscribeArgs } from "./transcribe.js";
 import { uploadToSpaces } from "./uploadToSpaces.js";
 import { type UploadFilesArgs } from "./uploadToSpaces.js";
-import { getMuxPlaybackId, type MuxResult } from "../lib/mux.js";
+import { createMuxAsset, deleteMuxAsset, type MuxResult } from "../lib/mux.js";
 import _ from 'underscore';
 import dotenv from "dotenv";
 
@@ -23,7 +23,8 @@ export type PipelineDeps = {
     splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]>;
     transcribe: Task<TranscribeArgs, Transcript>;
     applyDiarization: Task<{ diarization: Diarization; speakers: DiarizationSpeaker[]; transcript: Transcript }, TranscriptWithSpeakerIdentification>;
-    getMuxPlaybackId: (videoUrl: string) => Promise<MuxResult>;
+    createMuxAsset: (videoUrl: string) => Promise<MuxResult>;
+    deleteMuxAsset: (assetId: string) => Promise<void>;
 };
 
 export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeResult> {
@@ -43,62 +44,85 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
                 spacesPath: "council-meeting-videos"
             }, () => { });
 
-        const { audioUrl, diarization, speakers } = await deps.uploadToSpaces({
-            files: [audioOnly],
-            spacesPath: "audio"
-        }, () => { }).then(async (urls) => {
-            const audioUrl = urls[0];
-            console.log(`Diarizing url ${audioUrl}`);
-            const { diarization, speakers } = await deps.diarize({ audioUrl, voiceprints: request.voiceprints }, createProgressHandler("diarizing"));
-            return { audioUrl, diarization, speakers };
+        // Start Mux asset creation early so it runs in parallel with diarization/transcription.
+        // The playback ID is available immediately — Mux processes the video asynchronously.
+        // Suppress unhandled rejection since we handle errors when we await later.
+        const muxPromise = combinedVideoUploadPromise.then(async (urls) => {
+            if (urls.length !== 1) throw new Error("Expected a single video URL");
+            return deps.createMuxAsset(urls[0]);
         });
+        muxPromise.catch(() => {});
 
-        console.log("Uploaded audio to spaces and diarized");
+        try {
+            const { audioUrl, diarization, speakers } = await deps.uploadToSpaces({
+                files: [audioOnly],
+                spacesPath: "audio"
+            }, () => { }).then(async (urls) => {
+                const audioUrl = urls[0];
+                console.log(`Diarizing url ${audioUrl}`);
+                const { diarization, speakers } = await deps.diarize({ audioUrl, voiceprints: request.voiceprints }, createProgressHandler("diarizing"));
+                return { audioUrl, diarization, speakers };
+            });
 
-        const transcript =
-            await deps.splitAudioDiarization({ file: audioOnly, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-video"))
-                .then(async (audioSegments) => {
-                    const audioUrls = await deps.uploadToSpaces({
-                        files: audioSegments.map((segment) => segment.path),
-                        spacesPath: "audio"
-                    }, createProgressHandler("uploading-audio"));
+            console.log("Uploaded audio to spaces and diarized");
 
-                    const segments = audioSegments.map((segment, index) => ({
-                        url: audioUrls[index],
-                        start: segment.startTime
-                    }));
+            const transcript =
+                await deps.splitAudioDiarization({ file: audioOnly, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-video"))
+                    .then(async (audioSegments) => {
+                        const audioUrls = await deps.uploadToSpaces({
+                            files: audioSegments.map((segment) => segment.path),
+                            spacesPath: "audio"
+                        }, createProgressHandler("uploading-audio"));
 
-                    return deps.transcribe({
-                        segments,
-                        customVocabulary: request.customVocabulary,
-                        customPrompt: request.customPrompt
-                    }, createProgressHandler("transcribing"));
-                });
+                        const segments = audioSegments.map((segment, index) => ({
+                            url: audioUrls[index],
+                            start: segment.startTime
+                        }));
 
-        console.log("Split audio and transcribed");
+                        return deps.transcribe({
+                            segments,
+                            customVocabulary: request.customVocabulary,
+                            customPrompt: request.customPrompt
+                        }, createProgressHandler("transcribing"));
+                    });
 
-        const diarizedTranscript: TranscriptWithSpeakerIdentification = await deps.applyDiarization({ diarization, speakers, transcript }, createProgressHandler("diarizing-transcript"));
+            console.log("Split audio and transcribed");
 
-        console.log("Applied diarization");
+            const diarizedTranscript: TranscriptWithSpeakerIdentification = await deps.applyDiarization({ diarization, speakers, transcript }, createProgressHandler("diarizing-transcript"));
 
-        const combinedVideoUrls = await combinedVideoUploadPromise; // wait for video upload or get CDN URL
-        if (combinedVideoUrls.length !== 1) {
-            throw new Error("Expected a single video URL");
+            console.log("Applied diarization");
+
+            const combinedVideoUrls = await combinedVideoUploadPromise; // wait for video upload or get CDN URL
+            if (combinedVideoUrls.length !== 1) {
+                throw new Error("Expected a single video URL");
+            }
+            let videoUrl = combinedVideoUrls[0];
+
+            console.log(isCdnUrl ? "Using existing CDN video URL" : "Uploaded combined video");
+            onProgress("finished", 100); //lfgggg
+
+            console.log("All done");
+
+            const muxResult = await muxPromise;
+
+            return {
+                videoUrl,
+                audioUrl,
+                muxPlaybackId: muxResult.playbackId,
+                muxAssetId: muxResult.assetId,
+                transcript: diarizedTranscript
+            };
+        } catch (error) {
+            // Clean up the Mux asset if the pipeline fails — don't leave orphaned assets
+            try {
+                const muxResult = await muxPromise;
+                console.warn(`Pipeline failed, deleting Mux asset ${muxResult.assetId}`);
+                await deps.deleteMuxAsset(muxResult.assetId);
+            } catch {
+                // Mux creation itself may have failed, or deletion failed — nothing to clean up
+            }
+            throw error;
         }
-        let videoUrl = combinedVideoUrls[0];
-
-        console.log(isCdnUrl ? "Using existing CDN video URL" : "Uploaded combined video");
-        onProgress("finished", 100); //lfgggg
-
-        console.log("All done");
-        const muxResult = await deps.getMuxPlaybackId(videoUrl);
-        return {
-            videoUrl,
-            audioUrl,
-            muxPlaybackId: muxResult.playbackId,
-            muxAssetId: muxResult.assetId,
-            transcript: diarizedTranscript
-        };
     };
 }
 
@@ -110,5 +134,6 @@ export const pipeline = createPipeline({
     splitAudioDiarization,
     transcribe,
     applyDiarization,
-    getMuxPlaybackId,
+    createMuxAsset,
+    deleteMuxAsset,
 });

@@ -1,4 +1,4 @@
-import { getMuxPlaybackId } from "../lib/mux.js";
+import { createMuxAsset } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile } from "./utils/mediaOperations.js";
@@ -214,7 +214,7 @@ export const generateHighlight: Task<
 
     // Generate Mux playback ID for video highlights
     if (media.type === "video") {
-      const muxResult = await getMuxPlaybackId(result.url);
+      const muxResult = await createMuxAsset(result.url);
       highlightResult.muxPlaybackId = muxResult.playbackId;
       highlightResult.muxAssetId = muxResult.assetId;
       partProgress(95);

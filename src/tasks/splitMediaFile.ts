@@ -1,4 +1,4 @@
-import { getMuxPlaybackId } from "../lib/mux.js";
+import { createMuxAsset } from "../lib/mux.js";
 import { SplitMediaFileRequest, SplitMediaFileResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import { splitAndUploadMedia } from "./utils/mediaOperations.js";
@@ -39,7 +39,7 @@ export const splitMediaFile: Task<
 
     // Only generate muxPlaybackId for video parts
     if (type === "video") {
-      const muxResult = await getMuxPlaybackId(result.url);
+      const muxResult = await createMuxAsset(result.url);
       partResult.muxPlaybackId = muxResult.playbackId;
       partResult.muxAssetId = muxResult.assetId;
     }

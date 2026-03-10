@@ -39,7 +39,8 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
         ]),
         transcribe: vi.fn(async () => fakeTranscript),
         applyDiarization: vi.fn(async () => fakeDiarizedTranscript),
-        getMuxPlaybackId: vi.fn(async () => ({ playbackId: "mux-playback-id-123", assetId: "mux-asset-id-456" })),
+        createMuxAsset: vi.fn(async () => ({ playbackId: "mux-playback-id-123", assetId: "mux-asset-id-456" })),
+        deleteMuxAsset: vi.fn(async () => {}),
         ...overrides,
     };
 }
@@ -70,7 +71,7 @@ describe("createPipeline", () => {
         expect(deps.splitAudioDiarization).toHaveBeenCalledOnce();
         expect(deps.transcribe).toHaveBeenCalledOnce();
         expect(deps.applyDiarization).toHaveBeenCalledOnce();
-        expect(deps.getMuxPlaybackId).toHaveBeenCalledOnce();
+        expect(deps.createMuxAsset).toHaveBeenCalledOnce();
         // uploadToSpaces called 3 times: audio, video, audio segments
         expect(deps.uploadToSpaces).toHaveBeenCalledTimes(3);
     });
@@ -130,6 +131,40 @@ describe("createPipeline", () => {
             expect.objectContaining({ audioUrl: "https://cdn.example.com/audio-0.wav" }),
             expect.any(Function),
         );
+    });
+
+    it("Mux cleanup — deletes Mux asset when pipeline fails", async () => {
+        const deps = createStubDeps({
+            diarize: vi.fn(async () => { throw new Error("diarization failed"); }),
+        });
+        const pipeline = createPipeline(deps);
+
+        await expect(pipeline(baseRequest, vi.fn())).rejects.toThrow("diarization failed");
+
+        // Mux asset was created (runs in parallel) and should be cleaned up
+        expect(deps.createMuxAsset).toHaveBeenCalledOnce();
+        expect(deps.deleteMuxAsset).toHaveBeenCalledWith("mux-asset-id-456");
+    });
+
+    it("Mux cleanup — no crash when Mux creation itself failed", async () => {
+        const deps = createStubDeps({
+            createMuxAsset: vi.fn(async () => { throw new Error("Mux asset creation failed"); }),
+            diarize: vi.fn(async () => { throw new Error("diarization failed"); }),
+        });
+        const pipeline = createPipeline(deps);
+
+        // Pipeline rejects with the original error, not a Mux cleanup error
+        await expect(pipeline(baseRequest, vi.fn())).rejects.toThrow("diarization failed");
+        expect(deps.deleteMuxAsset).not.toHaveBeenCalled();
+    });
+
+    it("data flow — createMuxAsset receives the uploaded video URL", async () => {
+        const deps = createStubDeps();
+        const pipeline = createPipeline(deps);
+
+        await pipeline(baseRequest, vi.fn());
+
+        expect(deps.createMuxAsset).toHaveBeenCalledWith("https://cdn.example.com/video.mp4");
     });
 
     it("data flow — split audio segments are uploaded and passed to transcribe", async () => {

@@ -9,7 +9,7 @@ const { savedTokenId, savedTokenSecret } = vi.hoisted(() => {
     return { savedTokenId, savedTokenSecret };
 });
 
-import { getMuxPlaybackId, deleteMuxAsset } from "./mux.js";
+import { createMuxAsset, deleteMuxAsset } from "./mux.js";
 
 function createResponse(ok: boolean, body: unknown, status?: number): Response {
     return {
@@ -24,7 +24,7 @@ const MUX_ASSET = {
     data: { id: "asset-123", playback_ids: [{ id: "playback-abc" }] },
 };
 
-describe("getMuxPlaybackId", () => {
+describe("createMuxAsset", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let fetchSpy: any;
 
@@ -36,7 +36,6 @@ describe("getMuxPlaybackId", () => {
 
     afterEach(() => {
         vi.restoreAllMocks();
-        vi.useRealTimers();
         // Restore original env vars
         if (savedTokenId !== undefined) process.env.MUX_TOKEN_ID = savedTokenId;
         else delete process.env.MUX_TOKEN_ID;
@@ -48,7 +47,7 @@ describe("getMuxPlaybackId", () => {
         delete process.env.MUX_TOKEN_ID;
         delete process.env.MUX_TOKEN_SECRET;
 
-        const result = await getMuxPlaybackId("https://example.com/video.mp4");
+        const result = await createMuxAsset("https://example.com/video.mp4");
 
         expect(result.playbackId).toMatch(/^MOCK_/);
         expect(result.assetId).toMatch(/^MOCK_ASSET_/);
@@ -58,81 +57,22 @@ describe("getMuxPlaybackId", () => {
     it("throws on non-OK POST response", async () => {
         fetchSpy.mockResolvedValueOnce(createResponse(false, "Bad Request", 400));
 
-        await expect(getMuxPlaybackId("https://example.com/video.mp4"))
+        await expect(createMuxAsset("https://example.com/video.mp4"))
             .rejects.toThrow("Mux asset creation failed (HTTP 400): Bad Request");
     });
 
-    it("returns MuxResult when asset is immediately ready", async () => {
-        fetchSpy
-            .mockResolvedValueOnce(createResponse(true, MUX_ASSET))
-            .mockResolvedValueOnce(createResponse(true, { data: { status: "ready" } }));
+    it("returns playback ID and asset ID immediately", async () => {
+        fetchSpy.mockResolvedValueOnce(createResponse(true, MUX_ASSET));
 
-        const result = await getMuxPlaybackId("https://example.com/video.mp4");
+        const result = await createMuxAsset("https://example.com/video.mp4");
 
         expect(result).toEqual({ playbackId: "playback-abc", assetId: "asset-123" });
-        expect(fetchSpy).toHaveBeenCalledTimes(2);
+        expect(fetchSpy).toHaveBeenCalledTimes(1);
 
         // Verify POST request
         const [postUrl, postInit] = fetchSpy.mock.calls[0];
         expect(postUrl).toBe("https://api.mux.com/video/v1/assets");
         expect((postInit as RequestInit).method).toBe("POST");
-
-        // Verify GET polling request
-        const [getUrl] = fetchSpy.mock.calls[1];
-        expect(getUrl).toBe("https://api.mux.com/video/v1/assets/asset-123");
-    });
-
-    it("polls until asset becomes ready", async () => {
-        vi.useFakeTimers();
-
-        fetchSpy
-            .mockResolvedValueOnce(createResponse(true, MUX_ASSET))
-            .mockResolvedValueOnce(createResponse(true, { data: { status: "preparing" } }))
-            .mockResolvedValueOnce(createResponse(true, { data: { status: "preparing" } }))
-            .mockResolvedValueOnce(createResponse(true, { data: { status: "ready" } }));
-
-        const promise = getMuxPlaybackId("https://example.com/video.mp4");
-        await vi.advanceTimersByTimeAsync(5_000);
-        await vi.advanceTimersByTimeAsync(5_000);
-
-        const result = await promise;
-        expect(result).toEqual({ playbackId: "playback-abc", assetId: "asset-123" });
-        expect(fetchSpy).toHaveBeenCalledTimes(4); // 1 POST + 3 GETs
-    });
-
-    it("throws when asset status is errored", async () => {
-        fetchSpy
-            .mockResolvedValueOnce(createResponse(true, MUX_ASSET))
-            .mockResolvedValueOnce(createResponse(true, {
-                data: { status: "errored", errors: { messages: ["unsupported codec"] } },
-            }));
-
-        await expect(getMuxPlaybackId("https://example.com/video.mp4"))
-            .rejects.toThrow("Mux asset asset-123 errored");
-    });
-
-    it("throws on non-OK GET during polling", async () => {
-        fetchSpy
-            .mockResolvedValueOnce(createResponse(true, MUX_ASSET))
-            .mockResolvedValueOnce(createResponse(false, "Internal Server Error", 500));
-
-        await expect(getMuxPlaybackId("https://example.com/video.mp4"))
-            .rejects.toThrow("Mux asset status check failed (HTTP 500)");
-    });
-
-    it("throws after polling timeout", async () => {
-        vi.useFakeTimers();
-
-        // POST succeeds, all GETs return "preparing" forever
-        fetchSpy
-            .mockResolvedValueOnce(createResponse(true, MUX_ASSET))
-            .mockImplementation(async () => createResponse(true, { data: { status: "preparing" } }));
-
-        const promise = getMuxPlaybackId("https://example.com/video.mp4");
-        // Attach rejection handler before advancing timers to avoid unhandled rejection
-        const assertion = expect(promise).rejects.toThrow("did not become ready within 10 minutes");
-        await vi.advanceTimersByTimeAsync(10 * 60 * 1_000 + 1);
-        await assertion;
     });
 });
 
