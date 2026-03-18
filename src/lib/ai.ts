@@ -187,6 +187,16 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         let responseText = textBlocks.map(block => block.text).join("");
 
         if (response.stop_reason === "max_tokens") {
+            // Structured outputs are incompatible with the prefill-based continuation
+            // strategy — prefill is disabled when outputFormat is set. Throw so callers
+            // (e.g. batch retry logic) can handle it by reducing the request size.
+            if (outputFormat) {
+                throw new Error(
+                    `Structured-output response hit max_tokens (${maxTokens}). ` +
+                    `The request likely needs fewer items to fit within the output limit.`
+                );
+            }
+
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
             const response2 = await aiChat<T>({
@@ -197,7 +207,6 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
                 prependToResponse: ((prependToResponse || '') + responseText).trim(),
                 tools,
-                outputFormat,  // Preserve structured outputs on continuation
                 cacheSystemPrompt  // Preserve caching on continuation
             });
             return {

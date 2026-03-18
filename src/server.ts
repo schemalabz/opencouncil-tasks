@@ -123,7 +123,7 @@ app.post('/transcribe', (
 app.post('/summarize', taskManager.registerTask(summarize, {
     summary: 'Summarize transcript content',
     description: 'Generate a summary of transcript content with subject extraction',
-    version: 2,
+    version: 3,
   }));
 
 app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
