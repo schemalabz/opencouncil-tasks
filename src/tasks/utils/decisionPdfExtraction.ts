@@ -140,6 +140,230 @@ Return valid JSON matching this schema:
 
 If a field cannot be found, use empty array for lists, empty string for text, and null where indicated.`;
 
+// --- Greek name matching ---
+
+/**
+ * Normalize a Greek name for matching: strip diacritics (tonos), remove
+ * parenthetical nicknames like "(ΜΠΑΜΠΗΣ)", collapse whitespace, lowercase.
+ */
+export function normalizeGreekName(name: string): string {
+    return name
+        .replace(/\s*\([^)]*\)\s*/g, ' ')      // strip parenthetical nicknames
+        .normalize('NFD')                        // decompose accented chars
+        .replace(/[\u0300-\u036f]/g, '')         // strip combining diacriticals (tonos etc.)
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+/**
+ * Build a sorted token key from a normalized name string.
+ */
+function buildSortKey(normalized: string): string {
+    return normalized
+        .replace(/[-–—]/g, ' ')   // treat hyphens as word separators
+        .split(/\s+/)
+        .filter(Boolean)
+        .sort()
+        .join(' ');
+}
+
+/**
+ * Generate token-sort keys for a name. Returns multiple keys when the name
+ * contains a parenthetical nickname like "(ΚΩΣΤΗΣ)": one key with the nickname
+ * stripped and one with the nickname replacing the preceding name part.
+ * This handles Greek naming conventions where the DB may store the informal name
+ * (e.g. "Κωστής Παπαναστασόπουλος") while the PDF has the formal name + nickname
+ * (e.g. "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)").
+ */
+export function tokenSortKeys(name: string): string[] {
+    const keys: string[] = [];
+
+    // Key 1: standard — strip nickname entirely
+    keys.push(buildSortKey(normalizeGreekName(name)));
+
+    // Key 2: nickname variant — if "(NICKNAME)" is present, replace the word
+    // immediately before it with the nickname
+    const nicknameMatch = name.match(/(\S+)\s*\(([^)]+)\)/);
+    if (nicknameMatch) {
+        const replaced = name
+            .replace(/\S+\s*\([^)]+\)/, nicknameMatch[2]); // replace "WORD (NICK)" with "NICK"
+        const nicknameKey = buildSortKey(normalizeGreekName(replaced));
+        if (nicknameKey !== keys[0]) {
+            keys.push(nicknameKey);
+        }
+    }
+
+    return keys;
+}
+
+/** Convenience: primary token-sort key (nickname stripped). */
+export function tokenSortKey(name: string): string {
+    return tokenSortKeys(name)[0];
+}
+
+export interface PersonForMatching {
+    id: string;
+    name: string;
+}
+
+interface MatchResult {
+    matchedIds: string[];
+    unmatched: string[];
+}
+
+/**
+ * Step 1: Token-sort matching. Handles name order differences, hyphenation,
+ * and nickname-as-first-name variants.
+ * Returns matched personIds and remaining unmatched raw names.
+ */
+export function matchMembersToPersonIds(
+    rawNames: string[],
+    people: PersonForMatching[],
+): MatchResult {
+    // Build token-sorted lookup: sortedTokens → personId
+    // Include all key variants from each person's name
+    const lookup = new Map<string, string>();
+    for (const person of people) {
+        for (const key of tokenSortKeys(person.name)) {
+            lookup.set(key, person.id);
+        }
+    }
+
+    const matchedIds: string[] = [];
+    const unmatched: string[] = [];
+
+    for (const rawName of rawNames) {
+        const keys = tokenSortKeys(rawName);
+        const personId = keys.map(k => lookup.get(k)).find(Boolean);
+        if (personId) {
+            matchedIds.push(personId);
+        } else {
+            unmatched.push(rawName);
+        }
+    }
+
+    return { matchedIds, unmatched };
+}
+
+/**
+ * Step 1: Token-sort match for a single name.
+ */
+export function matchPersonByName(
+    rawName: string,
+    people: PersonForMatching[],
+): string | null {
+    const rawKeys = tokenSortKeys(rawName);
+    for (const person of people) {
+        const personKeys = tokenSortKeys(person.name);
+        for (const rk of rawKeys) {
+            for (const pk of personKeys) {
+                if (rk === pk) return person.id;
+            }
+        }
+    }
+    return null;
+}
+
+/**
+ * Step 2: LLM fallback for names that couldn't be matched by token-sort.
+ * Sends unmatched names + available people to haiku for semantic matching.
+ */
+export async function llmMatchMembers(
+    unmatchedNames: string[],
+    availablePeople: PersonForMatching[],
+): Promise<{ matched: { name: string; personId: string }[]; stillUnmatched: string[] }> {
+    if (unmatchedNames.length === 0 || availablePeople.length === 0) {
+        return { matched: [], stillUnmatched: unmatchedNames };
+    }
+
+    console.log(`  LLM matching ${unmatchedNames.length} unmatched names against ${availablePeople.length} people`);
+
+    const { result: rawResponse } = await aiChat<string>({
+        systemPrompt: `You are a Greek name matcher for municipal council members.
+
+Match each name from "unmatchedNames" to its corresponding person from "availablePeople".
+Names may differ in: word order, accents/diacritics, hyphenation, or nicknames.
+
+Return ONLY a JSON array with one entry per unmatched name, no other text:
+[{"name": "<exact name from unmatchedNames>", "personId": "<id from availablePeople or null>"}]
+
+Rules:
+- "name" must be the EXACT string from unmatchedNames
+- "personId" must be an id from availablePeople, or null if no match
+- Only match if confident — use null otherwise
+- Each personId at most once`,
+        userPrompt: JSON.stringify({
+            unmatchedNames,
+            availablePeople: availablePeople.map(p => ({ id: p.id, name: p.name })),
+        }),
+        prefillSystemResponse: '[',
+        prependToResponse: '[',
+        parseJson: false,
+        model: 'haiku',
+    });
+
+    // Strip any trailing text after the JSON array (LLM sometimes adds explanations)
+    const jsonEnd = rawResponse.lastIndexOf(']');
+    if (jsonEnd === -1) {
+        console.warn(`  LLM returned no valid JSON array, treating all as unmatched`);
+        return { matched: [], stillUnmatched: unmatchedNames };
+    }
+    const result: { name: string; personId: string | null }[] = JSON.parse(rawResponse.slice(0, jsonEnd + 1));
+
+    const matched: { name: string; personId: string }[] = [];
+    const stillUnmatched: string[] = [];
+    const usedIds = new Set<string>();
+
+    for (const entry of result) {
+        if (entry.personId && !usedIds.has(entry.personId)) {
+            matched.push({ name: entry.name, personId: entry.personId });
+            usedIds.add(entry.personId);
+        } else {
+            stillUnmatched.push(entry.name);
+        }
+    }
+
+    // Names from input that LLM didn't return at all → still unmatched
+    const returnedNames = new Set(result.map(r => r.name));
+    for (const name of unmatchedNames) {
+        if (!returnedNames.has(name)) {
+            stillUnmatched.push(name);
+        }
+    }
+
+    console.log(`  LLM matched ${matched.length}, still unmatched: ${stillUnmatched.length}`);
+    return { matched, stillUnmatched };
+}
+
+/**
+ * Two-step matching: token-sort first, then LLM fallback for remaining.
+ */
+export async function matchAllMembers(
+    rawNames: string[],
+    people: PersonForMatching[],
+): Promise<MatchResult> {
+    // Step 1: token-sort matching
+    const step1 = matchMembersToPersonIds(rawNames, people);
+
+    if (step1.unmatched.length === 0) {
+        return step1;
+    }
+
+    // Step 2: LLM fallback for unmatched
+    const alreadyMatchedIds = new Set(step1.matchedIds);
+    const availablePeople = people.filter(p => !alreadyMatchedIds.has(p.id));
+
+    const step2 = await llmMatchMembers(step1.unmatched, availablePeople);
+
+    return {
+        matchedIds: [...step1.matchedIds, ...step2.matched.map(m => m.personId)],
+        unmatched: step2.stillUnmatched,
+    };
+}
+
+// --- PDF extraction ---
+
 export async function extractDecisionFromPdf(pdfUrl: string): Promise<RawExtractedDecision> {
     const cached = readCache<RawExtractedDecision>(pdfUrl);
     if (cached) return cached;
