@@ -9,6 +9,7 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
+import { extractDecisionFromPdf, inferForVotes } from './tasks/utils/decisionPdfExtraction.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -570,6 +571,62 @@ program
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             console.error(`\nSmoke test FAILED after ${elapsed}s`);
             console.error(error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+// --- Decision PDF extraction CLI ---
+
+program
+    .command('extract-decision <pdfUrl>')
+    .description('Extract decision data from a single PDF URL')
+    .option('-O, --output-file <file>', 'Save result to file (otherwise prints to stdout)')
+    .action(async (pdfUrl: string, options: { outputFile?: string }) => {
+        try {
+            console.log(`Extracting decision data from: ${pdfUrl}`);
+            const result = await extractDecisionFromPdf(pdfUrl);
+
+            // Display attendance changes
+            if (result.attendanceChanges?.length > 0) {
+                console.log(`\n--- Attendance Changes ---`);
+                for (const change of result.attendanceChanges) {
+                    const where = change.duringAgendaItem != null
+                        ? `during item #${change.duringAgendaItem}`
+                        : change.atSessionBoundary
+                            ? `at session ${change.atSessionBoundary}`
+                            : 'unknown';
+                    console.log(`  ${change.type}: ${change.name} (${where})`);
+                    if (change.rawText) console.log(`    "${change.rawText}"`);
+                }
+            }
+
+            // Display discussion order
+            if (result.discussionOrder) {
+                console.log(`\n--- Discussion Order: ${result.discussionOrder.join(', ')} ---`);
+            }
+
+            // Infer FOR votes using present members
+            const { voteDetails: inferredVoteDetails, inferredCount } = inferForVotes(
+                result.presentMembers,
+                result.voteResult,
+                result.voteDetails || [],
+            );
+            if (inferredCount > 0) {
+                console.log(`Inferred ${inferredCount} FOR votes from present members (κατά πλειοψηφία)`);
+            }
+
+            const output = { ...result, voteDetails: inferredVoteDetails };
+            const json = JSON.stringify(output, null, 2);
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, json);
+                console.log(`\nResult saved to ${options.outputFile}`);
+            } else {
+                console.log('\n' + json);
+            }
+        } catch (error) {
+            console.error('Error extracting decision:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();
