@@ -1,4 +1,5 @@
-import { aiChat } from '../../lib/ai.js';
+import Anthropic from '@anthropic-ai/sdk';
+import { aiChat, ResultWithUsage, NO_USAGE } from '../../lib/ai.js';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -69,6 +70,10 @@ export interface RawExtractedDecision {
     voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
     attendanceChanges: AttendanceChange[];
     discussionOrder: number[] | null;
+    subjectInfo: {
+        number: number;
+        isOutOfAgenda: boolean;
+    } | null;
 }
 
 /**
@@ -124,6 +129,10 @@ Extract the following information from the PDF:
    - "rawText": the original sentence describing this change.
    If no such section exists, return an empty array.
 9. **discussionOrder**: When subjects were discussed out of agenda order (e.g. "Προτάθηκε η αλλαγή σειράς συζήτησης" or items are explicitly reordered), extract the agenda item numbers in the actual discussion sequence as an array of numbers. Return null if subjects were discussed in standard agenda order.
+10. **subjectInfo**: The agenda item this decision relates to:
+   - "number": The subject/topic number (e.g., "ΘΕΜΑ 3ο" → 3, "1ο ΕΚΤΑΚΤΟ ΘΕΜΑ" → 1, "ΘΕΜΑ ΕΚΤΟΣ Η.Δ. 2ο" → 2)
+   - "isOutOfAgenda": true if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), false for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
+   - Return null if the subject/topic number cannot be determined.
 
 Return valid JSON matching this schema:
 {
@@ -135,7 +144,8 @@ Return valid JSON matching this schema:
   "voteResult": string | null,
   "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" }[],
   "attendanceChanges": { "name": string, "type": "arrival" | "departure", "duringAgendaItem": number | null, "atSessionBoundary": "start" | "end" | null, "rawText": string }[],
-  "discussionOrder": number[] | null
+  "discussionOrder": number[] | null,
+  "subjectInfo": { "number": number, "isOutOfAgenda": boolean } | null
 }
 
 If a field cannot be found, use empty array for lists, empty string for text, and null where indicated.`;
@@ -272,14 +282,14 @@ export function matchPersonByName(
 export async function llmMatchMembers(
     unmatchedNames: string[],
     availablePeople: PersonForMatching[],
-): Promise<{ matched: { name: string; personId: string }[]; stillUnmatched: string[] }> {
+): Promise<{ matched: { name: string; personId: string }[]; stillUnmatched: string[]; usage: Anthropic.Messages.Usage }> {
     if (unmatchedNames.length === 0 || availablePeople.length === 0) {
-        return { matched: [], stillUnmatched: unmatchedNames };
+        return { matched: [], stillUnmatched: unmatchedNames, usage: { ...NO_USAGE } };
     }
 
     console.log(`  LLM matching ${unmatchedNames.length} unmatched names against ${availablePeople.length} people`);
 
-    const { result: rawResponse } = await aiChat<string>({
+    const { result: rawResponse, usage } = await aiChat<string>({
         systemPrompt: `You are a Greek name matcher for municipal council members.
 
 Match each name from "unmatchedNames" to its corresponding person from "availablePeople".
@@ -307,7 +317,7 @@ Rules:
     const jsonEnd = rawResponse.lastIndexOf(']');
     if (jsonEnd === -1) {
         console.warn(`  LLM returned no valid JSON array, treating all as unmatched`);
-        return { matched: [], stillUnmatched: unmatchedNames };
+        return { matched: [], stillUnmatched: unmatchedNames, usage };
     }
     const result: { name: string; personId: string | null }[] = JSON.parse(rawResponse.slice(0, jsonEnd + 1));
 
@@ -333,7 +343,7 @@ Rules:
     }
 
     console.log(`  LLM matched ${matched.length}, still unmatched: ${stillUnmatched.length}`);
-    return { matched, stillUnmatched };
+    return { matched, stillUnmatched, usage };
 }
 
 /**
@@ -364,13 +374,13 @@ export async function matchAllMembers(
 
 // --- PDF extraction ---
 
-export async function extractDecisionFromPdf(pdfUrl: string): Promise<RawExtractedDecision> {
+export async function extractDecisionFromPdf(pdfUrl: string): Promise<ResultWithUsage<RawExtractedDecision>> {
     const cached = readCache<RawExtractedDecision>(pdfUrl);
-    if (cached) return cached;
+    if (cached) return { result: cached, usage: { ...NO_USAGE } };
 
     const base64 = await downloadPdfToBase64(pdfUrl);
 
-    const { result } = await aiChat<RawExtractedDecision>({
+    const { result, usage } = await aiChat<RawExtractedDecision>({
         systemPrompt: EXTRACTION_SYSTEM_PROMPT,
         userPrompt: 'Extract the required information from this Greek municipal council decision PDF.',
         documentBase64: base64,
@@ -380,5 +390,5 @@ export async function extractDecisionFromPdf(pdfUrl: string): Promise<RawExtract
     });
 
     writeCache(pdfUrl, result);
-    return result;
+    return { result, usage };
 }

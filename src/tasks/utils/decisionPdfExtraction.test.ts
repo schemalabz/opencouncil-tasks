@@ -1,10 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockAiChat } = vi.hoisted(() => ({
+const { mockAiChat, NO_USAGE_MOCK } = vi.hoisted(() => ({
     mockAiChat: vi.fn(),
+    NO_USAGE_MOCK: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
 }));
 vi.mock("../../lib/ai.js", () => ({
     aiChat: mockAiChat,
+    NO_USAGE: NO_USAGE_MOCK,
 }));
 
 import {
@@ -19,7 +21,7 @@ import {
     inferForVotes,
 } from "./decisionPdfExtraction.js";
 
-const noUsage = { input_tokens: 0, output_tokens: 0 };
+const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
 
 // --- normalizeGreekName tests ---
 
@@ -175,13 +177,13 @@ describe('llmMatchMembers', () => {
         mockAiChat.mockReset();
     });
 
-    it('returns LLM-matched names with personIds', async () => {
+    it('returns LLM-matched names with personIds and usage', async () => {
         mockAiChat.mockResolvedValueOnce({
             result: JSON.stringify([
                 { name: 'ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ', personId: 'p1' },
                 { name: 'ΑΓΝΩΣΤΟΣ', personId: null },
             ]),
-            usage: noUsage,
+            usage: { input_tokens: 50, output_tokens: 25 },
         });
 
         const result = await llmMatchMembers(
@@ -191,12 +193,14 @@ describe('llmMatchMembers', () => {
 
         expect(result.matched).toEqual([{ name: 'ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ', personId: 'p1' }]);
         expect(result.stillUnmatched).toEqual(['ΑΓΝΩΣΤΟΣ']);
+        expect(result.usage).toEqual({ input_tokens: 50, output_tokens: 25 });
     });
 
     it('returns all names as unmatched when people list is empty', async () => {
         const result = await llmMatchMembers(['NAME1', 'NAME2'], []);
         expect(result.matched).toEqual([]);
         expect(result.stillUnmatched).toEqual(['NAME1', 'NAME2']);
+        expect(result.usage).toEqual(noUsage);
         expect(mockAiChat).not.toHaveBeenCalled();
     });
 
@@ -393,9 +397,10 @@ describe('extractDecisionFromPdf', () => {
             usage: { input_tokens: 100, output_tokens: 50 },
         });
 
-        const result = await extractDecisionFromPdf('https://example.com/test-unique-extraction-url.pdf');
+        const { result, usage } = await extractDecisionFromPdf('https://example.com/test-unique-extraction-url.pdf');
 
         expect(result).toEqual(mockResult);
+        expect(usage).toEqual({ input_tokens: 100, output_tokens: 50 });
         expect(mockAiChat).toHaveBeenCalledOnce();
         expect(fetchSpy).toHaveBeenCalledWith('https://example.com/test-unique-extraction-url.pdf');
 

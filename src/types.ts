@@ -409,25 +409,6 @@ export interface GenerateVoiceprintResult {
  * Extract Decisions (PDF → structured data)
  */
 
-export interface ExtractDecisionsRequest extends TaskRequest {
-    cityId: string;
-    meetingId: string;
-    subjects: {
-        subjectId: string;
-        name: string;
-        agendaItemIndex: number;
-        decision: {
-            pdfUrl: string;
-            ada: string | null;
-            protocolNumber: string | null;
-        };
-    }[];
-    people: {
-        id: string;
-        name: string;
-    }[];
-}
-
 export interface ExtractedDecisionResult {
     subjectId: string;
     excerpt: string;
@@ -437,27 +418,26 @@ export interface ExtractedDecisionResult {
     voteResult: string | null;
     voteDetails: { personId: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
     unmatchedMembers: string[];
-}
-
-export interface ExtractDecisionsResult {
-    decisions: ExtractedDecisionResult[];
-    warnings: string[];
+    subjectInfo: { number: number; isOutOfAgenda: boolean } | null;
 }
 
 /*
- * Task: Poll Decisions (Diavgeia)
+ * Task: Poll Decisions (Diavgeia) — includes extraction
  */
 
 export interface PollDecisionsRequest extends TaskRequest {
     meetingDate: string; // ISO date of the meeting
     diavgeiaUid: string; // Organization UID on Diavgeia
     diavgeiaUnitIds?: string[]; // Optional unit IDs (e.g., ["81689"] for ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ)
+    people: { id: string; name: string }[];
     subjects: Array<{
         subjectId: string;
         name: string;
+        agendaItemIndex: number | null;
         existingDecision?: {
             ada: string;
             decisionTitle: string;
+            pdfUrl: string;
         };
     }>;
 }
@@ -493,6 +473,16 @@ export interface PollDecisionsResult {
             similarity: number;
         }>;
     }>;
+    extractions: {
+        decisions: ExtractedDecisionResult[];
+        warnings: string[];
+    } | null;
+    costs: {
+        input_tokens: number;
+        output_tokens: number;
+        cache_creation_input_tokens: number;
+        cache_read_input_tokens: number;
+    };
     metadata?: {
         diavgeiaUid: string;
         query: object;

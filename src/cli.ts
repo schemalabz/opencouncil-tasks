@@ -394,7 +394,11 @@ program
                     meetingDate,
                     diavgeiaUid: orgUid,
                     diavgeiaUnitIds: unitIds,
-                    subjects,
+                    people: [], // CLI: no people for extraction
+                    subjects: subjects.map((s: { subjectId: string; name: string; agendaItemIndex?: number | null; existingDecision?: { ada: string; decisionTitle: string; pdfUrl: string } }) => ({
+                        ...s,
+                        agendaItemIndex: s.agendaItemIndex ?? null,
+                    })),
                 },
                 (stage: string, progressPercent: number) => {
                     process.stdout.write(`\r[${stage}] ${progressPercent.toFixed(2)}%`);
@@ -586,7 +590,7 @@ program
     .action(async (pdfUrl: string, options: { outputFile?: string }) => {
         try {
             console.log(`Extracting decision data from: ${pdfUrl}`);
-            const result = await extractDecisionFromPdf(pdfUrl);
+            const { result } = await extractDecisionFromPdf(pdfUrl);
 
             // Display attendance changes
             if (result.attendanceChanges?.length > 0) {

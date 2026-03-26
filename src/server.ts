@@ -15,7 +15,6 @@ import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
-import { extractDecisions } from './tasks/extractDecisions.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
@@ -155,13 +154,8 @@ app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
 }));
 
 app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
-  summary: 'Poll decisions from Diavgeia',
-  description: 'Fetch decisions from the Greek Government Transparency portal and match them to meeting subjects'
-}));
-
-app.post('/extractDecisions', taskManager.registerTask(extractDecisions, {
-  summary: 'Extract decision data from PDFs',
-  description: 'Read decision PDFs from Diavgeia and extract structured data: excerpt, references, attendance, vote details'
+  summary: 'Poll and extract decisions from Diavgeia',
+  description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs'
 }));
 
 // Resolve task paths from Express routes, then load API Documentation

@@ -1,12 +1,14 @@
 # Poll Decisions Task
 
 ### Overview
-Fetch decisions from the Diavgeia (Greek Government Transparency) API and match them to meeting agenda subjects. Uses a two-phase matching strategy: fast text-based matching first, then LLM fallback for unmatched subjects. This task enables opencouncil to link council meeting agenda items to their official published decisions.
+Fetch decisions from the Diavgeia (Greek Government Transparency) API, match them to meeting agenda subjects, extract structured data from matched PDFs, and verify matches using PDF content. Uses a multi-phase pipeline: fast text-based matching, LLM fallback for unmatched subjects, conflict resolution, PDF extraction via Claude, and subjectInfo verification. This task enables opencouncil to link council meeting agenda items to their official published decisions and extract attendance, votes, and excerpts in a single pass.
 
 ### Architecture
 - Orchestration: src/tasks/pollDecisions.ts
 - API Client: src/lib/DiavgeiaClient.ts
-- AI Integration: src/lib/ai.ts (for LLM fallback)
+- AI Integration: src/lib/ai.ts (for LLM matching and PDF extraction)
+- PDF Extraction: src/tasks/utils/decisionPdfExtraction.ts (single PDF), src/tasks/utils/extractionPipeline.ts (batch pipeline)
+- Effective Attendance: src/tasks/utils/effectiveAttendance.ts
 - Types: src/types.ts
 
 - Flow
@@ -22,10 +24,15 @@ flowchart TD
   H --> I{Any Unmatched?}
   I -- yes --> J[LLM Matching via Haiku]
   J --> K[Process LLM Results]
-  K --> L[Final Results]
+  K --> L[Conflict Resolution]
   I -- no --> L
   F --> L
   G --> L
+  L --> M{New Matches?}
+  M -- yes --> N[Download PDFs & Extract via Claude]
+  N --> O[Verify Matches via subjectInfo]
+  O --> P[Final Results]
+  M -- no --> P
 ```
 
 ### Input/Output Contract
@@ -33,16 +40,26 @@ flowchart TD
   - meetingDate: ISO date of the meeting (YYYY-MM-DD)
   - diavgeiaUid: Organization UID on Diavgeia (e.g., "6104")
   - diavgeiaUnitIds: Optional array of unit IDs to filter results (e.g., ["81689"])
-  - subjects: Array of { subjectId, name } from the meeting agenda
+  - people: Array of { id, name } — council members for name matching during extraction
+  - subjects: Array of { subjectId, name, agendaItemIndex, existingDecision? }
+    - agendaItemIndex: number | null — used for subjectInfo verification
+    - existingDecision: Optional { ada, decisionTitle, pdfUrl } — previously linked decisions (skipped during extraction)
 - Output: PollDecisionsResult (see src/types.ts)
-  - matches: Successfully matched subjects with ADA, PDF URL, protocol number, issue date, confidence
+  - matches: Successfully matched subjects with ADA, PDF URL, protocol number, publish date, confidence
+  - reassignments: Decisions moved between subjects (with reason)
   - unmatchedSubjects: Subjects with no matching decision (includes reason)
   - ambiguousSubjects: Subjects with multiple possible matches (includes candidates)
+  - extractions: Extracted data from matched PDFs, or null if no new matches
+    - decisions: Array of ExtractedDecisionResult (excerpt, references, attendance, votes, subjectInfo)
+    - warnings: Extraction warnings (unmatched member names, etc.)
+  - costs: Token usage across all LLM calls (input, output, cache creation, cache read)
   - metadata: Query info and counts
 
 - File References
   - Orchestration: src/tasks/pollDecisions.ts
   - Diavgeia Client: src/lib/DiavgeiaClient.ts
+  - PDF Extraction: src/tasks/utils/decisionPdfExtraction.ts, src/tasks/utils/extractionPipeline.ts
+  - Effective Attendance: src/tasks/utils/effectiveAttendance.ts
   - Types: src/types.ts
 
 ### Processing Pipeline
@@ -51,12 +68,12 @@ flowchart TD
    - Start: meeting date
    - End: meeting date + 45 days (decisions may be published later)
 
-2) **Fetch Decisions from Diavgeia**
+2) **Fetch Decisions from Diavgeia** (5%)
    - Uses DiavgeiaClient.fetchAllDecisions()
    - Filters by organization UID, date range, and optional unit IDs (one query per unit ID, deduplicated by ADA)
    - Handles pagination automatically (100 decisions per page)
 
-3) **Text-Based Matching (First Pass)**
+3) **Text-Based Matching** (15%)
    For each subject, find the best matching decision using:
    - **Exact match**: Normalized text comparison (lowercase, punctuation removed)
    - **Containment**: One text contains the other
@@ -67,24 +84,46 @@ flowchart TD
    - HIGH_CONFIDENCE_THRESHOLD = 0.45 (accept as match)
    - AMBIGUOUS_THRESHOLD = 0.30 (consider as candidate)
 
-4) **LLM Matching (Second Pass)**
+4) **LLM Matching** (35%)
    For subjects that didn't match with high confidence:
    - Uses Claude 3.5 Haiku (cheap, fast)
    - Provides semantic matching for Greek word inflection differences
    - Returns confidence: 'high' (0.85), 'low' (0.6), or 'none'
+   - Returns usage for cost tracking
 
-5) **Return Results**
-   - Matches with ADA, decision title, PDF URL, protocol number, issue date, confidence
+5) **Conflict Resolution** (45%)
+   - Detects when multiple subjects match the same decision
+   - Uses Claude to pick the best match with explanation
+   - Returns usage for cost tracking
+
+6) **PDF Extraction** (50-85%)
+   For newly matched subjects (excludes subjects with `existingDecision`):
+   - Downloads PDFs in batches of 5
+   - Sends each PDF to Claude Sonnet for extraction
+   - Extracts: excerpt, references, present/absent members, vote details, attendance changes, discussion order, subjectInfo
+   - Performs meeting-level name matching (token-sort + Haiku LLM fallback) to map PDF member names to person IDs
+   - Computes effective attendance per subject using each PDF's own data (self-contained — no external context needed)
+   - Infers vote records (unanimous → FOR for all present members)
+
+7) **Match Verification** (90%)
+   For each extraction result, cross-checks `subjectInfo` against the matched subject:
+   - If `subjectInfo.number` matches `agendaItemIndex` and `isOutOfAgenda` is consistent → confirmed
+   - If mismatch → match is discarded, decision moved to `unmatchedSubjects`
+
+8) **Return Results** (100%)
+   - Verified matches with ADA, decision title, PDF URL, protocol number, publish date, confidence
+   - Extraction results with attendance, votes, excerpts per subject
+   - Accumulated costs from all LLM calls
    - Unmatched subjects with reasons
    - Ambiguous subjects with candidate list
 
 ### Dependencies
 - External services:
   - Diavgeia API (https://diavgeia.gov.gr/opendata) - no authentication required
-  - Anthropic Claude API (for LLM fallback)
+  - Anthropic Claude API (Haiku for matching, Sonnet for PDF extraction)
 - Libraries: Standard fetch for HTTP
 - Environment variables:
-  - ANTHROPIC_API_KEY (for LLM matching)
+  - ANTHROPIC_API_KEY (for LLM matching and PDF extraction)
 
 ### Integration Points
 - API endpoint: POST /tasks/pollDecisions
@@ -93,33 +132,45 @@ flowchart TD
 
 ### Configuration
 - Env vars
-  - ANTHROPIC_API_KEY: Required for LLM fallback matching
+  - ANTHROPIC_API_KEY: Required for LLM matching and PDF extraction
 - Parameters (request)
   - diavgeiaUnitIds: Filter to specific organizational units (recommended)
   - Date range: Automatically calculated as meetingDate to meetingDate + 45 days
 
 ### Key Functions & Utilities
+
+**Matching:**
 - **normalizeText(text)**: Lowercase, remove quotes/punctuation, collapse whitespace
 - **tokenize(text)**: Extract word tokens for similarity comparison
 - **jaccardSimilarity(text1, text2)**: Token-based similarity (0-1)
 - **wordCoverage(text1, text2)**: Percentage of shorter text's words in longer text
 - **containsNormalized(text1, text2)**: Check if one contains the other
 - **findBestMatch(subject, decisions, usedDecisions)**: Find best matching decision
-- **llmMatchSubjects(unmatchedSubjects, availableDecisions)**: LLM fallback via Haiku
+- **llmMatchSubjects(unmatchedSubjects, availableDecisions)**: LLM fallback via Haiku (returns results + usage)
+- **resolveConflict(subjectA, subjectB, decision)**: LLM-based conflict resolution (returns winner + usage)
+
+**Extraction:**
+- **extractDecisionsFromPdfs(subjects, people, onProgress)**: Batch extraction pipeline — downloads PDFs, extracts via Claude, matches names, computes attendance
+- **extractDecisionFromPdf(pdfUrl)**: Single PDF extraction via Claude Sonnet
+- **computeEffectiveAttendance(rawDecision, targetSubjectNumber, allAgendaItemNumbers)**: Per-subject attendance from PDF data
 
 ### Data Flow & State Management
 - Stateless per request
 - No persistent state or caching
 - Tracks used decisions to prevent duplicate matches
+- Accumulates token usage from all LLM calls (matching + extraction)
 - Progress reported via onProgress callback:
-  - "fetching decisions" (10%)
-  - "matching subjects" (50%)
-  - "LLM matching" (70%)
+  - "fetching decisions" (5%)
+  - "matching subjects" (15%)
+  - "LLM matching" (35%)
+  - "conflict resolution" (45%)
+  - "extracting PDFs" (50-85%)
+  - "verifying matches" (90%)
   - "complete" (100%)
 
 ### Automated Polling (Cron Job)
 
-The opencouncil frontend has a cron endpoint that automatically polls Diavgeia for recent meetings with unlinked subjects. This server can run the cron script to call that endpoint on a schedule.
+The opencouncil frontend has a cron endpoint that automatically polls Diavgeia for recent meetings with unlinked subjects. Since extraction is now part of the poll task, cron-triggered polls automatically extract data from newly matched decisions — no manual extraction step needed.
 
 #### Prerequisites
 

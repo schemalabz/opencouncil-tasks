@@ -3,17 +3,30 @@ import type { Decision } from '@schemalabs/diavgeia-cli';
 import type { PollDecisionsRequest } from "../types.js";
 
 // Mock diavgeia-cli
-const { mockSearchAll } = vi.hoisted(() => ({
+const { mockSearchAll, NO_USAGE_MOCK } = vi.hoisted(() => ({
     mockSearchAll: vi.fn(),
+    NO_USAGE_MOCK: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
 }));
 vi.mock('@schemalabs/diavgeia-cli', () => ({
     Diavgeia: vi.fn(() => ({ searchAll: mockSearchAll })),
     msToISODate: (ms: number) => new Date(ms).toISOString().split('T')[0],
 }));
 
-// Mock aiChat
+// Mock aiChat + usage helpers
 vi.mock("../lib/ai.js", () => ({
-    aiChat: vi.fn(async () => ({ result: [], usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null } })),
+    aiChat: vi.fn(async () => ({ result: [], usage: NO_USAGE_MOCK })),
+    NO_USAGE: NO_USAGE_MOCK,
+    addUsage: (a: Record<string, number>, b: Record<string, number>) => ({
+        input_tokens: a.input_tokens + b.input_tokens,
+        output_tokens: a.output_tokens + b.output_tokens,
+        cache_creation_input_tokens: (a.cache_creation_input_tokens || 0) + (b.cache_creation_input_tokens || 0),
+        cache_read_input_tokens: (a.cache_read_input_tokens || 0) + (b.cache_read_input_tokens || 0),
+    }),
+}));
+
+// Mock extractionPipeline (extraction is tested separately)
+vi.mock("./utils/extractionPipeline.js", () => ({
+    extractDecisionsFromPdfs: vi.fn(async () => ({ decisions: [], warnings: [], usage: NO_USAGE_MOCK })),
 }));
 
 import { aiChat } from "../lib/ai.js";
@@ -56,6 +69,7 @@ function makeRequest(overrides: Partial<PollDecisionsRequest> = {}): PollDecisio
         callbackUrl: "http://localhost/api/taskStatuses/task-1",
         meetingDate: "2025-01-10",
         diavgeiaUid: "6104",
+        people: [],
         subjects: [],
         ...overrides,
     };
@@ -83,7 +97,8 @@ describe("pollDecisions - matching behavior", () => {
                     {
                         subjectId: "subA",
                         name: "Έγκριση προϋπολογισμού 2025",
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025" },
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
                 ],
             }),
@@ -114,9 +129,10 @@ describe("pollDecisions - matching behavior", () => {
                     {
                         subjectId: "subA",
                         name: "Έγκριση προϋπολογισμού 2025",
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025" },
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Τροποποίηση κανονισμού λειτουργίας" },
+                    { subjectId: "subB", name: "Τροποποίηση κανονισμού λειτουργίας", agendaItemIndex: 2 },
                 ],
             }),
             noopProgress,
@@ -139,7 +155,7 @@ describe("pollDecisions - matching behavior", () => {
         const result = await pollDecisions(
             makeRequest({
                 subjects: [
-                    { subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025" },
+                    { subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 1 },
                 ],
             }),
             noopProgress,
@@ -174,9 +190,10 @@ describe("pollDecisions - conflict resolution", () => {
                     {
                         subjectId: "subA",
                         name: "Ψήφισμα κατά της βίας",
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης" },
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης" },
+                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 2 },
                 ],
             }),
             noopProgress,
@@ -218,9 +235,10 @@ describe("pollDecisions - conflict resolution", () => {
                     {
                         subjectId: "subA",
                         name: "Έγκριση προϋπολογισμού 2025",
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025" },
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Έγκριση τεχνικού προϋπολογισμού 2025" },
+                    { subjectId: "subB", name: "Έγκριση τεχνικού προϋπολογισμού 2025", agendaItemIndex: 2 },
                 ],
             }),
             noopProgress,
@@ -254,9 +272,10 @@ describe("pollDecisions - conflict resolution", () => {
                     {
                         subjectId: "subA",
                         name: "Old subject",
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Old decision outside range" },
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Old decision outside range", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Unmatched subject" },
+                    { subjectId: "subB", name: "Unmatched subject", agendaItemIndex: 2 },
                 ],
             }),
             noopProgress,
@@ -312,18 +331,20 @@ describe("pollDecisions - mixed scenario", () => {
                     {
                         subjectId: "subA",
                         name: "Ψήφισμα",
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας έργου ανάπλασης" },
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
                     // subB correctly holds D2
                     {
                         subjectId: "subB",
                         name: "Τροποποίηση κανονισμού λειτουργίας",
-                        existingDecision: { ada: "ADA-D2", decisionTitle: "Τροποποίηση κανονισμού λειτουργίας" },
+                        agendaItemIndex: 2,
+                        existingDecision: { ada: "ADA-D2", decisionTitle: "Τροποποίηση κανονισμού λειτουργίας", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D2" },
                     },
                     // subC should get D1 via reassignment
-                    { subjectId: "subC", name: "Παράταση έργου ανάπλασης" },
+                    { subjectId: "subC", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 3 },
                     // subD has no match
-                    { subjectId: "subD", name: "Κάτι εντελώς διαφορετικό" },
+                    { subjectId: "subD", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 4 },
                 ],
             }),
             noopProgress,

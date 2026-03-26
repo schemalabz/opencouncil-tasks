@@ -1,8 +1,10 @@
 import { Diavgeia, msToISODate } from '@schemalabs/diavgeia-cli';
 import type { Decision } from '@schemalabs/diavgeia-cli';
+import Anthropic from '@anthropic-ai/sdk';
 import { PollDecisionsRequest, PollDecisionsResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { aiChat } from "../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
+import { extractDecisionsFromPdfs, ExtractionSubject } from "./utils/extractionPipeline.js";
 
 const client = new Diavgeia();
 
@@ -178,9 +180,9 @@ interface LLMMatchResult {
 async function llmMatchSubjects(
     unmatchedSubjects: Array<{ subjectId: string; name: string }>,
     availableDecisions: Decision[]
-): Promise<LLMMatchResult[]> {
+): Promise<{ results: LLMMatchResult[]; usage: Anthropic.Messages.Usage }> {
     if (unmatchedSubjects.length === 0 || availableDecisions.length === 0) {
-        return [];
+        return { results: [], usage: { ...NO_USAGE } };
     }
 
     const systemPrompt = `You are a Greek municipal council decision matcher. Your task is to match meeting agenda subjects with their corresponding Diavgeia (government transparency portal) decisions.
@@ -217,17 +219,17 @@ Return ONLY a JSON array (no explanation text), one object per subject:
 [{"subjectId": "...", "ada": "..." or null, "confidence": "high"|"low"|"none", "reasoning": "brief explanation"}]`;
 
     try {
-        const { result } = await aiChat<LLMMatchResult[]>({
+        const { result, usage } = await aiChat<LLMMatchResult[]>({
             systemPrompt,
             userPrompt,
             model: 'claude-haiku-4-5-20251001',
             prefillSystemResponse: '[',
             prependToResponse: '[',
         });
-        return result;
+        return { results: result, usage };
     } catch (error) {
         console.error('LLM matching failed:', error);
-        return [];
+        return { results: [], usage: { ...NO_USAGE } };
     }
 }
 
@@ -236,9 +238,9 @@ Return ONLY a JSON array (no explanation text), one object per subject:
  */
 async function resolveConflict(
     unmatchedSubject: { subjectId: string; name: string },
-    linkedSubject: { subjectId: string; name: string; existingDecision?: { ada: string; decisionTitle: string } },
+    linkedSubject: { subjectId: string; name: string; existingDecision?: { ada: string; decisionTitle: string; pdfUrl: string } },
     decision: Decision,
-): Promise<{ winner: 'unmatched' | 'linked'; reason: string }> {
+): Promise<{ winner: 'unmatched' | 'linked'; reason: string; usage: Anthropic.Messages.Usage }> {
     const systemPrompt = `You are a Greek municipal council decision matcher. You must determine which of two agenda subjects better corresponds to a Diavgeia decision.
 
 Greek text may have different word forms (inflections) - focus on the semantic meaning, not exact word matches.
@@ -259,7 +261,7 @@ SUBJECT B (currently linked to this decision):
 Return ONLY JSON: {"winner": "A" or "B", "reason": "..."}`;
 
     try {
-        const { result } = await aiChat<{ winner: 'A' | 'B'; reason: string }>({
+        const { result, usage } = await aiChat<{ winner: 'A' | 'B'; reason: string }>({
             systemPrompt,
             userPrompt,
             model: 'claude-haiku-4-5-20251001',
@@ -269,23 +271,27 @@ Return ONLY JSON: {"winner": "A" or "B", "reason": "..."}`;
         return {
             winner: result.winner === 'A' ? 'unmatched' : 'linked',
             reason: result.reason,
+            usage,
         };
     } catch (error) {
         console.error('LLM conflict resolution failed:', error);
         // Default to keeping the existing assignment
-        return { winner: 'linked', reason: 'LLM conflict resolution failed, keeping existing assignment' };
+        return { winner: 'linked', reason: 'LLM conflict resolution failed, keeping existing assignment', usage: { ...NO_USAGE } };
     }
 }
 
 export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = async (request, onProgress) => {
+    let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
+
     console.log("Polling decisions from Diavgeia:", {
         diavgeiaUid: request.diavgeiaUid,
         diavgeiaUnitIds: request.diavgeiaUnitIds,
         meetingDate: request.meetingDate,
         subjectCount: request.subjects.length,
+        peopleCount: request.people?.length ?? 0,
     });
 
-    onProgress("fetching decisions", 10);
+    onProgress("fetching decisions", 5);
 
     // Calculate date range: meeting date to 45 days after (decisions may be published later)
     const meetingDate = new Date(request.meetingDate);
@@ -317,7 +323,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     console.log(`Fetched ${decisions.length} decisions from Diavgeia (${unitIds.length} unit query/queries)`);
 
-    onProgress("matching subjects", 50);
+    onProgress("matching subjects", 15);
 
     // Partition subjects into linked (already have a decision) and unlinked
     const linkedSubjects = request.subjects.filter(s => s.existingDecision);
@@ -398,11 +404,12 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     // Second pass: LLM matching for remaining unmatched subjects
     if (unmatchedSubjects.length > 0) {
-        onProgress("LLM matching", 70);
+        onProgress("LLM matching", 35);
         console.log(`Attempting LLM matching for ${unmatchedSubjects.length} unmatched subjects...`);
 
         const availableDecisions = decisions.filter(d => !usedDecisions.has(d.ada));
-        const llmResults = await llmMatchSubjects(unmatchedSubjects, availableDecisions);
+        const { results: llmResults, usage: llmUsage } = await llmMatchSubjects(unmatchedSubjects, availableDecisions);
+        totalUsage = addUsage(totalUsage, llmUsage);
 
         // Process LLM results
         const stillUnmatched: typeof unmatchedSubjects = [];
@@ -441,24 +448,25 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     // a decision already held by a linked subject
     const conflictingMatches = matches.filter(m => linkedByAda.has(m.ada));
     if (conflictingMatches.length > 0) {
-        onProgress("conflict resolution", 90);
+        onProgress("conflict resolution", 45);
 
         for (const match of conflictingMatches) {
             const linked = linkedByAda.get(match.ada)!;
             const newSubject = unlinkedSubjects.find(s => s.subjectId === match.subjectId)!;
 
             const decision = decisions.find(d => d.ada === match.ada)!;
-            const llmResult = await resolveConflict(newSubject, linked, decision);
+            const { winner, reason, usage: conflictUsage } = await resolveConflict(newSubject, linked, decision);
+            totalUsage = addUsage(totalUsage, conflictUsage);
 
-            if (llmResult.winner === 'unmatched') {
+            if (winner === 'unmatched') {
                 // New match wins — record reassignment, keep match in results
                 reassignments.push({
                     ada: match.ada,
                     fromSubjectId: linked.subjectId,
                     toSubjectId: match.subjectId,
-                    reason: llmResult.reason,
+                    reason,
                 });
-                console.log(`  Conflict resolved: ADA ${match.ada} reassigned from "${linked.name}" to "${newSubject.name}": ${llmResult.reason}`);
+                console.log(`  Conflict resolved: ADA ${match.ada} reassigned from "${linked.name}" to "${newSubject.name}": ${reason}`);
             } else {
                 // Linked subject keeps the decision — remove match, add to unmatched
                 const idx = matches.indexOf(match);
@@ -467,11 +475,90 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 unmatchedSubjects.push({
                     subjectId: match.subjectId,
                     name: newSubject.name,
-                    reason: `ADA ${match.ada} already correctly assigned to another subject: ${llmResult.reason}`,
+                    reason: `ADA ${match.ada} already correctly assigned to another subject: ${reason}`,
                 });
-                console.log(`  Conflict resolved: ADA ${match.ada} stays with "${linked.name}", not "${newSubject.name}": ${llmResult.reason}`);
+                console.log(`  Conflict resolved: ADA ${match.ada} stays with "${linked.name}", not "${newSubject.name}": ${reason}`);
             }
         }
+    }
+
+    // --- Phase 2: Extract PDFs for newly matched subjects ---
+    // Build subject→request lookup for agendaItemIndex
+    const subjectLookup = new Map(request.subjects.map(s => [s.subjectId, s]));
+
+    // Only extract newly matched subjects (skip those with existingDecision — already extracted)
+    const extractionSubjects: ExtractionSubject[] = matches.map(match => {
+        const reqSubject = subjectLookup.get(match.subjectId)!;
+        return {
+            subjectId: match.subjectId,
+            name: reqSubject.name,
+            agendaItemIndex: reqSubject.agendaItemIndex,
+            decision: {
+                pdfUrl: match.pdfUrl,
+                ada: match.ada,
+                protocolNumber: match.protocolNumber,
+            },
+        };
+    });
+
+    let extractionResult: PollDecisionsResult['extractions'] = null;
+
+    if (extractionSubjects.length > 0 && request.people?.length > 0) {
+        onProgress("extracting PDFs", 50);
+        console.log(`\nExtracting ${extractionSubjects.length} newly matched decision PDFs...`);
+
+        const pipelineResult = await extractDecisionsFromPdfs(
+            extractionSubjects,
+            request.people,
+            (stage, percent) => {
+                // Map extraction progress (0-100) to overall progress (50-85)
+                const overallPercent = 50 + (percent / 100) * 35;
+                onProgress(stage, overallPercent);
+            },
+        );
+        totalUsage = addUsage(totalUsage, pipelineResult.usage);
+
+        // --- Verify matches using PDF subjectInfo ---
+        onProgress("verifying matches", 90);
+
+        for (const extraction of pipelineResult.decisions) {
+            if (!extraction.subjectInfo) continue;
+
+            const reqSubject = subjectLookup.get(extraction.subjectId);
+            if (!reqSubject) continue;
+
+            const expectedIndex = reqSubject.agendaItemIndex;
+            if (expectedIndex == null) continue; // Can't verify without an expected index
+
+            // Check if subjectInfo matches the expected agendaItemIndex
+            if (extraction.subjectInfo.number !== expectedIndex) {
+                console.log(`  Verification mismatch: subject "${reqSubject.name}" expected item #${expectedIndex}, PDF says #${extraction.subjectInfo.number}`);
+
+                // Try to find the correct subject for this PDF by subjectInfo
+                const correctSubject = request.subjects.find(s =>
+                    s.agendaItemIndex === extraction.subjectInfo!.number &&
+                    !s.existingDecision // Only unlinked subjects
+                );
+
+                if (correctSubject && correctSubject.subjectId !== extraction.subjectId) {
+                    console.log(`    → Could re-match to "${correctSubject.name}" (item #${correctSubject.agendaItemIndex})`);
+                    // For now, just log the mismatch as a warning — don't discard matches
+                    // since title-based matching is usually more reliable than PDF subject numbering
+                    pipelineResult.warnings.push(
+                        `PDF for "${reqSubject.name}" (ADA: ${matches.find(m => m.subjectId === extraction.subjectId)?.ada}) ` +
+                        `says subject #${extraction.subjectInfo.number}${extraction.subjectInfo.isOutOfAgenda ? ' (out-of-agenda)' : ''}, ` +
+                        `but matched to item #${expectedIndex}. Possible mismatch.`
+                    );
+                }
+            }
+        }
+
+        extractionResult = {
+            decisions: pipelineResult.decisions,
+            warnings: pipelineResult.warnings,
+        };
+    } else if (extractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
+        console.log(`Skipping extraction: no people provided for name matching`);
     }
 
     onProgress("complete", 100);
@@ -481,6 +568,13 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         reassignments,
         unmatchedSubjects,
         ambiguousSubjects,
+        extractions: extractionResult,
+        costs: {
+            input_tokens: totalUsage.input_tokens,
+            output_tokens: totalUsage.output_tokens,
+            cache_creation_input_tokens: totalUsage.cache_creation_input_tokens ?? 0,
+            cache_read_input_tokens: totalUsage.cache_read_input_tokens ?? 0,
+        },
         metadata: {
             diavgeiaUid: request.diavgeiaUid,
             query: { fromDate, toDate, unitIds: request.diavgeiaUnitIds },

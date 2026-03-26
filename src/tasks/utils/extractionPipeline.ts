@@ -1,44 +1,84 @@
-import { Task } from './pipeline.js';
-import { ExtractDecisionsRequest, ExtractDecisionsResult, ExtractedDecisionResult } from '../types.js';
-import { extractDecisionFromPdf, RawExtractedDecision, AttendanceChange, matchPersonByName, llmMatchMembers, inferForVotes } from './utils/decisionPdfExtraction.js';
-import { computeEffectiveAttendance } from './utils/effectiveAttendance.js';
+import Anthropic from '@anthropic-ai/sdk';
+import { addUsage, NO_USAGE } from '../../lib/ai.js';
+import { ExtractedDecisionResult } from '../../types.js';
+import {
+    extractDecisionFromPdf,
+    RawExtractedDecision,
+    AttendanceChange,
+    matchPersonByName,
+    llmMatchMembers,
+    inferForVotes,
+    PersonForMatching,
+} from './decisionPdfExtraction.js';
+import { computeEffectiveAttendance } from './effectiveAttendance.js';
 
-export { extractDecisionFromPdf };
+export interface ExtractionSubject {
+    subjectId: string;
+    name: string;
+    agendaItemIndex: number | null;
+    decision: {
+        pdfUrl: string;
+        ada: string | null;
+        protocolNumber: string | null;
+    };
+}
 
-export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsResult> = async (request, onProgress) => {
+export interface ExtractionPipelineResult {
+    decisions: ExtractedDecisionResult[];
+    warnings: string[];
+    usage: Anthropic.Messages.Usage;
+}
+
+const BATCH_SIZE = 5;
+
+/**
+ * Extract structured decision data from PDFs.
+ *
+ * Each PDF is self-contained for effective attendance: the agenda item list
+ * is derived from the PDF's own attendanceChanges, discussionOrder, and
+ * subjectInfo rather than requiring external context.
+ */
+export async function extractDecisionsFromPdfs(
+    subjects: ExtractionSubject[],
+    people: PersonForMatching[],
+    onProgress: (stage: string, percent: number) => void,
+): Promise<ExtractionPipelineResult> {
     const taskStart = Date.now();
     const warnings: string[] = [];
+    let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
 
-    console.log(`\n========== extractDecisions ==========`);
-    console.log(`Meeting: ${request.cityId}/${request.meetingId}`);
-    console.log(`Subjects with decisions: ${request.subjects.length}`);
-    console.log(`People for matching: ${request.people.length}`);
-    console.log(`======================================\n`);
+    console.log(`\n--- extractDecisionsFromPdfs ---`);
+    console.log(`Subjects with decisions: ${subjects.length}`);
+    console.log(`People for matching: ${people.length}`);
+
+    if (subjects.length === 0) {
+        return { decisions: [], warnings: [], usage: totalUsage };
+    }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
-    const BATCH_SIZE = 5;
-    const extractions: { subjectId: string; raw: RawExtractedDecision }[] = [];
+    const extractions: { subjectId: string; agendaItemIndex: number | null; raw: RawExtractedDecision; usage: Anthropic.Messages.Usage }[] = [];
     let completed = 0;
 
-    for (let i = 0; i < request.subjects.length; i += BATCH_SIZE) {
-        const batch = request.subjects.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < subjects.length; i += BATCH_SIZE) {
+        const batch = subjects.slice(i, i + BATCH_SIZE);
         const batchResults = await Promise.allSettled(
             batch.map(async (subject, batchIdx) => {
                 const idx = i + batchIdx;
                 const pdfUrl = subject.decision.pdfUrl;
-                console.log(`\n[PDF ${idx + 1}/${request.subjects.length}] Subject: "${subject.name}"`);
+                console.log(`\n[PDF ${idx + 1}/${subjects.length}] Subject: "${subject.name}"`);
                 console.log(`  URL: ${pdfUrl}`);
 
                 const pdfStart = Date.now();
-                const raw = await extractDecisionFromPdf(pdfUrl);
+                const { result: raw, usage: pdfUsage } = await extractDecisionFromPdf(pdfUrl);
                 const elapsed = ((Date.now() - pdfStart) / 1000).toFixed(1);
 
                 console.log(`  Excerpt: ${raw.decisionExcerpt?.length ?? 0} chars`);
                 console.log(`  Vote: ${raw.voteResult ?? '(none)'}`);
                 console.log(`  Present: ${raw.presentMembers?.length ?? 0}, Absent: ${raw.absentMembers?.length ?? 0}`);
+                console.log(`  SubjectInfo: ${raw.subjectInfo ? `#${raw.subjectInfo.number}${raw.subjectInfo.isOutOfAgenda ? ' (out-of-agenda)' : ''}` : '(none)'}`);
                 console.log(`  Done in ${elapsed}s`);
 
-                return { subjectId: subject.subjectId, raw };
+                return { subjectId: subject.subjectId, agendaItemIndex: subject.agendaItemIndex, raw, usage: pdfUsage };
             })
         );
 
@@ -46,6 +86,7 @@ export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsRes
             const result = batchResults[j];
             if (result.status === 'fulfilled') {
                 extractions.push(result.value);
+                totalUsage = addUsage(totalUsage, result.value.usage);
             } else {
                 const subject = batch[j];
                 const msg = result.reason instanceof Error ? result.reason.message : 'Unknown error';
@@ -55,38 +96,12 @@ export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsRes
         }
 
         completed += batch.length;
-        const progressPercent = (completed / request.subjects.length) * 80;
-        onProgress(`extracted ${completed}/${request.subjects.length} PDFs`, progressPercent);
+        const progressPercent = (completed / subjects.length) * 100;
+        onProgress(`extracted ${completed}/${subjects.length} PDFs`, progressPercent);
     }
 
-    // --- Extract meeting-level attendance changes and discussion order ---
-    // These are the same across all PDFs for a meeting (initial roll call is identical).
-    // Use the first successful extraction as the source.
-    let meetingAttendanceChanges: AttendanceChange[] = [];
-    let meetingDiscussionOrder: number[] | null = null;
-
-    if (extractions.length > 0) {
-        meetingAttendanceChanges = extractions[0].raw.attendanceChanges || [];
-        meetingDiscussionOrder = extractions[0].raw.discussionOrder ?? null;
-
-        if (meetingAttendanceChanges.length > 0) {
-            console.log(`\n--- Attendance changes (from first PDF) ---`);
-            for (const change of meetingAttendanceChanges) {
-                const where = change.duringAgendaItem != null
-                    ? `during item #${change.duringAgendaItem}`
-                    : change.atSessionBoundary
-                        ? `at session ${change.atSessionBoundary}`
-                        : 'unknown';
-                console.log(`  ${change.type}: ${change.name} (${where})`);
-            }
-        }
-        if (meetingDiscussionOrder) {
-            console.log(`\n--- Discussion order: ${meetingDiscussionOrder.join(', ')} ---`);
-        }
-    }
-
-    // --- Phase 2: Match all names at meeting level ---
-    onProgress('matching members', 85);
+    // --- Phase 2: Meeting-level name matching ---
+    onProgress('matching members', 100);
 
     // Collect all unique raw names across all decisions + attendance changes
     const allRawNames = new Set<string>();
@@ -94,15 +109,13 @@ export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsRes
         for (const name of raw.presentMembers || []) allRawNames.add(name);
         for (const name of raw.absentMembers || []) allRawNames.add(name);
         for (const detail of raw.voteDetails || []) allRawNames.add(detail.name);
-    }
-    for (const change of meetingAttendanceChanges) {
-        allRawNames.add(change.name);
+        for (const change of raw.attendanceChanges || []) allRawNames.add(change.name);
     }
 
     // Step 1: Token-sort matching — build name→personId map
     const nameToPersonId = new Map<string, string>();
     for (const rawName of allRawNames) {
-        const personId = matchPersonByName(rawName, request.people);
+        const personId = matchPersonByName(rawName, people);
         if (personId) {
             nameToPersonId.set(rawName, personId);
         }
@@ -117,10 +130,11 @@ export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsRes
     // Step 2: LLM fallback for remaining unmatched
     if (step1Unmatched.length > 0) {
         const matchedIds = new Set(nameToPersonId.values());
-        const availablePeople = request.people.filter(p => !matchedIds.has(p.id));
+        const availablePeople = people.filter(p => !matchedIds.has(p.id));
 
         try {
             const llmResult = await llmMatchMembers(step1Unmatched, availablePeople);
+            totalUsage = addUsage(totalUsage, llmResult.usage);
             for (const { name, personId } of llmResult.matched) {
                 nameToPersonId.set(name, personId);
             }
@@ -139,37 +153,43 @@ export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsRes
     console.log(`  Final matched: ${nameToPersonId.size}/${allRawNames.size}`);
 
     // --- Phase 3: Build decision results using the name→personId map ---
-    onProgress('building results', 95);
-
-    // Build the set of all agenda item numbers for effective attendance computation.
-    // Include items referenced by attendance changes (even without decisions) so that
-    // departures/arrivals during non-decision items are still processed in the walk.
-    const allAgendaItemNumbers = [...new Set([
-        ...request.subjects.map(s => s.agendaItemIndex),
-        ...meetingAttendanceChanges
-            .filter(c => c.duringAgendaItem != null)
-            .map(c => c.duringAgendaItem!),
-    ])];
-    // Build subjectId → agendaItemIndex lookup
-    const subjectAgendaIndex = new Map(
-        request.subjects.map(s => [s.subjectId, s.agendaItemIndex])
-    );
-
+    // Each PDF is self-contained: build allAgendaItemNumbers from its own data
     const decisions: ExtractedDecisionResult[] = [];
 
-    for (const { subjectId, raw } of extractions) {
+    for (const { subjectId, agendaItemIndex, raw } of extractions) {
         const unmatchedMembers: string[] = [];
 
+        // Determine target agenda item number: prefer PDF's subjectInfo, fall back to request
+        const targetAgendaItemNumber = raw.subjectInfo?.number ?? agendaItemIndex;
+
+        // Build allAgendaItemNumbers from this PDF's own data (self-contained)
+        const agendaItemNumbersFromPdf = new Set<number>();
+        if (targetAgendaItemNumber != null) {
+            agendaItemNumbersFromPdf.add(targetAgendaItemNumber);
+        }
+        for (const change of raw.attendanceChanges || []) {
+            if (change.duringAgendaItem != null) {
+                agendaItemNumbersFromPdf.add(change.duringAgendaItem);
+            }
+        }
+        if (raw.discussionOrder) {
+            for (const n of raw.discussionOrder) {
+                agendaItemNumbersFromPdf.add(n);
+            }
+        }
+
         // Compute effective attendance for this subject
-        const targetIndex = subjectAgendaIndex.get(subjectId);
-        const effective = targetIndex != null
+        const meetingAttendanceChanges = raw.attendanceChanges || [];
+        const meetingDiscussionOrder = raw.discussionOrder ?? null;
+
+        const effective = targetAgendaItemNumber != null
             ? computeEffectiveAttendance({
                 initialPresent: raw.presentMembers || [],
                 initialAbsent: raw.absentMembers || [],
                 attendanceChanges: meetingAttendanceChanges,
                 discussionOrder: meetingDiscussionOrder,
-                allAgendaItemNumbers,
-                targetAgendaItemNumber: targetIndex,
+                allAgendaItemNumbers: [...agendaItemNumbersFromPdf],
+                targetAgendaItemNumber,
             })
             : { presentNames: raw.presentMembers || [], absentNames: raw.absentMembers || [] };
 
@@ -217,18 +237,16 @@ export const extractDecisions: Task<ExtractDecisionsRequest, ExtractDecisionsRes
             voteResult: raw.voteResult || null,
             voteDetails,
             unmatchedMembers: [...new Set(unmatchedMembers)],
+            subjectInfo: raw.subjectInfo || null,
         });
 
         console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${unmatchedMembers.length} unmatched, ${voteDetails.length} votes`);
     }
 
     const totalElapsed = ((Date.now() - taskStart) / 1000).toFixed(1);
-    console.log(`\n========== extractDecisions DONE (${totalElapsed}s) ==========`);
-    console.log(`  Extracted: ${extractions.length}/${request.subjects.length}`);
+    console.log(`\n--- extractDecisionsFromPdfs DONE (${totalElapsed}s) ---`);
+    console.log(`  Extracted: ${extractions.length}/${subjects.length}`);
     console.log(`  Warnings: ${warnings.length}`);
-    console.log(`====================================================\n`);
 
-    onProgress('complete', 100);
-
-    return { decisions, warnings };
-};
+    return { decisions, warnings, usage: totalUsage };
+}
