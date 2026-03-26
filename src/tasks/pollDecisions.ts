@@ -504,7 +504,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     // Build subject→request lookup for agendaItemIndex
     const subjectLookup = new Map(request.subjects.map(s => [s.subjectId, s]));
 
-    // Only extract newly matched subjects (skip those with existingDecision — already extracted)
+    // Extract newly matched subjects
     const extractionSubjects: ExtractionSubject[] = matches.map(match => {
         const reqSubject = subjectLookup.get(match.subjectId)!;
         return {
@@ -519,14 +519,31 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         };
     });
 
+    // Also include subjects with linked decisions that need extraction
+    // (e.g., PDF extraction failed on a previous run but the match was saved)
+    const needsExtractionSubjects: ExtractionSubject[] = request.subjects
+        .filter(s => s.existingDecision?.needsExtraction)
+        .map(s => ({
+            subjectId: s.subjectId,
+            name: s.name,
+            agendaItemIndex: s.agendaItemIndex,
+            decision: {
+                pdfUrl: s.existingDecision!.pdfUrl,
+                ada: s.existingDecision!.ada,
+                protocolNumber: null,
+            },
+        }));
+
+    const allExtractionSubjects = [...extractionSubjects, ...needsExtractionSubjects];
+
     let extractionResult: PollDecisionsResult['extractions'] = null;
 
-    if (extractionSubjects.length > 0 && request.people?.length > 0) {
+    if (allExtractionSubjects.length > 0 && request.people?.length > 0) {
         onProgress("extracting PDFs", 50);
-        console.log(`\nExtracting ${extractionSubjects.length} newly matched decision PDFs...`);
+        console.log(`\nExtracting ${allExtractionSubjects.length} decision PDFs (${extractionSubjects.length} new, ${needsExtractionSubjects.length} re-extraction)...`);
 
         const pipelineResult = await extractDecisionsFromPdfs(
-            extractionSubjects,
+            allExtractionSubjects,
             request.people,
             (stage, percent) => {
                 // Map extraction progress (0-100) to overall progress (50-85)
@@ -608,7 +625,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             decisions: pipelineResult.decisions,
             warnings: pipelineResult.warnings,
         };
-    } else if (extractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
+    } else if (allExtractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
         console.log(`Skipping extraction: no people provided for name matching`);
     }
 

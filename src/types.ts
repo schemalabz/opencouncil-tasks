@@ -438,6 +438,7 @@ export interface PollDecisionsRequest extends TaskRequest {
             ada: string;
             decisionTitle: string;
             pdfUrl: string;
+            needsExtraction?: boolean;
         };
     }>;
 }

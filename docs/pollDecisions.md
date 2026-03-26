@@ -43,7 +43,7 @@ flowchart TD
   - people: Array of { id, name } — council members for name matching during extraction
   - subjects: Array of { subjectId, name, agendaItemIndex, existingDecision? }
     - agendaItemIndex: number | null — used for subjectInfo verification
-    - existingDecision: Optional { ada, decisionTitle, pdfUrl } — previously linked decisions (skipped during extraction)
+    - existingDecision: Optional { ada, decisionTitle, pdfUrl, needsExtraction? } — previously linked decisions (re-extracted if needsExtraction is true)
 - Output: PollDecisionsResult (see src/types.ts)
   - matches: Successfully matched subjects with ADA, PDF URL, protocol number, publish date, confidence
   - reassignments: Decisions moved between subjects (with reason)
@@ -97,7 +97,7 @@ flowchart TD
    - Returns usage for cost tracking
 
 6) **PDF Extraction** (50-85%)
-   For newly matched subjects (excludes subjects with `existingDecision`):
+   For newly matched subjects plus subjects with `needsExtraction` (linked but no extraction data):
    - Downloads PDFs in batches of 5
    - Sends each PDF to Claude Sonnet for extraction
    - Extracts: excerpt, references, present/absent members, vote details, attendance changes, discussion order, subjectInfo
@@ -107,8 +107,10 @@ flowchart TD
 
 7) **Match Verification** (90%)
    For each extraction result, cross-checks `subjectInfo` against the matched subject:
-   - If `subjectInfo.number` matches `agendaItemIndex` and `isOutOfAgenda` is consistent → confirmed
-   - If mismatch → match is discarded, decision moved to `unmatchedSubjects`
+   - Regular subjects: `subjectInfo.number` must match `agendaItemIndex` and `isOutOfAgenda` must be false
+   - outOfAgenda subjects (`agendaItemIndex: null`): `isOutOfAgenda` must be true
+   - On mismatch → match is discarded, subject moved to `unmatchedSubjects`
+   - On number mismatch → attempts re-match to the subject with the correct `agendaItemIndex`
 
 8) **Return Results** (100%)
    - Verified matches with ADA, decision title, PDF URL, protocol number, publish date, confidence
@@ -151,7 +153,7 @@ flowchart TD
 
 **Extraction:**
 - **extractDecisionsFromPdfs(subjects, people, onProgress)**: Batch extraction pipeline — downloads PDFs, extracts via Claude, matches names, computes attendance
-- **extractDecisionFromPdf(pdfUrl)**: Single PDF extraction via Claude Sonnet
+- **extractDecisionFromPdf(pdfUrl)**: Single PDF extraction via Claude Sonnet (returns `ResultWithUsage<RawExtractedDecision>`)
 - **computeEffectiveAttendance(rawDecision, targetSubjectNumber, allAgendaItemNumbers)**: Per-subject attendance from PDF data
 
 ### Data Flow & State Management
