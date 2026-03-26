@@ -1,10 +1,28 @@
 import { Diavgeia, msToISODate } from '@schemalabs/diavgeia-cli';
 import type { Decision } from '@schemalabs/diavgeia-cli';
 import Anthropic from '@anthropic-ai/sdk';
-import { PollDecisionsRequest, PollDecisionsResult } from "../types.js";
+import { PollDecisionsRequest, PollDecisionsResult, ExtractedDecisionResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
 import { extractDecisionsFromPdfs, ExtractionSubject } from "./utils/extractionPipeline.js";
+
+/**
+ * Remove a match and its extraction from the results, moving the subject to unmatched.
+ */
+function removeMatchAndExtraction(
+    subjectId: string,
+    matchesArr: PollDecisionsResult['matches'],
+    decisionsArr: ExtractedDecisionResult[],
+    unmatchedArr: PollDecisionsResult['unmatchedSubjects'],
+    subjectName: string,
+    reason: string,
+) {
+    const matchIdx = matchesArr.findIndex(m => m.subjectId === subjectId);
+    if (matchIdx >= 0) matchesArr.splice(matchIdx, 1);
+    const decIdx = decisionsArr.findIndex(d => d.subjectId === subjectId);
+    if (decIdx >= 0) decisionsArr.splice(decIdx, 1);
+    unmatchedArr.push({ subjectId, name: subjectName, reason });
+}
 
 const client = new Diavgeia();
 
@@ -519,37 +537,70 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         totalUsage = addUsage(totalUsage, pipelineResult.usage);
 
         // --- Verify matches using PDF subjectInfo ---
+        // Discard matches where the PDF's subject number contradicts the expected
+        // agendaItemIndex, and attempt to re-match to the correct subject.
         onProgress("verifying matches", 90);
 
-        for (const extraction of pipelineResult.decisions) {
+        const matchBySubjectId = new Map(matches.map(m => [m.subjectId, m]));
+
+        for (const extraction of [...pipelineResult.decisions]) { // iterate copy since we mutate
             if (!extraction.subjectInfo) continue;
 
             const reqSubject = subjectLookup.get(extraction.subjectId);
             if (!reqSubject) continue;
 
             const expectedIndex = reqSubject.agendaItemIndex;
-            if (expectedIndex == null) continue; // Can't verify without an expected index
+            const isOutOfAgenda = expectedIndex == null;
 
-            // Check if subjectInfo matches the expected agendaItemIndex
+            // outOfAgenda subjects: verify isOutOfAgenda consistency
+            if (isOutOfAgenda) {
+                if (!extraction.subjectInfo.isOutOfAgenda) {
+                    // Subject is outOfAgenda but PDF says regular item → mismatch
+                    removeMatchAndExtraction(extraction.subjectId, matches, pipelineResult.decisions,
+                        unmatchedSubjects, reqSubject.name,
+                        `PDF says regular item #${extraction.subjectInfo.number}, but subject is out-of-agenda`);
+                    pipelineResult.warnings.push(
+                        `Subject "${reqSubject.name}" is out-of-agenda but PDF says regular item #${extraction.subjectInfo.number}. Match discarded.`);
+                }
+                continue; // isOutOfAgenda: true → consistent, keep match
+            }
+
+            // Regular subjects: check isOutOfAgenda consistency
+            if (extraction.subjectInfo.isOutOfAgenda) {
+                removeMatchAndExtraction(extraction.subjectId, matches, pipelineResult.decisions,
+                    unmatchedSubjects, reqSubject.name,
+                    `PDF says out-of-agenda, but subject is regular item #${expectedIndex}`);
+                pipelineResult.warnings.push(
+                    `Subject "${reqSubject.name}" is item #${expectedIndex} but PDF says out-of-agenda. Match discarded.`);
+                continue;
+            }
+
+            // Regular subjects: check number match
             if (extraction.subjectInfo.number !== expectedIndex) {
-                console.log(`  Verification mismatch: subject "${reqSubject.name}" expected item #${expectedIndex}, PDF says #${extraction.subjectInfo.number}`);
+                removeMatchAndExtraction(extraction.subjectId, matches, pipelineResult.decisions,
+                    unmatchedSubjects, reqSubject.name,
+                    `PDF says subject #${extraction.subjectInfo.number} but matched to item #${expectedIndex}`);
 
-                // Try to find the correct subject for this PDF by subjectInfo
+                // Try re-matching to the correct subject
                 const correctSubject = request.subjects.find(s =>
                     s.agendaItemIndex === extraction.subjectInfo!.number &&
-                    !s.existingDecision // Only unlinked subjects
+                    !s.existingDecision &&
+                    unmatchedSubjects.some(u => u.subjectId === s.subjectId)
                 );
-
-                if (correctSubject && correctSubject.subjectId !== extraction.subjectId) {
-                    console.log(`    → Could re-match to "${correctSubject.name}" (item #${correctSubject.agendaItemIndex})`);
-                    // For now, just log the mismatch as a warning — don't discard matches
-                    // since title-based matching is usually more reliable than PDF subject numbering
-                    pipelineResult.warnings.push(
-                        `PDF for "${reqSubject.name}" (ADA: ${matches.find(m => m.subjectId === extraction.subjectId)?.ada}) ` +
-                        `says subject #${extraction.subjectInfo.number}${extraction.subjectInfo.isOutOfAgenda ? ' (out-of-agenda)' : ''}, ` +
-                        `but matched to item #${expectedIndex}. Possible mismatch.`
-                    );
+                if (correctSubject) {
+                    const originalMatch = matchBySubjectId.get(extraction.subjectId);
+                    if (originalMatch) {
+                        matches.push({ ...originalMatch, subjectId: correctSubject.subjectId });
+                        extraction.subjectId = correctSubject.subjectId;
+                        pipelineResult.decisions.push(extraction);
+                        const unmIdx = unmatchedSubjects.findIndex(u => u.subjectId === correctSubject.subjectId);
+                        if (unmIdx >= 0) unmatchedSubjects.splice(unmIdx, 1);
+                        pipelineResult.warnings.push(
+                            `Re-matched PDF (subject #${extraction.subjectInfo.number}) from "${reqSubject.name}" to "${correctSubject.name}".`);
+                    }
                 }
+                pipelineResult.warnings.push(
+                    `Subject "${reqSubject.name}" expected item #${expectedIndex}, PDF says #${extraction.subjectInfo.number}. Match discarded.`);
             }
         }
 

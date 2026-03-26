@@ -30,9 +30,11 @@ vi.mock("./utils/extractionPipeline.js", () => ({
 }));
 
 import { aiChat } from "../lib/ai.js";
+import { extractDecisionsFromPdfs } from "./utils/extractionPipeline.js";
 import { pollDecisions } from "./pollDecisions.js";
 
 const mockAiChat = vi.mocked(aiChat);
+const mockExtractDecisions = vi.mocked(extractDecisionsFromPdfs);
 const noopProgress = vi.fn();
 const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
 
@@ -367,5 +369,219 @@ describe("pollDecisions - mixed scenario", () => {
         // Linked subjects not in matches
         expect(result.matches.find(m => m.subjectId === "subA")).toBeUndefined();
         expect(result.matches.find(m => m.subjectId === "subB")).toBeUndefined();
+    });
+});
+
+describe("pollDecisions - verification", () => {
+    const people = [{ id: "person1", name: "Test Person" }];
+
+    it("discards match when PDF subject number mismatches agendaItemIndex", async () => {
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Έγκριση προϋπολογισμού 2025",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockExtractDecisions.mockResolvedValueOnce({
+            decisions: [{
+                subjectId: "subA",
+                excerpt: "test",
+                references: "",
+                presentMemberIds: [],
+                absentMemberIds: [],
+                voteResult: null,
+                voteDetails: [],
+                unmatchedMembers: [],
+                subjectInfo: { number: 5, isOutOfAgenda: false },
+            }],
+            warnings: [],
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                people,
+                subjects: [
+                    { subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 3 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        // Match discarded — subject moved to unmatched
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
+        expect(result.extractions?.warnings.length).toBeGreaterThan(0);
+    });
+
+    it("re-matches to correct subject when number mismatch has a candidate", async () => {
+        // D1 matches subA by title, but PDF says it's subject #5, not #3
+        // subB is item #5 and currently unmatched
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Έγκριση προϋπολογισμού 2025",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+        // LLM matching for subB (no match for it)
+        mockAiChat.mockResolvedValueOnce({
+            result: [{ subjectId: "subB", ada: null, confidence: "none", reasoning: "No match" }],
+            usage: noUsage,
+        });
+
+        mockExtractDecisions.mockResolvedValueOnce({
+            decisions: [{
+                subjectId: "subA",
+                excerpt: "test",
+                references: "",
+                presentMemberIds: [],
+                absentMemberIds: [],
+                voteResult: null,
+                voteDetails: [],
+                unmatchedMembers: [],
+                subjectInfo: { number: 5, isOutOfAgenda: false },
+            }],
+            warnings: [],
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                people,
+                subjects: [
+                    { subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 3 },
+                    { subjectId: "subB", name: "Θέμα 5ο", agendaItemIndex: 5 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        // subA match discarded, re-matched to subB
+        expect(result.matches.find(m => m.subjectId === "subA")).toBeUndefined();
+        const matchB = result.matches.find(m => m.subjectId === "subB");
+        expect(matchB).toBeDefined();
+        expect(matchB!.ada).toBe("ADA-D1");
+        // subA in unmatched (removed from original match), subB no longer unmatched
+        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
+        expect(result.unmatchedSubjects.find(u => u.subjectId === "subB")).toBeUndefined();
+    });
+
+    it("keeps match for outOfAgenda subject when PDF says isOutOfAgenda: true", async () => {
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Έκτακτο θέμα",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockExtractDecisions.mockResolvedValueOnce({
+            decisions: [{
+                subjectId: "subA",
+                excerpt: "test",
+                references: "",
+                presentMemberIds: [],
+                absentMemberIds: [],
+                voteResult: null,
+                voteDetails: [],
+                unmatchedMembers: [],
+                subjectInfo: { number: 2, isOutOfAgenda: true },
+            }],
+            warnings: [],
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                people,
+                subjects: [
+                    { subjectId: "subA", name: "Έκτακτο θέμα", agendaItemIndex: null },
+                ],
+            }),
+            noopProgress,
+        );
+
+        // Match kept — outOfAgenda consistent
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects).toHaveLength(0);
+    });
+
+    it("discards outOfAgenda match when PDF says regular item", async () => {
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Έκτακτο θέμα",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockExtractDecisions.mockResolvedValueOnce({
+            decisions: [{
+                subjectId: "subA",
+                excerpt: "test",
+                references: "",
+                presentMemberIds: [],
+                absentMemberIds: [],
+                voteResult: null,
+                voteDetails: [],
+                unmatchedMembers: [],
+                subjectInfo: { number: 3, isOutOfAgenda: false },
+            }],
+            warnings: [],
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                people,
+                subjects: [
+                    { subjectId: "subA", name: "Έκτακτο θέμα", agendaItemIndex: null },
+                ],
+            }),
+            noopProgress,
+        );
+
+        // Match discarded — PDF says regular item but subject is outOfAgenda
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
+    });
+
+    it("discards regular match when PDF says out-of-agenda", async () => {
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Θέμα 3ο",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockExtractDecisions.mockResolvedValueOnce({
+            decisions: [{
+                subjectId: "subA",
+                excerpt: "test",
+                references: "",
+                presentMemberIds: [],
+                absentMemberIds: [],
+                voteResult: null,
+                voteDetails: [],
+                unmatchedMembers: [],
+                subjectInfo: { number: 1, isOutOfAgenda: true },
+            }],
+            warnings: [],
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                people,
+                subjects: [
+                    { subjectId: "subA", name: "Θέμα 3ο", agendaItemIndex: 3 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        // Match discarded — regular subject but PDF says out-of-agenda
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
     });
 });
