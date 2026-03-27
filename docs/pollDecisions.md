@@ -100,15 +100,15 @@ flowchart TD
    For newly matched subjects plus subjects with `needsExtraction` (linked but no extraction data):
    - Downloads PDFs in batches of 5
    - Sends each PDF to Claude Sonnet for extraction
-   - Extracts: excerpt, references, present/absent members, vote details, attendance changes, discussion order, subjectInfo
+   - Extracts: excerpt, references, present/absent members, vote details, attendance changes (with timing), discussion order (with out-of-agenda items), subjectInfo
    - Performs meeting-level name matching (token-sort + Haiku LLM fallback) to map PDF member names to person IDs
-   - Computes effective attendance per subject using each PDF's own data (self-contained — no external context needed)
-   - Infers vote records (unanimous → FOR for all present members)
+   - Computes effective attendance per subject via `processRawExtraction()` — accounts for mid-meeting arrivals/departures and non-standard discussion order using each PDF's own data (self-contained)
+   - Infers vote records from effective present members: unanimous ("Ομόφωνα") → all present get FOR; majority ("κατά πλειοψηφία") with only AGAINST/ABSTAIN listed → remaining present get FOR. All vote inference is handled here in the backend — the frontend writes `voteDetails` as-is
 
 7) **Match Verification** (90%)
-   For each extraction result, cross-checks `subjectInfo` against the matched subject:
-   - Regular subjects: `subjectInfo.number` must match `agendaItemIndex` and `isOutOfAgenda` must be false
-   - outOfAgenda subjects (`agendaItemIndex: null`): `isOutOfAgenda` must be true
+   For each extraction result, cross-checks `subjectInfo` (an `AgendaItemRef`) against the matched subject:
+   - Regular subjects: `subjectInfo.agendaItemIndex` must match `agendaItemIndex` and `nonAgendaReason` must be null
+   - outOfAgenda subjects (`agendaItemIndex: null`): `nonAgendaReason` must be `'outOfAgenda'`
    - On mismatch → match is discarded, subject moved to `unmatchedSubjects`
    - On number mismatch → attempts re-match to the subject with the correct `agendaItemIndex`
 
@@ -152,13 +152,22 @@ flowchart TD
 - **resolveConflict(subjectA, subjectB, decision)**: LLM-based conflict resolution (returns winner + usage)
 
 **Extraction:**
-- **extractDecisionsFromPdfs(subjects, people, onProgress)**: Batch extraction pipeline — downloads PDFs, extracts via Claude, matches names, computes attendance
+- **extractDecisionsFromPdfs(subjects, people, onProgress)**: Batch extraction pipeline — downloads PDFs, extracts via Claude, matches names, processes each via `processRawExtraction`
 - **extractDecisionFromPdf(pdfUrl)**: Single PDF extraction via Claude Sonnet (returns `ResultWithUsage<RawExtractedDecision>`)
-- **computeEffectiveAttendance(rawDecision, targetSubjectNumber, allAgendaItemNumbers)**: Per-subject attendance from PDF data
+- **processRawExtraction(raw, fallbackAgendaItemIndex?)**: Shared processing function used by both the pipeline and CLI — computes effective attendance via `computeEffectiveAttendance` and infers votes via `inferForVotes`. Returns effective present/absent names and complete vote details.
+- **computeEffectiveAttendance(input)**: Low-level function that walks the discussion sequence applying attendance changes. Handles `AgendaItemRef` objects (distinguishing regular vs out-of-agenda items) and `timing` ("during" = absent from that item, "after" = present for that item, absent from next).
+- **inferForVotes(presentMembers, voteResult, voteDetails)**: Infers FOR votes for unanimous and majority decisions from the effective present list.
+
+### Key Types
+
+- **AgendaItemRef**: `{ agendaItemIndex: number; nonAgendaReason: 'outOfAgenda' | null }` — identifies an agenda item, distinguishing regular items from out-of-agenda/emergency items. Used in `discussionOrder`, `attendanceChanges[].agendaItem`, and `subjectInfo`.
+- **AttendanceChange**: `{ name, type: 'arrival'|'departure', agendaItem: AgendaItemRef|null, timing: 'during'|'after'|null, rawText }` — a mid-meeting arrival or departure. `timing: 'during'` means the person left/arrived partway through (absent from that item). `timing: 'after'` means after discussion ended (present for that item, change takes effect at the next item). `agendaItem: null` = session-level (start/end).
+- **RawExtractedDecision**: Claude's raw extraction output including `presentMembers`, `absentMembers`, `attendanceChanges`, `discussionOrder`, `subjectInfo`, `voteResult`, `voteDetails`, `decisionExcerpt`, `references`.
+- **ExtractedDecisionResult**: Processed output with person IDs (not names), effective attendance applied, votes inferred. This is the contract between backend and frontend.
 
 ### Data Flow & State Management
 - Stateless per request
-- No persistent state or caching
+- PDF extraction results are cached locally in `/tmp/opencouncil-decisions-cache/` during development to avoid redundant API calls. Clear the cache when changing the extraction prompt or schema.
 - Tracks used decisions to prevent duplicate matches
 - Accumulates token usage from all LLM calls (matching + extraction)
 - Progress reported via onProgress callback:

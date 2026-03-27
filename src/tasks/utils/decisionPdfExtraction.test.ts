@@ -331,14 +331,17 @@ describe('inferForVotes', () => {
         expect(result.voteDetails).toEqual([{ name: 'Alice', vote: 'FOR' }]);
     });
 
-    it('does not infer for unanimous decisions', () => {
+    it('infers FOR votes for all present members when unanimous', () => {
         const result = inferForVotes(
             ['Alice', 'Bob'],
             'Ομόφωνα',
             [],
         );
-        expect(result.inferredCount).toBe(0);
-        expect(result.voteDetails).toEqual([]);
+        expect(result.inferredCount).toBe(2);
+        expect(result.voteDetails).toEqual([
+            { name: 'Alice', vote: 'FOR' },
+            { name: 'Bob', vote: 'FOR' },
+        ]);
     });
 
     it('does not infer with empty present members', () => {

@@ -4,13 +4,11 @@ import { ExtractedDecisionResult } from '../../types.js';
 import {
     extractDecisionFromPdf,
     RawExtractedDecision,
-    AttendanceChange,
     matchPersonByName,
     llmMatchMembers,
-    inferForVotes,
     PersonForMatching,
 } from './decisionPdfExtraction.js';
-import { computeEffectiveAttendance } from './effectiveAttendance.js';
+import { processRawExtraction } from './effectiveAttendance.js';
 
 export interface ExtractionSubject {
     subjectId: string;
@@ -75,7 +73,7 @@ export async function extractDecisionsFromPdfs(
                 console.log(`  Excerpt: ${raw.decisionExcerpt?.length ?? 0} chars`);
                 console.log(`  Vote: ${raw.voteResult ?? '(none)'}`);
                 console.log(`  Present: ${raw.presentMembers?.length ?? 0}, Absent: ${raw.absentMembers?.length ?? 0}`);
-                console.log(`  SubjectInfo: ${raw.subjectInfo ? `#${raw.subjectInfo.number}${raw.subjectInfo.isOutOfAgenda ? ' (out-of-agenda)' : ''}` : '(none)'}`);
+                console.log(`  SubjectInfo: ${raw.subjectInfo ? `#${raw.subjectInfo.agendaItemIndex}${raw.subjectInfo.nonAgendaReason ? ' (out-of-agenda)' : ''}` : '(none)'}`);
                 console.log(`  Done in ${elapsed}s`);
 
                 return { subjectId: subject.subjectId, agendaItemIndex: subject.agendaItemIndex, raw, usage: pdfUsage };
@@ -159,67 +157,29 @@ export async function extractDecisionsFromPdfs(
     for (const { subjectId, agendaItemIndex, raw } of extractions) {
         const unmatchedMembers: string[] = [];
 
-        // Determine target agenda item number: prefer PDF's subjectInfo, fall back to request
-        const targetAgendaItemNumber = raw.subjectInfo?.number ?? agendaItemIndex;
-
-        // Build allAgendaItemNumbers from this PDF's own data (self-contained)
-        const agendaItemNumbersFromPdf = new Set<number>();
-        if (targetAgendaItemNumber != null) {
-            agendaItemNumbersFromPdf.add(targetAgendaItemNumber);
+        // Compute effective attendance and infer votes
+        const processed = processRawExtraction(raw, agendaItemIndex);
+        if (processed.inferredVoteCount > 0) {
+            console.log(`  [${subjectId}] Inferred ${processed.inferredVoteCount} FOR votes from effective present members`);
         }
-        for (const change of raw.attendanceChanges || []) {
-            if (change.duringAgendaItem != null) {
-                agendaItemNumbersFromPdf.add(change.duringAgendaItem);
-            }
-        }
-        if (raw.discussionOrder) {
-            for (const n of raw.discussionOrder) {
-                agendaItemNumbersFromPdf.add(n);
-            }
-        }
-
-        // Compute effective attendance for this subject
-        const meetingAttendanceChanges = raw.attendanceChanges || [];
-        const meetingDiscussionOrder = raw.discussionOrder ?? null;
-
-        const effective = targetAgendaItemNumber != null
-            ? computeEffectiveAttendance({
-                initialPresent: raw.presentMembers || [],
-                initialAbsent: raw.absentMembers || [],
-                attendanceChanges: meetingAttendanceChanges,
-                discussionOrder: meetingDiscussionOrder,
-                allAgendaItemNumbers: [...agendaItemNumbersFromPdf],
-                targetAgendaItemNumber,
-            })
-            : { presentNames: raw.presentMembers || [], absentNames: raw.absentMembers || [] };
 
         const presentMemberIds: string[] = [];
         const absentMemberIds: string[] = [];
 
-        for (const name of effective.presentNames) {
+        for (const name of processed.effectivePresent) {
             const personId = nameToPersonId.get(name);
             if (personId) presentMemberIds.push(personId);
             else unmatchedMembers.push(name);
         }
 
-        for (const name of effective.absentNames) {
+        for (const name of processed.effectiveAbsent) {
             const personId = nameToPersonId.get(name);
             if (personId) absentMemberIds.push(personId);
             else unmatchedMembers.push(name);
         }
 
-        // Infer FOR votes for majority decisions using effective present members
-        const { voteDetails: inferredVoteDetails, inferredCount } = inferForVotes(
-            effective.presentNames,
-            raw.voteResult,
-            raw.voteDetails || [],
-        );
-        if (inferredCount > 0) {
-            console.log(`  [${subjectId}] Inferred ${inferredCount} FOR votes from effective present members`);
-        }
-
         const voteDetails: ExtractedDecisionResult['voteDetails'] = [];
-        for (const detail of inferredVoteDetails) {
+        for (const detail of processed.voteDetails) {
             const personId = nameToPersonId.get(detail.name);
             if (personId) {
                 voteDetails.push({ personId, vote: detail.vote });
@@ -237,7 +197,9 @@ export async function extractDecisionsFromPdfs(
             voteResult: raw.voteResult || null,
             voteDetails,
             unmatchedMembers: [...new Set(unmatchedMembers)],
-            subjectInfo: raw.subjectInfo || null,
+            subjectInfo: raw.subjectInfo
+                ? { number: raw.subjectInfo.agendaItemIndex, isOutOfAgenda: raw.subjectInfo.nonAgendaReason !== null }
+                : null,
         });
 
         console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${unmatchedMembers.length} unmatched, ${voteDetails.length} votes`);

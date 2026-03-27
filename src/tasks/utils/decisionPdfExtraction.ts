@@ -52,11 +52,16 @@ export function writeCache<T>(pdfUrl: string, data: T): void {
 
 // --- PDF extraction types ---
 
+export type AgendaItemRef = {
+    agendaItemIndex: number;
+    nonAgendaReason: 'outOfAgenda' | null;  // null = regular agenda item
+};
+
 export interface AttendanceChange {
     name: string;
     type: 'arrival' | 'departure';
-    duringAgendaItem: number | null;
-    atSessionBoundary: 'start' | 'end' | null;
+    agendaItem: AgendaItemRef | null;      // null = session-level (start/end)
+    timing: 'during' | 'after' | null;     // null when agendaItem is null
     rawText: string;
 }
 
@@ -69,17 +74,17 @@ export interface RawExtractedDecision {
     voteResult: string | null;
     voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
     attendanceChanges: AttendanceChange[];
-    discussionOrder: number[] | null;
-    subjectInfo: {
-        number: number;
-        isOutOfAgenda: boolean;
-    } | null;
+    discussionOrder: AgendaItemRef[] | null;
+    subjectInfo: AgendaItemRef | null;
 }
 
 /**
- * Infer FOR votes for majority decisions. When voteResult says "κατά πλειοψηφία"
- * and the PDF only explicitly names AGAINST/ABSTAIN voters, all present members
- * not in voteDetails are implicitly FOR.
+ * Infer FOR votes when the PDF doesn't list them explicitly.
+ *
+ * Two cases:
+ * - **Unanimous** ("Ομόφωνα"): all present members voted FOR, no explicit details needed.
+ * - **Majority** ("κατά πλειοψηφία"): only AGAINST/ABSTAIN voters are named;
+ *   all present members not in voteDetails are implicitly FOR.
  *
  * Pure function: returns a new voteDetails array (never mutates input) and the
  * number of inferred FOR votes.
@@ -89,10 +94,11 @@ export function inferForVotes(
     voteResult: string | null,
     voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[],
 ): { voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[]; inferredCount: number } {
+    const isUnanimous = voteResult && /[οό]μ[οό]φων/i.test(voteResult);
     const isMajority = voteResult && /κατ[άα]\s+πλειοψηφ[ίι]/i.test(voteResult);
     const hasNoForVotes = (voteDetails || []).every(v => v.vote !== 'FOR');
 
-    if (!isMajority || !hasNoForVotes || presentMembers.length === 0) {
+    if ((!isUnanimous && !isMajority) || !hasNoForVotes || presentMembers.length === 0) {
         return { voteDetails: [...(voteDetails || [])], inferredCount: 0 };
     }
 
@@ -124,14 +130,25 @@ Extract the following information from the PDF:
 8. **attendanceChanges**: Extract from "Προσελεύσεις – Αποχωρήσεις" or separate "Προσελεύσεις" / "Αποχωρήσεις" sections. These describe members who arrived late or left early. For each person, extract:
    - "name": full name
    - "type": "arrival" or "departure"
-   - "duringAgendaItem": the agenda item number during which they arrived/departed (e.g. if the text says "κατά τη συζήτηση του 3ου θέματος", extract 3). Use null if no specific item is mentioned.
-   - "atSessionBoundary": "start" if they arrived at the beginning of the session (before any agenda items), "end" if they left at the end, or null otherwise.
+   - "agendaItem": The agenda item during/after which this change occurred. Use an object with:
+     - "agendaItemIndex": the item number (e.g., "κατά τη συζήτηση του 3ου θέματος" → 3, "μετά το 1ο έκτακτο θέμα" → 1)
+     - "nonAgendaReason": "outOfAgenda" if the item is explicitly an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ.), otherwise null
+     Set "agendaItem" to null if no specific item is mentioned (person arrived at session start or left at session end).
+   - "timing": The temporal relationship to the agenda item:
+     - "during" if the change happened DURING the item discussion (e.g., "κατά τη διάρκεια του 9ου θέματος", "κατά τη συζήτηση του 3ου θέματος")
+     - "after" if the change happened AFTER the item ended (e.g., "μετά τη λήξη της συζήτησης του 9ου θέματος", "μετά το 5ο θέμα")
+     Set to null when "agendaItem" is null (session-level changes).
+     The distinction matters: "after item 9" means the person was present and voted on item 9, while "during item 9" means they left/arrived partway through.
    - "rawText": the original sentence describing this change.
    If no such section exists, return an empty array.
-9. **discussionOrder**: When subjects were discussed out of agenda order (e.g. "Προτάθηκε η αλλαγή σειράς συζήτησης" or items are explicitly reordered), extract the agenda item numbers in the actual discussion sequence as an array of numbers. Return null if subjects were discussed in standard agenda order.
+9. **discussionOrder**: When subjects were discussed out of the standard agenda order (e.g. "Προτάθηκε η αλλαγή σειράς συζήτησης", items reordered, or out-of-agenda items inserted between regular items), extract the full discussion sequence including both regular and out-of-agenda/emergency items. Each entry is an object with:
+   - "agendaItemIndex": the item number
+   - "nonAgendaReason": "outOfAgenda" if the item is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ), otherwise null
+   Example: if regular item 1 was discussed first, then 3 out-of-agenda items, then regular item 9 was brought forward, the sequence would be: [{"agendaItemIndex":1,"nonAgendaReason":null},{"agendaItemIndex":1,"nonAgendaReason":"outOfAgenda"},{"agendaItemIndex":2,"nonAgendaReason":"outOfAgenda"},{"agendaItemIndex":3,"nonAgendaReason":"outOfAgenda"},{"agendaItemIndex":9,"nonAgendaReason":null},...].
+   Return null if subjects were discussed in standard agenda order with no out-of-agenda items interleaved.
 10. **subjectInfo**: The agenda item this decision relates to:
-   - "number": The subject/topic number (e.g., "ΘΕΜΑ 3ο" → 3, "1ο ΕΚΤΑΚΤΟ ΘΕΜΑ" → 1, "ΘΕΜΑ ΕΚΤΟΣ Η.Δ. 2ο" → 2)
-   - "isOutOfAgenda": true if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), false for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
+   - "agendaItemIndex": The subject/topic number (e.g., "ΘΕΜΑ 3ο" → 3, "1ο ΕΚΤΑΚΤΟ ΘΕΜΑ" → 1, "ΘΕΜΑ ΕΚΤΟΣ Η.Δ. 2ο" → 2)
+   - "nonAgendaReason": "outOfAgenda" if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), null for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
    - Return null if the subject/topic number cannot be determined.
 
 Return valid JSON matching this schema:
@@ -143,9 +160,9 @@ Return valid JSON matching this schema:
   "references": string,
   "voteResult": string | null,
   "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" }[],
-  "attendanceChanges": { "name": string, "type": "arrival" | "departure", "duringAgendaItem": number | null, "atSessionBoundary": "start" | "end" | null, "rawText": string }[],
-  "discussionOrder": number[] | null,
-  "subjectInfo": { "number": number, "isOutOfAgenda": boolean } | null
+  "attendanceChanges": { "name": string, "type": "arrival" | "departure", "agendaItem": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null, "timing": "during" | "after" | null, "rawText": string }[],
+  "discussionOrder": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null }[] | null,
+  "subjectInfo": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null
 }
 
 If a field cannot be found, use empty array for lists, empty string for text, and null where indicated.`;
