@@ -9,7 +9,9 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
-import { extractDecisionFromPdf, inferForVotes } from './tasks/utils/decisionPdfExtraction.js';
+import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
+import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
+import { formatUsage } from './lib/ai.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -584,44 +586,65 @@ program
 // --- Decision PDF extraction CLI ---
 
 program
-    .command('extract-decision <pdfUrl>')
-    .description('Extract decision data from a single PDF URL')
+    .command('extract-decision <source>')
+    .description('Extract decision data from a Diavgeia ADA, PDF URL, or local file path')
     .option('-O, --output-file <file>', 'Save result to file (otherwise prints to stdout)')
-    .action(async (pdfUrl: string, options: { outputFile?: string }) => {
+    .action(async (source: string, options: { outputFile?: string }) => {
         try {
-            console.log(`Extracting decision data from: ${pdfUrl}`);
-            const { result } = await extractDecisionFromPdf(pdfUrl);
+            // Resolve source: local file, URL, or ADA
+            let pdfUrl: string;
+            if (source.startsWith('/') || source.startsWith('./') || source.startsWith('../')) {
+                pdfUrl = source; // local file path — passed through to downloadPdfToBase64
+                console.log(`Extracting decision data from local file: ${source}`);
+            } else if (source.startsWith('http://') || source.startsWith('https://')) {
+                pdfUrl = source; // already a URL
+                console.log(`Extracting decision data from URL: ${pdfUrl}`);
+            } else {
+                pdfUrl = adaToPdfUrl(source); // treat as ADA
+                console.log(`Extracting decision data for ADA: ${source}`);
+                console.log(`PDF URL: ${pdfUrl}`);
+            }
+            const { result, usage } = await extractDecisionFromPdf(pdfUrl);
 
-            // Display attendance changes
-            if (result.attendanceChanges?.length > 0) {
-                console.log(`\n--- Attendance Changes ---`);
-                for (const change of result.attendanceChanges) {
-                    const where = change.duringAgendaItem != null
-                        ? `during item #${change.duringAgendaItem}`
-                        : change.atSessionBoundary
-                            ? `at session ${change.atSessionBoundary}`
-                            : 'unknown';
-                    console.log(`  ${change.type}: ${change.name} (${where})`);
-                    if (change.rawText) console.log(`    "${change.rawText}"`);
-                }
+            // Display summary
+            const totalTokens = usage.input_tokens + usage.output_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0);
+            if (totalTokens > 0) {
+                console.log(`\nTokens: ${formatUsage(usage)}`);
+            } else {
+                console.log(`\n(cached — no API call)`);
             }
 
-            // Display discussion order
+            const parts: string[] = [];
+            if (result.subjectInfo) {
+                parts.push(`subject #${result.subjectInfo.agendaItemIndex}${result.subjectInfo.nonAgendaReason ? ' (out-of-agenda)' : ''}`);
+            }
+            parts.push(`${result.presentMembers?.length ?? 0} present, ${result.absentMembers?.length ?? 0} absent`);
+            if (result.attendanceChanges?.length) parts.push(`${result.attendanceChanges.length} attendance changes`);
             if (result.discussionOrder) {
-                console.log(`\n--- Discussion Order: ${result.discussionOrder.join(', ')} ---`);
+                const orderStr = result.discussionOrder.map(
+                    (ref: AgendaItemRef) => `${ref.agendaItemIndex}${ref.nonAgendaReason ? '(OA)' : ''}`
+                ).join(', ');
+                parts.push(`order: [${orderStr}]`);
+            }
+            if (result.voteResult) parts.push(`vote: ${result.voteResult}`);
+            console.log(parts.join(' | '));
+
+            // Compute effective attendance and infer votes (same logic as the pipeline)
+            const processed = processRawExtraction(result);
+
+            if (result.subjectInfo) {
+                console.log(`Effective attendance at #${result.subjectInfo.agendaItemIndex}${result.subjectInfo.nonAgendaReason ? ' (OA)' : ''}: ${processed.effectivePresent.length} present, ${processed.effectiveAbsent.length} absent`);
+            }
+            if (processed.inferredVoteCount > 0) {
+                console.log(`Inferred ${processed.inferredVoteCount} FOR votes from effective present members`);
             }
 
-            // Infer FOR votes using present members
-            const { voteDetails: inferredVoteDetails, inferredCount } = inferForVotes(
-                result.presentMembers,
-                result.voteResult,
-                result.voteDetails || [],
-            );
-            if (inferredCount > 0) {
-                console.log(`Inferred ${inferredCount} FOR votes from present members (κατά πλειοψηφία)`);
-            }
-
-            const output = { ...result, voteDetails: inferredVoteDetails };
+            const output = {
+                ...result,
+                effectivePresent: processed.effectivePresent,
+                effectiveAbsent: processed.effectiveAbsent,
+                voteDetails: processed.voteDetails,
+            };
             const json = JSON.stringify(output, null, 2);
             if (options.outputFile) {
                 fs.writeFileSync(options.outputFile, json);

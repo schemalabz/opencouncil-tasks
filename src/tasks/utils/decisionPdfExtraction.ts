@@ -3,15 +3,28 @@ import { aiChat, ResultWithUsage, NO_USAGE } from '../../lib/ai.js';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
-import os from 'os';
 
 // --- PDF download ---
 
-export async function downloadPdfToBase64(url: string): Promise<string> {
-    console.log(`Downloading file from ${url}...`);
-    const response = await fetch(url);
+export function adaToPdfUrl(ada: string): string {
+    return `https://diavgeia.gov.gr/doc/${encodeURIComponent(ada)}`;
+}
+
+export async function downloadPdfToBase64(source: string): Promise<string> {
+    // Local file path
+    if (source.startsWith('/') || source.startsWith('./') || source.startsWith('../')) {
+        const filePath = decodeURIComponent(source);
+        console.log(`Reading local file: ${filePath}...`);
+        const buffer = fs.readFileSync(filePath);
+        const base64 = buffer.toString('base64');
+        console.log(`Read file: ${(base64.length / 1024).toFixed(0)} KB base64`);
+        return base64;
+    }
+
+    console.log(`Downloading file from ${source}...`);
+    const response = await fetch(source);
     if (!response.ok) {
-        throw new Error(`Failed to download PDF from ${url}: HTTP ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to download PDF from ${source}: HTTP ${response.status} ${response.statusText}`);
     }
     const arrayBuffer = await response.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString('base64');
@@ -21,9 +34,9 @@ export async function downloadPdfToBase64(url: string): Promise<string> {
 
 // --- Extraction cache ---
 // Caches Claude extraction results per PDF URL to avoid re-downloading and re-processing
-// during iterative development. Persists across runs in os.tmpdir().
+// during iterative development. Uses a fixed path so it persists across nix-shell sessions.
 
-const CACHE_DIR = path.join(os.tmpdir(), 'opencouncil-decisions-cache');
+const CACHE_DIR = '/tmp/opencouncil-decisions-cache';
 
 function getCachePath(pdfUrl: string): string {
     const hash = crypto.createHash('sha256').update(pdfUrl).digest('hex').slice(0, 16);

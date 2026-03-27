@@ -29,6 +29,13 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     server_tool_use: null, // Don't aggregate server_tool_use details
     service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
 });
+
+export function formatUsage(usage: Anthropic.Messages.Usage): string {
+    const parts = [`${usage.input_tokens.toLocaleString()} in, ${usage.output_tokens.toLocaleString()} out`];
+    if (usage.cache_creation_input_tokens) parts.push(`${usage.cache_creation_input_tokens.toLocaleString()} cache-write`);
+    if (usage.cache_read_input_tokens) parts.push(`${usage.cache_read_input_tokens.toLocaleString()} cache-read`);
+    return parts.join(', ');
+}
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');

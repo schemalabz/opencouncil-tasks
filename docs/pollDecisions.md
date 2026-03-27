@@ -129,7 +129,9 @@ flowchart TD
 
 ### Integration Points
 - API endpoint: POST /tasks/pollDecisions
-- CLI command: `npm run cli poll-decisions --subjects-file <file.json> --org-uid <uid> --meeting-date <date> [--unit-id <unitIds>]`
+- CLI commands:
+  - `npm run cli poll-decisions --subjects-file <file.json> --org-uid <uid> --meeting-date <date> [--unit-id <unitIds>]`
+  - `npm run cli extract-decision <source>` — extract from a single PDF. Source can be an ADA (e.g. `Ψ1ΓΚΩΡΦ-08Ο`), a URL, or a local file path. Runs the full processing pipeline (effective attendance + vote inference via `processRawExtraction`).
 - Related tasks: Works with meeting processing in opencouncil
 
 ### Configuration
