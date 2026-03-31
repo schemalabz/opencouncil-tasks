@@ -584,4 +584,65 @@ describe("pollDecisions - verification", () => {
         expect(result.matches).toHaveLength(0);
         expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
     });
+
+    it("re-matches cascading mismatches when similar titles cause shifted assignments", async () => {
+        // Three similar-titled decisions: title matching pairs each to the wrong subject
+        // sub6 (#6) → PDF-for-#7, sub7 (#7) → PDF-for-#8, sub8 (#8) → PDF-for-#9
+        // With single-pass, sub7 can't be reassigned because it's still "matched".
+        // Two-pass frees all three simultaneously, allowing correct reassignment.
+        const D1 = makeDecision({ ada: "ADA-D1", subject: "Διαγραφή οφειλών ΤΑΠ Α" });
+        const D2 = makeDecision({ ada: "ADA-D2", subject: "Διαγραφή οφειλών ΤΑΠ Β" });
+        const D3 = makeDecision({ ada: "ADA-D3", subject: "Διαγραφή οφειλών ΤΑΠ Γ" });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1, D2, D3]));
+
+        mockExtractDecisions.mockResolvedValueOnce({
+            decisions: [
+                {
+                    subjectId: "sub6", excerpt: "", references: "",
+                    presentMemberIds: [], absentMemberIds: [],
+                    voteResult: null, voteDetails: [], unmatchedMembers: [],
+                    subjectInfo: { number: 7, isOutOfAgenda: false },
+                },
+                {
+                    subjectId: "sub7", excerpt: "", references: "",
+                    presentMemberIds: [], absentMemberIds: [],
+                    voteResult: null, voteDetails: [], unmatchedMembers: [],
+                    subjectInfo: { number: 8, isOutOfAgenda: false },
+                },
+                {
+                    subjectId: "sub8", excerpt: "", references: "",
+                    presentMemberIds: [], absentMemberIds: [],
+                    voteResult: null, voteDetails: [], unmatchedMembers: [],
+                    subjectInfo: { number: 9, isOutOfAgenda: false },
+                },
+            ],
+            warnings: [],
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                people,
+                subjects: [
+                    { subjectId: "sub6", name: "Διαγραφή οφειλών ΤΑΠ Α", agendaItemIndex: 6 },
+                    { subjectId: "sub7", name: "Διαγραφή οφειλών ΤΑΠ Β", agendaItemIndex: 7 },
+                    { subjectId: "sub8", name: "Διαγραφή οφειλών ΤΑΠ Γ", agendaItemIndex: 8 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        // sub6's PDF says #7 → reassigned to sub7
+        // sub7's PDF says #8 → reassigned to sub8
+        // sub8's PDF says #9 → no subject #9, but sub8 was already filled above
+        const matchedIds = result.matches.map(m => m.subjectId);
+        expect(matchedIds).toContain("sub7");
+        expect(matchedIds).toContain("sub8");
+        expect(matchedIds).not.toContain("sub6");
+
+        // Only sub6 stays unmatched — nothing points to #6
+        const unmatchedIds = result.unmatchedSubjects.map(u => u.subjectId);
+        expect(unmatchedIds).toEqual(["sub6"]);
+    });
 });

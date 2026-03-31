@@ -554,14 +554,25 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         );
         totalUsage = addUsage(totalUsage, pipelineResult.usage);
 
-        // --- Verify matches using PDF subjectInfo ---
-        // Discard matches where the PDF's subject number contradicts the expected
-        // agendaItemIndex, and attempt to re-match to the correct subject.
+        // --- Verify matches using PDF subjectInfo (two-pass) ---
+        // Similar titles can cause cascading mis-assignments (e.g. subject #6 matched
+        // to PDF-for-#7, #7 to PDF-for-#8, etc.). A single-pass approach can't
+        // re-assign because the correct target is still "matched" to another wrong PDF.
+        // Two passes: first collect all mismatches, then bulk-reassign with full knowledge.
         onProgress("verifying matches", 90);
 
         const matchBySubjectId = new Map(matches.map(m => [m.subjectId, m]));
 
-        for (const extraction of [...pipelineResult.decisions]) { // iterate copy since we mutate
+        // --- Pass 1: collect mismatches without mutating matches/unmatched ---
+        interface VerificationMismatch {
+            extraction: (typeof pipelineResult.decisions)[number];
+            originalSubjectId: string;
+            originalSubjectName: string;
+            reason: string;
+        }
+        const mismatches: VerificationMismatch[] = [];
+
+        for (const extraction of pipelineResult.decisions) {
             if (!extraction.subjectInfo) continue;
 
             const reqSubject = subjectLookup.get(extraction.subjectId);
@@ -570,42 +581,62 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             const expectedIndex = reqSubject.agendaItemIndex;
             const isOutOfAgenda = expectedIndex == null;
 
-            // outOfAgenda subjects: verify isOutOfAgenda consistency
             if (isOutOfAgenda) {
                 if (!extraction.subjectInfo.isOutOfAgenda) {
-                    // Subject is outOfAgenda but PDF says regular item → mismatch
-                    removeMatchAndExtraction(extraction.subjectId, matches, pipelineResult.decisions,
-                        unmatchedSubjects, reqSubject.name,
-                        `PDF says regular item #${extraction.subjectInfo.number}, but subject is out-of-agenda`);
-                    pipelineResult.warnings.push(
-                        `Subject "${reqSubject.name}" is out-of-agenda but PDF says regular item #${extraction.subjectInfo.number}. Match discarded.`);
+                    mismatches.push({
+                        extraction, originalSubjectId: extraction.subjectId,
+                        originalSubjectName: reqSubject.name,
+                        reason: `PDF says regular item #${extraction.subjectInfo.number}, but subject is out-of-agenda`,
+                    });
                 }
-                continue; // isOutOfAgenda: true → consistent, keep match
-            }
-
-            // Regular subjects: check isOutOfAgenda consistency
-            if (extraction.subjectInfo.isOutOfAgenda) {
-                removeMatchAndExtraction(extraction.subjectId, matches, pipelineResult.decisions,
-                    unmatchedSubjects, reqSubject.name,
-                    `PDF says out-of-agenda, but subject is regular item #${expectedIndex}`);
-                pipelineResult.warnings.push(
-                    `Subject "${reqSubject.name}" is item #${expectedIndex} but PDF says out-of-agenda. Match discarded.`);
                 continue;
             }
 
-            // Regular subjects: check number match
-            if (extraction.subjectInfo.number !== expectedIndex) {
-                removeMatchAndExtraction(extraction.subjectId, matches, pipelineResult.decisions,
-                    unmatchedSubjects, reqSubject.name,
-                    `PDF says subject #${extraction.subjectInfo.number} but matched to item #${expectedIndex}`);
+            if (extraction.subjectInfo.isOutOfAgenda) {
+                mismatches.push({
+                    extraction, originalSubjectId: extraction.subjectId,
+                    originalSubjectName: reqSubject.name,
+                    reason: `PDF says out-of-agenda, but subject is regular item #${expectedIndex}`,
+                });
+                continue;
+            }
 
-                // Try re-matching to the correct subject
-                const correctSubject = request.subjects.find(s =>
-                    s.agendaItemIndex === extraction.subjectInfo!.number &&
-                    !s.existingDecision &&
-                    unmatchedSubjects.some(u => u.subjectId === s.subjectId)
+            if (extraction.subjectInfo.number !== expectedIndex) {
+                mismatches.push({
+                    extraction, originalSubjectId: extraction.subjectId,
+                    originalSubjectName: reqSubject.name,
+                    reason: `PDF says subject #${extraction.subjectInfo.number} but matched to item #${expectedIndex}`,
+                });
+            }
+        }
+
+        // --- Pass 2: remove all mismatches at once, then try to reassign ---
+        if (mismatches.length > 0) {
+            // Remove all mismatched entries (frees all subjects simultaneously)
+            const removedSubjectIds = new Set<string>();
+            for (const { originalSubjectId } of mismatches) {
+                if (removedSubjectIds.has(originalSubjectId)) continue;
+                removedSubjectIds.add(originalSubjectId);
+                removeMatchAndExtraction(
+                    originalSubjectId, matches, pipelineResult.decisions,
+                    unmatchedSubjects, subjectLookup.get(originalSubjectId)!.name, '',
                 );
+            }
+
+            // Try to reassign each freed PDF to the subject with matching agendaItemIndex
+            for (const { extraction, originalSubjectName, reason } of mismatches) {
+                const pdfNumber = extraction.subjectInfo!.number;
+                const pdfIsOutOfAgenda = extraction.subjectInfo!.isOutOfAgenda;
+
+                const correctSubject = !pdfIsOutOfAgenda
+                    ? request.subjects.find(s =>
+                        s.agendaItemIndex === pdfNumber &&
+                        !s.existingDecision &&
+                        unmatchedSubjects.some(u => u.subjectId === s.subjectId))
+                    : null;
+
                 if (correctSubject) {
+                    // Look up original match metadata (ada, pdfUrl, etc.)
                     const originalMatch = matchBySubjectId.get(extraction.subjectId);
                     if (originalMatch) {
                         matches.push({ ...originalMatch, subjectId: correctSubject.subjectId });
@@ -614,11 +645,16 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                         const unmIdx = unmatchedSubjects.findIndex(u => u.subjectId === correctSubject.subjectId);
                         if (unmIdx >= 0) unmatchedSubjects.splice(unmIdx, 1);
                         pipelineResult.warnings.push(
-                            `Re-matched PDF (subject #${extraction.subjectInfo.number}) from "${reqSubject.name}" to "${correctSubject.name}".`);
+                            `Re-matched PDF (subject #${pdfNumber}) from "${originalSubjectName}" to "${correctSubject.name}".`);
+                        continue;
                     }
                 }
+
+                // Couldn't reassign — update reason on the unmatched entry
+                const unmEntry = unmatchedSubjects.find(u => u.subjectId === extraction.subjectId);
+                if (unmEntry) unmEntry.reason = reason;
                 pipelineResult.warnings.push(
-                    `Subject "${reqSubject.name}" expected item #${expectedIndex}, PDF says #${extraction.subjectInfo.number}. Match discarded.`);
+                    `Subject "${originalSubjectName}": ${reason}. Match discarded.`);
             }
         }
 
