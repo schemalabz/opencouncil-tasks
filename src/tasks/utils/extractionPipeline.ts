@@ -40,14 +40,20 @@ export async function extractDecisionsFromPdfs(
     subjects: ExtractionSubject[],
     people: PersonForMatching[],
     onProgress: (stage: string, percent: number) => void,
+    mayorId?: string,
 ): Promise<ExtractionPipelineResult> {
     const taskStart = Date.now();
     const warnings: string[] = [];
     let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
 
+    const mayorName = mayorId
+        ? people.find(p => p.id === mayorId)?.name
+        : undefined;
+
     console.log(`\n--- extractDecisionsFromPdfs ---`);
     console.log(`Subjects with decisions: ${subjects.length}`);
     console.log(`People for matching: ${people.length}`);
+    if (mayorName) console.log(`Mayor: ${mayorName} (${mayorId})`);
 
     if (subjects.length === 0) {
         return { decisions: [], warnings: [], usage: totalUsage };
@@ -67,7 +73,7 @@ export async function extractDecisionsFromPdfs(
                 console.log(`  URL: ${pdfUrl}`);
 
                 const pdfStart = Date.now();
-                const { result: raw, usage: pdfUsage } = await extractDecisionFromPdf(pdfUrl);
+                const { result: raw, usage: pdfUsage } = await extractDecisionFromPdf(pdfUrl, mayorName);
                 const elapsed = ((Date.now() - pdfStart) / 1000).toFixed(1);
 
                 console.log(`  Excerpt: ${raw.decisionExcerpt?.length ?? 0} chars`);
@@ -194,6 +200,7 @@ export async function extractDecisionsFromPdfs(
             references: raw.references || '',
             presentMemberIds,
             absentMemberIds,
+            mayorPresent: raw.mayorPresent?.present ?? undefined,
             voteResult: raw.voteResult || null,
             voteDetails,
             unmatchedMembers: [...new Set(unmatchedMembers)],

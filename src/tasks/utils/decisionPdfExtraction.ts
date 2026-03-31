@@ -81,6 +81,7 @@ export interface AttendanceChange {
 export interface RawExtractedDecision {
     presentMembers: string[];
     absentMembers: string[];
+    mayorPresent: { present: boolean; rawText: string } | null;
     decisionExcerpt: string;
     decisionNumber: string | null;
     references: string;
@@ -163,11 +164,13 @@ Extract the following information from the PDF:
    - "agendaItemIndex": The subject/topic number (e.g., "ΘΕΜΑ 3ο" → 3, "1ο ΕΚΤΑΚΤΟ ΘΕΜΑ" → 1, "ΘΕΜΑ ΕΚΤΟΣ Η.Δ. 2ο" → 2)
    - "nonAgendaReason": "outOfAgenda" if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), null for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
    - Return null if the subject/topic number cannot be determined.
+11. **mayorPresent**: Whether the city mayor (Δήμαρχος/Δήμαρχο) was present at the session. This is usually stated in a narrative paragraph separate from the council member attendance list. Look for phrases like "Ο/Η Δήμαρχος ... προσκλήθηκε νομίμως και παρέστη" or "Ο/Η Δήμαρχος ... παρών/παρούσα" (present), or "Ο/Η Δήμαρχος ... δεν ήταν παρών/παρούσα" or "απουσίαζε" (absent). Return an object with "present" (boolean) and "rawText" (the original sentence from the PDF describing the mayor's presence/absence). Return null if mayor presence is not mentioned.
 
 Return valid JSON matching this schema:
 {
   "presentMembers": string[],
   "absentMembers": string[],
+  "mayorPresent": { "present": boolean, "rawText": string } | null,
   "decisionExcerpt": string,
   "decisionNumber": string | null,
   "references": string,
@@ -404,15 +407,20 @@ export async function matchAllMembers(
 
 // --- PDF extraction ---
 
-export async function extractDecisionFromPdf(pdfUrl: string): Promise<ResultWithUsage<RawExtractedDecision>> {
+export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string): Promise<ResultWithUsage<RawExtractedDecision>> {
     const cached = readCache<RawExtractedDecision>(pdfUrl);
     if (cached) return { result: cached, usage: { ...NO_USAGE } };
 
     const base64 = await downloadPdfToBase64(pdfUrl);
 
+    const userPromptParts = ['Extract the required information from this Greek municipal council decision PDF.'];
+    if (mayorName) {
+        userPromptParts.push(`The city mayor is: ${mayorName}`);
+    }
+
     const { result, usage } = await aiChat<RawExtractedDecision>({
         systemPrompt: EXTRACTION_SYSTEM_PROMPT,
-        userPrompt: 'Extract the required information from this Greek municipal council decision PDF.',
+        userPrompt: userPromptParts.join('\n'),
         documentBase64: base64,
         prefillSystemResponse: '{',
         prependToResponse: '{',

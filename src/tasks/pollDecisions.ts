@@ -550,6 +550,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 const overallPercent = 50 + (percent / 100) * 35;
                 onProgress(stage, overallPercent);
             },
+            request.mayorId,
         );
         totalUsage = addUsage(totalUsage, pipelineResult.usage);
 

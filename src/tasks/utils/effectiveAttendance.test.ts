@@ -392,6 +392,7 @@ describe('processRawExtraction', () => {
         return {
             presentMembers: ['Alice', 'Bob', 'Charlie'],
             absentMembers: ['Diana'],
+            mayorPresent: null,
             decisionExcerpt: 'Test excerpt',
             decisionNumber: '1/2025',
             references: '',
@@ -534,6 +535,7 @@ describe('processRawExtraction', () => {
         const raw: RawExtractedDecision = {
             presentMembers: ['Alice'],
             absentMembers: [],
+            mayorPresent: null,
             decisionExcerpt: '',
             decisionNumber: null,
             references: '',

@@ -9,6 +9,35 @@ vi.mock("../../lib/ai.js", () => ({
     NO_USAGE: NO_USAGE_MOCK,
 }));
 
+// Prevent tests from reading/writing the on-disk extraction cache
+vi.mock("node:fs", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("node:fs")>();
+    return {
+        ...actual,
+        default: {
+            ...actual,
+            readFileSync: (...args: Parameters<typeof actual.readFileSync>) => {
+                if (typeof args[0] === 'string' && args[0].includes('opencouncil-decisions-cache')) {
+                    throw new Error('cache miss (mocked)');
+                }
+                return actual.readFileSync(...args);
+            },
+            writeFileSync: (...args: Parameters<typeof actual.writeFileSync>) => {
+                if (typeof args[0] === 'string' && args[0].includes('opencouncil-decisions-cache')) {
+                    return; // no-op
+                }
+                return actual.writeFileSync(...args);
+            },
+            mkdirSync: (...args: Parameters<typeof actual.mkdirSync>) => {
+                if (typeof args[0] === 'string' && args[0].includes('opencouncil-decisions-cache')) {
+                    return undefined; // no-op
+                }
+                return actual.mkdirSync(...args);
+            },
+        },
+    };
+});
+
 import {
     extractDecisionFromPdf,
     normalizeGreekName,
