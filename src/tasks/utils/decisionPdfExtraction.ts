@@ -407,9 +407,11 @@ export async function matchAllMembers(
 
 // --- PDF extraction ---
 
-export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string): Promise<ResultWithUsage<RawExtractedDecision>> {
-    const cached = readCache<RawExtractedDecision>(pdfUrl);
-    if (cached) return { result: cached, usage: { ...NO_USAGE } };
+export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string, skipCache?: boolean): Promise<ResultWithUsage<RawExtractedDecision> & { fromCache: boolean }> {
+    if (!skipCache) {
+        const cached = readCache<RawExtractedDecision>(pdfUrl);
+        if (cached) return { result: cached, usage: { ...NO_USAGE }, fromCache: true };
+    }
 
     const base64 = await downloadPdfToBase64(pdfUrl);
 
@@ -428,5 +430,5 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string)
     });
 
     writeCache(pdfUrl, result);
-    return { result, usage };
+    return { result, usage, fromCache: false };
 }

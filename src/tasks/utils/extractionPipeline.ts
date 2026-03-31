@@ -41,6 +41,7 @@ export async function extractDecisionsFromPdfs(
     people: PersonForMatching[],
     onProgress: (stage: string, percent: number) => void,
     mayorId?: string,
+    skipCache?: boolean,
 ): Promise<ExtractionPipelineResult> {
     const taskStart = Date.now();
     const warnings: string[] = [];
@@ -60,7 +61,7 @@ export async function extractDecisionsFromPdfs(
     }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
-    const extractions: { subjectId: string; agendaItemIndex: number | null; raw: RawExtractedDecision; usage: Anthropic.Messages.Usage }[] = [];
+    const extractions: { subjectId: string; agendaItemIndex: number | null; raw: RawExtractedDecision; usage: Anthropic.Messages.Usage; fromCache: boolean }[] = [];
     let completed = 0;
 
     for (let i = 0; i < subjects.length; i += BATCH_SIZE) {
@@ -73,16 +74,17 @@ export async function extractDecisionsFromPdfs(
                 console.log(`  URL: ${pdfUrl}`);
 
                 const pdfStart = Date.now();
-                const { result: raw, usage: pdfUsage } = await extractDecisionFromPdf(pdfUrl, mayorName);
+                const { result: raw, usage: pdfUsage, fromCache } = await extractDecisionFromPdf(pdfUrl, mayorName, skipCache);
                 const elapsed = ((Date.now() - pdfStart) / 1000).toFixed(1);
 
                 console.log(`  Excerpt: ${raw.decisionExcerpt?.length ?? 0} chars`);
                 console.log(`  Vote: ${raw.voteResult ?? '(none)'}`);
                 console.log(`  Present: ${raw.presentMembers?.length ?? 0}, Absent: ${raw.absentMembers?.length ?? 0}`);
                 console.log(`  SubjectInfo: ${raw.subjectInfo ? `#${raw.subjectInfo.agendaItemIndex}${raw.subjectInfo.nonAgendaReason ? ' (out-of-agenda)' : ''}` : '(none)'}`);
+                if (fromCache) console.log(`  (from cache)`);
                 console.log(`  Done in ${elapsed}s`);
 
-                return { subjectId: subject.subjectId, agendaItemIndex: subject.agendaItemIndex, raw, usage: pdfUsage };
+                return { subjectId: subject.subjectId, agendaItemIndex: subject.agendaItemIndex, raw, usage: pdfUsage, fromCache };
             })
         );
 
@@ -160,7 +162,7 @@ export async function extractDecisionsFromPdfs(
     // Each PDF is self-contained: build allAgendaItemNumbers from its own data
     const decisions: ExtractedDecisionResult[] = [];
 
-    for (const { subjectId, agendaItemIndex, raw } of extractions) {
+    for (const { subjectId, agendaItemIndex, raw, fromCache } of extractions) {
         const unmatchedMembers: string[] = [];
 
         // Compute effective attendance and infer votes
@@ -207,6 +209,7 @@ export async function extractDecisionsFromPdfs(
             subjectInfo: raw.subjectInfo
                 ? { number: raw.subjectInfo.agendaItemIndex, isOutOfAgenda: raw.subjectInfo.nonAgendaReason !== null }
                 : null,
+            fromCache,
         });
 
         console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${unmatchedMembers.length} unmatched, ${voteDetails.length} votes`);

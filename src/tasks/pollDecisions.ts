@@ -551,6 +551,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 onProgress(stage, overallPercent);
             },
             request.mayorId,
+            request.forceExtract,
         );
         totalUsage = addUsage(totalUsage, pipelineResult.usage);
 

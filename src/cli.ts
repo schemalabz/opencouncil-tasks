@@ -589,7 +589,8 @@ program
     .command('extract-decision <source>')
     .description('Extract decision data from a Diavgeia ADA, PDF URL, or local file path')
     .option('-O, --output-file <file>', 'Save result to file (otherwise prints to stdout)')
-    .action(async (source: string, options: { outputFile?: string }) => {
+    .option('--skip-cache', 'Skip the on-disk extraction cache and re-extract from the PDF')
+    .action(async (source: string, options: { outputFile?: string; skipCache?: boolean }) => {
         try {
             // Resolve source: local file, URL, or ADA
             let pdfUrl: string;
@@ -604,7 +605,7 @@ program
                 console.log(`Extracting decision data for ADA: ${source}`);
                 console.log(`PDF URL: ${pdfUrl}`);
             }
-            const { result, usage } = await extractDecisionFromPdf(pdfUrl);
+            const { result, usage } = await extractDecisionFromPdf(pdfUrl, undefined, options.skipCache);
 
             // Display summary
             const totalTokens = usage.input_tokens + usage.output_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0);
