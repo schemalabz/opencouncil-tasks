@@ -61,7 +61,7 @@ type AiChatOptions = {
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
 }
 
-function isTransientError(e: any): boolean {
+export function isTransientError(e: any): boolean {
     // Socket closed by remote (e.g. Anthropic server timeout, load balancer disconnect)
     if (e?.cause?.code === 'UND_ERR_SOCKET') return true;
     // Anthropic SDK wraps socket errors as "terminated"
