@@ -401,6 +401,7 @@ describe('processRawExtraction', () => {
             attendanceChanges: [],
             discussionOrder: null,
             subjectInfo: null,
+            incomplete: false,
             ...overrides,
         };
     }
@@ -544,6 +545,7 @@ describe('processRawExtraction', () => {
             attendanceChanges: [],
             discussionOrder: null,
             subjectInfo: null,
+            incomplete: false,
         };
 
         const result = processRawExtraction(raw);

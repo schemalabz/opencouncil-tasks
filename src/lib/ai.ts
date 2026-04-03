@@ -53,8 +53,6 @@ async function logToFile(message: string, data?: any) {
     }
 }
 
-const maxTokens = 64000;
-
 type AiChatOptions = {
     model?: string;
     documentBase64?: string;
@@ -63,6 +61,7 @@ type AiChatOptions = {
     prefillSystemResponse?: string;
     prependToResponse?: string;
     parseJson?: boolean;
+    maxTokens?: number;
     tools?: Anthropic.Messages.Tool[];
     outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
@@ -108,10 +107,10 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+    const maxTokens = maxTokensParam ?? 64000;
     try {
         console.log(`Sending message to claude...`);
-
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({

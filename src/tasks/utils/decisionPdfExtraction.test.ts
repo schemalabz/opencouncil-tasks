@@ -1,13 +1,37 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockAiChat, NO_USAGE_MOCK } = vi.hoisted(() => ({
+const { mockAiChat, NO_USAGE_MOCK, mockGetPageCount } = vi.hoisted(() => ({
     mockAiChat: vi.fn(),
     NO_USAGE_MOCK: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+    mockGetPageCount: vi.fn().mockReturnValue(3), // Default: small PDF (≤10 pages)
 }));
 vi.mock("../../lib/ai.js", () => ({
     aiChat: mockAiChat,
+    addUsage: (a: any, b: any) => ({
+        input_tokens: a.input_tokens + b.input_tokens,
+        output_tokens: a.output_tokens + b.output_tokens,
+        cache_creation_input_tokens: (a.cache_creation_input_tokens || 0) + (b.cache_creation_input_tokens || 0),
+        cache_read_input_tokens: (a.cache_read_input_tokens || 0) + (b.cache_read_input_tokens || 0),
+    }),
     NO_USAGE: NO_USAGE_MOCK,
 }));
+
+// Mock pdf-lib to avoid needing real PDF bytes in tests
+vi.mock("pdf-lib", () => {
+    const mockSrcDoc = {
+        getPageCount: mockGetPageCount,
+    };
+    return {
+        PDFDocument: {
+            load: vi.fn().mockResolvedValue(mockSrcDoc),
+            create: vi.fn().mockResolvedValue({
+                copyPages: vi.fn().mockResolvedValue([]),
+                addPage: vi.fn(),
+                save: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
+            }),
+        },
+    };
+});
 
 // Prevent tests from reading/writing the on-disk extraction cache
 vi.mock("node:fs", async (importOriginal) => {
@@ -417,6 +441,7 @@ describe('extractDecisionFromPdf', () => {
             references: '1. Ν.3852/2010\n2. Ν.4555/2018',
             voteResult: 'Ομόφωνα',
             voteDetails: [],
+            incomplete: false,
         };
 
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
@@ -439,7 +464,7 @@ describe('extractDecisionFromPdf', () => {
         fetchSpy.mockRestore();
     });
 
-    it('calls aiChat with correct parameters', async () => {
+    it('calls aiChat with correct parameters including maxTokens', async () => {
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
             ok: true,
             arrayBuffer: () => Promise.resolve(new ArrayBuffer(50)),
@@ -454,6 +479,7 @@ describe('extractDecisionFromPdf', () => {
                 references: '',
                 voteResult: null,
                 voteDetails: [],
+                incomplete: false,
             },
             usage: { input_tokens: 100, output_tokens: 50 },
         });
@@ -462,6 +488,7 @@ describe('extractDecisionFromPdf', () => {
 
         expect(mockAiChat).toHaveBeenCalledWith(expect.objectContaining({
             model: 'sonnet',
+            maxTokens: 8192,
             prefillSystemResponse: '{',
             prependToResponse: '{',
         }));
@@ -469,5 +496,56 @@ describe('extractDecisionFromPdf', () => {
         expect(mockAiChat.mock.calls[0][0].systemPrompt).toContain('ΠΑΡΟΝΤΕΣ');
 
         fetchSpy.mockRestore();
+    });
+
+    it('uses progressive extraction for large PDFs', async () => {
+        mockGetPageCount.mockReturnValue(20); // Large PDF
+
+        const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+            ok: true,
+            arrayBuffer: () => Promise.resolve(new ArrayBuffer(100)),
+        } as Response);
+
+        // First call: incomplete
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                presentMembers: ['Μέλος 1'],
+                absentMembers: [],
+                decisionExcerpt: '',
+                decisionNumber: null,
+                references: '',
+                voteResult: null,
+                voteDetails: [],
+                incomplete: true,
+            },
+            usage: { input_tokens: 50, output_tokens: 25 },
+        });
+
+        // Second call: complete
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                presentMembers: ['Μέλος 1'],
+                absentMembers: [],
+                decisionExcerpt: 'Αποφασίζεται...',
+                decisionNumber: '1/2025',
+                references: '',
+                voteResult: 'Ομόφωνα',
+                voteDetails: [],
+                incomplete: false,
+            },
+            usage: { input_tokens: 80, output_tokens: 40 },
+        });
+
+        const { result, usage } = await extractDecisionFromPdf('https://example.com/test-progressive-url.pdf');
+
+        expect(result.incomplete).toBe(false);
+        expect(result.decisionExcerpt).toBe('Αποφασίζεται...');
+        expect(mockAiChat).toHaveBeenCalledTimes(2);
+        // Usage should be aggregated
+        expect(usage.input_tokens).toBe(130);
+        expect(usage.output_tokens).toBe(65);
+
+        fetchSpy.mockRestore();
+        mockGetPageCount.mockReturnValue(3); // Reset
     });
 });

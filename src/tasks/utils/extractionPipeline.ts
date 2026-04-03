@@ -96,8 +96,8 @@ export async function extractDecisionsFromPdfs(
             } else {
                 const subject = batch[j];
                 const msg = result.reason instanceof Error ? result.reason.message : 'Unknown error';
-                console.error(`  [PDF ${i + j + 1}] FAILED: ${msg}`);
-                warnings.push(`Failed to extract data from decision PDF for "${subject.name}": ${msg}`);
+                console.error(`  [PDF ${i + j + 1}] FAILED for "${subject.name}" (${subject.decision.pdfUrl}): ${msg}`);
+                warnings.push(`Failed to extract data from decision PDF for "${subject.name}" (${subject.decision.pdfUrl}): ${msg}`);
             }
         }
 

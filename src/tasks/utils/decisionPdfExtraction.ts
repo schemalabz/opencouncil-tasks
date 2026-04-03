@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { aiChat, ResultWithUsage, NO_USAGE } from '../../lib/ai.js';
+import { aiChat, ResultWithUsage, NO_USAGE, addUsage } from '../../lib/ai.js';
+import { PDFDocument } from 'pdf-lib';
 import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
@@ -10,15 +11,14 @@ export function adaToPdfUrl(ada: string): string {
     return `https://diavgeia.gov.gr/doc/${encodeURIComponent(ada)}`;
 }
 
-export async function downloadPdfToBase64(source: string): Promise<string> {
+export async function downloadPdfAsBuffer(source: string): Promise<Buffer> {
     // Local file path
     if (source.startsWith('/') || source.startsWith('./') || source.startsWith('../')) {
         const filePath = decodeURIComponent(source);
         console.log(`Reading local file: ${filePath}...`);
         const buffer = fs.readFileSync(filePath);
-        const base64 = buffer.toString('base64');
-        console.log(`Read file: ${(base64.length / 1024).toFixed(0)} KB base64`);
-        return base64;
+        console.log(`Read file: ${(buffer.length / 1024).toFixed(0)} KB`);
+        return buffer;
     }
 
     console.log(`Downloading file from ${source}...`);
@@ -27,9 +27,35 @@ export async function downloadPdfToBase64(source: string): Promise<string> {
         throw new Error(`Failed to download PDF from ${source}: HTTP ${response.status} ${response.statusText}`);
     }
     const arrayBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    console.log(`Downloaded file: ${(base64.length / 1024).toFixed(0)} KB base64`);
-    return base64;
+    const buffer = Buffer.from(arrayBuffer);
+    console.log(`Downloaded file: ${(buffer.length / 1024).toFixed(0)} KB`);
+    return buffer;
+}
+
+/** @deprecated Use downloadPdfAsBuffer instead */
+export async function downloadPdfToBase64(source: string): Promise<string> {
+    const buffer = await downloadPdfAsBuffer(source);
+    return buffer.toString('base64');
+}
+
+/**
+ * Extract a range of pages from a PDF buffer and return as base64.
+ * Pages are 0-indexed: extractPages(buf, 0, 5) → first 5 pages.
+ */
+async function extractPdfPages(pdfBuffer: Buffer, startPage: number, endPage: number): Promise<string> {
+    const srcDoc = await PDFDocument.load(pdfBuffer);
+    const totalPages = srcDoc.getPageCount();
+    const actualEnd = Math.min(endPage, totalPages);
+
+    const newDoc = await PDFDocument.create();
+    const pageIndices = Array.from({ length: actualEnd - startPage }, (_, i) => startPage + i);
+    const copiedPages = await newDoc.copyPages(srcDoc, pageIndices);
+    for (const page of copiedPages) {
+        newDoc.addPage(page);
+    }
+
+    const pdfBytes = await newDoc.save();
+    return Buffer.from(pdfBytes).toString('base64');
 }
 
 // --- Extraction cache ---
@@ -90,6 +116,7 @@ export interface RawExtractedDecision {
     attendanceChanges: AttendanceChange[];
     discussionOrder: AgendaItemRef[] | null;
     subjectInfo: AgendaItemRef | null;
+    incomplete: boolean;
 }
 
 /**
@@ -165,6 +192,7 @@ Extract the following information from the PDF:
    - "nonAgendaReason": "outOfAgenda" if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), null for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
    - Return null if the subject/topic number cannot be determined.
 11. **mayorPresent**: Whether the city mayor (Δήμαρχος/Δήμαρχο) was present at the session. This is usually stated in a narrative paragraph separate from the council member attendance list. Look for phrases like "Ο/Η Δήμαρχος ... προσκλήθηκε νομίμως και παρέστη" or "Ο/Η Δήμαρχος ... παρών/παρούσα" (present), or "Ο/Η Δήμαρχος ... δεν ήταν παρών/παρούσα" or "απουσίαζε" (absent). Return an object with "present" (boolean) and "rawText" (the original sentence from the PDF describing the mayor's presence/absence). Return null if mayor presence is not mentioned.
+12. **incomplete**: Set to true if the document appears truncated — i.e. you can see attendance lists and preamble but the decision text ("ΑΠΟΦΑΣΙΖΕΙ") and vote result are missing or cut off. Set to false if you found the full decision content.
 
 Return valid JSON matching this schema:
 {
@@ -178,7 +206,8 @@ Return valid JSON matching this schema:
   "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" }[],
   "attendanceChanges": { "name": string, "type": "arrival" | "departure", "agendaItem": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null, "timing": "during" | "after" | null, "rawText": string }[],
   "discussionOrder": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null }[] | null,
-  "subjectInfo": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null
+  "subjectInfo": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null,
+  "incomplete": boolean
 }
 
 If a field cannot be found, use empty array for lists, empty string for text, and null where indicated.`;
@@ -407,28 +436,110 @@ export async function matchAllMembers(
 
 // --- PDF extraction ---
 
+/** Max output tokens for extraction — the JSON output is small, so we don't need the full 64k default. */
+const EXTRACTION_MAX_TOKENS = 8192;
+
+/** Page count threshold: PDFs with this many pages or fewer are sent whole. */
+const SMALL_PDF_THRESHOLD = 10;
+
+/** Initial number of pages to send for large PDFs. */
+const INITIAL_PAGES = 5;
+
+/** How many additional pages to add on each retry. */
+const PAGE_INCREMENT = 5;
+
+/** Maximum pages to try before giving up on progressive extraction. */
+const MAX_PAGES = 30;
+
 export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string, skipCache?: boolean): Promise<ResultWithUsage<RawExtractedDecision> & { fromCache: boolean }> {
     if (!skipCache) {
         const cached = readCache<RawExtractedDecision>(pdfUrl);
         if (cached) return { result: cached, usage: { ...NO_USAGE }, fromCache: true };
     }
 
-    const base64 = await downloadPdfToBase64(pdfUrl);
+    const pdfBuffer = await downloadPdfAsBuffer(pdfUrl);
+    const srcDoc = await PDFDocument.load(pdfBuffer);
+    const totalPages = srcDoc.getPageCount();
 
     const userPromptParts = ['Extract the required information from this Greek municipal council decision PDF.'];
     if (mayorName) {
         userPromptParts.push(`The city mayor is: ${mayorName}`);
     }
+    const userPrompt = userPromptParts.join('\n');
 
+    // Small PDFs: send the whole thing in one call
+    if (totalPages <= SMALL_PDF_THRESHOLD) {
+        console.log(`  PDF has ${totalPages} pages (≤${SMALL_PDF_THRESHOLD}), sending whole document`);
+        const base64 = pdfBuffer.toString('base64');
+        const { result, usage } = await aiChat<RawExtractedDecision>({
+            systemPrompt: EXTRACTION_SYSTEM_PROMPT,
+            userPrompt,
+            documentBase64: base64,
+            prefillSystemResponse: '{',
+            prependToResponse: '{',
+            model: 'sonnet',
+            maxTokens: EXTRACTION_MAX_TOKENS,
+        });
+
+        writeCache(pdfUrl, result);
+        return { result, usage, fromCache: false };
+    }
+
+    // Large PDFs: progressive page loading
+    console.log(`  PDF has ${totalPages} pages (>${SMALL_PDF_THRESHOLD}), using progressive extraction`);
+    let pagesToSend = INITIAL_PAGES;
+    let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
+
+    while (pagesToSend <= MAX_PAGES) {
+        const actualPages = Math.min(pagesToSend, totalPages);
+        console.log(`  Trying with first ${actualPages}/${totalPages} pages...`);
+
+        const partialBase64 = await extractPdfPages(pdfBuffer, 0, actualPages);
+
+        const partialPrompt = actualPages < totalPages
+            ? `${userPrompt}\n\nNote: You are seeing pages 1-${actualPages} of a ${totalPages}-page document. If the decision text (ΑΠΟΦΑΣΙΖΕΙ) and vote result are not visible in these pages, set "incomplete" to true.`
+            : userPrompt;
+
+        const { result, usage } = await aiChat<RawExtractedDecision>({
+            systemPrompt: EXTRACTION_SYSTEM_PROMPT,
+            userPrompt: partialPrompt,
+            documentBase64: partialBase64,
+            prefillSystemResponse: '{',
+            prependToResponse: '{',
+            model: 'sonnet',
+            maxTokens: EXTRACTION_MAX_TOKENS,
+        });
+
+        totalUsage = addUsage(totalUsage, usage);
+
+        if (!result.incomplete || actualPages >= totalPages) {
+            if (result.incomplete) {
+                console.log(`  Extraction still incomplete after all ${totalPages} pages`);
+            } else {
+                console.log(`  Extraction complete with ${actualPages} pages`);
+            }
+            writeCache(pdfUrl, result);
+            return { result, usage: totalUsage, fromCache: false };
+        }
+
+        console.log(`  Incomplete extraction — decision content not found in first ${actualPages} pages, retrying with more...`);
+        pagesToSend += PAGE_INCREMENT;
+    }
+
+    // Exhausted retries — send the whole PDF as last resort
+    console.log(`  Progressive extraction exhausted (tried up to ${MAX_PAGES} pages), sending full ${totalPages}-page PDF`);
+    const fullBase64 = pdfBuffer.toString('base64');
     const { result, usage } = await aiChat<RawExtractedDecision>({
         systemPrompt: EXTRACTION_SYSTEM_PROMPT,
-        userPrompt: userPromptParts.join('\n'),
-        documentBase64: base64,
+        userPrompt,
+        documentBase64: fullBase64,
         prefillSystemResponse: '{',
         prependToResponse: '{',
         model: 'sonnet',
+        maxTokens: EXTRACTION_MAX_TOKENS,
     });
 
+    totalUsage = addUsage(totalUsage, usage);
     writeCache(pdfUrl, result);
-    return { result, usage, fromCache: false };
+    return { result, usage: totalUsage, fromCache: false };
 }
