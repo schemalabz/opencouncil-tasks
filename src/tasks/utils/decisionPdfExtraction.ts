@@ -192,7 +192,7 @@ Extract the following information from the PDF:
    - "nonAgendaReason": "outOfAgenda" if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), null for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
    - Return null if the subject/topic number cannot be determined.
 11. **mayorPresent**: Whether the city mayor (Δήμαρχος/Δήμαρχο) was present at the session. This is usually stated in a narrative paragraph separate from the council member attendance list. Look for phrases like "Ο/Η Δήμαρχος ... προσκλήθηκε νομίμως και παρέστη" or "Ο/Η Δήμαρχος ... παρών/παρούσα" (present), or "Ο/Η Δήμαρχος ... δεν ήταν παρών/παρούσα" or "απουσίαζε" (absent). Return an object with "present" (boolean) and "rawText" (the original sentence from the PDF describing the mayor's presence/absence). Return null if mayor presence is not mentioned.
-12. **incomplete**: Set to true if the document appears truncated — i.e. you can see attendance lists and preamble but the decision text ("ΑΠΟΦΑΣΙΖΕΙ") and vote result are missing or cut off. Set to false if you found the full decision content.
+12. **incomplete**: Set to true ONLY if the document appears physically truncated — i.e. you can see attendance lists and preamble but the decision section starting with "ΑΠΟΦΑΣΙΖΕΙ" is not present because the provided pages end before reaching it. Set to false if you can see the "ΑΠΟΦΑΣΙΖΕΙ" section, even if some fields within it (like the vote result phrase) are missing or unclear. Missing data in a complete document is a data quality issue, not truncation.
 
 Return valid JSON matching this schema:
 {
@@ -355,7 +355,13 @@ export async function llmMatchMembers(
         systemPrompt: `You are a Greek name matcher for municipal council members.
 
 Match each name from "unmatchedNames" to its corresponding person from "availablePeople".
-Names may differ in: word order, accents/diacritics, hyphenation, or nicknames.
+Names may differ in:
+- Word order or missing middle names
+- Accents/diacritics (monotonic vs polytonic, missing accents)
+- Hyphenation or spacing (e.g. "ΚΩΝΣΤΑΝΤΙΝΑ - ΟΛΥΜΠΙΑ" vs "Κωνσταντίνα-Ολυμπία")
+- Greek diminutives (υποκοριστικά): official documents use formal/legal names while databases often store the commonly used form. These can be very different from the formal name. Examples: Παρασκευή→Βούλα/Εύη, Ελπινίκη→Νίκη, Κωνσταντίνα→Τάνια/Ντίνα, Κωνσταντίνος→Ντίνος/Κώστας, Ευαγγελία→Εύα/Λίτσα, Δημήτριος→Μήτσος/Τάκης, Γεώργιος→Γιώργος, Αθανάσιος→Θανάσης, Χαράλαμπος→Μπάμπης
+
+**Key strategy**: When the surname matches exactly between an unmatched name and only ONE available person shares that surname, the first name is very likely a diminutive — match them even if the first name looks very different. If multiple available people share the same surname, only match when you can confidently identify the diminutive.
 
 Return ONLY a JSON array with one entry per unmatched name, no other text:
 [{"name": "<exact name from unmatchedNames>", "personId": "<id from availablePeople or null>"}]
@@ -363,7 +369,7 @@ Return ONLY a JSON array with one entry per unmatched name, no other text:
 Rules:
 - "name" must be the EXACT string from unmatchedNames
 - "personId" must be an id from availablePeople, or null if no match
-- Only match if confident — use null otherwise
+- When the surname matches exactly, match confidently even if the first name differs significantly (it's almost certainly a diminutive)
 - Each personId at most once`,
         userPrompt: JSON.stringify({
             unmatchedNames,
@@ -448,8 +454,11 @@ const INITIAL_PAGES = 5;
 /** How many additional pages to add on each retry. */
 const PAGE_INCREMENT = 5;
 
-/** Maximum pages to try before giving up on progressive extraction. */
-const MAX_PAGES = 30;
+/** Maximum front pages to try before switching to tail extraction. */
+const MAX_FRONT_PAGES = 15;
+
+/** Number of pages to try from the end of the document as a last resort. */
+const TAIL_PAGES = 5;
 
 export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string, skipCache?: boolean): Promise<ResultWithUsage<RawExtractedDecision> & { fromCache: boolean }> {
     if (!skipCache) {
@@ -489,15 +498,16 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
     console.log(`  PDF has ${totalPages} pages (>${SMALL_PDF_THRESHOLD}), using progressive extraction`);
     let pagesToSend = INITIAL_PAGES;
     let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
+    let lastFrontResult: RawExtractedDecision | null = null;
 
-    while (pagesToSend <= MAX_PAGES) {
+    while (pagesToSend <= MAX_FRONT_PAGES) {
         const actualPages = Math.min(pagesToSend, totalPages);
         console.log(`  Trying with first ${actualPages}/${totalPages} pages...`);
 
         const partialBase64 = await extractPdfPages(pdfBuffer, 0, actualPages);
 
         const partialPrompt = actualPages < totalPages
-            ? `${userPrompt}\n\nNote: You are seeing pages 1-${actualPages} of a ${totalPages}-page document. If the decision text (ΑΠΟΦΑΣΙΖΕΙ) and vote result are not visible in these pages, set "incomplete" to true.`
+            ? `${userPrompt}\n\nNote: You are seeing pages 1-${actualPages} of a ${totalPages}-page document. If the decision section ("ΑΠΟΦΑΣΙΖΕΙ") is not visible in these pages because the document is cut off, set "incomplete" to true. If you can see "ΑΠΟΦΑΣΙΖΕΙ" but some details are missing or unclear, set "incomplete" to false.`
             : userPrompt;
 
         const { result, usage } = await aiChat<RawExtractedDecision>({
@@ -511,6 +521,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         });
 
         totalUsage = addUsage(totalUsage, usage);
+        lastFrontResult = result;
 
         if (!result.incomplete || actualPages >= totalPages) {
             if (result.incomplete) {
@@ -526,20 +537,48 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         pagesToSend += PAGE_INCREMENT;
     }
 
-    // Exhausted retries — send the whole PDF as last resort
-    console.log(`  Progressive extraction exhausted (tried up to ${MAX_PAGES} pages), sending full ${totalPages}-page PDF`);
-    const fullBase64 = pdfBuffer.toString('base64');
-    const { result, usage } = await aiChat<RawExtractedDecision>({
-        systemPrompt: EXTRACTION_SYSTEM_PROMPT,
-        userPrompt,
-        documentBase64: fullBase64,
-        prefillSystemResponse: '{',
-        prependToResponse: '{',
-        model: 'sonnet',
-        maxTokens: EXTRACTION_MAX_TOKENS,
-    });
+    // Front pages exhausted — try the last TAIL_PAGES pages
+    const tailStart = Math.max(0, totalPages - TAIL_PAGES);
+    if (tailStart > MAX_FRONT_PAGES) {
+        // Only try tail if it doesn't overlap with pages we already sent
+        const tailActual = totalPages - tailStart;
+        console.log(`  Front pages exhausted, trying last ${tailActual} pages (${tailStart + 1}-${totalPages})...`);
 
-    totalUsage = addUsage(totalUsage, usage);
-    writeCache(pdfUrl, result);
-    return { result, usage: totalUsage, fromCache: false };
+        const tailBase64 = await extractPdfPages(pdfBuffer, tailStart, totalPages);
+        const tailPrompt = `${userPrompt}\n\nNote: You are seeing the last ${tailActual} pages (${tailStart + 1}-${totalPages}) of a ${totalPages}-page document. The earlier pages contained attendance lists and preamble but not the decision section. Extract the decision information from these pages. If the decision section ("ΑΠΟΦΑΣΙΖΕΙ") is not visible in these pages either, set "incomplete" to true.`;
+
+        const { result, usage } = await aiChat<RawExtractedDecision>({
+            systemPrompt: EXTRACTION_SYSTEM_PROMPT,
+            userPrompt: tailPrompt,
+            documentBase64: tailBase64,
+            prefillSystemResponse: '{',
+            prependToResponse: '{',
+            model: 'sonnet',
+            maxTokens: EXTRACTION_MAX_TOKENS,
+        });
+
+        totalUsage = addUsage(totalUsage, usage);
+
+        if (!result.incomplete) {
+            // Merge: attendance from front pages, decision data from tail pages
+            const merged: RawExtractedDecision = {
+                ...result,
+                presentMembers: result.presentMembers?.length ? result.presentMembers : lastFrontResult!.presentMembers,
+                absentMembers: result.absentMembers?.length ? result.absentMembers : lastFrontResult!.absentMembers,
+                attendanceChanges: result.attendanceChanges?.length ? result.attendanceChanges : lastFrontResult!.attendanceChanges,
+                mayorPresent: result.mayorPresent ?? lastFrontResult!.mayorPresent,
+            };
+            console.log(`  Extraction complete from tail pages (merged with front-page attendance)`);
+            writeCache(pdfUrl, merged);
+            return { result: merged, usage: totalUsage, fromCache: false };
+        }
+
+        console.log(`  Decision content not found in tail pages either`);
+    }
+
+    // Fully exhausted — return best partial result we got (with incomplete flag)
+    console.log(`  Progressive extraction exhausted (front ${MAX_FRONT_PAGES} + tail ${TAIL_PAGES} pages of ${totalPages}), returning partial data`);
+    const bestResult: RawExtractedDecision = { ...lastFrontResult!, incomplete: true };
+    writeCache(pdfUrl, bestResult);
+    return { result: bestResult, usage: totalUsage, fromCache: false };
 }

@@ -9,6 +9,7 @@ import {
     PersonForMatching,
 } from './decisionPdfExtraction.js';
 import { processRawExtraction } from './effectiveAttendance.js';
+import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
 
 export interface ExtractionSubject {
     subjectId: string;
@@ -196,6 +197,16 @@ export async function extractDecisionsFromPdfs(
             }
         }
 
+        const dedupedUnmatched = [...new Set(unmatchedMembers)];
+
+        // Validate raw extraction and post-processing
+        const rawWarnings = validateRawExtraction(raw);
+        const processedWarnings = validateProcessedDecision({
+            voteResult: raw.voteResult,
+            voteDetails: voteDetails.map(v => ({ vote: v.vote })),
+        });
+        const decisionWarnings = [...rawWarnings, ...processedWarnings];
+
         decisions.push({
             subjectId,
             excerpt: raw.decisionExcerpt || '',
@@ -205,11 +216,12 @@ export async function extractDecisionsFromPdfs(
             mayorPresent: raw.mayorPresent?.present ?? undefined,
             voteResult: raw.voteResult || null,
             voteDetails,
-            unmatchedMembers: [...new Set(unmatchedMembers)],
+            unmatchedMembers: dedupedUnmatched,
             subjectInfo: raw.subjectInfo
                 ? { number: raw.subjectInfo.agendaItemIndex, isOutOfAgenda: raw.subjectInfo.nonAgendaReason !== null }
                 : null,
             fromCache,
+            warnings: decisionWarnings,
         });
 
         console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${unmatchedMembers.length} unmatched, ${voteDetails.length} votes`);

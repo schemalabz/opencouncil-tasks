@@ -11,6 +11,7 @@ import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
+import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
 import { formatUsage } from './lib/ai.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
@@ -640,11 +641,26 @@ program
                 console.log(`Inferred ${processed.inferredVoteCount} FOR votes from effective present members`);
             }
 
+            // Validate and display warnings
+            const rawWarnings = validateRawExtraction(result);
+            const processedWarnings = validateProcessedDecision({
+                voteResult: result.voteResult,
+                voteDetails: processed.voteDetails.map(v => ({ vote: v.vote })),
+            });
+            const allWarnings = [...rawWarnings, ...processedWarnings];
+            if (allWarnings.length > 0) {
+                console.log(`\nWarnings (${allWarnings.length}):`);
+                for (const w of allWarnings) {
+                    console.log(`  [${w.severity}] ${w.code}: ${w.message}`);
+                }
+            }
+
             const output = {
                 ...result,
                 effectivePresent: processed.effectivePresent,
                 effectiveAbsent: processed.effectiveAbsent,
                 voteDetails: processed.voteDetails,
+                warnings: allWarnings,
             };
             const json = JSON.stringify(output, null, 2);
             if (options.outputFile) {

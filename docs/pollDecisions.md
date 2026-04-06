@@ -8,6 +8,7 @@ Fetch decisions from the Diavgeia (Greek Government Transparency) API, match the
 - API Client: src/lib/DiavgeiaClient.ts
 - AI Integration: src/lib/ai.ts (for LLM matching and PDF extraction)
 - PDF Extraction: src/tasks/utils/decisionPdfExtraction.ts (single PDF), src/tasks/utils/extractionPipeline.ts (batch pipeline)
+- Validation: src/tasks/utils/decisionValidation.ts (per-decision warnings)
 - Effective Attendance: src/tasks/utils/effectiveAttendance.ts
 - Types: src/types.ts
 
@@ -104,6 +105,14 @@ flowchart TD
    - Performs meeting-level name matching (token-sort + Haiku LLM fallback) to map PDF member names to person IDs
    - Computes effective attendance per subject via `processRawExtraction()` — accounts for mid-meeting arrivals/departures and non-standard discussion order using each PDF's own data (self-contained)
    - Infers vote records from effective present members: unanimous ("Ομόφωνα") → all present get FOR; majority ("κατά πλειοψηφία") with only AGAINST/ABSTAIN listed → remaining present get FOR. All vote inference is handled here in the backend — the frontend writes `voteDetails` as-is
+   - Validates each extraction and produces per-decision warnings (see **Decision Warnings** below)
+
+   **Progressive page loading** — Large PDFs (>10 pages) are not sent whole. Instead:
+   1. Front pages: tries 5 → 10 → 15 pages from the start
+   2. Tail pages: if still incomplete, tries the last 5 pages (merged with front-page attendance data)
+   3. If the decision section ("ΑΠΟΦΑΣΙΖΕΙ") is not found in either, returns the best partial result with an `EXTRACTION_INCOMPLETE` warning
+
+   Small PDFs (≤10 pages) are always sent whole in a single call. The `incomplete` flag means physical document truncation only — a complete document with missing data fields (e.g. no vote phrase) is not considered incomplete.
 
 7) **Match Verification** (90%)
    For each extraction result, cross-checks `subjectInfo` (an `AgendaItemRef`) against the matched subject:
@@ -160,12 +169,19 @@ flowchart TD
 - **computeEffectiveAttendance(input)**: Low-level function that walks the discussion sequence applying attendance changes. Handles `AgendaItemRef` objects (distinguishing regular vs out-of-agenda items) and `timing` ("during" = absent from that item, "after" = present for that item, absent from next).
 - **inferForVotes(presentMembers, voteResult, voteDetails)**: Infers FOR votes for unanimous and majority decisions from the effective present list.
 
+### Decision Warnings
+
+Each extracted decision carries a `warnings: DecisionWarning[]` array with structured, machine-readable quality signals. Warnings are produced at two validation levels: raw-level (before name matching) and post-matching (after vote inference).
+
+See `DecisionWarningCode` in `src/tasks/utils/decisionValidation.ts` for the full list of codes, severities, and conditions. New checks are added by extending the union and adding a condition to the appropriate validation function.
+
 ### Key Types
 
+- **DecisionWarning**: `{ code: DecisionWarningCode, severity: 'info' | 'warning' | 'error', message: string }` — a structured quality signal attached to an extraction result. See **Decision Warnings** above for the full list of codes.
 - **AgendaItemRef**: `{ agendaItemIndex: number; nonAgendaReason: 'outOfAgenda' | null }` — identifies an agenda item, distinguishing regular items from out-of-agenda/emergency items. Used in `discussionOrder`, `attendanceChanges[].agendaItem`, and `subjectInfo`.
 - **AttendanceChange**: `{ name, type: 'arrival'|'departure', agendaItem: AgendaItemRef|null, timing: 'during'|'after'|null, rawText }` — a mid-meeting arrival or departure. `timing: 'during'` means the person left/arrived partway through (absent from that item). `timing: 'after'` means after discussion ended (present for that item, change takes effect at the next item). `agendaItem: null` = session-level (start/end).
 - **RawExtractedDecision**: Claude's raw extraction output including `presentMembers`, `absentMembers`, `attendanceChanges`, `discussionOrder`, `subjectInfo`, `voteResult`, `voteDetails`, `decisionExcerpt`, `references`.
-- **ExtractedDecisionResult**: Processed output with person IDs (not names), effective attendance applied, votes inferred. This is the contract between backend and frontend.
+- **ExtractedDecisionResult**: Processed output with person IDs (not names), effective attendance applied, votes inferred, and per-decision `warnings`. This is the contract between backend and frontend.
 
 ### Data Flow & State Management
 - Stateless per request

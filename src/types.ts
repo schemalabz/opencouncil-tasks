@@ -409,6 +409,13 @@ export interface GenerateVoiceprintResult {
  * Extract Decisions (PDF → structured data)
  */
 
+/** Per-decision warning from the extraction pipeline. See DecisionWarningCode in decisionValidation.ts for the full list of codes. */
+export interface DecisionWarning {
+    code: string;
+    severity: 'info' | 'warning' | 'error';
+    message: string;
+}
+
 export interface ExtractedDecisionResult {
     subjectId: string;
     excerpt: string;
@@ -421,6 +428,7 @@ export interface ExtractedDecisionResult {
     unmatchedMembers: string[];
     subjectInfo: { number: number; isOutOfAgenda: boolean } | null;
     fromCache?: boolean;
+    warnings: DecisionWarning[];
 }
 
 /*
