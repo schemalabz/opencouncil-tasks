@@ -163,7 +163,7 @@ Extract the following information from the PDF:
 
 1. **presentMembers**: List of council members marked as present (ΠΑΡΟΝΤΕΣ). Extract just their full names.
 2. **absentMembers**: List of council members marked as absent (ΑΠΟΝΤΕΣ). Extract just their full names.
-3. **decisionExcerpt**: The decision text, starting from "ΤΟ Δ.Σ αφού έλαβε υπόψη" or similar phrasing through "ΑΠΟΦΑΣΙΖΕΙ" and the decision content. Include the full decision text. Use markdown formatting to preserve structure (bullet points, numbered lists, etc.).
+3. **decisionExcerpt**: The decision text, starting from "ΤΟ Δ.Σ αφού έλαβε υπόψη" or similar phrasing through "ΑΠΟΦΑΣΙΖΕΙ" and the decision content. Include the full decision text. Use markdown formatting to preserve structure (bullet points, numbered lists, etc.). Preserve bold formatting from the PDF — if text is bold in the original, wrap it in **bold** markdown. The "decides" statement (e.g. "ΑΠΟΦΑΣΙΖΕΙ", "Το Δημοτικό Συμβούλιο … αποφασίζει ομόφωνα") must be its own paragraph — keep the full sentence on one line, separated by blank lines from surrounding text, not merged with the decision content that follows.
 4. **decisionNumber**: The decision number (Αριθμός Απόφασης), e.g. "231/2025".
 5. **references**: The legal bases and references from the "αφού έλαβε υπόψη" or "Έχοντας υπόψη" section. List each reference item. Use markdown formatting (numbered list). If the section just says something generic like "τις σχετικές διατάξεις της Νομοθεσίας", return that text as-is.
 6. **voteResult**: The vote result phrase, e.g. "Ομόφωνα", "Κατά πλειοψηφία", "Κατά πλειοψηφία με ψήφους 21 υπέρ και 2 κατά". This is usually found right before or after "ΑΠΟΦΑΣΙΖΕΙ".
