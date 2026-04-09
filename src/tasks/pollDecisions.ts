@@ -420,16 +420,22 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         }
     }
 
-    // Second pass: LLM matching for remaining unmatched subjects
-    if (unmatchedSubjects.length > 0) {
+    // Second pass: LLM matching for unmatched and ambiguous subjects
+    // Ambiguous subjects had multiple candidates with similar text scores — the LLM
+    // can resolve these by understanding semantic differences (e.g. school numbers).
+    const llmSubjects = [
+        ...unmatchedSubjects,
+        ...ambiguousSubjects.map(a => ({ subjectId: a.subjectId, name: a.name, reason: '' })),
+    ];
+    if (llmSubjects.length > 0) {
         onProgress("LLM matching", 35);
-        console.log(`Attempting LLM matching for ${unmatchedSubjects.length} unmatched subjects...`);
+        console.log(`Attempting LLM matching for ${unmatchedSubjects.length} unmatched + ${ambiguousSubjects.length} ambiguous subjects...`);
 
         const availableDecisions = decisions.filter(d => !usedDecisions.has(d.ada));
-        const { results: llmResults, usage: llmUsage } = await llmMatchSubjects(unmatchedSubjects, availableDecisions);
+        const { results: llmResults, usage: llmUsage } = await llmMatchSubjects(llmSubjects, availableDecisions);
         totalUsage = addUsage(totalUsage, llmUsage);
 
-        // Process LLM results
+        // Process LLM results for unmatched subjects
         const stillUnmatched: typeof unmatchedSubjects = [];
         for (const unmatched of unmatchedSubjects) {
             const llmResult = llmResults.find(r => r.subjectId === unmatched.subjectId);
@@ -456,10 +462,35 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 reason: llmResult?.reasoning || unmatched.reason,
             });
         }
-
-        // Update unmatched list
         unmatchedSubjects.length = 0;
         unmatchedSubjects.push(...stillUnmatched);
+
+        // Process LLM results for ambiguous subjects
+        const stillAmbiguous: typeof ambiguousSubjects = [];
+        for (const ambiguous of ambiguousSubjects) {
+            const llmResult = llmResults.find(r => r.subjectId === ambiguous.subjectId);
+
+            if (llmResult?.ada && llmResult.confidence !== 'none') {
+                const decision = decisions.find(d => d.ada === llmResult.ada);
+                if (decision && !usedDecisions.has(decision.ada)) {
+                    matches.push({
+                        subjectId: ambiguous.subjectId,
+                        ada: decision.ada,
+                        decisionTitle: decision.subject,
+                        pdfUrl: decision.documentUrl,
+                        protocolNumber: decision.protocolNumber,
+                        publishDate: msToISODate(decision.publishTimestamp),
+                        matchConfidence: llmResult.confidence === 'high' ? 0.85 : 0.6,
+                    });
+                    usedDecisions.add(decision.ada);
+                    console.log(`  LLM resolved ambiguous: "${ambiguous.name}" → ${decision.ada} (${llmResult.confidence})`);
+                    continue;
+                }
+            }
+            stillAmbiguous.push(ambiguous);
+        }
+        ambiguousSubjects.length = 0;
+        ambiguousSubjects.push(...stillAmbiguous);
     }
 
     // Third pass: conflict resolution — check if any new match collides with

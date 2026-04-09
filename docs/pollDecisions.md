@@ -22,18 +22,17 @@ flowchart TD
   E -- >=0.45 --> F[Add to Matches]
   E -- 0.30-0.45 --> G[Add to Ambiguous]
   E -- <0.30 --> H[Add to Unmatched]
-  H --> I{Any Unmatched?}
-  I -- yes --> J[LLM Matching via Haiku]
-  J --> K[Process LLM Results]
-  K --> L[Conflict Resolution]
-  I -- no --> L
-  F --> L
-  G --> L
-  L --> M{New Matches?}
-  M -- yes --> N[Download PDFs & Extract via Claude]
+  H --> I[LLM Matching via Haiku]
+  G --> I
+  I --> J[Process LLM Results]
+  J --> K[Conflict Resolution]
+  F --> K
+  K --> L{Subjects to Extract?}
+  L -- yes --> M[Fetch Diavgeia Metadata ∥ Extract PDFs via Claude]
+  M --> N[Enrich Results with Metadata]
   N --> O[Verify Matches via subjectInfo]
   O --> P[Final Results]
-  M -- no --> P
+  L -- no --> P
 ```
 
 ### Input/Output Contract
@@ -86,10 +85,12 @@ flowchart TD
    - AMBIGUOUS_THRESHOLD = 0.30 (consider as candidate)
 
 4) **LLM Matching** (35%)
-   For subjects that didn't match with high confidence:
-   - Uses Claude 3.5 Haiku (cheap, fast)
+   For unmatched subjects AND ambiguous subjects (multiple candidates with similar text scores) in a single LLM call:
+   - Uses Claude Haiku 4.5
    - Provides semantic matching for Greek word inflection differences
+   - Resolves ambiguities that text similarity can't (e.g. "4ου Γυμνασίου" vs "7ο Γυμνάσιο" where ordinal numbers are too short for tokenization)
    - Returns confidence: 'high' (0.85), 'low' (0.6), or 'none'
+   - Resolved ambiguous subjects move to matches; unresolved stay in `ambiguousSubjects`
    - Returns usage for cost tracking
 
 5) **Conflict Resolution** (45%)
@@ -192,7 +193,7 @@ See `DecisionWarningCode` in `src/tasks/utils/decisionValidation.ts` for the ful
 - Progress reported via onProgress callback:
   - "fetching decisions" (5%)
   - "matching subjects" (15%)
-  - "LLM matching" (35%)
+  - "LLM matching" (35%) — includes both unmatched and ambiguous subjects
   - "conflict resolution" (45%)
   - "extracting PDFs" (50-85%) — Diavgeia metadata fetch runs in parallel
   - "verifying matches" (90%)
