@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { aiChat, ResultWithUsage, NO_USAGE, addUsage } from '../../lib/ai.js';
+import { aiChat, ResultWithUsage, NO_USAGE, addUsage, HAIKU_MODEL } from '../../lib/ai.js';
 import { PDFDocument } from 'pdf-lib';
 import crypto from 'crypto';
 import fs from 'fs';
@@ -378,7 +378,7 @@ Rules:
         prefillSystemResponse: '[',
         prependToResponse: '[',
         parseJson: false,
-        model: 'haiku',
+        model: HAIKU_MODEL,
     });
 
     // Strip any trailing text after the JSON array (LLM sometimes adds explanations)
@@ -442,6 +442,7 @@ export async function matchAllMembers(
 
 // --- PDF extraction ---
 
+const EXTRACTION_MODEL = 'claude-sonnet-4-20250514';
 /** Max output tokens for extraction — the JSON output is small, so we don't need the full 64k default. */
 const EXTRACTION_MAX_TOKENS = 8192;
 
@@ -486,7 +487,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             documentBase64: base64,
             prefillSystemResponse: '{',
             prependToResponse: '{',
-            model: 'sonnet',
+            model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
 
@@ -516,7 +517,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             documentBase64: partialBase64,
             prefillSystemResponse: '{',
             prependToResponse: '{',
-            model: 'sonnet',
+            model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
 
@@ -553,7 +554,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             documentBase64: tailBase64,
             prefillSystemResponse: '{',
             prependToResponse: '{',
-            model: 'sonnet',
+            model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
 

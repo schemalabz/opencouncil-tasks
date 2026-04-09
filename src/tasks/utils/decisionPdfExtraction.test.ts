@@ -14,6 +14,7 @@ vi.mock("../../lib/ai.js", () => ({
         cache_read_input_tokens: (a.cache_read_input_tokens || 0) + (b.cache_read_input_tokens || 0),
     }),
     NO_USAGE: NO_USAGE_MOCK,
+    HAIKU_MODEL: 'claude-haiku-4-5-20251001',
 }));
 
 // Mock pdf-lib to avoid needing real PDF bytes in tests
@@ -487,7 +488,7 @@ describe('extractDecisionFromPdf', () => {
         await extractDecisionFromPdf('https://example.com/test-ai-params-url.pdf');
 
         expect(mockAiChat).toHaveBeenCalledWith(expect.objectContaining({
-            model: 'sonnet',
+            model: 'claude-sonnet-4-20250514',
             maxTokens: 8192,
             prefillSystemResponse: '{',
             prependToResponse: '{',

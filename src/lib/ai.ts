@@ -36,6 +36,9 @@ export function formatUsage(usage: Anthropic.Messages.Usage): string {
     if (usage.cache_read_input_tokens) parts.push(`${usage.cache_read_input_tokens.toLocaleString()} cache-read`);
     return parts.join(', ');
 }
+
+export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
@@ -212,6 +215,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 userPrompt,
                 prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
                 prependToResponse: ((prependToResponse || '') + responseText).trim(),
+                maxTokens: maxTokensParam,
                 tools,
                 cacheSystemPrompt  // Preserve caching on continuation
             });

@@ -16,6 +16,7 @@ vi.mock('@schemalabs/diavgeia-cli', () => ({
 vi.mock("../lib/ai.js", () => ({
     aiChat: vi.fn(async () => ({ result: [], usage: NO_USAGE_MOCK })),
     NO_USAGE: NO_USAGE_MOCK,
+    HAIKU_MODEL: 'claude-haiku-4-5-20251001',
     addUsage: (a: Record<string, number>, b: Record<string, number>) => ({
         input_tokens: a.input_tokens + b.input_tokens,
         output_tokens: a.output_tokens + b.output_tokens,

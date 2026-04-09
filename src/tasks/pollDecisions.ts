@@ -3,7 +3,7 @@ import type { Decision } from '@schemalabs/diavgeia-cli';
 import Anthropic from '@anthropic-ai/sdk';
 import { PollDecisionsRequest, PollDecisionsResult, ExtractedDecisionResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, HAIKU_MODEL } from "../lib/ai.js";
 import { extractDecisionsFromPdfs, ExtractionSubject } from "./utils/extractionPipeline.js";
 
 /**
@@ -240,7 +240,7 @@ Return ONLY a JSON array (no explanation text), one object per subject:
         const { result, usage } = await aiChat<LLMMatchResult[]>({
             systemPrompt,
             userPrompt,
-            model: 'claude-haiku-4-5-20251001',
+            model: HAIKU_MODEL,
             prefillSystemResponse: '[',
             prependToResponse: '[',
         });
@@ -282,7 +282,7 @@ Return ONLY JSON: {"winner": "A" or "B", "reason": "..."}`;
         const { result, usage } = await aiChat<{ winner: 'A' | 'B'; reason: string }>({
             systemPrompt,
             userPrompt,
-            model: 'claude-haiku-4-5-20251001',
+            model: HAIKU_MODEL,
             prefillSystemResponse: '{',
             prependToResponse: '{',
         });
