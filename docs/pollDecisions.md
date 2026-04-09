@@ -5,7 +5,7 @@ Fetch decisions from the Diavgeia (Greek Government Transparency) API, match the
 
 ### Architecture
 - Orchestration: src/tasks/pollDecisions.ts
-- API Client: src/lib/DiavgeiaClient.ts
+- API Client: @schemalabs/diavgeia-cli (Diavgeia class)
 - AI Integration: src/lib/ai.ts (for LLM matching and PDF extraction)
 - PDF Extraction: src/tasks/utils/decisionPdfExtraction.ts (single PDF), src/tasks/utils/extractionPipeline.ts (batch pipeline)
 - Validation: src/tasks/utils/decisionValidation.ts (per-decision warnings)
@@ -58,7 +58,7 @@ flowchart TD
 
 - File References
   - Orchestration: src/tasks/pollDecisions.ts
-  - Diavgeia Client: src/lib/DiavgeiaClient.ts
+  - Diavgeia Client: @schemalabs/diavgeia-cli
   - PDF Extraction: src/tasks/utils/decisionPdfExtraction.ts, src/tasks/utils/extractionPipeline.ts
   - Effective Attendance: src/tasks/utils/effectiveAttendance.ts
   - Types: src/types.ts
@@ -70,9 +70,9 @@ flowchart TD
    - End: meeting date + 45 days (decisions may be published later)
 
 2) **Fetch Decisions from Diavgeia** (5%)
-   - Uses DiavgeiaClient.fetchAllDecisions()
+   - Uses `client.searchAll()` from `@schemalabs/diavgeia-cli`
    - Filters by organization UID, date range, and optional unit IDs (one query per unit ID, deduplicated by ADA)
-   - Handles pagination automatically (100 decisions per page)
+   - Handles pagination automatically
 
 3) **Text-Based Matching** (15%)
    For each subject, find the best matching decision using:
@@ -97,8 +97,9 @@ flowchart TD
    - Uses Claude to pick the best match with explanation
    - Returns usage for cost tracking
 
-6) **PDF Extraction** (50-85%)
+6) **PDF Extraction + Diavgeia Metadata** (50-85%)
    For newly matched subjects plus subjects with `needsExtraction` (linked but no extraction data):
+   - **Diavgeia metadata fetch** (in parallel with extraction): For `needsExtraction` subjects with an ADA, fetches title, protocolNumber, and publishDate from the Diavgeia API via `client.decision(ada)`. Uses `Promise.allSettled` so individual failures don't block others. This allows manually-added decisions (ADA-only) to get full metadata backfilled.
    - Downloads PDFs in batches of 5
    - Sends each PDF to Claude Sonnet for extraction
    - Extracts: excerpt, references, present/absent members, vote details, attendance changes (with timing), discussion order (with out-of-agenda items), subjectInfo
@@ -181,7 +182,7 @@ See `DecisionWarningCode` in `src/tasks/utils/decisionValidation.ts` for the ful
 - **AgendaItemRef**: `{ agendaItemIndex: number; nonAgendaReason: 'outOfAgenda' | null }` — identifies an agenda item, distinguishing regular items from out-of-agenda/emergency items. Used in `discussionOrder`, `attendanceChanges[].agendaItem`, and `subjectInfo`.
 - **AttendanceChange**: `{ name, type: 'arrival'|'departure', agendaItem: AgendaItemRef|null, timing: 'during'|'after'|null, rawText }` — a mid-meeting arrival or departure. `timing: 'during'` means the person left/arrived partway through (absent from that item). `timing: 'after'` means after discussion ended (present for that item, change takes effect at the next item). `agendaItem: null` = session-level (start/end).
 - **RawExtractedDecision**: Claude's raw extraction output including `presentMembers`, `absentMembers`, `attendanceChanges`, `discussionOrder`, `subjectInfo`, `voteResult`, `voteDetails`, `decisionExcerpt`, `references`.
-- **ExtractedDecisionResult**: Processed output with person IDs (not names), effective attendance applied, votes inferred, and per-decision `warnings`. This is the contract between backend and frontend.
+- **ExtractedDecisionResult**: Processed output with person IDs (not names), effective attendance applied, votes inferred, and per-decision `warnings`. Includes optional metadata from Diavgeia API (`diavgeiaTitle`, `diavgeiaPublishDate`) and `protocolNumber` (from Diavgeia API or PDF extraction). This is the contract between backend and frontend.
 
 ### Data Flow & State Management
 - Stateless per request
@@ -193,7 +194,7 @@ See `DecisionWarningCode` in `src/tasks/utils/decisionValidation.ts` for the ful
   - "matching subjects" (15%)
   - "LLM matching" (35%)
   - "conflict resolution" (45%)
-  - "extracting PDFs" (50-85%)
+  - "extracting PDFs" (50-85%) — Diavgeia metadata fetch runs in parallel
   - "verifying matches" (90%)
   - "complete" (100%)
 

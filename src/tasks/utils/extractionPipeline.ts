@@ -222,6 +222,7 @@ export async function extractDecisionsFromPdfs(
                 : null,
             fromCache,
             warnings: decisionWarnings,
+            protocolNumber: raw.decisionNumber || null,
         });
 
         console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${unmatchedMembers.length} unmatched, ${voteDetails.length} votes`);

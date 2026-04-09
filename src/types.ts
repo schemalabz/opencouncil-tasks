@@ -429,6 +429,11 @@ export interface ExtractedDecisionResult {
     subjectInfo: { number: number; isOutOfAgenda: boolean } | null;
     fromCache?: boolean;
     warnings: DecisionWarning[];
+    /** Protocol number — from Diavgeia API or PDF extraction (Αριθμός Απόφασης) */
+    protocolNumber?: string | null;
+    /** Metadata fetched from Diavgeia API for needsExtraction subjects */
+    diavgeiaTitle?: string;
+    diavgeiaPublishDate?: string; // ISO date
 }
 
 /*
