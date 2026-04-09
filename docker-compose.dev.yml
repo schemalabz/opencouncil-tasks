@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./src:/app/src
-      - ./.env:/app/.env 
+      - ./.env:/app/.env
       - ./tsconfig.json:/app/tsconfig.json
       - ./secrets:/app/secrets
       - ./data:/app/data
@@ -17,6 +17,8 @@ services:
       - DO_SPACES_SECRET=minioadmin
       - DO_SPACES_BUCKET=opencouncil-dev
       - CDN_BASE_URL=http://localhost:${PORT}/dev/files/opencouncil-dev
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - opencouncil-net
     depends_on:

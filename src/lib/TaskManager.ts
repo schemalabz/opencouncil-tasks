@@ -11,6 +11,7 @@ export interface TaskMetadata {
   description: string;
   tags?: string[];
   security?: boolean; // defaults to true
+  version?: number;
 }
 
 // Global task registry - maps task functions to their metadata
@@ -71,8 +72,8 @@ class TaskManager {
         while (this.runningTasks.size < this.maxParallelTasks && this.taskQueue.length > 0) {
             const nextTask = this.taskQueue.shift();
             if (nextTask) {
-                const { task, input, callbackUrl, taskType } = nextTask;
-                this.executeTask(task, input, callbackUrl, taskType);
+                const { task, input, callbackUrl, taskType, version } = nextTask;
+                this.executeTask(task, input, callbackUrl, taskType, version);
             }
         }
     }
@@ -87,7 +88,7 @@ class TaskManager {
         const taskId = `task_${++this.taskCounter}`;
         const createdAt = new Date();
         try {
-            this.runningTasks.set(taskId, {
+            const initialUpdate: RunningTask = {
                 status: "processing",
                 stage: "initializing",
                 progressPercent: 0,
@@ -95,7 +96,11 @@ class TaskManager {
                 lastUpdatedAt: createdAt,
                 taskType,
                 version
-            });
+            };
+            this.runningTasks.set(taskId, initialUpdate);
+
+            // Send initial callback immediately
+            await this.sendCallback(callbackUrl, initialUpdate);
 
             const result = await task(input, (stage, progressPercent) => {
                 const now = new Date();
@@ -176,7 +181,7 @@ class TaskManager {
             });
         } else {
             // Execute the task immediately
-            await this.executeTask(task, input, callbackUrl, taskType);
+            await this.executeTask(task, input, callbackUrl, taskType, version);
         }
     }
 
@@ -211,14 +216,14 @@ class TaskManager {
     ): express.RequestHandler {
         // Register metadata without path for now; we'll resolve path from Express later
         // Default security to true if not specified
-        const partialMetadata: TaskMetadata = { 
+        const partialMetadata: TaskMetadata = {
             security: true, // default to secure
-            ...metadata 
+            ...metadata
         };
         this.registerTaskMetadata(task, partialMetadata);
 
         // Create the handler and tag it with the task reference for later discovery
-        const handler = this.serveTask(task) as unknown as express.RequestHandler & { [key: symbol]: any };
+        const handler = this.serveTask(task, metadata.version) as unknown as express.RequestHandler & { [key: symbol]: any };
         (handler as any)[ROUTE_TASK_SYMBOL] = task;
         return handler;
     }

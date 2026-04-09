@@ -9,7 +9,6 @@ import { authMiddleware, verifyBearerToken } from './lib/auth.js';
 import fs from 'fs';
 import { spawnSync } from 'child_process';
 import { summarize } from './tasks/summarize.js';
-import { generatePodcastSpec } from './tasks/generatePodcastSpec.js';
 import { splitMediaFile } from './tasks/splitMediaFile.js';
 import { fixTranscript } from './tasks/fixTranscript.js';
 import { processAgenda } from './tasks/processAgenda.js';
@@ -124,16 +123,12 @@ app.post('/transcribe', (
 app.post('/summarize', taskManager.registerTask(summarize, {
     summary: 'Summarize transcript content',
     description: 'Generate a summary of transcript content with subject extraction',
+    version: 3,
   }));
 
 app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
   summary: 'Split media file into segments',
   description: 'Split audio or video files into smaller segments based on specified time ranges'
-}));
-
-app.post('/generatePodcastSpec', taskManager.registerTask(generatePodcastSpec, {
-  summary: 'Generate podcast specification',
-  description: 'Create a podcast specification from transcript and subjects'
 }));
 
 app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
@@ -143,7 +138,8 @@ app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
   summary: 'Process meeting agenda',
-  description: 'Extracts and structures agenda information from documents'
+  description: 'Extracts and structures agenda information from documents',
+  version: 1,
 }));
 
 app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
@@ -239,10 +235,17 @@ const server = app.listen(port, () => {
 if (process.argv.includes('--console')) {
     setInterval(() => taskManager.printTaskUpdates(), 5000);
 } else {
+    let lastTaskCount = 0;
     setInterval(() => {
         const taskUpdates = taskManager.getTaskUpdates();
         const tasksRunning = taskUpdates.length;
         const tasksQueued = taskManager.getQueuedTasksCount();
+
+        // Only log if there are tasks or if the count changed
+        if (tasksRunning === 0 && tasksQueued === 0 && lastTaskCount === 0) {
+            return;
+        }
+        lastTaskCount = tasksRunning + tasksQueued;
 
         let longestRunningTaskDuration = 0;
         if (tasksRunning > 0) {
@@ -253,11 +256,13 @@ if (process.argv.includes('--console')) {
             longestRunningTaskDuration = durationSeconds;
         }
 
-        console.log(JSON.stringify({
-            type: 'task-updates',
-            tasksRunning,
-            tasksQueued,
-            longestRunningTaskDuration
-        }));
-    }, 5000);
+        // Pretty formatted output
+        const runningEmoji = tasksRunning > 0 ? '🔄' : '✓';
+        const queuedEmoji = tasksQueued > 0 ? '⏳' : '';
+        const durationStr = longestRunningTaskDuration > 0
+            ? ` (longest: ${longestRunningTaskDuration}s)`
+            : '';
+
+        console.log(`${runningEmoji} Tasks: ${tasksRunning} running${durationStr}${queuedEmoji ? ` ${queuedEmoji} ${tasksQueued} queued` : ''}`);
+    }, 30000);
 }

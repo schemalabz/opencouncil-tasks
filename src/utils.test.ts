@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { IdCompressor, validateUrl, validateYoutubeUrl, formatTime } from './utils.js';
+import { IdCompressor, validateUrl, validateYoutubeUrl, formatTime, generateSubjectUUID } from './utils.js';
 
 describe('IdCompressor', () => {
   it('round-trips: add → getShort → getLong', () => {
@@ -28,6 +28,7 @@ describe('IdCompressor', () => {
 
     expect(unique.size).toBe(50);
   });
+
 });
 
 describe('validateUrl', () => {
@@ -91,3 +92,79 @@ describe('formatTime', () => {
     expect(formatTime(61.9)).toBe('00:01:01');
   });
 });
+
+// ===========================================================================
+// generateSubjectUUID — Deterministic hash-based ID for subjects
+//
+// Generates a stable SHA-256 hash from subject properties so the same
+// subject always gets the same ID, regardless of when or where it's
+// processed. The hash inputs are: name + description + agendaItemIndex.
+// This means renaming a subject or changing its description will change
+// its ID — which is intentional, as it's a different subject at that point.
+// ===========================================================================
+
+describe('generateSubjectUUID', () => {
+
+  it('produces a 64-character hex string by default (full SHA-256)', () => {
+    const uuid = generateSubjectUUID({ name: 'Test', description: 'Desc' });
+
+    expect(uuid).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('is deterministic — same inputs always produce same hash', () => {
+    const subject = { name: 'Budget', description: 'Annual budget review', agendaItemIndex: 1 };
+
+    const first = generateSubjectUUID(subject);
+    const second = generateSubjectUUID(subject);
+
+    expect(first).toBe(second);
+  });
+
+  it('truncates to requested length', () => {
+    const full = generateSubjectUUID({ name: 'Test', description: 'Desc' });
+    const truncated = generateSubjectUUID({ name: 'Test', description: 'Desc' }, 36);
+
+    expect(truncated).toHaveLength(36);
+    expect(full.startsWith(truncated)).toBe(true);
+  });
+
+  it('includes agendaItemIndex in the hash — different index means different ID', () => {
+    const base = { name: 'Same name', description: 'Same desc' };
+
+    const withIndex1 = generateSubjectUUID({ ...base, agendaItemIndex: 1 });
+    const withIndex2 = generateSubjectUUID({ ...base, agendaItemIndex: 2 });
+
+    expect(withIndex1).not.toBe(withIndex2);
+  });
+
+  it('uses "NO_AGENDA" as fallback when agendaItemIndex is undefined', () => {
+    const withUndefined = generateSubjectUUID({ name: 'X', description: 'Y' });
+    const withNoAgenda = generateSubjectUUID({ name: 'X', description: 'Y', agendaItemIndex: undefined });
+
+    expect(withUndefined).toBe(withNoAgenda);
+  });
+
+  it('handles special string values for agendaItemIndex', () => {
+    const base = { name: 'Topic', description: 'Desc' };
+
+    const beforeAgenda = generateSubjectUUID({ ...base, agendaItemIndex: 'BEFORE_AGENDA' });
+    const outOfAgenda = generateSubjectUUID({ ...base, agendaItemIndex: 'OUT_OF_AGENDA' });
+
+    expect(beforeAgenda).not.toBe(outOfAgenda);
+  });
+
+  it('is sensitive to name changes', () => {
+    const a = generateSubjectUUID({ name: 'Roads', description: 'Same' });
+    const b = generateSubjectUUID({ name: 'Schools', description: 'Same' });
+
+    expect(a).not.toBe(b);
+  });
+
+  it('is sensitive to description changes', () => {
+    const a = generateSubjectUUID({ name: 'Same', description: 'Version 1' });
+    const b = generateSubjectUUID({ name: 'Same', description: 'Version 2' });
+
+    expect(a).not.toBe(b);
+  });
+});
+

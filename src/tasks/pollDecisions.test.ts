@@ -13,7 +13,7 @@ vi.mock('@schemalabs/diavgeia-cli', () => ({
 
 // Mock aiChat
 vi.mock("../lib/ai.js", () => ({
-    aiChat: vi.fn(async () => ({ result: [], usage: { input_tokens: 0, output_tokens: 0 } })),
+    aiChat: vi.fn(async () => ({ result: [], usage: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null } })),
 }));
 
 import { aiChat } from "../lib/ai.js";
@@ -21,7 +21,7 @@ import { pollDecisions } from "./pollDecisions.js";
 
 const mockAiChat = vi.mocked(aiChat);
 const noopProgress = vi.fn();
-const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 };
+const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
 
 async function* asyncIter<T>(items: T[]): AsyncIterable<T> {
     for (const item of items) yield item;

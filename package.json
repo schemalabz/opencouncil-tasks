@@ -16,7 +16,7 @@
     "smoke": "tsc && node dist/cli.js smoke"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.36.3",
+    "@anthropic-ai/sdk": "^0.71.2",
     "@schemalabs/diavgeia-cli": "^0.1.0",
     "aws-sdk": "^2.1687.0",
     "axios": "^1.7.7",
@@ -46,7 +46,7 @@
     "@types/underscore": "^1.11.15",
     "nodemon": "^3.1.10",
     "tsx": "^4.20.3",
-    "vitest": "^3.0.0"
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": "^20.11.1"
