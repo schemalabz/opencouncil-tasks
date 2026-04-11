@@ -1,7 +1,8 @@
 import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
-import { ProcessAgendaRequest, ProcessAgendaResult, Subject } from "../types.js";
+import { ProcessAgendaRequest, ProcessAgendaResult, Subject, TopicLabelInfo } from "../types.js";
+import { formatTopicLabels } from "./summarize/prompts.js";
 import { Task } from "./pipeline.js";
 import { generateSubjectUUID } from "../utils.js";
 import { logUsage } from "../lib/usageLogging.js";
@@ -124,7 +125,9 @@ ${IMPORTANCE_GUIDELINES}
 Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.`;
 }
 
-export const getUserPrompt = (agendaPdfBase64: string, cityName: string, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: string[]) => {
+export const getUserPrompt = (agendaPdfBase64: string, cityName: string, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: TopicLabelInfo[]) => {
+    const formattedTopics = formatTopicLabels(topicLabels);
+
     return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.
 
 ΣΗΜΑΝΤΙΚΟ: Η συνεδρίαση ΔΕΝ έχει γίνει ακόμα - αυτή είναι η ημερήσια διάταξη για μελλοντική συνεδρίαση. Γράψε τις περιγραφές με τρόπο που δείχνει ότι αυτά είναι θέματα ΠΡΟΣ συζήτηση, όχι θέματα που συζητούνται αυτή τη στιγμή.
@@ -138,7 +141,8 @@ ${JSON.stringify(people, null, 2)}
 - Χρησιμοποίησε το id του ατόμου, όχι το όνομα του ρόλου
 - Αν δεν βρίσκεις αντιστοίχιση, βάλε null
 
-Τα topic labels που μπορεί να έχουν τα θέματα είναι: ${topicLabels.join(", ")}
+Τα topic labels που μπορεί να έχουν τα θέματα είναι:
+${formattedTopics}
 
 Παρακαλώ να εξάγεις ΟΛΑ τα θέματα από αυτό το έγγραφο.`;
 }

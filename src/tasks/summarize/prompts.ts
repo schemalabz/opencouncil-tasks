@@ -4,6 +4,13 @@
  */
 
 import { IMPORTANCE_GUIDELINES } from "../../lib/importanceGuidelines.js";
+import { TopicLabelInfo } from "../../types.js";
+
+export function formatTopicLabels(labels: TopicLabelInfo[]): string {
+  return labels.map(t =>
+    t.description ? `- ${t.name} — ${t.description}` : `- ${t.name}`
+  ).join('\n');
+}
 
 /**
  * Markdown reference format instructions (used in multiple prompts)
@@ -57,13 +64,14 @@ export const MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS = `
 export function getBatchProcessingSystemPrompt(metadata: {
   cityName: string;
   date: string;
-  topicLabels: string[];
+  topicLabels: TopicLabelInfo[];
   administrativeBodyName?: string;
   additionalInstructions?: string;
 }): string {
   const bodyInfo = metadata.administrativeBodyName
     ? `\nΌργανο: ${metadata.administrativeBodyName}`
     : '';
+  const formattedTopicLabels = formatTopicLabels(metadata.topicLabels);
 
   if (!metadata.administrativeBodyName) {
     console.warn('⚠️  WARNING: administrativeBodyName not provided in batch processing prompt. Using generic description.');
@@ -106,8 +114,8 @@ SUMMARY:
 - Κύρια σημεία, όχι λεπτομέρειες
 
 LABELS:
-Διάλεξε 0-3 από: ${metadata.topicLabels.join(", ")}
-Μόνο αν το segment αναφέρεται στο θέμα.
+Διάλεξε 0-3 από τα παρακάτω. Μόνο αν το segment αναφέρεται στο θέμα.
+${formattedTopicLabels}
 
 ═══════════════════════════════════════════════════════════════════════════
 ΜΕΡΟΣ 2: SUBJECTS (ΘΕΜΑΤΑ)
@@ -257,7 +265,8 @@ introducedByPersonId:
 - null αν δεν είναι σαφές
 
 topicLabel:
-- Ένα από: ${metadata.topicLabels.join(", ")}, ή null
+- Ένα από τα παρακάτω, ή null:
+${formattedTopicLabels}
 
 discussedIn:
 - ΠΑΝΤΑ null για ΝΕΑ θέματα που δημιουργείς (BEFORE_AGENDA ή OUT_OF_AGENDA)

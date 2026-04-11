@@ -10,7 +10,6 @@ The server supports the following processing tasks:
 - [`processAgenda`](src/tasks/processAgenda.ts) - Extracts and structures agenda information from documents
 - [`fixTranscript`](src/tasks/fixTranscript.ts) - Cleans and corrects transcription output for improved accuracy
 - [`summarize`](src/tasks/summarize.ts) - Generates comprehensive content summaries with subject extraction
-- [`generatePodcastSpec`](src/tasks/generatePodcastSpec.ts) - Generates podcast specifications for content distribution
 
 ### Media Processing
 - [`downloadYTV`](src/tasks/downloadYTV.ts) - Downloads YouTube videos and extracts audio with optimized quality settings

@@ -407,7 +407,7 @@ describe('compressIds → decompressIds round-trip', () => {
       existingSubjects: [],
       cityName: 'Athens',
       date: '2024-01-01',
-      topicLabels: ['Environment'],
+      topicLabels: [{ name: 'Environment', description: '' }],
       administrativeBodyName: 'City Council',
       partiesWithPeople: [],
       requestedSubjects: [],
