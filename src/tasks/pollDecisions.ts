@@ -626,9 +626,14 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             reason: string;
         }
         const mismatches: VerificationMismatch[] = [];
+        // Skip verification for re-extraction subjects — they already have linked
+        // decisions and are not in the matches array, so removeMatchAndExtraction
+        // would incorrectly discard their extraction data.
+        const reExtractionIds = new Set(needsExtractionSubjects.map(s => s.subjectId));
 
         for (const extraction of pipelineResult.decisions) {
             if (!extraction.subjectInfo) continue;
+            if (reExtractionIds.has(extraction.subjectId)) continue;
 
             const reqSubject = subjectLookup.get(extraction.subjectId);
             if (!reqSubject) continue;
