@@ -282,6 +282,7 @@ export async function generateSpeakerContributionsInBatches(
     }
 
     const deduplicatedContributions = Array.from(contributionsBySpeaker.values());
+    deduplicatedContributions.forEach((c, i) => { c.order = i; });
     console.log(`   📊 After deduplication: ${deduplicatedContributions.length} unique contributions`);
 
     return { contributions: deduplicatedContributions, usage: totalUsage };
