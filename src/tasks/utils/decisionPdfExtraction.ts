@@ -561,13 +561,15 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         totalUsage = addUsage(totalUsage, usage);
 
         if (!result.incomplete) {
-            // Merge: attendance from front pages, decision data from tail pages
+            // Merge: attendance + preamble from front pages, decision data from tail pages
             const merged: RawExtractedDecision = {
                 ...result,
                 presentMembers: result.presentMembers?.length ? result.presentMembers : lastFrontResult!.presentMembers,
                 absentMembers: result.absentMembers?.length ? result.absentMembers : lastFrontResult!.absentMembers,
                 attendanceChanges: result.attendanceChanges?.length ? result.attendanceChanges : lastFrontResult!.attendanceChanges,
                 mayorPresent: result.mayorPresent ?? lastFrontResult!.mayorPresent,
+                discussionOrder: result.discussionOrder ?? lastFrontResult!.discussionOrder,
+                subjectInfo: result.subjectInfo ?? lastFrontResult!.subjectInfo,
             };
             console.log(`  Extraction complete from tail pages (merged with front-page attendance)`);
             writeCache(pdfUrl, merged);
