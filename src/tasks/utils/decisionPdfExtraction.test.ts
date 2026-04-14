@@ -424,6 +424,30 @@ describe('inferForVotes', () => {
         const result = inferForVotes(['Alice'], null, []);
         expect(result.inferredCount).toBe(0);
     });
+
+    it('matches names with different casing (e.g. uppercase attendance vs mixed-case votes)', () => {
+        const result = inferForVotes(
+            ['ΠΑΠΑΔΟΠΟΥΛΟΣ ΙΩΑΝΝΗΣ', 'ΓΕΩΡΓΙΟΥ ΜΑΡΙΑ'],
+            'Κατά πλειοψηφία',
+            [{ name: 'Παπαδόπουλος Ιωάννης', vote: 'AGAINST' }],
+        );
+        // Παπαδόπουλος already voted AGAINST — should NOT get an inferred FOR
+        expect(result.inferredCount).toBe(1);
+        expect(result.voteDetails).toEqual([
+            { name: 'Παπαδόπουλος Ιωάννης', vote: 'AGAINST' },
+            { name: 'ΓΕΩΡΓΙΟΥ ΜΑΡΙΑ', vote: 'FOR' },
+        ]);
+    });
+
+    it('matches names with different accents/diacritics', () => {
+        const result = inferForVotes(
+            ['Παπαδοπουλος Ιωαννης'],  // no accents
+            'Κατά πλειοψηφία',
+            [{ name: 'Παπαδόπουλος Ιωάννης', vote: 'ABSTAIN' }],  // with accents
+        );
+        expect(result.inferredCount).toBe(0);
+        expect(result.voteDetails).toHaveLength(1);
+    });
 });
 
 // --- extractDecisionFromPdf tests ---

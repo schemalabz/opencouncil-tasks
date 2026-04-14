@@ -143,11 +143,11 @@ export function inferForVotes(
         return { voteDetails: [...(voteDetails || [])], inferredCount: 0 };
     }
 
-    const explicitVoterNames = new Set(voteDetails.map(v => v.name));
+    const explicitVoterNormalized = new Set(voteDetails.map(v => normalizeGreekName(v.name)));
     const result = [...voteDetails];
     let inferredCount = 0;
     for (const name of presentMembers) {
-        if (!explicitVoterNames.has(name)) {
+        if (!explicitVoterNormalized.has(normalizeGreekName(name))) {
             result.push({ name, vote: 'FOR' });
             inferredCount++;
         }
