@@ -1,4 +1,4 @@
-import { Subject, SubjectContext } from '../types.js';
+import { Subject, SubjectContext, SpeakerContribution } from '../types.js';
 import { geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
 import { ResultWithUsage, NO_USAGE } from './ai.js';
@@ -16,7 +16,7 @@ export interface EnrichmentInput {
     topicLabel: string | null;
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
-    speakerContributions: { speakerId: string | null; speakerName: string | null; text: string; order?: number | null; }[];
+    speakerContributions: SpeakerContribution[];
     discussedIn: string | null;
 }
 
