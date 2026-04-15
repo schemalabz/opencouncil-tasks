@@ -281,7 +281,11 @@ export async function generateSpeakerContributionsInBatches(
         });
     }
 
-    const deduplicatedContributions = Array.from(contributionsBySpeaker.values());
+    // Assign order based on transcript first-appearance (speakerIds order), not LLM response order
+    const speakerOrder = new Map(speakerIds.map((key, i) => [key, i]));
+    const deduplicatedContributions = Array.from(contributionsBySpeaker.entries())
+        .sort(([a], [b]) => (speakerOrder.get(a) ?? Infinity) - (speakerOrder.get(b) ?? Infinity))
+        .map(([, contrib], i) => ({ ...contrib, order: i }));
     console.log(`   📊 After deduplication: ${deduplicatedContributions.length} unique contributions`);
 
     return { contributions: deduplicatedContributions, usage: totalUsage };
