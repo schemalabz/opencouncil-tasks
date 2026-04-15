@@ -91,6 +91,14 @@ export async function processBatchesWithState(
         totalUsage = addUsage(totalUsage, batchUsage);
         console.log(`   📊 Batch tokens: ${formatTokenCount(batchUsage.input_tokens)} input, ${formatTokenCount(batchUsage.output_tokens)} output`);
 
+        // Clear summaries for untranscribable/incomprehensible segments
+        for (const seg of batchResult.segmentSummaries) {
+            if (seg.summary && /ακαταλ[αά]β[ιί]στ/i.test(seg.summary)) {
+                console.log(`   🧹 Cleared unprofessional summary for segment ${seg.id}: "${seg.summary}"`);
+                seg.summary = "";
+            }
+        }
+
         allSummaries.push(...batchResult.segmentSummaries);
 
         // Register any new subject IDs from the LLM in the IdCompressor
