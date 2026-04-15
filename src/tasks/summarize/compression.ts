@@ -74,7 +74,7 @@ export const decompressIds = (
                     speakerId: c.speakerId ? idCompressor.getLongId(c.speakerId) : null,
                     speakerName: c.speakerName,
                     text: decompressReferencesInMarkdown(c.text, idCompressor),
-                    order: c.order ?? undefined
+                    order: c.order
                 }))
         })),
         utteranceDiscussionStatuses: result.utteranceDiscussionStatuses.map(u => {

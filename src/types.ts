@@ -134,7 +134,7 @@ export interface SpeakerContribution {
     speakerId: string | null;  // Compressed person ID, or null if speaker has no person record
     speakerName: string | null;  // Display name — always set, but especially important when speakerId is null
     text: string;  // Markdown with special reference links: [text](REF:UTTERANCE:id), [text](REF:PERSON:id), [text](REF:PARTY:id)
-    order?: number;  // Display order within the subject (0-based)
+    order?: number | null;  // Display order within the subject (0-based)
 }
 
 export enum DiscussionStatus {
