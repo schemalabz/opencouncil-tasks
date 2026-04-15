@@ -139,16 +139,16 @@ Update it to include opencouncil-tasks:
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    pr-previews.url = "github:schemalabz/pr-previews";
     opencouncil.url = "github:schemalabz/opencouncil";
     opencouncil-tasks.url = "github:schemalabz/opencouncil-tasks";
   };
 
-  outputs = { self, nixpkgs, opencouncil, opencouncil-tasks, ... }: {
+  outputs = { self, nixpkgs, pr-previews, opencouncil, opencouncil-tasks, ... }: {
     nixosConfigurations.preview = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [
-        opencouncil.nixosModules.opencouncil-preview
-        opencouncil-tasks.nixosModules.opencouncil-tasks-preview
+        pr-previews.nixosModules.default
         ./configuration.nix
       ];
     };
@@ -164,7 +164,9 @@ Edit `/etc/nixos/configuration.nix`:
 nano /etc/nixos/configuration.nix
 ```
 
-Add the opencouncil-tasks-preview service configuration:
+Configure the generic [pr-previews](https://github.com/schemalabz/pr-previews)
+module — project behavior (start script, hooks) comes from each app flake's
+`previews` export; the host only sets host-level knobs:
 
 ```nix
 { config, pkgs, ... }:
@@ -175,19 +177,21 @@ Add the opencouncil-tasks-preview service configuration:
   # Caddy web server (if not already configured)
   services.caddy.enable = true;
 
-  # OpenCouncil main app previews (port 3000+N)
-  services.opencouncil-preview = {
+  # Per-PR previews for both projects (opencouncil on 3000+N, tasks on 4000+N)
+  services.pr-previews = {
     enable = true;
-    envFile = "/var/lib/opencouncil-previews/.env";
-    cachix.enable = true;
-  };
-
-  # OpenCouncil Tasks API previews (port 4000+N)
-  services.opencouncil-tasks-preview = {
-    enable = true;
-    envFile = "/var/lib/opencouncil-tasks-previews/.env";
-    previewDomain = "tasks.opencouncil.gr";
-    cachix.enable = true;
+    user = "opencouncil";
+    group = "opencouncil";
+    projects = {
+      opencouncil = lib.mkMerge [
+        opencouncil.previews.opencouncil
+        { envFile = "/var/lib/opencouncil-previews/.env"; }
+      ];
+      opencouncil-tasks = lib.mkMerge [
+        opencouncil-tasks.previews.opencouncil-tasks
+        { envFile = "/var/lib/opencouncil-tasks-previews/.env"; }
+      ];
+    };
   };
 
   # ... rest of configuration ...
