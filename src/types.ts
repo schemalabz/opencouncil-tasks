@@ -103,6 +103,11 @@ export type Voiceprint = {
     voiceprint: string;
 }
 
+export interface TopicLabelInfo {
+    name: string;
+    description: string;
+}
+
 /*
  * Task: Process Agenda
  */
@@ -115,7 +120,7 @@ export interface ProcessAgendaRequest extends TaskRequest {
         role: string;
         party: string;
     }[];
-    topicLabels: string[];
+    topicLabels: TopicLabelInfo[];
     cityName: string;
     date: string;
 }
@@ -243,7 +248,7 @@ export interface RequestOnTranscript extends TaskRequest {
             endTimestamp: number;
         }[];
     }[];
-    topicLabels: string[];
+    topicLabels: TopicLabelInfo[];
     cityName: string;
     administrativeBodyName: string;  // e.g., "Δημοτικό Συμβούλιο"
     partiesWithPeople: {
@@ -295,38 +300,6 @@ export interface SummarizeResult {
         status: DiscussionStatus;
         subjectId: string | null;  // only for SUBJECT_DISCUSSION and VOTE
     }[];
-}
-
-/*
- * Produce Podcast
- */
-
-export interface GeneratePodcastSpecRequest extends RequestOnTranscript {
-    subjects: {
-        name: string;
-        description: string;
-        speakerSegmentIds: string[];
-        highlightedUtteranceIds: string[];
-        allocation: "onlyMention" | "skip" | "full";
-        allocatedMinutes: number;
-    }[];
-
-    audioUrl: string;
-    additionalInstructions?: string;
-}
-
-export type PodcastPart =
-    | {
-        type: "host";
-        text: string;
-    }
-    | {
-        type: "audio";
-        utteranceIds: string[];
-    };
-
-export interface GeneratePodcastSpecResult {
-    parts: PodcastPart[];
 }
 
 /*

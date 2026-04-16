@@ -362,7 +362,6 @@ function filterRelevantTypes(typeNames: string[]): string[] {
     'Utterance',                     // Internal transcript type
     'Word',                          // Internal transcript type
     'RequestOnTranscript',           // Base interface, not used directly
-    'PodcastPart',                   // Internal podcast type
   ];
 
   const filtered = typeNames.filter(typeName => {

@@ -28,7 +28,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log(`   • Existing subjects: ${request.existingSubjects.length}`);
     console.log(`   • City: ${request.cityName}`);
     console.log(`   • Date: ${request.date}`);
-    console.log(`   • Topic labels: ${request.topicLabels.join(', ')}`);
+    console.log(`   • Topic labels: ${request.topicLabels.map(t => t.name).join(', ')}`);
     if (request.additionalInstructions) {
         console.log(`   • Additional instructions: ${request.additionalInstructions.substring(0, 100)}...`);
     }

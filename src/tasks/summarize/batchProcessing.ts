@@ -4,7 +4,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { DiscussionStatus } from "../../types.js";
+import { DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE } from "../../lib/ai.js";
 import { getBatchProcessingSystemPrompt } from "./prompts.js";
@@ -30,7 +30,7 @@ export async function processBatchesWithState(
         existingSubjects: any[];
         cityName: string;
         date: string;
-        topicLabels: string[];
+        topicLabels: TopicLabelInfo[];
         administrativeBodyName?: string;
         requestedSubjects?: string[];
         additionalInstructions?: string;
@@ -428,7 +428,7 @@ export async function processSingleBatch(
     metadata: {
         cityName: string;
         date: string;
-        topicLabels: string[];
+        topicLabels: TopicLabelInfo[];
         administrativeBodyName?: string;
         requestedSubjects?: string[];
         additionalInstructions?: string;
