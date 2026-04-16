@@ -136,11 +136,8 @@ export async function extractDecisionsFromPdfs(
 
     // Step 2: LLM fallback for remaining unmatched
     if (step1Unmatched.length > 0) {
-        const matchedIds = new Set(nameToPersonId.values());
-        const availablePeople = people.filter(p => !matchedIds.has(p.id));
-
         try {
-            const llmResult = await llmMatchMembers(step1Unmatched, availablePeople);
+            const llmResult = await llmMatchMembers(step1Unmatched, people);
             totalUsage = addUsage(totalUsage, llmResult.usage);
             for (const { name, personId } of llmResult.matched) {
                 nameToPersonId.set(name, personId);
@@ -188,10 +185,14 @@ export async function extractDecisionsFromPdfs(
         }
 
         const voteDetails: ExtractedDecisionResult['voteDetails'] = [];
+        const seenVoterIds = new Set<string>();
         for (const detail of processed.voteDetails) {
             const personId = nameToPersonId.get(detail.name);
             if (personId) {
-                voteDetails.push({ personId, vote: detail.vote });
+                if (!seenVoterIds.has(personId)) {
+                    seenVoterIds.add(personId);
+                    voteDetails.push({ personId, vote: detail.vote });
+                }
             } else {
                 unmatchedMembers.push(detail.name);
             }

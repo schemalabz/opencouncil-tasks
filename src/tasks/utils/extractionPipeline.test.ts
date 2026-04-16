@@ -142,6 +142,67 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
         expect(codes).not.toContain('NO_ATTENDANCE');
     });
 
+    it('deduplicates vote details when two name forms resolve to the same person', async () => {
+        mockExtractDecisionFromPdf.mockResolvedValueOnce({
+            result: makeRaw({
+                presentMembers: ['ΠΑΠΑΔΟΠΟΥΛΟΣ ΙΩΑΝΝΗΣ', 'Μαρία Κωνσταντίνου'],
+                voteResult: 'Κατά πλειοψηφία',
+                voteDetails: [{ name: 'Παπαδόπουλος Ι.', vote: 'AGAINST' }],
+            }),
+            usage: noUsage,
+            fromCache: false,
+        });
+
+        mockMatchPersonByName.mockImplementation((name: string) => {
+            if (name === 'ΠΑΠΑΔΟΠΟΥΛΟΣ ΙΩΑΝΝΗΣ') return 'p1';
+            if (name === 'Μαρία Κωνσταντίνου') return 'p2';
+            return null;
+        });
+
+        mockLlmMatchMembers.mockResolvedValueOnce({
+            matched: [{ name: 'Παπαδόπουλος Ι.', personId: 'p1' }],
+            stillUnmatched: [],
+            usage: noUsage,
+        });
+
+        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+
+        const decision = result.decisions[0];
+        const p1Votes = decision.voteDetails.filter(v => v.personId === 'p1');
+        expect(p1Votes).toHaveLength(1);
+        expect(p1Votes[0].vote).toBe('AGAINST');
+    });
+
+    it('passes full people list to LLM fallback (not filtered by already-matched)', async () => {
+        mockExtractDecisionFromPdf.mockResolvedValueOnce({
+            result: makeRaw({
+                presentMembers: ['Γιάννης Παπαδόπουλος'],
+                absentMembers: [],
+                voteDetails: [{ name: 'Unknown Name', vote: 'AGAINST' }],
+            }),
+            usage: noUsage,
+            fromCache: false,
+        });
+
+        mockMatchPersonByName.mockImplementation((name: string) => {
+            if (name === 'Γιάννης Παπαδόπουλος') return 'p1';
+            return null;
+        });
+
+        mockLlmMatchMembers.mockResolvedValueOnce({
+            matched: [],
+            stillUnmatched: ['Unknown Name'],
+            usage: noUsage,
+        });
+
+        await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+
+        expect(mockLlmMatchMembers).toHaveBeenCalledWith(
+            ['Unknown Name'],
+            people,
+        );
+    });
+
     it('combines raw and processed warnings on the same decision', async () => {
         // Majority vote with no opposition voters + missing decision number
         // → should get both raw-level and post-matching warnings

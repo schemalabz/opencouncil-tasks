@@ -394,6 +394,7 @@ Rules:
     const usedIds = new Set<string>();
 
     for (const entry of result) {
+        if (!entry || typeof entry.name !== 'string' || !entry.name) continue;
         if (entry.personId && !usedIds.has(entry.personId)) {
             matched.push({ name: entry.name, personId: entry.personId });
             usedIds.add(entry.personId);
@@ -540,7 +541,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
 
     // Front pages exhausted — try the last TAIL_PAGES pages
     const tailStart = Math.max(0, totalPages - TAIL_PAGES);
-    if (tailStart > MAX_FRONT_PAGES) {
+    if (tailStart >= MAX_FRONT_PAGES) {
         // Only try tail if it doesn't overlap with pages we already sent
         const tailActual = totalPages - tailStart;
         console.log(`  Front pages exhausted, trying last ${tailActual} pages (${tailStart + 1}-${totalPages})...`);

@@ -215,6 +215,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 userPrompt,
                 prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
                 prependToResponse: ((prependToResponse || '') + responseText).trim(),
+                parseJson,
                 maxTokens: maxTokensParam,
                 tools,
                 cacheSystemPrompt  // Preserve caching on continuation

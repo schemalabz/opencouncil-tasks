@@ -54,7 +54,7 @@ export function validateRawExtraction(raw: RawExtractedDecision): DecisionWarnin
         });
     }
 
-    if (raw.decisionNumber == null) {
+    if (!raw.decisionNumber) {
         warnings.push({
             code: 'MISSING_DECISION_NUMBER',
             severity: 'info',

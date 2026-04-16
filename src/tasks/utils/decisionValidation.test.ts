@@ -52,6 +52,11 @@ describe('validateRawExtraction', () => {
         expect(warnings.find(w => w.code === 'MISSING_DECISION_NUMBER')!.severity).toBe('info');
     });
 
+    it('flags MISSING_DECISION_NUMBER when decisionNumber is empty string', () => {
+        const warnings = validateRawExtraction(makeRaw({ decisionNumber: '' }));
+        expect(codes(warnings)).toContain('MISSING_DECISION_NUMBER');
+    });
+
     it('flags NO_ATTENDANCE when both present and absent are empty', () => {
         const warnings = validateRawExtraction(makeRaw({
             presentMembers: [],
