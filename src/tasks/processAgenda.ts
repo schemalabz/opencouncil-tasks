@@ -2,7 +2,7 @@ import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject, TopicLabelInfo } from "../types.js";
-import { formatTopicLabels } from "./summarize/prompts.js";
+import { formatTopicLabels } from "../lib/promptUtils.js";
 import { Task } from "./pipeline.js";
 import { generateSubjectUUID } from "../utils.js";
 import { logUsage } from "../lib/usageLogging.js";

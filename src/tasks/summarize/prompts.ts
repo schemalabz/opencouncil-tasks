@@ -4,13 +4,8 @@
  */
 
 import { IMPORTANCE_GUIDELINES } from "../../lib/importanceGuidelines.js";
+import { formatTopicLabels } from "../../lib/promptUtils.js";
 import { TopicLabelInfo } from "../../types.js";
-
-export function formatTopicLabels(labels: TopicLabelInfo[]): string {
-  return labels.map(t =>
-    t.description ? `- ${t.name} — ${t.description}` : `- ${t.name}`
-  ).join('\n');
-}
 
 /**
  * Markdown reference format instructions (used in multiple prompts)
