@@ -412,4 +412,4 @@ npx tsx scripts/diavgeia-lookup.ts all --profile=exclude-empty --json # Same, no
 
 **MEF API:** https://mef.diavgeia.gov.gr/api/ — subsidized organization spending and earnings data (separate system)
 
-**Related docs:** `docs/pollDecisions.md` — how the pollDecisions task uses this API
+**Related code:** `src/tasks/pollDecisions.ts` — how the pollDecisions task uses this API

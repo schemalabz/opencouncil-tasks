@@ -29,6 +29,16 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     server_tool_use: null, // Don't aggregate server_tool_use details
     service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
 });
+
+export function formatUsage(usage: Anthropic.Messages.Usage): string {
+    const parts = [`${usage.input_tokens.toLocaleString()} in, ${usage.output_tokens.toLocaleString()} out`];
+    if (usage.cache_creation_input_tokens) parts.push(`${usage.cache_creation_input_tokens.toLocaleString()} cache-write`);
+    if (usage.cache_read_input_tokens) parts.push(`${usage.cache_read_input_tokens.toLocaleString()} cache-read`);
+    return parts.join(', ');
+}
+
+export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
@@ -46,8 +56,6 @@ async function logToFile(message: string, data?: any) {
     }
 }
 
-const maxTokens = 64000;
-
 type AiChatOptions = {
     model?: string;
     documentBase64?: string;
@@ -56,6 +64,7 @@ type AiChatOptions = {
     prefillSystemResponse?: string;
     prependToResponse?: string;
     parseJson?: boolean;
+    maxTokens?: number;
     tools?: Anthropic.Messages.Tool[];
     outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
@@ -101,10 +110,10 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+    const maxTokens = maxTokensParam ?? 64000;
     try {
         console.log(`Sending message to claude...`);
-
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({
@@ -206,6 +215,8 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 userPrompt,
                 prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
                 prependToResponse: ((prependToResponse || '') + responseText).trim(),
+                parseJson,
+                maxTokens: maxTokensParam,
                 tools,
                 cacheSystemPrompt  // Preserve caching on continuation
             });

@@ -9,6 +9,10 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
+import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
+import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
+import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
+import { formatUsage } from './lib/ai.js';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -393,7 +397,11 @@ program
                     meetingDate,
                     diavgeiaUid: orgUid,
                     diavgeiaUnitIds: unitIds,
-                    subjects,
+                    people: [], // CLI: no people for extraction
+                    subjects: subjects.map((s: { subjectId: string; name: string; agendaItemIndex?: number | null; existingDecision?: { ada: string; decisionTitle: string; pdfUrl: string } }) => ({
+                        ...s,
+                        agendaItemIndex: s.agendaItemIndex ?? null,
+                    })),
                 },
                 (stage: string, progressPercent: number) => {
                     process.stdout.write(`\r[${stage}] ${progressPercent.toFixed(2)}%`);
@@ -570,6 +578,99 @@ program
             const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
             console.error(`\nSmoke test FAILED after ${elapsed}s`);
             console.error(error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+// --- Decision PDF extraction CLI ---
+
+program
+    .command('extract-decision <source>')
+    .description('Extract decision data from a Diavgeia ADA, PDF URL, or local file path')
+    .option('-O, --output-file <file>', 'Save result to file (otherwise prints to stdout)')
+    .option('--skip-cache', 'Skip the on-disk extraction cache and re-extract from the PDF')
+    .action(async (source: string, options: { outputFile?: string; skipCache?: boolean }) => {
+        try {
+            // Resolve source: local file, URL, or ADA
+            let pdfUrl: string;
+            if (source.startsWith('/') || source.startsWith('./') || source.startsWith('../')) {
+                pdfUrl = source; // local file path — passed through to downloadPdfToBase64
+                console.log(`Extracting decision data from local file: ${source}`);
+            } else if (source.startsWith('http://') || source.startsWith('https://')) {
+                pdfUrl = source; // already a URL
+                console.log(`Extracting decision data from URL: ${pdfUrl}`);
+            } else {
+                pdfUrl = adaToPdfUrl(source); // treat as ADA
+                console.log(`Extracting decision data for ADA: ${source}`);
+                console.log(`PDF URL: ${pdfUrl}`);
+            }
+            const { result, usage } = await extractDecisionFromPdf(pdfUrl, undefined, options.skipCache);
+
+            // Display summary
+            const totalTokens = usage.input_tokens + usage.output_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0);
+            if (totalTokens > 0) {
+                console.log(`\nTokens: ${formatUsage(usage)}`);
+            } else {
+                console.log(`\n(cached — no API call)`);
+            }
+
+            const parts: string[] = [];
+            if (result.subjectInfo) {
+                parts.push(`subject #${result.subjectInfo.agendaItemIndex}${result.subjectInfo.nonAgendaReason ? ' (out-of-agenda)' : ''}`);
+            }
+            parts.push(`${result.presentMembers?.length ?? 0} present, ${result.absentMembers?.length ?? 0} absent`);
+            if (result.attendanceChanges?.length) parts.push(`${result.attendanceChanges.length} attendance changes`);
+            if (result.discussionOrder) {
+                const orderStr = result.discussionOrder.map(
+                    (ref: AgendaItemRef) => `${ref.agendaItemIndex}${ref.nonAgendaReason ? '(OA)' : ''}`
+                ).join(', ');
+                parts.push(`order: [${orderStr}]`);
+            }
+            if (result.voteResult) parts.push(`vote: ${result.voteResult}`);
+            console.log(parts.join(' | '));
+
+            // Compute effective attendance and infer votes (same logic as the pipeline)
+            const processed = processRawExtraction(result);
+
+            if (result.subjectInfo) {
+                console.log(`Effective attendance at #${result.subjectInfo.agendaItemIndex}${result.subjectInfo.nonAgendaReason ? ' (OA)' : ''}: ${processed.effectivePresent.length} present, ${processed.effectiveAbsent.length} absent`);
+            }
+            if (processed.inferredVoteCount > 0) {
+                console.log(`Inferred ${processed.inferredVoteCount} FOR votes from effective present members`);
+            }
+
+            // Validate and display warnings
+            const rawWarnings = validateRawExtraction(result);
+            const processedWarnings = validateProcessedDecision({
+                voteResult: result.voteResult,
+                voteDetails: processed.voteDetails.map(v => ({ vote: v.vote })),
+            });
+            const allWarnings = [...rawWarnings, ...processedWarnings];
+            if (allWarnings.length > 0) {
+                console.log(`\nWarnings (${allWarnings.length}):`);
+                for (const w of allWarnings) {
+                    console.log(`  [${w.severity}] ${w.code}: ${w.message}`);
+                }
+            }
+
+            const output = {
+                ...result,
+                effectivePresent: processed.effectivePresent,
+                effectiveAbsent: processed.effectiveAbsent,
+                voteDetails: processed.voteDetails,
+                warnings: allWarnings,
+            };
+            const json = JSON.stringify(output, null, 2);
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, json);
+                console.log(`\nResult saved to ${options.outputFile}`);
+            } else {
+                console.log('\n' + json);
+            }
+        } catch (error) {
+            console.error('Error extracting decision:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();

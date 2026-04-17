@@ -3,11 +3,23 @@
 # Cron script for automated Diavgeia decision polling.
 #
 # Calls the opencouncil poll-decisions endpoint on a schedule.
-# See docs/pollDecisions.md for setup instructions.
 #
-# Required environment variables (set in .env alongside this script):
-#   CRON_TARGET_URL  - Base URL of the opencouncil deployment (e.g., https://opencouncil.gr)
-#   CRON_SECRET      - Shared secret for authenticating cron requests
+# Prerequisites:
+#   1. The opencouncil deployment must have CRON_SECRET set in its environment
+#   2. Add CRON_TARGET_URL and CRON_SECRET to this server's .env:
+#        CRON_TARGET_URL=https://opencouncil.gr
+#        CRON_SECRET=<same secret as the opencouncil deployment>
+#
+# Setup:
+#   1. Test manually:  ./scripts/poll-decisions-cron.sh
+#   2. Install cron (runs every 12 hours):
+#        crontab -e
+#        0 0,12 * * * /path/to/opencouncil-tasks/scripts/poll-decisions-cron.sh >> /path/to/opencouncil-tasks/logs/poll-decisions-cron.log 2>&1
+#   3. Create logs dir:  mkdir -p logs
+#
+# Monitoring:
+#   - Logs: tail -f logs/poll-decisions-cron.log
+#   - Polling stats: opencouncil admin UI at /admin/diavgeia
 #
 set -euo pipefail
 

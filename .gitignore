@@ -22,3 +22,6 @@ squid.conf
 
 # Local MinIO data (smoke tests)
 .minio-data/
+
+# Debug output (CLI intermediates)
+.debug/
