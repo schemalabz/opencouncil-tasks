@@ -33,6 +33,9 @@ export interface SubjectInProgress {
     topicLabel: string | null;
     speakerContributions: SpeakerContribution[];  // Will be populated after batch processing
 
+    // Set to true when subject won't be discussed: IN_AGENDA withdrawal/postponement, or OUT_OF_AGENDA rejected κατεπείγον
+    withdrawn?: boolean;
+
     // Reference to primary subject if discussed jointly with other subjects
     // null for primary subjects or independently-discussed subjects
     // ID of primary subject for secondary subjects in joint discussion

@@ -30,6 +30,7 @@ export const compressIds = (request: SummarizeRequest, idCompressor: IdCompresso
             topicLabel: subj.topicLabel,
             topicImportance: subj.topicImportance,
             proximityImportance: subj.proximityImportance,
+            ...(subj.withdrawn ? { withdrawn: true } : {}),
             discussedIn: subj.discussedIn ? idCompressor.addLongId(subj.discussedIn) : null
         };
     });

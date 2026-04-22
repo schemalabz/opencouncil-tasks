@@ -17,6 +17,7 @@ export interface EnrichmentInput {
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
     introducedByPersonId: string | null;
     speakerContributions: SpeakerContribution[];
+    withdrawn?: boolean;
     discussedIn: string | null;
 }
 
@@ -98,6 +99,7 @@ export async function enrichSubjectData(
             location,
             topicLabel: input.topicLabel,
             context,
+            ...(input.withdrawn ? { withdrawn: true } : {}),
             discussedIn: input.discussedIn
         },
         usage

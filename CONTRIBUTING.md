@@ -131,6 +131,25 @@ Run this after significant pipeline changes or when onboarding to verify the ful
 - **Fixing a previous commit** (e.g. after code review): use `git commit --fixup <sha>` then `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash <sha>~1` to squash the fix into the original commit cleanly. Set `git config --global rebase.autoSquash true` to make this the default for interactive rebases.
 - For the broader contributor workflow (PRDs, issue creation), see the main [opencouncil CONTRIBUTING.md](https://github.com/opencouncil/opencouncil/blob/main/CONTRIBUTING.md)
 
+## Documentation (`docs/`)
+
+Task documentation lives in `docs/<taskName>.md`. These docs supplement the code — they should capture things that **aren't obvious from reading the source**.
+
+**Do include:**
+- High-level flow (mermaid diagrams work well)
+- Input/output contract (types, key fields)
+- Design decisions and non-obvious "why" — e.g. why IDs are compressed, why subjects merge across batches
+- Concepts that span multiple files and aren't clear from any single one
+
+**Do not include:**
+- Input/output contracts or type field listings — keep those as comments in the types file where they stay in sync
+- Function-by-function listings or file path inventories — readers can navigate the code
+- Configuration values (batch sizes, env var names) — these drift and the code is authoritative
+- Step-by-step narration of what code does — that's what the code is for
+- Anything already in CLAUDE.md or CONTRIBUTING.md
+
+Rule of thumb: if you could derive it in 30 seconds by reading the source, it doesn't belong in the doc.
+
 ## Code Style
 
 - TypeScript strict mode, ESM (`"type": "module"` in `package.json`)

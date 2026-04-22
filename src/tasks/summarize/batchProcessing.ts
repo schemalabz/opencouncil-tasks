@@ -226,6 +226,7 @@ export async function processBatchesWithState(
 
         // Display organized by status type
         const statusDisplayOrder: DiscussionStatus[] = [
+            DiscussionStatus.PROCEDURAL_VOTE,
             DiscussionStatus.ATTENDANCE,
             DiscussionStatus.SUBJECT_DISCUSSION,
             DiscussionStatus.VOTE,
@@ -276,7 +277,7 @@ export async function processBatchesWithState(
             // Check for invalid utterance statuses pointing to secondary subjects
             const invalidStatuses = batchResult.utteranceStatuses.filter(s =>
                 s.subjectId &&
-                (s.status === DiscussionStatus.SUBJECT_DISCUSSION || s.status === DiscussionStatus.VOTE) &&
+                (s.status === DiscussionStatus.SUBJECT_DISCUSSION || s.status === DiscussionStatus.VOTE || s.status === DiscussionStatus.PROCEDURAL_VOTE) &&
                 secondarySubjects.some(sub => sub.id === s.subjectId)
             );
 
@@ -335,6 +336,7 @@ export async function processBatchesWithState(
 
         // Display top subjects per status
         const statusOrder: DiscussionStatus[] = [
+            DiscussionStatus.PROCEDURAL_VOTE,
             DiscussionStatus.ATTENDANCE,
             DiscussionStatus.SUBJECT_DISCUSSION,
             DiscussionStatus.VOTE,
@@ -369,6 +371,19 @@ export async function processBatchesWithState(
                         console.log(`         • "${subject?.name || 'Unknown'}" [${entry.subjectId}]: ${entry.count} utterances`);
                     } else {
                         console.log(`         • ⚠️  (no subject - INVALID): ${entry.count} utterances`);
+                    }
+                });
+            }
+
+            // Show all for PROCEDURAL_VOTE (urgency/withdrawal votes)
+            if (status === DiscussionStatus.PROCEDURAL_VOTE) {
+                entries.forEach(entry => {
+                    if (entry.subjectId) {
+                        const subject = conversationState.subjects.find(s => s.id === entry.subjectId);
+                        const withdrawn = subject?.withdrawn ? ' [withdrawn]' : '';
+                        console.log(`         • "${subject?.name || 'Unknown'}" [${entry.subjectId}]${withdrawn}: ${entry.count} utterances`);
+                    } else {
+                        console.log(`         • (no subject): ${entry.count} utterances`);
                     }
                 });
             }
@@ -466,7 +481,7 @@ ${JSON.stringify(batch, null, 2)}
 ${metadata.requestedSubjects && metadata.requestedSubjects.length > 0 ?
             `Αν στο παραπάνω transcript αναφέρεται κάποιο από τα ακόλουθα θέματα, είναι σημαντικό να το συμπεριλάβεις: ${metadata.requestedSubjects.join(', ')}` : ''}
 
-Η τρέχουσα λίστα subjects (χρησιμοποίησε το ίδιο ID και ΔΙΑΤΗΡΗΣΕ τα type/agendaItemIndex/introducedByPersonId/discussedIn):
+Η τρέχουσα λίστα subjects (χρησιμοποίησε το ίδιο ID και ΔΙΑΤΗΡΗΣΕ τα type/agendaItemIndex/introducedByPersonId/discussedIn/withdrawn):
 ${JSON.stringify(conversationState.subjects.map(s => ({
                 id: s.id,
                 name: s.name,
@@ -474,7 +489,8 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                 type: s.type,
                 agendaItemIndex: s.agendaItemIndex,
                 introducedByPersonId: s.introducedByPersonId,
-                discussedIn: s.discussedIn
+                discussedIn: s.discussedIn,
+                ...(s.withdrawn ? { withdrawn: true } : {})
             })), null, 2)}
 `;
 
@@ -517,6 +533,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 locationText: { type: ["string", "null"] },
                                 topicLabel: { type: ["string", "null"] },
                                 discussedIn: { type: ["string", "null"] },
+                                withdrawn: { type: "boolean" },
                                 speakerContributions: {
                                     type: "array",
                                     items: {
@@ -540,7 +557,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                             type: "object",
                             properties: {
                                 utteranceId: { type: "string" },
-                                status: { type: "string", enum: ["ATTENDANCE", "SUBJECT_DISCUSSION", "VOTE", "OTHER"] },
+                                status: { type: "string", enum: ["ATTENDANCE", "SUBJECT_DISCUSSION", "PROCEDURAL_VOTE", "VOTE", "OTHER"] },
                                 subjectId: { type: ["string", "null"] }
                             },
                             required: ["utteranceId", "status", "subjectId"],

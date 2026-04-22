@@ -53,6 +53,7 @@ describe('getStatusEmoji', () => {
   it.each([
     [DiscussionStatus.ATTENDANCE, '📋'],
     [DiscussionStatus.SUBJECT_DISCUSSION, '💬'],
+    [DiscussionStatus.PROCEDURAL_VOTE, '⚖️'],
     [DiscussionStatus.VOTE, '🗳️'],
     [DiscussionStatus.OTHER, '📝'],
   ])('returns correct emoji for %s', (status, expected) => {
