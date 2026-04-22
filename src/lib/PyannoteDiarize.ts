@@ -145,7 +145,8 @@ export default class PyannoteDiarizer {
             console.error(`Error with request to ${voiceprintUrl}, passed url: ${audioUrl}`);
             if (isAxiosError(error)) {
                 console.error(`Response was ${error.response?.status}: ${JSON.stringify(error.response?.data)}`);
-                throw new Error(`Failed to start voiceprint generation: ${error.response?.statusText || error.message}`);
+                const detail = error.response?.data ? `: ${JSON.stringify(error.response.data)}` : '';
+                throw new Error(`Failed to start voiceprint generation: ${error.response?.statusText || error.message}${detail}`);
             } else {
                 console.log(`Non axios error:`, error);
             }
@@ -234,7 +235,8 @@ export default class PyannoteDiarizer {
             console.error(`Error with request to ${identifyUrl}, passed url: ${audioUrl}`);
             if (isAxiosError(error)) {
                 console.error(`Response was ${error.response?.status}: ${JSON.stringify(error.response?.data)}`);
-                throw new Error(`Failed to start identification job: ${error.response?.statusText || error.message}`);
+                const detail = error.response?.data ? `: ${JSON.stringify(error.response.data)}` : '';
+                throw new Error(`Failed to start identification job: ${error.response?.statusText || error.message}${detail}`);
             } else {
                 console.log(`Non axios error:`, error);
             }
