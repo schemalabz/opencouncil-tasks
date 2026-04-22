@@ -448,4 +448,108 @@ describe('compressIds → decompressIds round-trip', () => {
     expect(decompressed.utteranceDiscussionStatuses[0].utteranceId).toBe('utterance-uuid-1');
     expect(decompressed.utteranceDiscussionStatuses[1].utteranceId).toBe('utterance-uuid-2');
   });
+
+  it('handles PROCEDURAL_VOTE with subjectId', () => {
+    const idCompressor = new IdCompressor();
+    const longUtteranceId = 'utt-procedural';
+    const longSubjectId = 'subj-urgent';
+    const shortUtteranceId = idCompressor.addLongId(longUtteranceId);
+    const shortSubjectId = idCompressor.addLongId(longSubjectId);
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [],
+      utteranceDiscussionStatuses: [{
+        utteranceId: shortUtteranceId,
+        status: DiscussionStatus.PROCEDURAL_VOTE,
+        subjectId: shortSubjectId
+      }]
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.utteranceDiscussionStatuses[0].status).toBe(DiscussionStatus.PROCEDURAL_VOTE);
+    expect(decompressed.utteranceDiscussionStatuses[0].subjectId).toBe(longSubjectId);
+  });
+
+  it('handles PROCEDURAL_VOTE with null subjectId gracefully', () => {
+    const idCompressor = new IdCompressor();
+    const longUtteranceId = 'utt-rejected';
+    const shortUtteranceId = idCompressor.addLongId(longUtteranceId);
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [],
+      utteranceDiscussionStatuses: [{
+        utteranceId: shortUtteranceId,
+        status: DiscussionStatus.PROCEDURAL_VOTE,
+        subjectId: null
+      }]
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.utteranceDiscussionStatuses[0].status).toBe(DiscussionStatus.PROCEDURAL_VOTE);
+    expect(decompressed.utteranceDiscussionStatuses[0].subjectId).toBeNull();
+  });
+
+  it('preserves withdrawn field on subjects through decompression', () => {
+    const idCompressor = new IdCompressor();
+    const longSubjectId = 'subj-withdrawn';
+    const shortSubjectId = idCompressor.addLongId(longSubjectId);
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [{
+        id: shortSubjectId,
+        name: 'Withdrawn item',
+        description: 'This was withdrawn',
+        agendaItemIndex: 5,
+        introducedByPersonId: null,
+        speakerContributions: [],
+        topicImportance: 'normal' as const,
+        proximityImportance: 'none' as const,
+        location: null,
+        topicLabel: null,
+        context: null,
+        discussedIn: null,
+        withdrawn: true
+      }],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects[0].withdrawn).toBe(true);
+    expect(decompressed.subjects[0].id).toBe(longSubjectId);
+  });
+
+  it('does not add withdrawn field when absent on subject', () => {
+    const idCompressor = new IdCompressor();
+    const longSubjectId = 'subj-normal';
+    const shortSubjectId = idCompressor.addLongId(longSubjectId);
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [{
+        id: shortSubjectId,
+        name: 'Normal item',
+        description: 'Regular subject',
+        agendaItemIndex: 1,
+        introducedByPersonId: null,
+        speakerContributions: [],
+        topicImportance: 'normal' as const,
+        proximityImportance: 'none' as const,
+        location: null,
+        topicLabel: null,
+        context: null,
+        discussedIn: null
+      }],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects[0].withdrawn).toBeUndefined();
+  });
 });

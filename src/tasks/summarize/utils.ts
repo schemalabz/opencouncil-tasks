@@ -33,6 +33,7 @@ export function getStatusEmoji(status: DiscussionStatus): string {
     switch (status) {
         case DiscussionStatus.ATTENDANCE: return '📋';
         case DiscussionStatus.SUBJECT_DISCUSSION: return '💬';
+        case DiscussionStatus.PROCEDURAL_VOTE: return '⚖️';
         case DiscussionStatus.VOTE: return '🗳️';
         default: return '📝';
     }
@@ -81,6 +82,7 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
         introducedByPersonId: s.introducedByPersonId,
         locationText: s.locationText,
         topicLabel: s.topicLabel,
+        ...(s.withdrawn ? { withdrawn: true } : {}),
         discussedIn: s.discussedIn || null,  // Preserve if set, otherwise null
         speakerContributions: []
     }));

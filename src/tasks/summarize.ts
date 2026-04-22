@@ -266,6 +266,7 @@ async function enrichSubject(
         agendaItemIndex: subject.agendaItemIndex ?? "OUT_OF_AGENDA",
         introducedByPersonId: subject.introducedByPersonId,
         speakerContributions: subject.speakerContributions,
+        withdrawn: subject.withdrawn,
         discussedIn: subject.discussedIn
     };
 

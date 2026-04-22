@@ -145,6 +145,7 @@ export interface SpeakerContribution {
 export enum DiscussionStatus {
     ATTENDANCE = "ATTENDANCE",
     SUBJECT_DISCUSSION = "SUBJECT_DISCUSSION",
+    PROCEDURAL_VOTE = "PROCEDURAL_VOTE",
     VOTE = "VOTE",
     OTHER = "OTHER"
 }
@@ -154,7 +155,7 @@ export interface DiscussionRange {
     startUtteranceId: string | null;  // null = starts before batch
     endUtteranceId: string | null;    // null = continues after batch
     status: DiscussionStatus;
-    subjectId: string | null;         // required for SUBJECT_DISCUSSION/VOTE
+    subjectId: string | null;         // required for SUBJECT_DISCUSSION/VOTE/PROCEDURAL_VOTE; null for ATTENDANCE/OTHER
 }
 
 export interface Location {
@@ -184,6 +185,10 @@ export interface Subject {
     // null for subjects discussed independently or primary subjects in a joint discussion
     // Set to the primary subject's ID for secondary subjects in a joint discussion
     discussedIn: string | null;
+
+    // Set to true when subject won't be discussed: IN_AGENDA withdrawal/postponement, or OUT_OF_AGENDA rejected κατεπείγον.
+    // Omit entirely for non-withdrawn subjects (absence means false).
+    withdrawn?: boolean;
 }
 
 export interface ProcessAgendaResult {
@@ -298,7 +303,7 @@ export interface SummarizeResult {
     utteranceDiscussionStatuses: {
         utteranceId: string;
         status: DiscussionStatus;
-        subjectId: string | null;  // only for SUBJECT_DISCUSSION and VOTE
+        subjectId: string | null;  // required for SUBJECT_DISCUSSION/VOTE/PROCEDURAL_VOTE; null for ATTENDANCE/OTHER
     }[];
 }
 
