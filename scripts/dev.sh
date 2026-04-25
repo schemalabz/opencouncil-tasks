@@ -51,6 +51,7 @@ trap cleanup EXIT
 
 start_app() {
     cd "$PROJECT_DIR"
+    mkdir -p logs
     exec npx nodemon --watch .env --watch src --exec "tsx" src/server.ts
 }
 

@@ -26,7 +26,7 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 \
       --no-install-recommends \
-    && apt-get install -y tini ffmpeg curl \
+    && apt-get install -y tini ffmpeg curl gosu \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r apify && useradd -rm -g apify -G audio,video apify
 
@@ -54,8 +54,8 @@ RUN mkdir -p /app/bin \
     && chmod +x /app/bin/yt-dlp \
     && chown apify:apify /app/bin/yt-dlp
 
-# Switch to the non-root user
-USER apify
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
@@ -64,8 +64,8 @@ ENV YTDLP_BIN_PATH=/app/bin/yt-dlp
 # Expose the port the app runs on
 EXPOSE ${PORT}
 
-# Use tini as the entrypoint
-ENTRYPOINT ["/usr/bin/tini", "--"]
+# Use tini as init, entrypoint fixes volume permissions then drops to apify
+ENTRYPOINT ["/usr/bin/tini", "--", "/app/entrypoint.sh"]
 
 # Start the application with Node.js
 CMD ["node", "dist/server.js"]

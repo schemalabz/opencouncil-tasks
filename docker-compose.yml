@@ -12,7 +12,13 @@ services:
     env_file:
       - .env
     environment:
+      TZ: "Europe/Athens"
       YTDLP_PROXY: "http://proxy-forwarder:3128"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
     networks:
       - cobalt

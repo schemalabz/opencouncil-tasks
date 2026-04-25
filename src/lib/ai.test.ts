@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { classifyTransientError, formatApiError, addUsage, NO_USAGE } from './ai.js';
 
 // Helper: build SDK error instances using the SDK's own factory.
-function makeApiError(status: number, errorType: string, errorMessage: string): Anthropic.APIError {
+function makeApiError(status: number, errorType: string, errorMessage: string) {
     const body = { type: 'error', error: { type: errorType, message: errorMessage } };
     const headers = new Headers({ 'request-id': `req_test_${status}` });
     return Anthropic.APIError.generate(status, body, undefined, headers);

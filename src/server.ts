@@ -1,3 +1,6 @@
+import { enableLogPersistence } from './lib/logPersistence.js';
+enableLogPersistence();
+
 import express from 'express';
 import dotenv from 'dotenv';
 import { pipeline } from './tasks/pipeline.js';
@@ -33,6 +36,18 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Log incoming requests
+app.use((req, res, next) => {
+    const start = Date.now();
+    res.on('finish', () => {
+        const duration = Date.now() - start;
+        const status = res.statusCode;
+        const level = status >= 400 ? '⚠' : '→';
+        console.log(`${level} ${req.method} ${req.path} ${status} ${duration}ms`);
+    });
+    next();
+});
 
 // Apply authentication middleware
 app.use(authMiddleware);
