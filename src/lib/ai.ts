@@ -70,14 +70,16 @@ type AiChatOptions = {
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
 }
 
-export function isTransientError(e: unknown): boolean {
-    if (e instanceof Anthropic.APIConnectionError) return true;
-    if (e instanceof Anthropic.InternalServerError) return true;
+export type TransientErrorKind = 'connection' | 'server' | false;
+
+export function classifyTransientError(e: unknown): TransientErrorKind {
+    if (e instanceof Anthropic.APIConnectionError) return 'connection';
+    if (e instanceof Anthropic.InternalServerError) return 'server';
     // The SDK doesn't have a dedicated class for 529 (overloaded), but it maps
     // to InternalServerError (>= 500). Check the inner type for completeness.
     if (e instanceof Anthropic.APIError) {
         const inner = (e.error as any)?.error?.type;
-        if (inner === 'overloaded_error') return true;
+        if (inner === 'overloaded_error') return 'server';
     }
     return false;
 }
@@ -110,6 +112,11 @@ export function formatApiError(e: unknown): Error {
 
 const MAX_TRANSIENT_RETRIES = 2;
 
+const BACKOFF_BASE_MS: Record<Exclude<TransientErrorKind, false>, number> = {
+    connection: 5_000,   // 5s, 10s — quick reconnect
+    server:    30_000,   // 30s, 60s — give Anthropic time to recover
+};
+
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
     let transientRetries = 0;
     while (true) {
@@ -128,11 +135,12 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
                     continue;
                 }
             }
-            // Transient errors: retry with backoff
-            if (isTransientError(e) && transientRetries < MAX_TRANSIENT_RETRIES) {
+            // Transient errors: retry with category-specific backoff
+            const errorKind = classifyTransientError(e);
+            if (errorKind && transientRetries < MAX_TRANSIENT_RETRIES) {
                 transientRetries++;
-                const backoffMs = transientRetries * 5000;
-                console.log(`Transient error (attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES}), retrying in ${backoffMs}ms...`);
+                const backoffMs = transientRetries * BACKOFF_BASE_MS[errorKind];
+                console.log(`Transient ${errorKind} error (attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES}), retrying in ${backoffMs}ms...`);
                 await sleep(backoffMs);
                 continue;
             }

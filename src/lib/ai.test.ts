@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { isTransientError, formatApiError, addUsage, NO_USAGE } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE } from './ai.js';
 
 // Helper: build SDK error instances using the SDK's own factory.
 function makeApiError(status: number, errorType: string, errorMessage: string): Anthropic.APIError {
@@ -10,29 +10,29 @@ function makeApiError(status: number, errorType: string, errorMessage: string): 
 }
 
 // ===========================================================================
-// isTransientError
+// classifyTransientError
 // ===========================================================================
 
-describe('isTransientError', () => {
+describe('classifyTransientError', () => {
 
-    it('retries InternalServerError (500)', () => {
-        expect(isTransientError(makeApiError(500, 'api_error', 'Internal server error'))).toBe(true);
+    it('classifies InternalServerError as server', () => {
+        expect(classifyTransientError(makeApiError(500, 'api_error', 'Internal server error'))).toBe('server');
     });
 
-    it('retries APIConnectionError', () => {
-        expect(isTransientError(new Anthropic.APIConnectionError({ message: 'fail' }))).toBe(true);
+    it('classifies APIConnectionError as connection', () => {
+        expect(classifyTransientError(new Anthropic.APIConnectionError({ message: 'fail' }))).toBe('connection');
     });
 
-    it('does not retry RateLimitError (handled separately)', () => {
-        expect(isTransientError(makeApiError(429, 'rate_limit_error', 'Rate limited'))).toBe(false);
+    it('does not classify RateLimitError as transient (handled separately)', () => {
+        expect(classifyTransientError(makeApiError(429, 'rate_limit_error', 'Rate limited'))).toBe(false);
     });
 
-    it('does not retry BadRequestError', () => {
-        expect(isTransientError(makeApiError(400, 'invalid_request_error', 'bad'))).toBe(false);
+    it('does not classify BadRequestError as transient', () => {
+        expect(classifyTransientError(makeApiError(400, 'invalid_request_error', 'bad'))).toBe(false);
     });
 
     it('returns false for plain errors', () => {
-        expect(isTransientError(new Error('boom'))).toBe(false);
+        expect(classifyTransientError(new Error('boom'))).toBe(false);
     });
 });
 
