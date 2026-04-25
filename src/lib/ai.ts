@@ -9,6 +9,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export type ResultWithUsage<T> = {
     result: T;
     usage: Anthropic.Messages.Usage;
+    maxTokens?: number;
     response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
 };
 export const NO_USAGE: Anthropic.Messages.Usage = {
@@ -261,7 +262,8 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             });
             return {
                 usage: addUsage(response.usage, response2.usage),
-                result: response2.result
+                result: response2.result,
+                maxTokens
             }
         }
 
@@ -296,6 +298,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         return {
             usage: response.usage,
             result: responseJson,
+            maxTokens,
             response: response
         };
     } catch (e) {

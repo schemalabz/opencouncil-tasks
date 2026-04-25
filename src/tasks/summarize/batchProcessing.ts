@@ -53,6 +53,7 @@ export async function processBatchesWithState(
 
     const allSummaries: BatchProcessingResult['segmentSummaries'] = [];
     let totalUsage = NO_USAGE;
+    const batchStats: Array<{ segments: number; utterances: number; inputChars: number; outputTokens: number; maxTokens: number }> = [];
 
     console.log(`Processing ${batches.length} batches...`);
 
@@ -63,6 +64,12 @@ export async function processBatchesWithState(
         console.log(`📦 BATCH ${i + 1}/${batches.length}`);
         console.log(`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
 
+        // Log batch composition
+        const batchSegments = batches[i].length;
+        const batchUtterances = batches[i].reduce((sum: number, seg: any) => sum + (seg.utterances?.length || 0), 0);
+        const batchInputChars = JSON.stringify(batches[i]).length;
+        console.log(`   📐 Batch composition: ${batchSegments} segments, ${batchUtterances} utterances, ${(batchInputChars / 1000).toFixed(1)}K input chars`);
+
         // Show previous meeting progress summary if available
         if (conversationState.meetingProgressSummary) {
             console.log(`📋 Meeting progress context:`);
@@ -71,7 +78,7 @@ export async function processBatchesWithState(
             console.log(`🆕 Starting first batch (no previous context)`);
         }
 
-        const { result: batchResult, usage: batchUsage } = await processSingleBatch(
+        const { result: batchResult, usage: batchUsage, maxTokens: batchMaxTokens } = await processSingleBatch(
             batches[i],
             i,
             batches.length,
@@ -89,7 +96,10 @@ export async function processBatchesWithState(
 
         // Accumulate token usage
         totalUsage = addUsage(totalUsage, batchUsage);
-        console.log(`   📊 Batch tokens: ${formatTokenCount(batchUsage.input_tokens)} input, ${formatTokenCount(batchUsage.output_tokens)} output`);
+        const utilization = (batchUsage.output_tokens / batchMaxTokens * 100).toFixed(1);
+        const tokensPerUtterance = batchUtterances > 0 ? (batchUsage.output_tokens / batchUtterances).toFixed(0) : 'N/A';
+        console.log(`   📊 Batch tokens: ${formatTokenCount(batchUsage.input_tokens)} input, ${formatTokenCount(batchUsage.output_tokens)} output (${utilization}% of ${formatTokenCount(batchMaxTokens)} limit, ~${tokensPerUtterance} tokens/utterance)`);
+        batchStats.push({ segments: batchSegments, utterances: batchUtterances, inputChars: batchInputChars, outputTokens: batchUsage.output_tokens, maxTokens: batchMaxTokens });
 
         allSummaries.push(...batchResult.segmentSummaries);
 
@@ -423,6 +433,19 @@ export async function processBatchesWithState(
         }
     }
 
+    // Log batch capacity summary
+    if (batchStats.length > 0) {
+        const totalUtterances = batchStats.reduce((sum, s) => sum + s.utterances, 0);
+        const totalOutputTokens = batchStats.reduce((sum, s) => sum + s.outputTokens, 0);
+        const tightest = batchStats.reduce((max, s, i) => {
+            const util = s.outputTokens / s.maxTokens;
+            return util > max.util ? { index: i, util } : max;
+        }, { index: 0, util: 0 });
+
+        console.log('');
+        console.log(`📊 Batch capacity: tightest batch ${tightest.index + 1}/${batchStats.length} (${(tightest.util * 100).toFixed(1)}% of limit, ${batchStats[tightest.index].utterances} utterances), avg ~${totalUtterances > 0 ? (totalOutputTokens / totalUtterances).toFixed(0) : 'N/A'} output tokens/utterance`);
+    }
+
     return {
         speakerSegmentSummaries: allSummaries,
         subjects: conversationState.subjects,
@@ -449,7 +472,7 @@ export async function processSingleBatch(
         additionalInstructions?: string;
     },
     previousMeetingProgressSummary?: string
-): Promise<{ result: BatchProcessingResult; usage: Anthropic.Messages.Usage }> {
+): Promise<{ result: BatchProcessingResult; usage: Anthropic.Messages.Usage; maxTokens: number }> {
     const systemPrompt = getBatchProcessingSystemPrompt(metadata);
 
     // Create context summary
@@ -496,6 +519,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
 
     const response = await aiChat<BatchProcessingResult>({
         model: "claude-opus-4-6",
+        maxTokens: 128000,
         systemPrompt,
         userPrompt,
         outputFormat: {
@@ -573,5 +597,5 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
         cacheSystemPrompt: true  // Cache system prompt across batches
     });
 
-    return { result: response.result, usage: response.usage };
+    return { result: response.result, usage: response.usage, maxTokens: response.maxTokens! };
 }
