@@ -70,14 +70,42 @@ type AiChatOptions = {
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
 }
 
-export function isTransientError(e: any): boolean {
-    // Socket closed by remote (e.g. Anthropic server timeout, load balancer disconnect)
-    if (e?.cause?.code === 'UND_ERR_SOCKET') return true;
-    // Anthropic SDK wraps socket errors as "terminated"
-    if (e?.message === 'terminated' || e?.cause?.message === 'terminated') return true;
-    // Connection reset
-    if (e?.code === 'ECONNRESET' || e?.cause?.code === 'ECONNRESET') return true;
+export function isTransientError(e: unknown): boolean {
+    if (e instanceof Anthropic.APIConnectionError) return true;
+    if (e instanceof Anthropic.InternalServerError) return true;
+    // The SDK doesn't have a dedicated class for 529 (overloaded), but it maps
+    // to InternalServerError (>= 500). Check the inner type for completeness.
+    if (e instanceof Anthropic.APIError) {
+        const inner = (e.error as any)?.error?.type;
+        if (inner === 'overloaded_error') return true;
+    }
     return false;
+}
+
+/**
+ * Format an Anthropic SDK error into a plain Error with a human-readable message.
+ *
+ * The SDK's makeMessage() produces a JSON blob when the API response body has
+ * no top-level .message (which is the case for most error responses — the
+ * actual message lives at body.error.message). We extract the useful parts
+ * and build a readable string that works well in alerts (Discord, etc.).
+ */
+export function formatApiError(e: unknown): Error {
+    if (e instanceof Anthropic.APIError) {
+        const inner = (e.error as any)?.error;
+        const errorType = inner?.type ?? 'unknown';
+        const errorMessage = inner?.message ?? 'no details';
+        const parts = [
+            e.status ? `${e.status}` : null,
+            `${errorType}: ${errorMessage}`,
+            e.requestID ? `(request: ${e.requestID})` : null,
+        ].filter(Boolean);
+        const wrapped = new Error(parts.join(' '));
+        wrapped.cause = e;
+        return wrapped;
+    }
+    if (e instanceof Error) return e;
+    return new Error(String(e));
 }
 
 const MAX_TRANSIENT_RETRIES = 2;
@@ -89,19 +117,22 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
             return await fn();
         } catch (e: any) {
             // Rate limit: wait for reset time
-            if (e?.error?.error?.type === 'rate_limit_error' && e.headers?.['anthropic-ratelimit-tokens-reset']) {
-                const resetTime = new Date(e.headers['anthropic-ratelimit-tokens-reset']);
-                const now = new Date();
-                const sleepTime = resetTime.getTime() - now.getTime() + 1000;
-                console.log(`Rate limit hit, sleeping until ${resetTime.toISOString()} (${sleepTime}ms)`);
-                await sleep(sleepTime);
-                continue;
+            if (e instanceof Anthropic.RateLimitError) {
+                const resetHeader = e.headers?.get('anthropic-ratelimit-tokens-reset');
+                if (resetHeader) {
+                    const resetTime = new Date(resetHeader);
+                    const now = new Date();
+                    const sleepTime = resetTime.getTime() - now.getTime() + 1000;
+                    console.log(`Rate limit hit, sleeping until ${resetTime.toISOString()} (${sleepTime}ms)`);
+                    await sleep(sleepTime);
+                    continue;
+                }
             }
-            // Transient connection errors: retry with backoff
+            // Transient errors: retry with backoff
             if (isTransientError(e) && transientRetries < MAX_TRANSIENT_RETRIES) {
                 transientRetries++;
                 const backoffMs = transientRetries * 5000;
-                console.log(`Transient connection error (attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES}), retrying in ${backoffMs}ms...`);
+                console.log(`Transient error (attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES}), retrying in ${backoffMs}ms...`);
                 await sleep(backoffMs);
                 continue;
             }
@@ -262,7 +293,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);
         await logToFile("Error in aiChat", e);
-        throw e;
+        throw formatApiError(e);
     }
 }
 

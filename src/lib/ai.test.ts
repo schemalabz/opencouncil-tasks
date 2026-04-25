@@ -1,87 +1,67 @@
 import { describe, it, expect } from 'vitest';
-import { isTransientError, addUsage, NO_USAGE } from './ai.js';
-import type Anthropic from '@anthropic-ai/sdk';
+import Anthropic from '@anthropic-ai/sdk';
+import { isTransientError, formatApiError, addUsage, NO_USAGE } from './ai.js';
+
+// Helper: build SDK error instances using the SDK's own factory.
+function makeApiError(status: number, errorType: string, errorMessage: string): Anthropic.APIError {
+    const body = { type: 'error', error: { type: errorType, message: errorMessage } };
+    const headers = new Headers({ 'request-id': `req_test_${status}` });
+    return Anthropic.APIError.generate(status, body, undefined, headers);
+}
 
 // ===========================================================================
-// isTransientError — Classifies errors as transient (retryable) vs permanent
-//
-// The AI client retries transient errors (socket closures, connection resets)
-// with exponential backoff, but throws permanent errors immediately.
-// This classification is critical: false positives waste time retrying
-// unrecoverable errors, false negatives fail requests that would succeed
-// on retry.
+// isTransientError
 // ===========================================================================
 
 describe('isTransientError', () => {
 
-    describe('socket errors — remote server closed the connection', () => {
-
-        it('detects UND_ERR_SOCKET (undici socket closure, e.g. Anthropic server timeout)', () => {
-            const error = { cause: { code: 'UND_ERR_SOCKET' } };
-            expect(isTransientError(error)).toBe(true);
-        });
-
-        it('detects ECONNRESET at top level', () => {
-            const error = { code: 'ECONNRESET' };
-            expect(isTransientError(error)).toBe(true);
-        });
-
-        it('detects ECONNRESET nested in cause (wrapped by SDK)', () => {
-            const error = { cause: { code: 'ECONNRESET' } };
-            expect(isTransientError(error)).toBe(true);
-        });
+    it('retries InternalServerError (500)', () => {
+        expect(isTransientError(makeApiError(500, 'api_error', 'Internal server error'))).toBe(true);
     });
 
-    describe('"terminated" errors — Anthropic SDK wraps socket errors', () => {
-
-        it('detects "terminated" at top-level message', () => {
-            const error = { message: 'terminated' };
-            expect(isTransientError(error)).toBe(true);
-        });
-
-        it('detects "terminated" in cause.message', () => {
-            const error = { cause: { message: 'terminated' } };
-            expect(isTransientError(error)).toBe(true);
-        });
+    it('retries APIConnectionError', () => {
+        expect(isTransientError(new Anthropic.APIConnectionError({ message: 'fail' }))).toBe(true);
     });
 
-    describe('non-transient errors — should NOT be retried', () => {
+    it('does not retry RateLimitError (handled separately)', () => {
+        expect(isTransientError(makeApiError(429, 'rate_limit_error', 'Rate limited'))).toBe(false);
+    });
 
-        it('rejects authentication errors', () => {
-            const error = { status: 401, message: 'Invalid API key' };
-            expect(isTransientError(error)).toBe(false);
-        });
+    it('does not retry BadRequestError', () => {
+        expect(isTransientError(makeApiError(400, 'invalid_request_error', 'bad'))).toBe(false);
+    });
 
-        it('rejects validation errors', () => {
-            const error = { status: 400, message: 'Invalid request' };
-            expect(isTransientError(error)).toBe(false);
-        });
-
-        it('rejects generic errors with no matching shape', () => {
-            const error = new Error('Something unexpected');
-            expect(isTransientError(error)).toBe(false);
-        });
-
-        it('rejects null/undefined', () => {
-            expect(isTransientError(null)).toBe(false);
-            expect(isTransientError(undefined)).toBe(false);
-        });
-
-        it('rejects empty object', () => {
-            expect(isTransientError({})).toBe(false);
-        });
+    it('returns false for plain errors', () => {
+        expect(isTransientError(new Error('boom'))).toBe(false);
     });
 });
 
 // ===========================================================================
-// addUsage — Accumulates token usage across multiple AI calls
-//
-// Each AI call returns a Usage object with token counts. addUsage combines
-// them into a running total. The tricky part: cache fields are nullable in
-// the Anthropic SDK type, so the function must coalesce nulls to 0 before
-// summing. The non-aggregatable fields (cache_creation, server_tool_use)
-// are intentionally set to null since per-call details don't make sense
-// in a total.
+// formatApiError — the string that reaches Discord via TaskManager
+// ===========================================================================
+
+describe('formatApiError', () => {
+
+    it('extracts status, type, message, and request id from an API error', () => {
+        const err = makeApiError(500, 'api_error', 'Internal server error');
+        const result = formatApiError(err);
+
+        expect(result.message).toBe('500 api_error: Internal server error (request: req_test_500)');
+        expect(result.cause).toBe(err);
+    });
+
+    it('passes through non-SDK errors unchanged', () => {
+        const err = new Error('disk full');
+        expect(formatApiError(err)).toBe(err);
+    });
+
+    it('wraps non-Error values in an Error', () => {
+        expect(formatApiError('string')).toBeInstanceOf(Error);
+    });
+});
+
+// ===========================================================================
+// addUsage
 // ===========================================================================
 
 describe('addUsage', () => {
@@ -97,7 +77,6 @@ describe('addUsage', () => {
     });
 
     it('sums cache token fields, treating null as 0', () => {
-        // First call created cache, second call read from it
         const a: Anthropic.Messages.Usage = {
             ...NO_USAGE,
             input_tokens: 1000,
@@ -127,8 +106,6 @@ describe('addUsage', () => {
     });
 
     it('always sets non-aggregatable detail fields to null', () => {
-        // cache_creation and server_tool_use contain per-call details
-        // that don't make sense to aggregate across calls
         const result = addUsage(NO_USAGE, NO_USAGE);
 
         expect(result.cache_creation).toBeNull();
@@ -140,7 +117,6 @@ describe('addUsage', () => {
         const b: Anthropic.Messages.Usage = { ...NO_USAGE, service_tier: null };
 
         expect(addUsage(a, b).service_tier).toBe('standard');
-        // Order matters: first non-null wins
         expect(addUsage(b, a).service_tier).toBe('standard');
     });
 
