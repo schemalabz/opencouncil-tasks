@@ -22,11 +22,14 @@ export const ROUTE_TASK_SYMBOL: unique symbol = Symbol('route_task');
 
 dotenv.config();
 
-type RunningTask = Omit<TaskUpdate<any>, "result" | "error"> & {
+type CallbackPayload = TaskUpdate<unknown> & {
     createdAt: Date,
     lastUpdatedAt: Date,
     taskType: string,
-    version?: number
+};
+
+type RunningTask = Omit<CallbackPayload, "result" | "error"> & {
+    callbackUrl: string,
 };
 
 // Task queue item with all necessary information to run a task
@@ -59,6 +62,10 @@ class TaskManager {
 
     public getQueuedTasksCount(): number {
         return this.taskQueue.length;
+    }
+
+    public getMaxParallelTasks(): number {
+        return this.maxParallelTasks;
     }
 
     public async finish(): Promise<void> {
@@ -95,6 +102,7 @@ class TaskManager {
                 createdAt,
                 lastUpdatedAt: createdAt,
                 taskType,
+                callbackUrl,
                 version
             };
             this.runningTasks.set(taskId, initialUpdate);
@@ -111,6 +119,7 @@ class TaskManager {
                     createdAt,
                     lastUpdatedAt: now,
                     taskType,
+                    callbackUrl,
                     version
                 };
                 this.runningTasks.set(taskId, update);
@@ -286,7 +295,7 @@ class TaskManager {
         }
     }
 
-    private async sendCallback(callbackUrl: string, update: RunningTask): Promise<void> {
+    private async sendCallback(callbackUrl: string, update: CallbackPayload): Promise<void> {
         console.log('Sending callback to ', callbackUrl);
         try {
             await fetch(callbackUrl, {

@@ -108,6 +108,22 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
     });
 });
 
+app.get('/tasks', (req, res) => {
+    const running = taskManager.getTaskUpdates().map(t => ({
+        taskType: t.taskType,
+        status: t.status,
+        stage: t.stage,
+        progressPercent: t.progressPercent,
+        duration: Math.floor((Date.now() - t.createdAt.getTime()) / 1000),
+        callbackUrl: t.callbackUrl,
+    }));
+    res.json({
+        running,
+        queued: taskManager.getQueuedTasksCount(),
+        maxParallelTasks: taskManager.getMaxParallelTasks(),
+    });
+});
+
 // ============================================================================
 // TASK ENDPOINTS (Authentication Required)
 // ============================================================================

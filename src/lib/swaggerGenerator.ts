@@ -45,6 +45,45 @@ export function generateSwaggerPaths(): Record<string, any> {
         }
     };
 
+    paths['/tasks'] = {
+        get: {
+            summary: 'Running tasks',
+            description: 'List currently running and queued tasks with their status, progress, and duration',
+            tags: ['System'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+                '200': {
+                    description: 'Current task status',
+                    content: {
+                        'application/json': {
+                            schema: {
+                                type: 'object',
+                                properties: {
+                                    running: {
+                                        type: 'array',
+                                        items: {
+                                            type: 'object',
+                                            properties: {
+                                                taskType: { type: 'string' },
+                                                status: { type: 'string' },
+                                                stage: { type: 'string', nullable: true },
+                                                progressPercent: { type: 'number', nullable: true },
+                                                duration: { type: 'number', description: 'Duration in seconds' },
+                                                callbackUrl: { type: 'string' }
+                                            }
+                                        }
+                                    },
+                                    queued: { type: 'number' },
+                                    maxParallelTasks: { type: 'number' }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     // Add task endpoints
     const registeredTasks = taskManager.getAllRegisteredTasks();
     
