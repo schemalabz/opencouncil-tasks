@@ -62,3 +62,14 @@ npm test                              # unit tests (vitest)
 - **S3-compatible storage** — DigitalOcean Spaces (production) or MinIO (development)
 
 The callback server (`src/lib/CallbackServer.ts`) receives async results from Pyannote and Gladia. It requires `PUBLIC_URL` to be set to a publicly reachable address (e.g. via ngrok for local dev).
+
+## Deployment
+
+Both environments run via Docker Compose on `134.122.74.255`:
+
+| Environment | Directory | Container | Logs |
+|---|---|---|---|
+| **Production** | `/root/opencouncil-tasks/` | `opencouncil-tasks-app-1` | `/root/opencouncil-tasks/logs/app.log` |
+| **Staging** | `/root/staging-opencouncil-tasks/` | `staging-opencouncil-tasks-app-1` | `/root/staging-opencouncil-tasks/logs/app.log` |
+
+Access via `ssh root@134.122.74.255`. Use the `/logs` skill for quick log access from your local machine.
