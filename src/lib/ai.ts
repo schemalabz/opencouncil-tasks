@@ -76,11 +76,11 @@ export type TransientErrorKind = 'connection' | 'server' | false;
 export function classifyTransientError(e: unknown): TransientErrorKind {
     if (e instanceof Anthropic.APIConnectionError) return 'connection';
     if (e instanceof Anthropic.InternalServerError) return 'server';
-    // The SDK doesn't have a dedicated class for 529 (overloaded), but it maps
-    // to InternalServerError (>= 500). Check the inner type for completeness.
+    // Streaming errors arrive as base APIError (no HTTP status), bypassing
+    // the SDK's status-based class hierarchy. Check the inner error type.
     if (e instanceof Anthropic.APIError) {
         const inner = (e.error as any)?.error?.type;
-        if (inner === 'overloaded_error') return 'server';
+        if (inner === 'overloaded_error' || inner === 'api_error') return 'server';
     }
     return false;
 }
