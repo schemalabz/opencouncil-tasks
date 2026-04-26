@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
-import { aiChat, addUsage, NO_USAGE } from "../../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, classifyTransientError } from "../../lib/ai.js";
 import { getBatchProcessingSystemPrompt } from "./prompts.js";
 import {
     CompressedTranscript,
@@ -55,6 +55,9 @@ export async function processBatchesWithState(
     let totalUsage = NO_USAGE;
     const batchStats: Array<{ segments: number; utterances: number; inputChars: number; outputTokens: number; maxTokens: number }> = [];
 
+    const MAX_BATCH_RETRIES = 3;
+    const BATCH_RETRY_DELAY_MS = 5 * 60 * 1000; // 5 minutes
+
     console.log(`Processing ${batches.length} batches...`);
 
     for (let i = 0; i < batches.length; i++) {
@@ -78,21 +81,41 @@ export async function processBatchesWithState(
             console.log(`🆕 Starting first batch (no previous context)`);
         }
 
-        const { result: batchResult, usage: batchUsage, maxTokens: batchMaxTokens } = await processSingleBatch(
-            batches[i],
-            i,
-            batches.length,
-            conversationState,
-            {
-                cityName: request.cityName,
-                date: request.date,
-                topicLabels: request.topicLabels,
-                administrativeBodyName: request.administrativeBodyName,
-                requestedSubjects: request.requestedSubjects,
-                additionalInstructions: request.additionalInstructions
-            },
-            conversationState.meetingProgressSummary  // Pass previous meeting progress summary
-        );
+        let batchResult: BatchProcessingResult;
+        let batchUsage: Anthropic.Messages.Usage;
+        let batchMaxTokens: number;
+
+        for (let attempt = 1; ; attempt++) {
+            try {
+                const response = await processSingleBatch(
+                    batches[i],
+                    i,
+                    batches.length,
+                    conversationState,
+                    {
+                        cityName: request.cityName,
+                        date: request.date,
+                        topicLabels: request.topicLabels,
+                        administrativeBodyName: request.administrativeBodyName,
+                        requestedSubjects: request.requestedSubjects,
+                        additionalInstructions: request.additionalInstructions
+                    },
+                    conversationState.meetingProgressSummary
+                );
+                batchResult = response.result;
+                batchUsage = response.usage;
+                batchMaxTokens = response.maxTokens;
+                break;
+            } catch (e) {
+                if (i > 0 && classifyTransientError(e) && attempt <= MAX_BATCH_RETRIES) {
+                    console.log(`\n⚠️  Batch ${i + 1}/${batches.length} failed (attempt ${attempt}/${MAX_BATCH_RETRIES}), retrying in ${BATCH_RETRY_DELAY_MS / 1000}s...`);
+                    console.log(`   Previous batch progress (${i} batches) preserved.`);
+                    await new Promise(resolve => setTimeout(resolve, BATCH_RETRY_DELAY_MS));
+                    continue;
+                }
+                throw e;
+            }
+        }
 
         // Accumulate token usage
         totalUsage = addUsage(totalUsage, batchUsage);
