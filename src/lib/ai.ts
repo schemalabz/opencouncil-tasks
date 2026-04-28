@@ -89,6 +89,11 @@ export function classifyTransientError(e: unknown): TransientErrorKind {
         const cause = (e as any).cause;
         if (cause instanceof TypeError && cause.message === 'terminated') return 'connection';
     }
+    // Check the cause chain — errors wrapped by formatApiError or other layers
+    // should still be classifiable by their original type.
+    if (e instanceof Error && (e as any).cause) {
+        return classifyTransientError((e as any).cause);
+    }
     return false;
 }
 
@@ -157,6 +162,53 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
     }
 }
 
+const BATCH_POLL_INTERVAL_MS = 60_000; // 60s between polls
+
+async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming, requestOptions: Anthropic.RequestOptions): Promise<Anthropic.Messages.Message> {
+    const betas = [
+        ...(requestOptions.headers?.['anthropic-beta']?.split(',').map((s: string) => s.trim()) || []),
+        'output-300k-2026-03-24',
+    ];
+
+    const batch = await anthropic.messages.batches.create({
+        requests: [{
+            custom_id: 'request-1',
+            params: requestParams,
+        }],
+    }, {
+        headers: { 'anthropic-beta': betas.join(',') },
+    });
+
+    console.log(`Batch created: ${batch.id}, polling for result...`);
+
+    while (true) {
+        await sleep(BATCH_POLL_INTERVAL_MS);
+
+        const status = await anthropic.messages.batches.retrieve(batch.id);
+        const elapsed = Math.round((Date.now() - new Date(status.created_at).getTime()) / 1000);
+        console.log(`Batch ${batch.id}: ${status.processing_status} (${elapsed}s elapsed, ${status.request_counts.processing} processing, ${status.request_counts.succeeded} succeeded)`);
+
+        if (status.processing_status === 'ended') {
+            const results = await anthropic.messages.batches.results(batch.id);
+            for await (const result of results) {
+                if (result.custom_id === 'request-1') {
+                    if (result.result.type === 'succeeded') {
+                        return result.result.message;
+                    }
+                    if (result.result.type === 'errored') {
+                        throw new Error(`Batch request errored: ${JSON.stringify(result.result.error)}`);
+                    }
+                    if (result.result.type === 'expired') {
+                        throw new Error(`Batch request expired (exceeded Anthropic's 24h processing window)`);
+                    }
+                    throw new Error(`Batch request ${result.result.type}`);
+                }
+            }
+            throw new Error('Batch completed but no result found for request-1');
+        }
+    }
+}
+
 export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     try {
@@ -215,12 +267,23 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             }
         } : {};
 
-        // Use .stream() helper for long requests (>10 minutes) - it handles accumulation automatically
-        // Wrap in withRetry to handle transient connection errors (socket closures, etc.)
-        const response = await withRetry(async () => {
-            const stream = anthropic.messages.stream(requestParams, requestOptions);
-            return stream.finalMessage();
-        });
+        // Stream with retry, fall back to Batches API if all retries exhausted.
+        // Streaming is fast (seconds) but fragile on long requests. The Batches API
+        // is slower (minutes of queue time) but immune to connection drops.
+        let response: Anthropic.Messages.Message;
+        try {
+            response = await withRetry(async () => {
+                const stream = anthropic.messages.stream(requestParams, requestOptions);
+                return stream.finalMessage();
+            });
+        } catch (e) {
+            if (classifyTransientError(e)) {
+                console.log(`Streaming failed after retries, falling back to batch mode...`);
+                response = await executeBatch(requestParams, requestOptions);
+            } else {
+                throw e;
+            }
+        }
 
         await logToFile("Claude Response", response);
 
