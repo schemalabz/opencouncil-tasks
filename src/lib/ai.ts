@@ -82,6 +82,13 @@ export function classifyTransientError(e: unknown): TransientErrorKind {
         const inner = (e.error as any)?.error?.type;
         if (inner === 'overloaded_error' || inner === 'api_error') return 'server';
     }
+    // Node's undici throws TypeError: terminated when the TCP connection drops
+    // mid-stream. The SDK wraps it in AnthropicError. Retry is the correct
+    // mitigation: https://github.com/anthropics/anthropic-sdk-typescript/issues/774#issuecomment-4329060307
+    if (e instanceof Anthropic.AnthropicError) {
+        const cause = (e as any).cause;
+        if (cause instanceof TypeError && cause.message === 'terminated') return 'connection';
+    }
     return false;
 }
 
@@ -303,7 +310,21 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         };
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);
-        await logToFile("Error in aiChat", e);
+        // Log full error details for stream terminations to aid reproduction
+        // (see https://github.com/anthropics/anthropic-sdk-typescript/issues/774)
+        if (e instanceof Error && (e as any).cause) {
+            const cause = (e as any).cause;
+            console.error(`  cause: ${cause}`);
+            if (cause instanceof Error && cause.cause) {
+                console.error(`  cause.cause: ${cause.cause}`);
+            }
+        }
+        await logToFile("Error in aiChat", {
+            message: e instanceof Error ? e.message : String(e),
+            name: e instanceof Error ? e.name : undefined,
+            cause: e instanceof Error ? (e as any).cause : undefined,
+            stack: e instanceof Error ? e.stack : undefined,
+        });
         throw formatApiError(e);
     }
 }
