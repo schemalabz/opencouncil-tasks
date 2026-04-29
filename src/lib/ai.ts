@@ -43,7 +43,7 @@ export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
-async function logToFile(message: string, data?: any) {
+export async function logToFile(message: string, data?: any) {
     const timestamp = new Date().toISOString();
     let logEntry = `${timestamp} - ${message}`;
     if (data) {
@@ -69,6 +69,7 @@ type AiChatOptions = {
     tools?: Anthropic.Messages.Tool[];
     outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
+    batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
 }
 
 export type TransientErrorKind = 'connection' | 'server' | false;
@@ -209,10 +210,10 @@ async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParam
     }
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     try {
-        console.log(`Sending message to claude...`);
+        console.log(`Sending message to claude${batchFirst ? ' (batch-first)' : ''}...`);
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({
@@ -270,18 +271,23 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         // Stream with retry, fall back to Batches API if all retries exhausted.
         // Streaming is fast (seconds) but fragile on long requests. The Batches API
         // is slower (minutes of queue time) but immune to connection drops.
+        // batchFirst: skip streaming entirely, go direct to Batches API (300K output limit).
         let response: Anthropic.Messages.Message;
-        try {
-            response = await withRetry(async () => {
-                const stream = anthropic.messages.stream(requestParams, requestOptions);
-                return stream.finalMessage();
-            });
-        } catch (e) {
-            if (classifyTransientError(e)) {
-                console.log(`Streaming failed after retries, falling back to batch mode...`);
-                response = await executeBatch(requestParams, requestOptions);
-            } else {
-                throw e;
+        if (batchFirst) {
+            response = await executeBatch(requestParams, requestOptions);
+        } else {
+            try {
+                response = await withRetry(async () => {
+                    const stream = anthropic.messages.stream(requestParams, requestOptions);
+                    return stream.finalMessage();
+                });
+            } catch (e) {
+                if (classifyTransientError(e)) {
+                    console.log(`Streaming failed after retries, falling back to batch mode...`);
+                    response = await executeBatch(requestParams, requestOptions);
+                } else {
+                    throw e;
+                }
             }
         }
 

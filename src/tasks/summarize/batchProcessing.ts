@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
-import { aiChat, addUsage, NO_USAGE, classifyTransientError } from "../../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile } from "../../lib/ai.js";
 import { getBatchProcessingSystemPrompt } from "./prompts.js";
 import {
     CompressedTranscript,
@@ -43,7 +43,8 @@ export async function processBatchesWithState(
     allUtteranceStatuses: UtteranceStatus[];
     usage: Anthropic.Messages.Usage;
 }> {
-    const batches = splitTranscript(request.transcript, 120000);
+    const BATCH_INPUT_CHAR_LIMIT = 120_000;
+    const batches = splitTranscript(request.transcript, BATCH_INPUT_CHAR_LIMIT);
 
     let conversationState = {
         subjects: initializeSubjectsFromExisting(request.existingSubjects),
@@ -72,6 +73,21 @@ export async function processBatchesWithState(
         const batchUtterances = batches[i].reduce((sum: number, seg: any) => sum + (seg.utterances?.length || 0), 0);
         const batchInputChars = JSON.stringify(batches[i]).length;
         console.log(`   📐 Batch composition: ${batchSegments} segments, ${batchUtterances} utterances, ${(batchInputChars / 1000).toFixed(1)}K input chars`);
+
+        // Verbose input breakdown to ai.log
+        const speakerCounts = new Map<string, number>();
+        for (const seg of batches[i] as any[]) {
+            const name = seg.speakerName || 'Unknown';
+            speakerCounts.set(name, (speakerCounts.get(name) || 0) + (seg.utterances?.length || 0));
+        }
+        await logToFile(`Batch ${i + 1}/${batches.length} input breakdown`, {
+            segments: batchSegments,
+            utterances: batchUtterances,
+            inputChars: batchInputChars,
+            existingSubjects: conversationState.subjects.length,
+            existingSubjectsChars: JSON.stringify(conversationState.subjects).length,
+            speakers: Object.fromEntries([...speakerCounts.entries()].sort((a, b) => b[1] - a[1])),
+        });
 
         // Show previous meeting progress summary if available
         if (conversationState.meetingProgressSummary) {
@@ -129,6 +145,22 @@ export async function processBatchesWithState(
         const segSummChars = JSON.stringify(batchResult.segmentSummaries).length;
         const totalOutputChars = uttStatusChars + subjectsChars + segSummChars;
         console.log(`   📊 Output breakdown: utteranceStatuses ${(uttStatusChars/1000).toFixed(0)}K (${(uttStatusChars*100/totalOutputChars).toFixed(0)}%), subjects ${(subjectsChars/1000).toFixed(0)}K (${(subjectsChars*100/totalOutputChars).toFixed(0)}%), segmentSummaries ${(segSummChars/1000).toFixed(0)}K (${(segSummChars*100/totalOutputChars).toFixed(0)}%)`);
+
+        // Verbose per-subject breakdown to ai.log for capacity analysis
+        const subjectDetails = batchResult.subjects.map(s => ({
+            id: s.id,
+            name: s.name,
+            descriptionChars: s.description?.length || 0,
+            contributionCount: s.speakerContributions?.length || 0,
+            contributionChars: JSON.stringify(s.speakerContributions || []).length,
+            totalChars: JSON.stringify(s).length,
+        }));
+        await logToFile(`Batch ${i + 1}/${batches.length} output breakdown`, {
+            utteranceStatuses: { count: batchResult.utteranceStatuses.length, chars: uttStatusChars },
+            segmentSummaries: { count: batchResult.segmentSummaries.length, chars: segSummChars },
+            subjects: { count: batchResult.subjects.length, chars: subjectsChars, details: subjectDetails },
+            totalOutputChars,
+        });
         batchStats.push({ segments: batchSegments, utterances: batchUtterances, inputChars: batchInputChars, outputTokens: batchUsage.output_tokens, maxTokens: batchMaxTokens });
 
         allSummaries.push(...batchResult.segmentSummaries);
@@ -550,9 +582,11 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
             })), null, 2)}
 `;
 
+    const useBatchFirst = process.env.BATCH_FIRST_PHASE1 === 'true';
     const response = await aiChat<BatchProcessingResult>({
         model: "claude-opus-4-6",
-        maxTokens: 128000,
+        maxTokens: useBatchFirst ? 300000 : 128000,
+        batchFirst: useBatchFirst,
         systemPrompt,
         userPrompt,
         outputFormat: {
