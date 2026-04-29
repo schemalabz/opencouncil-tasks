@@ -122,6 +122,13 @@ export async function processBatchesWithState(
         const utilization = (batchUsage.output_tokens / batchMaxTokens * 100).toFixed(1);
         const tokensPerUtterance = batchUtterances > 0 ? (batchUsage.output_tokens / batchUtterances).toFixed(0) : 'N/A';
         console.log(`   📊 Batch tokens: ${formatTokenCount(batchUsage.input_tokens)} input, ${formatTokenCount(batchUsage.output_tokens)} output (${utilization}% of ${formatTokenCount(batchMaxTokens)} limit, ~${tokensPerUtterance} tokens/utterance)`);
+
+        // Output breakdown — helps identify which component drives output size
+        const uttStatusChars = JSON.stringify(batchResult.utteranceStatuses).length;
+        const subjectsChars = JSON.stringify(batchResult.subjects).length;
+        const segSummChars = JSON.stringify(batchResult.segmentSummaries).length;
+        const totalOutputChars = uttStatusChars + subjectsChars + segSummChars;
+        console.log(`   📊 Output breakdown: utteranceStatuses ${(uttStatusChars/1000).toFixed(0)}K (${(uttStatusChars*100/totalOutputChars).toFixed(0)}%), subjects ${(subjectsChars/1000).toFixed(0)}K (${(subjectsChars*100/totalOutputChars).toFixed(0)}%), segmentSummaries ${(segSummChars/1000).toFixed(0)}K (${(segSummChars*100/totalOutputChars).toFixed(0)}%)`);
         batchStats.push({ segments: batchSegments, utterances: batchUtterances, inputChars: batchInputChars, outputTokens: batchUsage.output_tokens, maxTokens: batchMaxTokens });
 
         allSummaries.push(...batchResult.segmentSummaries);
@@ -497,6 +504,9 @@ export async function processSingleBatch(
     previousMeetingProgressSummary?: string
 ): Promise<{ result: BatchProcessingResult; usage: Anthropic.Messages.Usage; maxTokens: number }> {
     const systemPrompt = getBatchProcessingSystemPrompt(metadata);
+    if (batchIndex === 0) {
+        console.log(`   📏 System prompt: ${(systemPrompt.length / 1000).toFixed(1)}K chars`);
+    }
 
     // Create context summary
     const progressSummary = batchIndex === 0
