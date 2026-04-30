@@ -40,18 +40,18 @@ export function getStatusEmoji(status: DiscussionStatus): string {
 }
 
 /**
- * Split transcript into batches based on character length.
- * Used to prevent LLM context overflow.
+ * Split transcript into batches based on character length and segment count.
+ * Used to prevent LLM output overflow.
  */
-export function splitTranscript(transcript: any[], maxLengthChars: number) {
+export function splitTranscript(transcript: any[], maxLengthChars: number, maxSegments: number = Infinity) {
     const parts: typeof transcript[] = [];
     let currentPart: typeof transcript = [];
     let currentPartLength = 0;
 
     for (const item of transcript) {
         const itemLength = JSON.stringify(item).length;
-        // Only push current batch if it has items (prevents empty batches when first item exceeds limit)
-        if (currentPartLength + itemLength > maxLengthChars && currentPart.length > 0) {
+        // Split when hitting char limit OR segment count limit
+        if ((currentPartLength + itemLength > maxLengthChars || currentPart.length >= maxSegments) && currentPart.length > 0) {
             parts.push(currentPart);
             currentPart = [];
             currentPartLength = 0;

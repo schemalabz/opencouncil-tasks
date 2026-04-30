@@ -44,7 +44,8 @@ export async function processBatchesWithState(
     usage: Anthropic.Messages.Usage;
 }> {
     const BATCH_INPUT_CHAR_LIMIT = 120_000;
-    const batches = splitTranscript(request.transcript, BATCH_INPUT_CHAR_LIMIT);
+    const BATCH_MAX_SEGMENTS = 80;
+    const batches = splitTranscript(request.transcript, BATCH_INPUT_CHAR_LIMIT, BATCH_MAX_SEGMENTS);
 
     let conversationState = {
         subjects: initializeSubjectsFromExisting(request.existingSubjects),
@@ -123,6 +124,13 @@ export async function processBatchesWithState(
                 batchMaxTokens = response.maxTokens;
                 break;
             } catch (e) {
+                await logToFile(`Batch ${i + 1}/${batches.length} failed`, {
+                    error: e instanceof Error ? e.message : String(e),
+                    segments: batchSegments,
+                    utterances: batchUtterances,
+                    inputChars: batchInputChars,
+                    existingSubjects: conversationState.subjects.length,
+                });
                 if (i > 0 && classifyTransientError(e) && attempt <= MAX_BATCH_RETRIES) {
                     console.log(`\n⚠️  Batch ${i + 1}/${batches.length} failed (attempt ${attempt}/${MAX_BATCH_RETRIES}), retrying in ${BATCH_RETRY_DELAY_MS / 1000}s...`);
                     console.log(`   Previous batch progress (${i} batches) preserved.`);
