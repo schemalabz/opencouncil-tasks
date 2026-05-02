@@ -584,7 +584,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
 
     const useBatchFirst = process.env.BATCH_FIRST_PHASE1 === 'true';
     const response = await aiChat<BatchProcessingResult>({
-        model: "claude-opus-4-6",
+        model: "claude-opus-4-7",
         maxTokens: 128000,
         batchFirst: useBatchFirst,
         systemPrompt,
@@ -624,21 +624,10 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 locationText: { type: ["string", "null"] },
                                 topicLabel: { type: ["string", "null"] },
                                 discussedIn: { type: ["string", "null"] },
-                                withdrawn: { type: "boolean" },
-                                speakerContributions: {
-                                    type: "array",
-                                    items: {
-                                        type: "object",
-                                        properties: {
-                                            speakerId: { type: "string" },
-                                            text: { type: "string" }
-                                        },
-                                        required: ["speakerId", "text"],
-                                        additionalProperties: false
-                                    }
-                                }
+                                withdrawn: { type: "boolean" }
+                                // speakerContributions is generated in Phase 2; including it here wasted tokens and triggered degenerate output.
                             },
-                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "discussedIn", "speakerContributions"],
+                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "discussedIn"],
                             additionalProperties: false
                         }
                     },
@@ -663,6 +652,10 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
         },
         cacheSystemPrompt: true  // Cache system prompt across batches
     });
+
+    for (const subject of response.result.subjects) {
+        subject.speakerContributions = [];
+    }
 
     return { result: response.result, usage: response.usage, maxTokens: response.maxTokens! };
 }
