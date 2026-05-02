@@ -240,12 +240,14 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                   }]
                 : systemPrompt;
 
+        const resolvedModel = model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
         const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
-            model: model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929",
+            model: resolvedModel,
             max_tokens: maxTokens,
             system: systemPromptParam,
             messages,
-            temperature: 0,
+            // Opus 4.7 rejects the temperature parameter; older models still accept it.
+            ...(resolvedModel.startsWith("claude-opus-4-7") ? {} : { temperature: 0 }),
             ...(tools && { tools }),
             ...(outputFormat && {
                 output_format: outputFormat
