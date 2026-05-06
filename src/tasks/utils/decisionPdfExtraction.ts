@@ -104,6 +104,8 @@ export interface AttendanceChange {
     rawText: string;
 }
 
+export type VoteValue = 'FOR' | 'AGAINST' | 'ABSTAIN' | 'PRESENT' | 'DID_NOT_VOTE';
+
 export interface RawExtractedDecision {
     presentMembers: string[];
     absentMembers: string[];
@@ -112,7 +114,7 @@ export interface RawExtractedDecision {
     decisionNumber: string | null;
     references: string;
     voteResult: string | null;
-    voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
+    voteDetails: { name: string; vote: VoteValue }[];
     attendanceChanges: AttendanceChange[];
     discussionOrder: AgendaItemRef[] | null;
     subjectInfo: AgendaItemRef | null;
@@ -127,14 +129,18 @@ export interface RawExtractedDecision {
  * - **Majority** ("κατά πλειοψηφία"): only AGAINST/ABSTAIN voters are named;
  *   all present members not in voteDetails are implicitly FOR.
  *
+ * Members with any explicit voteDetails entry — including PRESENT (Παρών)
+ * and DID_NOT_VOTE (Αποχή) declarations — are not given inferred FOR votes,
+ * since they're already in the explicit voter set.
+ *
  * Pure function: returns a new voteDetails array (never mutates input) and the
  * number of inferred FOR votes.
  */
 export function inferForVotes(
     presentMembers: string[],
     voteResult: string | null,
-    voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[],
-): { voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[]; inferredCount: number } {
+    voteDetails: { name: string; vote: VoteValue }[],
+): { voteDetails: { name: string; vote: VoteValue }[]; inferredCount: number } {
     const isUnanimous = voteResult && /[οό]μ[οό]φων/i.test(voteResult);
     const isMajority = voteResult && /κατ[άα]\s+πλειοψηφ[ίι]/i.test(voteResult);
     const hasNoForVotes = (voteDetails || []).every(v => v.vote !== 'FOR');
@@ -161,13 +167,20 @@ const EXTRACTION_SYSTEM_PROMPT = `You are a document parser for Greek municipal 
 
 Extract the following information from the PDF:
 
-1. **presentMembers**: List of council members marked as present (ΠΑΡΟΝΤΕΣ). Extract just their full names.
-2. **absentMembers**: List of council members marked as absent (ΑΠΟΝΤΕΣ). Extract just their full names.
+1. **presentMembers**: List of council members who were present at the START of the session — the initial roll call used to establish quorum (απαρτία). Extract just their full names. These are the members present BEFORE any arrivals or departures listed in the "Προσελεύσεις – Αποχωρήσεις" section. PDFs use two formats:
+   - **Explicit ΠΑΡΟΝΤΕΣ section**: A list headed "Παρόντες" or "Συμμετέχοντες-Παρόντες" — extract those names directly.
+   - **Composition + Absent format**: A "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ" section listing ALL members, followed by a separate "απουσίαζαν" / "ΑΠΟΝΤΕΣ" section listing absent members. In this case, presentMembers = all members from the composition list MINUS the absent members. Do NOT include members who arrived later (from "Προσελεύσεις").
+2. **absentMembers**: List of council members who were absent at the START of the session (ΑΠΟΝΤΕΣ / "απουσίαζαν"). Extract just their full names. Do NOT remove someone from this list just because they arrived later (Προσελεύσεις) — that information goes in attendanceChanges.
 3. **decisionExcerpt**: The decision text, starting from "ΤΟ Δ.Σ αφού έλαβε υπόψη" or similar phrasing through "ΑΠΟΦΑΣΙΖΕΙ" and the decision content. Include the full decision text. Use markdown formatting to preserve structure (bullet points, numbered lists, etc.). Preserve bold formatting from the PDF — if text is bold in the original, wrap it in **bold** markdown. The "decides" statement (e.g. "ΑΠΟΦΑΣΙΖΕΙ", "Το Δημοτικό Συμβούλιο … αποφασίζει ομόφωνα") must be its own paragraph — keep the full sentence on one line, separated by blank lines from surrounding text, not merged with the decision content that follows.
 4. **decisionNumber**: The decision number (Αριθμός Απόφασης), e.g. "231/2025".
 5. **references**: The legal bases and references from the "αφού έλαβε υπόψη" or "Έχοντας υπόψη" section. List each reference item. Use markdown formatting (numbered list). If the section just says something generic like "τις σχετικές διατάξεις της Νομοθεσίας", return that text as-is.
 6. **voteResult**: The vote result phrase, e.g. "Ομόφωνα", "Κατά πλειοψηφία", "Κατά πλειοψηφία με ψήφους 21 υπέρ και 2 κατά". This is usually found right before or after "ΑΠΟΦΑΣΙΖΕΙ".
-7. **voteDetails**: When the PDF names specific people who voted differently (against or abstained), list them. For unanimous decisions, return an empty array. Each entry has "name" (full name) and "vote" ("FOR", "AGAINST", or "ABSTAIN").
+7. **voteDetails**: When the PDF names specific people who voted differently (against or abstained) or made declarations (present/non-participation), list them. For unanimous decisions, return an empty array. Each entry has "name" (full name) and "vote":
+   - "FOR" (ΥΠΕΡ) — voted in favor
+   - "AGAINST" (ΚΑΤΑ) — voted against
+   - "ABSTAIN" (ΛΕΥΚΟ) — blank vote, no position taken (still a vote)
+   - "PRESENT" (ΠΑΡΩΝ/ΠΑΡΟΥΣΑ) — declared physical presence but did not participate in the vote (declaration, not a vote)
+   - "DID_NOT_VOTE" (ΑΠΟΧΗ) — declined to participate (declaration, not a vote)
 8. **attendanceChanges**: Extract from "Προσελεύσεις – Αποχωρήσεις" or separate "Προσελεύσεις" / "Αποχωρήσεις" sections. These describe members who arrived late or left early. For each person, extract:
    - "name": full name
    - "type": "arrival" or "departure"
@@ -203,7 +216,7 @@ Return valid JSON matching this schema:
   "decisionNumber": string | null,
   "references": string,
   "voteResult": string | null,
-  "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" }[],
+  "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" | "PRESENT" | "DID_NOT_VOTE" }[],
   "attendanceChanges": { "name": string, "type": "arrival" | "departure", "agendaItem": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null, "timing": "during" | "after" | null, "rawText": string }[],
   "discussionOrder": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null }[] | null,
   "subjectInfo": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null,

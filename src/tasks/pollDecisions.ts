@@ -733,6 +733,8 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         extractionResult = {
             decisions: pipelineResult.decisions,
             warnings: pipelineResult.warnings,
+            initialAttendance: pipelineResult.initialAttendance,
+            unmatchedInitialAttendance: pipelineResult.unmatchedInitialAttendance,
         };
     } else if (allExtractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
         console.log(`Skipping extraction: no people provided for name matching`);
