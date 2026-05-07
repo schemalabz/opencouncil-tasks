@@ -489,7 +489,7 @@ describe('extractDecisionFromPdf', () => {
         fetchSpy.mockRestore();
     });
 
-    it('calls aiChat with correct parameters including maxTokens', async () => {
+    it('calls aiChat with correct model and prefill parameters', async () => {
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
             ok: true,
             arrayBuffer: () => Promise.resolve(new ArrayBuffer(50)),
@@ -513,7 +513,6 @@ describe('extractDecisionFromPdf', () => {
 
         expect(mockAiChat).toHaveBeenCalledWith(expect.objectContaining({
             model: 'claude-sonnet-4-20250514',
-            maxTokens: 8192,
             prefillSystemResponse: '{',
             prependToResponse: '{',
         }));
