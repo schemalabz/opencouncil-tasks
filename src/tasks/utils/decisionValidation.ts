@@ -1,4 +1,4 @@
-import { RawExtractedDecision } from './decisionPdfExtraction.js';
+import { RawExtractedDecision, VoteValue } from './decisionPdfExtraction.js';
 
 // --- Warning types ---
 
@@ -94,7 +94,7 @@ export function validateRawExtraction(raw: RawExtractedDecision): DecisionWarnin
 
 export interface ProcessedDecisionContext {
     voteResult: string | null;
-    voteDetails: { vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
+    voteDetails: { vote: VoteValue }[];
 }
 
 /**
@@ -104,15 +104,17 @@ export interface ProcessedDecisionContext {
 export function validateProcessedDecision(ctx: ProcessedDecisionContext): DecisionWarning[] {
     const warnings: DecisionWarning[] = [];
 
-    // Majority vote but no AGAINST/ABSTAIN voters listed
+    // Majority vote but no non-FOR votes or declarations listed
     const isMajority = ctx.voteResult && /κατ[άα]\s+πλειοψηφ[ίι]/i.test(ctx.voteResult);
     if (isMajority) {
-        const hasOppositionVotes = ctx.voteDetails.some(v => v.vote === 'AGAINST' || v.vote === 'ABSTAIN');
-        if (!hasOppositionVotes) {
+        const hasNonForVotes = ctx.voteDetails.some(v =>
+            v.vote === 'AGAINST' || v.vote === 'ABSTAIN' || v.vote === 'PRESENT' || v.vote === 'DID_NOT_VOTE'
+        );
+        if (!hasNonForVotes) {
             warnings.push({
                 code: 'NO_VOTE_DETAILS',
                 severity: 'warning',
-                message: 'Vote result indicates majority but no AGAINST or ABSTAIN voters were found',
+                message: 'Vote result indicates majority but no AGAINST, ABSTAIN, PRESENT or DID_NOT_VOTE voters were found',
             });
         }
     }

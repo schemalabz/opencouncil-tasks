@@ -1,4 +1,4 @@
-import { AttendanceChange, AgendaItemRef, RawExtractedDecision, inferForVotes } from './decisionPdfExtraction.js';
+import { AttendanceChange, AgendaItemRef, RawExtractedDecision, VoteValue, inferForVotes } from './decisionPdfExtraction.js';
 
 function agendaItemRefEquals(a: AgendaItemRef, b: AgendaItemRef): boolean {
     return a.agendaItemIndex === b.agendaItemIndex && a.nonAgendaReason === b.nonAgendaReason;
@@ -126,7 +126,7 @@ export function computeEffectiveAttendance(input: EffectiveAttendanceInput): {
 export interface ProcessedExtraction {
     effectivePresent: string[];
     effectiveAbsent: string[];
-    voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
+    voteDetails: { name: string; vote: VoteValue }[];
     inferredVoteCount: number;
 }
 

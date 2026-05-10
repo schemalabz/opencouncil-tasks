@@ -429,7 +429,7 @@ export interface ExtractedDecisionResult {
     absentMemberIds: string[];
     mayorPresent?: boolean;
     voteResult: string | null;
-    voteDetails: { personId: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
+    voteDetails: { personId: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' | 'PRESENT' | 'DID_NOT_VOTE' }[];
     unmatchedMembers: string[];
     subjectInfo: { number: number; isOutOfAgenda: boolean } | null;
     fromCache?: boolean;
@@ -499,6 +499,10 @@ export interface PollDecisionsResult {
     extractions: {
         decisions: ExtractedDecisionResult[];
         warnings: string[];
+        /** Initial roll call — who was present/absent at session start (meeting-level, not per-subject) */
+        initialAttendance: { personId: string; status: 'PRESENT' | 'ABSENT' }[];
+        /** Names from the initial roll call that couldn't be matched to any person in the database */
+        unmatchedInitialAttendance: string[];
     } | null;
     costs: {
         input_tokens: number;

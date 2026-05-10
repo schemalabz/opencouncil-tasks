@@ -26,6 +26,10 @@ export interface ExtractionPipelineResult {
     decisions: ExtractedDecisionResult[];
     warnings: string[];
     usage: Anthropic.Messages.Usage;
+    /** Initial roll call — who was present/absent at session start (meeting-level, not per-subject) */
+    initialAttendance: { personId: string; status: 'PRESENT' | 'ABSENT' }[];
+    /** Names from the initial roll call that couldn't be matched to any person in the database */
+    unmatchedInitialAttendance: string[];
 }
 
 const BATCH_SIZE = 5;
@@ -58,7 +62,7 @@ export async function extractDecisionsFromPdfs(
     if (mayorName) console.log(`Mayor: ${mayorName} (${mayorId})`);
 
     if (subjects.length === 0) {
-        return { decisions: [], warnings: [], usage: totalUsage };
+        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [] };
     }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
@@ -156,6 +160,44 @@ export async function extractDecisionsFromPdfs(
 
     console.log(`  Final matched: ${nameToPersonId.size}/${allRawNames.size}`);
 
+    // --- Build meeting-level initial attendance from the first extraction with roll call data ---
+    // All PDFs from the same meeting have the same initial roll, so we use the first one.
+    const initialAttendance: ExtractionPipelineResult['initialAttendance'] = [];
+    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
+    const unmatchedInitialAttendance: string[] = [];
+    if (firstWithRoll) {
+        for (const name of firstWithRoll.raw.presentMembers || []) {
+            const personId = nameToPersonId.get(name);
+            if (personId) initialAttendance.push({ personId, status: 'PRESENT' });
+            else unmatchedInitialAttendance.push(name);
+        }
+        for (const name of firstWithRoll.raw.absentMembers || []) {
+            const personId = nameToPersonId.get(name);
+            if (personId) initialAttendance.push({ personId, status: 'ABSENT' });
+            else unmatchedInitialAttendance.push(name);
+        }
+        // Include mayor if extracted from decision narrative
+        let mayorAdded = false;
+        if (firstWithRoll.raw.mayorPresent?.present != null && mayorId) {
+            if (!initialAttendance.some(a => a.personId === mayorId)) {
+                initialAttendance.push({ personId: mayorId, status: firstWithRoll.raw.mayorPresent.present ? 'PRESENT' : 'ABSENT' });
+                mayorAdded = true;
+            }
+        }
+        const presentCount = initialAttendance.filter(a => a.status === 'PRESENT').length;
+        const absentCount = initialAttendance.filter(a => a.status === 'ABSENT').length;
+        const totalExtracted = (firstWithRoll.raw.presentMembers?.length ?? 0) + (firstWithRoll.raw.absentMembers?.length ?? 0);
+        const matchedCount = presentCount + absentCount;
+        const mayorNote = mayorAdded ? ' (includes mayor from narrative)' : '';
+        console.log(`  Initial attendance: ${presentCount} present, ${absentCount} absent — ${matchedCount} matched from ${totalExtracted} extracted${mayorNote}`);
+        if (unmatchedInitialAttendance.length > 0) {
+            console.warn(`  ⚠ ${unmatchedInitialAttendance.length} unmatched members in initial roll call:`);
+            for (const name of unmatchedInitialAttendance) {
+                console.warn(`    - "${name}"`);
+            }
+        }
+    }
+
     // --- Phase 3: Build decision results using the name→personId map ---
     // Each PDF is self-contained: build allAgendaItemNumbers from its own data
     const decisions: ExtractedDecisionResult[] = [];
@@ -226,7 +268,10 @@ export async function extractDecisionsFromPdfs(
             protocolNumber: raw.decisionNumber || null,
         });
 
-        console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${unmatchedMembers.length} unmatched, ${voteDetails.length} votes`);
+        console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${voteDetails.length} votes`);
+        if (dedupedUnmatched.length > 0) {
+            console.warn(`  ⚠ [${subjectId}] ${dedupedUnmatched.length} unmatched members: ${dedupedUnmatched.map(n => `"${n}"`).join(', ')}`);
+        }
     }
 
     const totalElapsed = ((Date.now() - taskStart) / 1000).toFixed(1);
@@ -234,5 +279,5 @@ export async function extractDecisionsFromPdfs(
     console.log(`  Extracted: ${extractions.length}/${subjects.length}`);
     console.log(`  Warnings: ${warnings.length}`);
 
-    return { decisions, warnings, usage: totalUsage };
+    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance };
 }

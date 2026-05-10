@@ -104,6 +104,72 @@ export interface AttendanceChange {
     rawText: string;
 }
 
+export type VoteValue = 'FOR' | 'AGAINST' | 'ABSTAIN' | 'PRESENT' | 'DID_NOT_VOTE';
+
+/**
+ * Raw shape returned by the LLM. The attendance section varies by PDF format:
+ * - "composition_and_absent": PDF lists all members (ΣΥΝΘΕΣΗ) + absent separately
+ * - "explicit_present_absent": PDF has explicit ΠΑΡΟΝΤΕΣ / ΑΠΟΝΤΕΣ lists
+ */
+interface RawLlmExtraction {
+    attendanceFormat: 'composition_and_absent' | 'explicit_present_absent';
+    /** All council members listed in ΣΥΝΘΕΣΗ — only when attendanceFormat is "composition_and_absent" */
+    compositionMembers: string[] | null;
+    /** Members from ΠΑΡΟΝΤΕΣ list — only when attendanceFormat is "explicit_present_absent" */
+    presentMembers: string[] | null;
+    /** Members from ΑΠΟΝΤΕΣ / "απουσίαζαν" list — always present */
+    absentMembers: string[];
+    mayorPresent: { present: boolean; rawText: string } | null;
+    decisionExcerpt: string;
+    decisionNumber: string | null;
+    references: string;
+    voteResult: string | null;
+    voteDetails: { name: string; vote: VoteValue }[];
+    attendanceChanges: AttendanceChange[];
+    discussionOrder: AgendaItemRef[] | null;
+    subjectInfo: AgendaItemRef | null;
+    incomplete: boolean;
+}
+
+/**
+ * Normalize the LLM extraction into the standard shape used by the pipeline.
+ * When the PDF uses "composition + absent" format, computes present = composition - absent
+ * so the LLM doesn't have to do any subtraction.
+ */
+function normalizeExtraction(raw: RawLlmExtraction): RawExtractedDecision {
+    let presentMembers: string[];
+    let absentMembers = raw.absentMembers || [];
+
+    if (raw.attendanceFormat === 'composition_and_absent') {
+        if (raw.compositionMembers && raw.compositionMembers.length > 0) {
+            // Compute present = composition - absent using normalizeGreekName for robust matching
+            // (handles diacritics/tonos, parenthetical nicknames, whitespace differences)
+            const absentNormalized = new Set(absentMembers.map(n => normalizeGreekName(n)));
+            presentMembers = raw.compositionMembers.filter(n => !absentNormalized.has(normalizeGreekName(n)));
+        } else {
+            console.warn('⚠ LLM returned attendanceFormat "composition_and_absent" but compositionMembers is empty — attendance may be incomplete');
+            presentMembers = raw.presentMembers || [];
+        }
+    } else {
+        presentMembers = raw.presentMembers || [];
+    }
+
+    return {
+        presentMembers,
+        absentMembers,
+        mayorPresent: raw.mayorPresent,
+        decisionExcerpt: raw.decisionExcerpt,
+        decisionNumber: raw.decisionNumber,
+        references: raw.references,
+        voteResult: raw.voteResult,
+        voteDetails: raw.voteDetails,
+        attendanceChanges: raw.attendanceChanges,
+        discussionOrder: raw.discussionOrder,
+        subjectInfo: raw.subjectInfo,
+        incomplete: raw.incomplete,
+    };
+}
+
 export interface RawExtractedDecision {
     presentMembers: string[];
     absentMembers: string[];
@@ -112,7 +178,7 @@ export interface RawExtractedDecision {
     decisionNumber: string | null;
     references: string;
     voteResult: string | null;
-    voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[];
+    voteDetails: { name: string; vote: VoteValue }[];
     attendanceChanges: AttendanceChange[];
     discussionOrder: AgendaItemRef[] | null;
     subjectInfo: AgendaItemRef | null;
@@ -127,14 +193,18 @@ export interface RawExtractedDecision {
  * - **Majority** ("κατά πλειοψηφία"): only AGAINST/ABSTAIN voters are named;
  *   all present members not in voteDetails are implicitly FOR.
  *
+ * Members with any explicit voteDetails entry — including PRESENT (Παρών)
+ * and DID_NOT_VOTE (Αποχή) declarations — are not given inferred FOR votes,
+ * since they're already in the explicit voter set.
+ *
  * Pure function: returns a new voteDetails array (never mutates input) and the
  * number of inferred FOR votes.
  */
 export function inferForVotes(
     presentMembers: string[],
     voteResult: string | null,
-    voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[],
-): { voteDetails: { name: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' }[]; inferredCount: number } {
+    voteDetails: { name: string; vote: VoteValue }[],
+): { voteDetails: { name: string; vote: VoteValue }[]; inferredCount: number } {
     const isUnanimous = voteResult && /[οό]μ[οό]φων/i.test(voteResult);
     const isMajority = voteResult && /κατ[άα]\s+πλειοψηφ[ίι]/i.test(voteResult);
     const hasNoForVotes = (voteDetails || []).every(v => v.vote !== 'FOR');
@@ -161,14 +231,23 @@ const EXTRACTION_SYSTEM_PROMPT = `You are a document parser for Greek municipal 
 
 Extract the following information from the PDF:
 
-1. **presentMembers**: List of council members marked as present (ΠΑΡΟΝΤΕΣ). Extract just their full names.
-2. **absentMembers**: List of council members marked as absent (ΑΠΟΝΤΕΣ). Extract just their full names.
-3. **decisionExcerpt**: The decision text, starting from "ΤΟ Δ.Σ αφού έλαβε υπόψη" or similar phrasing through "ΑΠΟΦΑΣΙΖΕΙ" and the decision content. Include the full decision text. Use markdown formatting to preserve structure (bullet points, numbered lists, etc.). Preserve bold formatting from the PDF — if text is bold in the original, wrap it in **bold** markdown. The "decides" statement (e.g. "ΑΠΟΦΑΣΙΖΕΙ", "Το Δημοτικό Συμβούλιο … αποφασίζει ομόφωνα") must be its own paragraph — keep the full sentence on one line, separated by blank lines from surrounding text, not merged with the decision content that follows.
-4. **decisionNumber**: The decision number (Αριθμός Απόφασης), e.g. "231/2025".
-5. **references**: The legal bases and references from the "αφού έλαβε υπόψη" or "Έχοντας υπόψη" section. List each reference item. Use markdown formatting (numbered list). If the section just says something generic like "τις σχετικές διατάξεις της Νομοθεσίας", return that text as-is.
-6. **voteResult**: The vote result phrase, e.g. "Ομόφωνα", "Κατά πλειοψηφία", "Κατά πλειοψηφία με ψήφους 21 υπέρ και 2 κατά". This is usually found right before or after "ΑΠΟΦΑΣΙΖΕΙ".
-7. **voteDetails**: When the PDF names specific people who voted differently (against or abstained), list them. For unanimous decisions, return an empty array. Each entry has "name" (full name) and "vote" ("FOR", "AGAINST", or "ABSTAIN").
-8. **attendanceChanges**: Extract from "Προσελεύσεις – Αποχωρήσεις" or separate "Προσελεύσεις" / "Αποχωρήσεις" sections. These describe members who arrived late or left early. For each person, extract:
+1. **attendanceFormat**: How attendance is structured in this PDF. One of:
+   - "composition_and_absent" — The PDF has a "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ" section listing ALL council members, followed by a separate "απουσίαζαν" / "ΑΠΟΝΤΕΣ" section listing absent members.
+   - "explicit_present_absent" — The PDF has separate "Παρόντες" / "ΠΑΡΟΝΤΕΣ" and "Απόντες" / "ΑΠΟΝΤΕΣ" lists.
+2. **compositionMembers**: When attendanceFormat is "composition_and_absent", extract ALL names from the ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ section — this is the complete council membership. Set to null when attendanceFormat is "explicit_present_absent".
+3. **presentMembers**: When attendanceFormat is "explicit_present_absent", extract names from the ΠΑΡΟΝΤΕΣ list. Set to null when attendanceFormat is "composition_and_absent".
+4. **absentMembers**: Names from the ΑΠΟΝΤΕΣ / "απουσίαζαν" section. Always extract this regardless of format. Do NOT remove someone from this list just because they arrived later (Προσελεύσεις) — that information goes in attendanceChanges.
+5. **decisionExcerpt**: The decision text, starting from "ΤΟ Δ.Σ αφού έλαβε υπόψη" or similar phrasing through "ΑΠΟΦΑΣΙΖΕΙ" and the decision content. Include the full decision text — do not skip or omit any sections. Use markdown formatting to preserve structure (tables, bullet points, numbered lists, etc.). When the PDF contains tabular data, render it as a markdown table with all rows including summary/total rows. Not all tables follow the same columnar format — budget amendments may include title-change tables (ΑΠΟ/ΣΕ), revenue limit tables, or other non-standard layouts. Represent these faithfully using the most appropriate markdown structure (table, list, or formatted text). Preserve bold formatting from the PDF — if text is bold in the original, wrap it in **bold** markdown. The "decides" statement (e.g. "ΑΠΟΦΑΣΙΖΕΙ", "Το Δημοτικό Συμβούλιο … αποφασίζει ομόφωνα") must be its own paragraph — keep the full sentence on one line, separated by blank lines from surrounding text, not merged with the decision content that follows.
+6. **decisionNumber**: The decision number (Αριθμός Απόφασης), e.g. "231/2025".
+7. **references**: The legal bases and references from the "αφού έλαβε υπόψη" or "Έχοντας υπόψη" section. List each reference item. Use markdown formatting (numbered list). If the section just says something generic like "τις σχετικές διατάξεις της Νομοθεσίας", return that text as-is.
+8. **voteResult**: The vote result phrase, e.g. "Ομόφωνα", "Κατά πλειοψηφία", "Κατά πλειοψηφία με ψήφους 21 υπέρ και 2 κατά". This is usually found right before or after "ΑΠΟΦΑΣΙΖΕΙ".
+9. **voteDetails**: When the PDF names specific people who voted differently (against or abstained) or made declarations (present/non-participation), list them. For unanimous decisions, return an empty array. Each entry has "name" (full name) and "vote":
+   - "FOR" (ΥΠΕΡ) — voted in favor
+   - "AGAINST" (ΚΑΤΑ) — voted against
+   - "ABSTAIN" (ΛΕΥΚΟ) — blank vote, no position taken (still a vote)
+   - "PRESENT" (ΠΑΡΩΝ/ΠΑΡΟΥΣΑ) — declared physical presence but did not participate in the vote (declaration, not a vote)
+   - "DID_NOT_VOTE" (ΑΠΟΧΗ) — declined to participate (declaration, not a vote)
+10. **attendanceChanges**: Extract from "Προσελεύσεις – Αποχωρήσεις" or separate "Προσελεύσεις" / "Αποχωρήσεις" sections. These describe members who arrived late or left early. For each person, extract:
    - "name": full name
    - "type": "arrival" or "departure"
    - "agendaItem": The agenda item during/after which this change occurred. Use an object with:
@@ -182,28 +261,30 @@ Extract the following information from the PDF:
      The distinction matters: "after item 9" means the person was present and voted on item 9, while "during item 9" means they left/arrived partway through.
    - "rawText": the original sentence describing this change.
    If no such section exists, return an empty array.
-9. **discussionOrder**: When subjects were discussed out of the standard agenda order (e.g. "Προτάθηκε η αλλαγή σειράς συζήτησης", items reordered, or out-of-agenda items inserted between regular items), extract the full discussion sequence including both regular and out-of-agenda/emergency items. Each entry is an object with:
+11. **discussionOrder**: When subjects were discussed out of the standard agenda order (e.g. "Προτάθηκε η αλλαγή σειράς συζήτησης", items reordered, or out-of-agenda items inserted between regular items), extract the full discussion sequence including both regular and out-of-agenda/emergency items. Each entry is an object with:
    - "agendaItemIndex": the item number
    - "nonAgendaReason": "outOfAgenda" if the item is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ), otherwise null
    Example: if regular item 1 was discussed first, then 3 out-of-agenda items, then regular item 9 was brought forward, the sequence would be: [{"agendaItemIndex":1,"nonAgendaReason":null},{"agendaItemIndex":1,"nonAgendaReason":"outOfAgenda"},{"agendaItemIndex":2,"nonAgendaReason":"outOfAgenda"},{"agendaItemIndex":3,"nonAgendaReason":"outOfAgenda"},{"agendaItemIndex":9,"nonAgendaReason":null},...].
    Return null if subjects were discussed in standard agenda order with no out-of-agenda items interleaved.
-10. **subjectInfo**: The agenda item this decision relates to:
+12. **subjectInfo**: The agenda item this decision relates to:
    - "agendaItemIndex": The subject/topic number (e.g., "ΘΕΜΑ 3ο" → 3, "1ο ΕΚΤΑΚΤΟ ΘΕΜΑ" → 1, "ΘΕΜΑ ΕΚΤΟΣ Η.Δ. 2ο" → 2)
    - "nonAgendaReason": "outOfAgenda" if this is an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ., etc.), null for regular agenda items (ΘΕΜΑ Η.Δ., τακτικό θέμα)
    - Return null if the subject/topic number cannot be determined.
-11. **mayorPresent**: Whether the city mayor (Δήμαρχος/Δήμαρχο) was present at the session. This is usually stated in a narrative paragraph separate from the council member attendance list. Look for phrases like "Ο/Η Δήμαρχος ... προσκλήθηκε νομίμως και παρέστη" or "Ο/Η Δήμαρχος ... παρών/παρούσα" (present), or "Ο/Η Δήμαρχος ... δεν ήταν παρών/παρούσα" or "απουσίαζε" (absent). Return an object with "present" (boolean) and "rawText" (the original sentence from the PDF describing the mayor's presence/absence). Return null if mayor presence is not mentioned.
-12. **incomplete**: Set to true ONLY if the document appears physically truncated — i.e. you can see attendance lists and preamble but the decision section starting with "ΑΠΟΦΑΣΙΖΕΙ" is not present because the provided pages end before reaching it. Set to false if you can see the "ΑΠΟΦΑΣΙΖΕΙ" section, even if some fields within it (like the vote result phrase) are missing or unclear. Missing data in a complete document is a data quality issue, not truncation.
+13. **mayorPresent**: Whether the city mayor (Δήμαρχος/Δήμαρχο) was present at the session. This is usually stated in a narrative paragraph separate from the council member attendance list. Look for phrases like "Ο/Η Δήμαρχος ... προσκλήθηκε νομίμως και παρέστη" or "Ο/Η Δήμαρχος ... παρών/παρούσα" (present), or "Ο/Η Δήμαρχος ... δεν ήταν παρών/παρούσα" or "απουσίαζε" (absent). Return an object with "present" (boolean) and "rawText" (the original sentence from the PDF describing the mayor's presence/absence). Return null if mayor presence is not mentioned.
+14. **incomplete**: Set to true ONLY if the document appears physically truncated — i.e. you can see attendance lists and preamble but the decision section starting with "ΑΠΟΦΑΣΙΖΕΙ" is not present because the provided pages end before reaching it. Set to false if you can see the "ΑΠΟΦΑΣΙΖΕΙ" section, even if some fields within it (like the vote result phrase) are missing or unclear. Missing data in a complete document is a data quality issue, not truncation.
 
 Return valid JSON matching this schema:
 {
-  "presentMembers": string[],
+  "attendanceFormat": "composition_and_absent" | "explicit_present_absent",
+  "compositionMembers": string[] | null,
+  "presentMembers": string[] | null,
   "absentMembers": string[],
   "mayorPresent": { "present": boolean, "rawText": string } | null,
   "decisionExcerpt": string,
   "decisionNumber": string | null,
   "references": string,
   "voteResult": string | null,
-  "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" }[],
+  "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" | "PRESENT" | "DID_NOT_VOTE" }[],
   "attendanceChanges": { "name": string, "type": "arrival" | "departure", "agendaItem": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null, "timing": "during" | "after" | null, "rawText": string }[],
   "discussionOrder": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null }[] | null,
   "subjectInfo": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null,
@@ -444,8 +525,8 @@ export async function matchAllMembers(
 // --- PDF extraction ---
 
 const EXTRACTION_MODEL = 'claude-sonnet-4-20250514';
-/** Max output tokens for extraction — the JSON output is small, so we don't need the full 64k default. */
-const EXTRACTION_MAX_TOKENS = 8192;
+/** Max output tokens for extraction — needs headroom for decisions with large tables (budget amendments, etc.). */
+const EXTRACTION_MAX_TOKENS = 16384;
 
 /** Page count threshold: PDFs with this many pages or fewer are sent whole. */
 const SMALL_PDF_THRESHOLD = 10;
@@ -482,7 +563,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
     if (totalPages <= SMALL_PDF_THRESHOLD) {
         console.log(`  PDF has ${totalPages} pages (≤${SMALL_PDF_THRESHOLD}), sending whole document`);
         const base64 = pdfBuffer.toString('base64');
-        const { result, usage } = await aiChat<RawExtractedDecision>({
+        const { result: raw, usage } = await aiChat<RawLlmExtraction>({
             systemPrompt: EXTRACTION_SYSTEM_PROMPT,
             userPrompt,
             documentBase64: base64,
@@ -492,6 +573,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
 
+        const result = normalizeExtraction(raw);
         writeCache(pdfUrl, result);
         return { result, usage, fromCache: false };
     }
@@ -512,7 +594,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             ? `${userPrompt}\n\nNote: You are seeing pages 1-${actualPages} of a ${totalPages}-page document. If the decision section ("ΑΠΟΦΑΣΙΖΕΙ") is not visible in these pages because the document is cut off, set "incomplete" to true. If you can see "ΑΠΟΦΑΣΙΖΕΙ" but some details are missing or unclear, set "incomplete" to false.`
             : userPrompt;
 
-        const { result, usage } = await aiChat<RawExtractedDecision>({
+        const { result: raw, usage } = await aiChat<RawLlmExtraction>({
             systemPrompt: EXTRACTION_SYSTEM_PROMPT,
             userPrompt: partialPrompt,
             documentBase64: partialBase64,
@@ -523,6 +605,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         });
 
         totalUsage = addUsage(totalUsage, usage);
+        const result = normalizeExtraction(raw);
         lastFrontResult = result;
 
         if (!result.incomplete || actualPages >= totalPages) {
@@ -549,7 +632,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         const tailBase64 = await extractPdfPages(pdfBuffer, tailStart, totalPages);
         const tailPrompt = `${userPrompt}\n\nNote: You are seeing the last ${tailActual} pages (${tailStart + 1}-${totalPages}) of a ${totalPages}-page document. The earlier pages contained attendance lists and preamble but not the decision section. Extract the decision information from these pages. If the decision section ("ΑΠΟΦΑΣΙΖΕΙ") is not visible in these pages either, set "incomplete" to true.`;
 
-        const { result, usage } = await aiChat<RawExtractedDecision>({
+        const { result: tailRaw, usage } = await aiChat<RawLlmExtraction>({
             systemPrompt: EXTRACTION_SYSTEM_PROMPT,
             userPrompt: tailPrompt,
             documentBase64: tailBase64,
@@ -560,17 +643,18 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         });
 
         totalUsage = addUsage(totalUsage, usage);
+        const tailResult = normalizeExtraction(tailRaw);
 
-        if (!result.incomplete) {
+        if (!tailResult.incomplete) {
             // Merge: attendance + preamble from front pages, decision data from tail pages
             const merged: RawExtractedDecision = {
-                ...result,
-                presentMembers: result.presentMembers?.length ? result.presentMembers : lastFrontResult!.presentMembers,
-                absentMembers: result.absentMembers?.length ? result.absentMembers : lastFrontResult!.absentMembers,
-                attendanceChanges: result.attendanceChanges?.length ? result.attendanceChanges : lastFrontResult!.attendanceChanges,
-                mayorPresent: result.mayorPresent ?? lastFrontResult!.mayorPresent,
-                discussionOrder: result.discussionOrder ?? lastFrontResult!.discussionOrder,
-                subjectInfo: result.subjectInfo ?? lastFrontResult!.subjectInfo,
+                ...tailResult,
+                presentMembers: tailResult.presentMembers?.length ? tailResult.presentMembers : lastFrontResult!.presentMembers,
+                absentMembers: tailResult.absentMembers?.length ? tailResult.absentMembers : lastFrontResult!.absentMembers,
+                attendanceChanges: tailResult.attendanceChanges?.length ? tailResult.attendanceChanges : lastFrontResult!.attendanceChanges,
+                mayorPresent: tailResult.mayorPresent ?? lastFrontResult!.mayorPresent,
+                discussionOrder: tailResult.discussionOrder ?? lastFrontResult!.discussionOrder,
+                subjectInfo: tailResult.subjectInfo ?? lastFrontResult!.subjectInfo,
             };
             console.log(`  Extraction complete from tail pages (merged with front-page attendance)`);
             writeCache(pdfUrl, merged);

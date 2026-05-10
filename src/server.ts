@@ -186,7 +186,8 @@ app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
 
 app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   summary: 'Poll and extract decisions from Diavgeia',
-  description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs'
+  description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs',
+  version: 1,
 }));
 
 // Resolve task paths from Express routes, then load API Documentation

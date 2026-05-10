@@ -27,7 +27,7 @@ vi.mock("../lib/ai.js", () => ({
 
 // Mock extractionPipeline (extraction is tested separately)
 vi.mock("./utils/extractionPipeline.js", () => ({
-    extractDecisionsFromPdfs: vi.fn(async () => ({ decisions: [], warnings: [], usage: NO_USAGE_MOCK })),
+    extractDecisionsFromPdfs: vi.fn(async () => ({ decisions: [], warnings: [], usage: NO_USAGE_MOCK, initialAttendance: [], unmatchedInitialAttendance: [] })),
 }));
 
 import { aiChat } from "../lib/ai.js";
@@ -399,6 +399,8 @@ describe("pollDecisions - verification", () => {
             }],
             warnings: [],
             usage: noUsage,
+            initialAttendance: [],
+            unmatchedInitialAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -447,6 +449,8 @@ describe("pollDecisions - verification", () => {
             }],
             warnings: [],
             usage: noUsage,
+            initialAttendance: [],
+            unmatchedInitialAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -493,6 +497,8 @@ describe("pollDecisions - verification", () => {
             }],
             warnings: [],
             usage: noUsage,
+            initialAttendance: [],
+            unmatchedInitialAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -534,6 +540,8 @@ describe("pollDecisions - verification", () => {
             }],
             warnings: [],
             usage: noUsage,
+            initialAttendance: [],
+            unmatchedInitialAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -574,6 +582,8 @@ describe("pollDecisions - verification", () => {
             }],
             warnings: [],
             usage: noUsage,
+            initialAttendance: [],
+            unmatchedInitialAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -625,6 +635,8 @@ describe("pollDecisions - verification", () => {
             ],
             warnings: [],
             usage: noUsage,
+            initialAttendance: [],
+            unmatchedInitialAttendance: [],
         });
 
         const result = await pollDecisions(
