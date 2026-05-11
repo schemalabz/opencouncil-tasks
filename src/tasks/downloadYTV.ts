@@ -62,6 +62,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
     }
 
     console.log(`Video downloaded successfully: ${formatBytes(videoSize)}`);
+    await normalizeVideoAudio(finalVideoPath);
     await extractSoundFromMP4(finalVideoPath, audioOutputPath);
 
     return { audioOnly: audioOutputPath, combined: finalVideoPath, sourceType };
@@ -99,6 +100,89 @@ export const getVideoIdAndUrl = (mediaUrl: string) => {
 
     return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL' };
 }
+type LoudnormStats = {
+    input_i: string;
+    input_tp: string;
+    input_lra: string;
+    input_thresh: string;
+};
+
+const LOUDNORM_TARGET = { I: -14, TP: -1.5, LRA: 11 };
+const AUDIO_BITRATE = '128k';
+
+export function parseLoudnormStats(stderr: string): LoudnormStats {
+    // ffmpeg's loudnorm filter outputs a JSON block at the end of stderr
+    const jsonMatch = stderr.match(/\{[^{}]*"input_i"\s*:\s*"[^"]*"[^{}]*\}/s);
+    if (!jsonMatch) {
+        throw new Error('Could not find loudnorm JSON in ffmpeg output');
+    }
+
+    const parsed = JSON.parse(jsonMatch[0]);
+    const required = ['input_i', 'input_tp', 'input_lra', 'input_thresh'] as const;
+    for (const key of required) {
+        if (typeof parsed[key] !== 'string') {
+            throw new Error(`Missing loudnorm field: ${key}`);
+        }
+    }
+
+    return {
+        input_i: parsed.input_i,
+        input_tp: parsed.input_tp,
+        input_lra: parsed.input_lra,
+        input_thresh: parsed.input_thresh,
+    };
+}
+
+function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
+    const ffmpegBin = ffmpegPath();
+    return new Promise((resolve, reject) => {
+        const proc = cp.spawn(ffmpegBin, args, {
+            windowsHide: true,
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+
+        let stderr = '';
+        proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
+        proc.on('close', (code) => {
+            if (code === 0) resolve({ stderr });
+            else reject(new Error(`FFmpeg exited with code ${code}: ${stderr.slice(-500)}`));
+        });
+        proc.on('error', reject);
+    });
+}
+
+async function normalizeVideoAudio(filePath: string): Promise<void> {
+    const { I, TP, LRA } = LOUDNORM_TARGET;
+    const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
+
+    // Pass 1: measure loudness
+    console.log(`Measuring loudness: ${path.basename(filePath)}`);
+    const { stderr } = await runFfmpeg([
+        '-i', filePath,
+        '-af', `${loudnormFilter}:print_format=json`,
+        '-f', 'null', '-',
+    ]);
+
+    const stats = parseLoudnormStats(stderr);
+    console.log(`Measured loudness: ${stats.input_i} LUFS (target: ${I} LUFS)`);
+
+    // Pass 2: apply normalization with linear mode
+    const tempPath = filePath + '.normalized.mp4';
+    console.log(`Normalizing audio to ${I} LUFS`);
+    await runFfmpeg([
+        '-i', filePath,
+        '-c:v', 'copy',
+        '-af', `${loudnormFilter}:measured_I=${stats.input_i}:measured_TP=${stats.input_tp}:measured_LRA=${stats.input_lra}:measured_thresh=${stats.input_thresh}:linear=true`,
+        '-c:a', 'aac', '-b:a', AUDIO_BITRATE,
+        '-y', tempPath,
+    ]);
+
+    // Replace original with normalized version
+    fs.renameSync(tempPath, filePath);
+    console.log(`Audio normalized successfully`);
+}
+
 const FREQUENCY_FILTER = true;
 const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promise<void> => {
     // Validate input file exists and is not empty
