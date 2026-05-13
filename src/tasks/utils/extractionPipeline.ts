@@ -7,6 +7,8 @@ import {
     matchPersonByName,
     llmMatchMembers,
     PersonForMatching,
+    AttendanceChange,
+    AgendaItemRef,
 } from './decisionPdfExtraction.js';
 import { processRawExtraction } from './effectiveAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
@@ -30,6 +32,14 @@ export interface ExtractionPipelineResult {
     initialAttendance: { personId: string; status: 'PRESENT' | 'ABSENT' }[];
     /** Names from the initial roll call that couldn't be matched to any person in the database */
     unmatchedInitialAttendance: string[];
+    /** Meeting-level raw attendance data aggregated from all PDFs, for computing effective attendance of any subject */
+    meetingAttendanceData: {
+        initialPresent: string[];
+        initialAbsent: string[];
+        attendanceChanges: AttendanceChange[];
+        discussionOrder: AgendaItemRef[] | null;
+        nameToPersonId: Map<string, string>;
+    } | null;
 }
 
 const BATCH_SIZE = 5;
@@ -62,7 +72,7 @@ export async function extractDecisionsFromPdfs(
     if (mayorName) console.log(`Mayor: ${mayorName} (${mayorId})`);
 
     if (subjects.length === 0) {
-        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [] };
+        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [], meetingAttendanceData: null };
     }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
@@ -160,10 +170,47 @@ export async function extractDecisionsFromPdfs(
 
     console.log(`  Final matched: ${nameToPersonId.size}/${allRawNames.size}`);
 
+    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
+
+    // --- Aggregate meeting-level attendance data from all PDFs ---
+    // All PDFs from the same meeting share the same preamble (composition, attendance
+    // changes, discussion order). We aggregate from all PDFs to get the most complete
+    // picture, deduplicating attendance changes by rawText.
+    let meetingAttendanceData: ExtractionPipelineResult['meetingAttendanceData'] = null;
+    if (firstWithRoll) {
+        // Deduplicate attendance changes by rawText + name + type (same change appears in every PDF)
+        const changesSeen = new Set<string>();
+        const aggregatedChanges: AttendanceChange[] = [];
+        for (const { raw } of extractions) {
+            for (const change of raw.attendanceChanges || []) {
+                const key = `${change.name}|${change.type}|${change.rawText}`;
+                if (!changesSeen.has(key)) {
+                    changesSeen.add(key);
+                    aggregatedChanges.push(change);
+                }
+            }
+        }
+
+        // Use the longest discussion order from any PDF (most complete)
+        let bestDiscussionOrder: AgendaItemRef[] | null = null;
+        for (const { raw } of extractions) {
+            if (raw.discussionOrder && (bestDiscussionOrder === null || raw.discussionOrder.length > bestDiscussionOrder.length)) {
+                bestDiscussionOrder = raw.discussionOrder;
+            }
+        }
+
+        meetingAttendanceData = {
+            initialPresent: firstWithRoll.raw.presentMembers || [],
+            initialAbsent: firstWithRoll.raw.absentMembers || [],
+            attendanceChanges: aggregatedChanges,
+            discussionOrder: bestDiscussionOrder,
+            nameToPersonId,
+        };
+    }
+
     // --- Build meeting-level initial attendance from the first extraction with roll call data ---
     // All PDFs from the same meeting have the same initial roll, so we use the first one.
     const initialAttendance: ExtractionPipelineResult['initialAttendance'] = [];
-    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
     const unmatchedInitialAttendance: string[] = [];
     if (firstWithRoll) {
         for (const name of firstWithRoll.raw.presentMembers || []) {
@@ -279,5 +326,5 @@ export async function extractDecisionsFromPdfs(
     console.log(`  Extracted: ${extractions.length}/${subjects.length}`);
     console.log(`  Warnings: ${warnings.length}`);
 
-    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance };
+    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance, meetingAttendanceData };
 }
