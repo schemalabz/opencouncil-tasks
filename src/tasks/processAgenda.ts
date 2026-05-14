@@ -21,11 +21,31 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     const base64 = await downloadFileToBase64(request.agendaUrl);
 
     const result = await aiChat<Omit<ExtractedSubject, "speakerContributions">[]>({
+        model: "claude-opus-4-6",
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
-        prefillSystemResponse: "Η απάντηση σου σε JSON: [",
-        prependToResponse: "[",
-        documentBase64: base64
+        documentBase64: base64,
+        outputFormat: {
+            type: "json_schema",
+            schema: {
+                type: "array",
+                items: {
+                    type: "object",
+                    properties: {
+                        name: { type: "string" },
+                        description: { type: "string" },
+                        agendaItemIndex: { type: ["number", "null"] },
+                        locationText: { type: ["string", "null"] },
+                        introducedByPersonId: { type: ["string", "null"] },
+                        topicLabel: { type: ["string", "null"] },
+                        topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
+                        proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
+                    },
+                    required: ["name", "description", "agendaItemIndex", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance"],
+                    additionalProperties: false
+                }
+            }
+        }
     });
 
     // Track usage from enrichment
