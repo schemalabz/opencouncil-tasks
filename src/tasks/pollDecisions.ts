@@ -738,11 +738,22 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         let nonDecisionSubjectAttendance: NonNullable<PollDecisionsResult['extractions']>['nonDecisionSubjectAttendance'] = [];
 
         if (pipelineResult.meetingAttendanceData) {
-            const allAttendance = computeAllSubjectAttendance(
-                request.subjects.map(s => ({
+            // Assign sequential OA indices (1-based) from request order.
+            // The request includes nonAgendaReason so we can identify OA subjects
+            // and assign their position without depending on extraction results.
+            let oaCounter = 0;
+            const subjectsForAttendance = request.subjects.map(s => {
+                const isOA = s.nonAgendaReason === 'outOfAgenda';
+                if (isOA) oaCounter++;
+                return {
                     subjectId: s.subjectId,
                     agendaItemIndex: s.agendaItemIndex,
-                })),
+                    outOfAgendaIndex: isOA ? oaCounter : null,
+                };
+            });
+
+            const allAttendance = computeAllSubjectAttendance(
+                subjectsForAttendance,
                 pipelineResult.meetingAttendanceData,
             );
 
