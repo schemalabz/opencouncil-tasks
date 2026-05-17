@@ -254,11 +254,25 @@ export async function extractDecisionsFromPdfs(
     // --- Phase 3: Compute meeting-level attendance for all subjects ---
     // Uses the aggregated attendance data (resolved names, complete discussion order)
     // to compute effective attendance consistently for every subject.
+    //
+    // Assign OA indices from extraction subjectInfo (the PDF knows the actual OA
+    // number) rather than counting in request order (which depends on DB ordering).
+    const oaIndexFromExtraction = new Map<string, number>();
+    for (const { subjectId, raw } of extractions) {
+        if (raw.subjectInfo?.nonAgendaReason === 'outOfAgenda') {
+            oaIndexFromExtraction.set(subjectId, raw.subjectInfo.agendaItemIndex);
+        }
+    }
+    const subjectsWithOAIndices: SubjectForAttendance[] = allMeetingSubjects.map(s => ({
+        ...s,
+        outOfAgendaIndex: oaIndexFromExtraction.get(s.subjectId) ?? s.outOfAgendaIndex ?? null,
+    }));
+
     const attendanceBySubject = new Map<string, { presentMemberIds: string[]; absentMemberIds: string[] }>();
     let nonDecisionSubjectAttendance: ExtractionPipelineResult['nonDecisionSubjectAttendance'] = [];
 
     if (meetingAttendanceData) {
-        const allAttendance = computeAllSubjectAttendance(allMeetingSubjects, meetingAttendanceData);
+        const allAttendance = computeAllSubjectAttendance(subjectsWithOAIndices, meetingAttendanceData);
         for (const a of allAttendance) {
             attendanceBySubject.set(a.subjectId, { presentMemberIds: a.presentMemberIds, absentMemberIds: a.absentMemberIds });
         }
