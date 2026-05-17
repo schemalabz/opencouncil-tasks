@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
+    resolveAndDeduplicateAttendanceChanges,
     computeAllSubjectAttendance,
     buildCompleteDiscussionOrder,
     SubjectForAttendance,
     MeetingAttendanceData,
 } from './meetingAttendance.js';
-import { AgendaItemRef } from './decisionPdfExtraction.js';
+import { AgendaItemRef, AttendanceChange } from './decisionPdfExtraction.js';
 
 function ref(index: number, nonAgendaReason: 'outOfAgenda' | null = null): AgendaItemRef {
     return { agendaItemIndex: index, nonAgendaReason };
@@ -27,15 +28,115 @@ function makeMeetingData(overrides: Partial<MeetingAttendanceData> = {}): Meetin
     };
 }
 
+function makeChange(overrides: Partial<AttendanceChange> & Pick<AttendanceChange, 'name' | 'type'>): AttendanceChange {
+    return { agendaItem: null, timing: null, rawText: '', ...overrides };
+}
+
+describe('resolveAndDeduplicateAttendanceChanges', () => {
+    const nameToPersonId = new Map([
+        ['ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', 'p1'],
+        ['Κ. Αγγελής', 'p1'],
+        ['ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ', 'p2'],
+    ]);
+    const initialNames = ['ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', 'ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ'];
+
+    it('resolves abbreviated names to canonical initial-list form', () => {
+        const extractions = [{
+            raw: { attendanceChanges: [
+                makeChange({ name: 'Κ. Αγγελής', type: 'departure', agendaItem: ref(1), timing: 'during' }),
+            ] },
+        }];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe('ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ');
+        expect(result[0].timing).toBe('during');
+    });
+
+    it('deduplicates same change from multiple PDFs with different name variants', () => {
+        const extractions = [
+            { raw: { attendanceChanges: [
+                makeChange({ name: 'Κ. Αγγελής', type: 'departure', agendaItem: ref(1), timing: 'during' }),
+            ] } },
+            { raw: { attendanceChanges: [
+                makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'during' }),
+            ] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe('ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ');
+    });
+
+    it('picks timing by majority vote', () => {
+        // 3 PDFs say "during", 1 says "after" → "during" wins
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'after' })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'during' })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'during' })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'during' })] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].timing).toBe('during');
+    });
+
+    it('prefers specified timing over null on tie', () => {
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: null })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'during' })] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].timing).toBe('during');
+    });
+
+    it('prefers during over after on tie', () => {
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'after' as const })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure', agendaItem: ref(1), timing: 'during' as const })] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].timing).toBe('during');
+    });
+
+    it('keeps unmatched names as-is', () => {
+        const extractions = [{
+            raw: { attendanceChanges: [
+                makeChange({ name: 'Ε. Χριστούλη', type: 'arrival', agendaItem: ref(2, 'outOfAgenda'), timing: 'during' }),
+            ] },
+        }];
+        // "Ε. Χριστούλη" not in nameToPersonId
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, new Map([['ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ', 'p2']]), initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].name).toBe('Ε. Χριστούλη'); // unchanged
+    });
+});
+
 describe('buildCompleteDiscussionOrder', () => {
-    it('returns subjects in numerical order when no explicit discussion order', () => {
+    it('returns OA first then regular when no explicit discussion order', () => {
         const subjects: SubjectForAttendance[] = [
             { subjectId: 's3', agendaItemIndex: 3 },
             { subjectId: 's1', agendaItemIndex: 1 },
+            { subjectId: 'soa1', agendaItemIndex: null, outOfAgendaIndex: 1 },
             { subjectId: 's2', agendaItemIndex: 2 },
+            { subjectId: 'soa2', agendaItemIndex: null, outOfAgendaIndex: 2 },
         ];
         const result = buildCompleteDiscussionOrder(null, subjects);
-        expect(result).toEqual([ref(1), ref(2), ref(3)]);
+        expect(result).toEqual([ref(1, 'outOfAgenda'), ref(2, 'outOfAgenda'), ref(1), ref(2), ref(3)]);
+    });
+
+    it('returns only regular subjects when no OA subjects and no explicit order', () => {
+        const subjects: SubjectForAttendance[] = [
+            { subjectId: 's3', agendaItemIndex: 3 },
+            { subjectId: 's1', agendaItemIndex: 1 },
+        ];
+        const result = buildCompleteDiscussionOrder(null, subjects);
+        expect(result).toEqual([ref(1), ref(3)]);
     });
 
     it('appends remaining subjects after explicit order', () => {
@@ -147,7 +248,7 @@ describe('computeAllSubjectAttendance', () => {
         expect(result.find(r => r.subjectId === 'sub-10')!.presentMemberIds).not.toContain('p2');
     });
 
-    it('skips subjects with null agendaItemIndex', () => {
+    it('skips subjects with null agendaItemIndex and no outOfAgendaIndex', () => {
         const subjects: SubjectForAttendance[] = [
             { subjectId: 'sub-1', agendaItemIndex: 1 },
             { subjectId: 'sub-oa', agendaItemIndex: null },
@@ -156,6 +257,41 @@ describe('computeAllSubjectAttendance', () => {
         const result = computeAllSubjectAttendance(subjects, makeMeetingData());
         expect(result).toHaveLength(1);
         expect(result[0].subjectId).toBe('sub-1');
+    });
+
+    it('includes OA subjects when outOfAgendaIndex is provided', () => {
+        // Discussion order: OA1, OA2, OA3, then regular items 1-3
+        // Bob departs before topic #1 (during #1) → present for OA items, absent for regular
+        const subjects: SubjectForAttendance[] = [
+            { subjectId: 'sub-oa1', agendaItemIndex: null, outOfAgendaIndex: 1 },
+            { subjectId: 'sub-oa2', agendaItemIndex: null, outOfAgendaIndex: 2 },
+            { subjectId: 'sub-1', agendaItemIndex: 1 },
+            { subjectId: 'sub-2', agendaItemIndex: 2 },
+        ];
+
+        const result = computeAllSubjectAttendance(subjects, makeMeetingData({
+            attendanceChanges: [{
+                name: 'Bob',
+                type: 'departure',
+                agendaItem: ref(1),
+                timing: 'during',
+                rawText: 'Bob left before item 1',
+            }],
+            discussionOrder: [
+                ref(1, 'outOfAgenda'), ref(2, 'outOfAgenda'),
+                ref(1), ref(2),
+            ],
+        }));
+
+        expect(result).toHaveLength(4);
+
+        // OA subjects: Bob present
+        expect(result.find(r => r.subjectId === 'sub-oa1')!.presentMemberIds).toContain('p2');
+        expect(result.find(r => r.subjectId === 'sub-oa2')!.presentMemberIds).toContain('p2');
+
+        // Regular subjects: Bob absent (departed during #1)
+        expect(result.find(r => r.subjectId === 'sub-1')!.presentMemberIds).not.toContain('p2');
+        expect(result.find(r => r.subjectId === 'sub-2')!.presentMemberIds).not.toContain('p2');
     });
 
     it('filters out names with no personId mapping', () => {

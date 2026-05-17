@@ -11,6 +11,7 @@ import {
     AgendaItemRef,
 } from './decisionPdfExtraction.js';
 import { processRawExtraction } from './effectiveAttendance.js';
+import { resolveAndDeduplicateAttendanceChanges } from './meetingAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
 
 export interface ExtractionSubject {
@@ -173,23 +174,12 @@ export async function extractDecisionsFromPdfs(
     const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
 
     // --- Aggregate meeting-level attendance data from all PDFs ---
-    // All PDFs from the same meeting share the same preamble (composition, attendance
-    // changes, discussion order). We aggregate from all PDFs to get the most complete
-    // picture, deduplicating attendance changes by rawText.
+    // All PDFs from the same meeting share the same attendance preamble.
+    // See resolveAndDeduplicateAttendanceChanges for the resolution strategy.
     let meetingAttendanceData: ExtractionPipelineResult['meetingAttendanceData'] = null;
     if (firstWithRoll) {
-        // Deduplicate attendance changes by rawText + name + type (same change appears in every PDF)
-        const changesSeen = new Set<string>();
-        const aggregatedChanges: AttendanceChange[] = [];
-        for (const { raw } of extractions) {
-            for (const change of raw.attendanceChanges || []) {
-                const key = `${change.name}|${change.type}|${change.rawText}`;
-                if (!changesSeen.has(key)) {
-                    changesSeen.add(key);
-                    aggregatedChanges.push(change);
-                }
-            }
-        }
+        const allInitialNames = [...(firstWithRoll.raw.presentMembers || []), ...(firstWithRoll.raw.absentMembers || [])];
+        const aggregatedChanges = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, allInitialNames);
 
         // Use the longest discussion order from any PDF (most complete)
         let bestDiscussionOrder: AgendaItemRef[] | null = null;
@@ -206,6 +196,19 @@ export async function extractDecisionsFromPdfs(
             discussionOrder: bestDiscussionOrder,
             nameToPersonId,
         };
+
+        // Log attendance changes after resolution
+        if (aggregatedChanges.length > 0) {
+            console.log(`  Attendance changes (${aggregatedChanges.length} after resolution/dedup):`);
+            for (const change of aggregatedChanges) {
+                const personId = nameToPersonId.get(change.name);
+                const status = personId ? '✓' : '✗ unmatched';
+                const agendaLabel = change.agendaItem
+                    ? `${change.timing} ${change.agendaItem.nonAgendaReason === 'outOfAgenda' ? 'OA' : '#'}${change.agendaItem.agendaItemIndex}`
+                    : 'session';
+                console.log(`    ${change.type} "${change.name}" ${agendaLabel} ${status}`);
+            }
+        }
     }
 
     // --- Build meeting-level initial attendance from the first extraction with roll call data ---
