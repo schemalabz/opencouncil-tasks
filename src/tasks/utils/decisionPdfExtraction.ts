@@ -255,10 +255,10 @@ Extract the following information from the PDF:
      - "nonAgendaReason": "outOfAgenda" if the item is explicitly an out-of-agenda/emergency item (ΕΚΤΑΚΤΟ ΘΕΜΑ, ΘΕΜΑ ΕΚΤΟΣ Η.Δ.), otherwise null
      Set "agendaItem" to null if no specific item is mentioned (person arrived at session start or left at session end).
    - "timing": The temporal relationship to the agenda item:
-     - "during" if the change happened DURING the item discussion (e.g., "κατά τη διάρκεια του 9ου θέματος", "κατά τη συζήτηση του 3ου θέματος")
-     - "after" if the change happened AFTER the item ended (e.g., "μετά τη λήξη της συζήτησης του 9ου θέματος", "μετά το 5ο θέμα")
+     - "during" if the change happened DURING or BEFORE the item discussion (e.g., "κατά τη διάρκεια του 9ου θέματος", "κατά τη συζήτηση του 3ου θέματος", "πριν τη συζήτηση του 1ου θέματος", "πριν το 4ο θέμα"). Use "during" for BOTH "κατά" and "πριν" — both mean the person was absent from that item onward.
+     - "after" if the change happened AFTER the item ENDED (e.g., "μετά τη λήξη της συζήτησης του 9ου θέματος", "μετά το 5ο θέμα"). Use "after" ONLY for "μετά" — it means the person was present and voted on that item, then left.
      Set to null when "agendaItem" is null (session-level changes).
-     The distinction matters: "after item 9" means the person was present and voted on item 9, while "during item 9" means they left/arrived partway through.
+     The distinction matters: "after item 9" means the person was present for item 9, while "during item 9" or "before item 9" means they were absent from item 9 onward.
    - "rawText": the original sentence describing this change.
    If no such section exists, return an empty array.
 11. **discussionOrder**: When subjects were discussed out of the standard agenda order (e.g. "Προτάθηκε η αλλαγή σειράς συζήτησης", items reordered, or out-of-agenda items inserted between regular items), extract the full discussion sequence including both regular and out-of-agenda/emergency items. Each entry is an object with:
@@ -441,6 +441,7 @@ Names may differ in:
 - Word order or missing middle names
 - Accents/diacritics (monotonic vs polytonic, missing accents)
 - Hyphenation or spacing (e.g. "ΚΩΝΣΤΑΝΤΙΝΑ - ΟΛΥΜΠΙΑ" vs "Κωνσταντίνα-Ολυμπία")
+- First-initial abbreviations (e.g., "Ε. Χριστούλη" → "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ", "Κ. Αγγελής" → "ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ"). Match by surname — if the surname is unique among available people, the initial is enough.
 - Greek diminutives (υποκοριστικά): official documents use formal/legal names while databases often store the commonly used form. These can be very different from the formal name. Examples: Παρασκευή→Βούλα/Εύη, Ελπινίκη→Νίκη, Κωνσταντίνα→Τάνια/Ντίνα, Κωνσταντίνος→Ντίνος/Κώστας, Ευαγγελία→Εύα/Λίτσα, Δημήτριος→Μήτσος/Τάκης, Γεώργιος→Γιώργος, Αθανάσιος→Θανάσης, Χαράλαμπος→Μπάμπης
 
 **Key strategy**: When the surname matches exactly between an unmatched name and only ONE available person shares that surname, the first name is very likely a diminutive — match them even if the first name looks very different. If multiple available people share the same surname, only match when you can confidently identify the diminutive.
