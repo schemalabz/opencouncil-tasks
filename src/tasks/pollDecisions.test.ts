@@ -27,7 +27,7 @@ vi.mock("../lib/ai.js", () => ({
 
 // Mock extractionPipeline (extraction is tested separately)
 vi.mock("./utils/extractionPipeline.js", () => ({
-    extractDecisionsFromPdfs: vi.fn(async () => ({ decisions: [], warnings: [], usage: NO_USAGE_MOCK, initialAttendance: [], unmatchedInitialAttendance: [], meetingAttendanceData: null })),
+    extractDecisionsFromPdfs: vi.fn(async () => ({ decisions: [], warnings: [], usage: NO_USAGE_MOCK, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [] })),
 }));
 
 import { aiChat } from "../lib/ai.js";
@@ -401,7 +401,7 @@ describe("pollDecisions - verification", () => {
             usage: noUsage,
             initialAttendance: [],
             unmatchedInitialAttendance: [],
-            meetingAttendanceData: null,
+            nonDecisionSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -452,7 +452,7 @@ describe("pollDecisions - verification", () => {
             usage: noUsage,
             initialAttendance: [],
             unmatchedInitialAttendance: [],
-            meetingAttendanceData: null,
+            nonDecisionSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -501,7 +501,7 @@ describe("pollDecisions - verification", () => {
             usage: noUsage,
             initialAttendance: [],
             unmatchedInitialAttendance: [],
-            meetingAttendanceData: null,
+            nonDecisionSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -545,7 +545,7 @@ describe("pollDecisions - verification", () => {
             usage: noUsage,
             initialAttendance: [],
             unmatchedInitialAttendance: [],
-            meetingAttendanceData: null,
+            nonDecisionSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -588,7 +588,7 @@ describe("pollDecisions - verification", () => {
             usage: noUsage,
             initialAttendance: [],
             unmatchedInitialAttendance: [],
-            meetingAttendanceData: null,
+            nonDecisionSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -642,7 +642,7 @@ describe("pollDecisions - verification", () => {
             usage: noUsage,
             initialAttendance: [],
             unmatchedInitialAttendance: [],
-            meetingAttendanceData: null,
+            nonDecisionSubjectAttendance: [],
         });
 
         const result = await pollDecisions(

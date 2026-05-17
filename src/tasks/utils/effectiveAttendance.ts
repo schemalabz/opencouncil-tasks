@@ -143,8 +143,7 @@ export interface ProcessedExtraction {
  * Process a raw PDF extraction: compute effective attendance at the target
  * subject, then infer votes using the effective present list.
  *
- * Used by both the extraction pipeline (batch processing) and the CLI
- * (single-PDF testing) to ensure consistent logic.
+ * Used by the CLI for single-PDF testing.
  *
  * @param fallbackAgendaItemIndex - Used when the PDF doesn't contain subjectInfo
  *   but the caller knows the agenda item index (e.g. from the database).

@@ -89,7 +89,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             fromCache: false,
         });
 
-        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        const result = await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         expect(result.decisions).toHaveLength(1);
         const codes = result.decisions[0].warnings.map(w => w.code);
@@ -103,7 +103,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             fromCache: false,
         });
 
-        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        const result = await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         const codes = result.decisions[0].warnings.map(w => w.code);
         expect(codes).toContain('EXTRACTION_INCOMPLETE');
@@ -119,7 +119,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             fromCache: false,
         });
 
-        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        const result = await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         const codes = result.decisions[0].warnings.map(w => w.code);
         expect(codes).toContain('NO_VOTE_DETAILS');
@@ -132,7 +132,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             fromCache: false,
         });
 
-        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        const result = await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         // Only INFERRED_VOTES expected (unanimous with no explicit votes)
         const codes = result.decisions[0].warnings.map(w => w.code);
@@ -165,7 +165,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             usage: noUsage,
         });
 
-        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        const result = await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         const decision = result.decisions[0];
         const p1Votes = decision.voteDetails.filter(v => v.personId === 'p1');
@@ -195,7 +195,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             usage: noUsage,
         });
 
-        await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         expect(mockLlmMatchMembers).toHaveBeenCalledWith(
             ['Unknown Name'],
@@ -216,7 +216,7 @@ describe('extractDecisionsFromPdfs — warning propagation', () => {
             fromCache: false,
         });
 
-        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+        const result = await extractDecisionsFromPdfs([makeSubject()], [{ subjectId: 'sub-1', agendaItemIndex: 1 }], people, noopProgress);
 
         const codes = result.decisions[0].warnings.map(w => w.code);
         // Raw-level warning

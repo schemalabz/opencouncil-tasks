@@ -5,7 +5,6 @@ import { PollDecisionsRequest, PollDecisionsResult, ExtractedDecisionResult } fr
 import { Task } from "./pipeline.js";
 import { aiChat, addUsage, NO_USAGE, HAIKU_MODEL } from "../lib/ai.js";
 import { extractDecisionsFromPdfs, ExtractionSubject } from "./utils/extractionPipeline.js";
-import { computeAllSubjectAttendance } from "./utils/meetingAttendance.js";
 
 /**
  * Remove a match and its extraction from the results, moving the subject to unmatched.
@@ -597,8 +596,23 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         onProgress("extracting PDFs", 50);
         console.log(`\nExtracting ${allExtractionSubjects.length} decision PDFs (${extractionSubjects.length} new, ${needsExtractionSubjects.length} re-extraction)...`);
 
+        // Build subject list for meeting-level attendance computation.
+        // The pipeline uses this to compute effective attendance for ALL subjects
+        // (including those without decisions) using the complete discussion order.
+        let oaCounter = 0;
+        const allMeetingSubjects = request.subjects.map(s => {
+            const isOA = s.nonAgendaReason === 'outOfAgenda';
+            if (isOA) oaCounter++;
+            return {
+                subjectId: s.subjectId,
+                agendaItemIndex: s.agendaItemIndex,
+                outOfAgendaIndex: isOA ? oaCounter : null,
+            };
+        });
+
         const pipelineResult = await extractDecisionsFromPdfs(
             allExtractionSubjects,
+            allMeetingSubjects,
             request.people,
             (stage, percent) => {
                 // Map extraction progress (0-100) to overall progress (50-85)
@@ -731,58 +745,12 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             }
         }
 
-        // --- Compute effective attendance using complete discussion order ---
-        // The per-PDF computation only sees agenda items mentioned in that PDF.
-        // Here we use the aggregated meeting-level data (all attendance changes,
-        // complete discussion order) for consistent results across all subjects.
-        let nonDecisionSubjectAttendance: NonNullable<PollDecisionsResult['extractions']>['nonDecisionSubjectAttendance'] = [];
-
-        if (pipelineResult.meetingAttendanceData) {
-            // Assign sequential OA indices (1-based) from request order.
-            // The request includes nonAgendaReason so we can identify OA subjects
-            // and assign their position without depending on extraction results.
-            let oaCounter = 0;
-            const subjectsForAttendance = request.subjects.map(s => {
-                const isOA = s.nonAgendaReason === 'outOfAgenda';
-                if (isOA) oaCounter++;
-                return {
-                    subjectId: s.subjectId,
-                    agendaItemIndex: s.agendaItemIndex,
-                    outOfAgendaIndex: isOA ? oaCounter : null,
-                };
-            });
-
-            const allAttendance = computeAllSubjectAttendance(
-                subjectsForAttendance,
-                pipelineResult.meetingAttendanceData,
-            );
-
-            // Build lookup for quick access
-            const attendanceBySubject = new Map(allAttendance.map(a => [a.subjectId, a]));
-
-            // Overwrite per-decision attendance with meeting-level values
-            const decisionSubjectIds = new Set<string>();
-            for (const decision of pipelineResult.decisions) {
-                decisionSubjectIds.add(decision.subjectId);
-                const meetingLevel = attendanceBySubject.get(decision.subjectId);
-                if (meetingLevel) {
-                    decision.presentMemberIds = meetingLevel.presentMemberIds;
-                    decision.absentMemberIds = meetingLevel.absentMemberIds;
-                }
-            }
-
-            // Collect attendance for subjects without decisions
-            nonDecisionSubjectAttendance = allAttendance.filter(a => !decisionSubjectIds.has(a.subjectId));
-
-            console.log(`Computed effective attendance: ${pipelineResult.decisions.length} decision subjects updated, ${nonDecisionSubjectAttendance.length} non-decision subjects added`);
-        }
-
         extractionResult = {
             decisions: pipelineResult.decisions,
             warnings: pipelineResult.warnings,
             initialAttendance: pipelineResult.initialAttendance,
             unmatchedInitialAttendance: pipelineResult.unmatchedInitialAttendance,
-            nonDecisionSubjectAttendance,
+            nonDecisionSubjectAttendance: pipelineResult.nonDecisionSubjectAttendance,
         };
     } else if (allExtractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
         console.log(`Skipping extraction: no people provided for name matching`);
