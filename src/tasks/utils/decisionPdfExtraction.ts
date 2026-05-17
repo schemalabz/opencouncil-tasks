@@ -302,6 +302,7 @@ If a field cannot be found, use empty array for lists, empty string for text, an
 export function normalizeGreekName(name: string): string {
     return name
         .replace(/\s*\([^)]*\)\s*/g, ' ')      // strip parenthetical nicknames
+        .replace(/[\u2010-\u2015\u2212]/g, ' ')  // normalize Unicode dashes (en-dash, em-dash, etc.) to spaces; preserve ASCII hyphen-minus in compound surnames
         .normalize('NFD')                        // decompose accented chars
         .replace(/[\u0300-\u036f]/g, '')         // strip combining diacriticals (tonos etc.)
         .toLowerCase()

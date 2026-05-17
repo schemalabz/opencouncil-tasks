@@ -352,6 +352,66 @@ describe('computeEffectiveAttendance', () => {
         }).presentNames).not.toContain('Bob');
     });
 
+    it('matches names with en-dash vs space differences (normalizes dashes)', () => {
+        // Real-world case: composition uses space, attendance change uses en-dash
+        const input = {
+            initialPresent: ['ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ', 'ΠΑΠΑΔΟΠΟΥΛΟΣ ΙΩΑΝΝΗΣ'],
+            initialAbsent: [],
+            allAgendaItemNumbers: [ref(1), ref(2), ref(3), ref(9), ref(10)],
+            discussionOrder: [ref(1), ref(9), ref(10)],
+            attendanceChanges: [
+                makeChange({
+                    name: 'ΣΤΡΑΚΑΝΤΟΥΝΑ \u2013ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ', // en-dash instead of space
+                    type: 'departure',
+                    agendaItem: ref(9),
+                    timing: 'after',
+                }),
+            ],
+        };
+
+        // At subject #9, she's still present (departure is AFTER #9)
+        const at9 = computeEffectiveAttendance({
+            ...input,
+            targetAgendaItemNumber: ref(9),
+        });
+        expect(at9.presentNames).toContain('ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ');
+
+        // At subject #10, she should be absent
+        const at10 = computeEffectiveAttendance({
+            ...input,
+            targetAgendaItemNumber: ref(10),
+        });
+        expect(at10.presentNames).not.toContain('ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ');
+        expect(at10.absentNames).toContain('ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ');
+        // Total count should be preserved (no phantom entries)
+        expect(at10.presentNames.length + at10.absentNames.length).toBe(2);
+    });
+
+    it('matches names with diacritics/case differences', () => {
+        const input = {
+            initialPresent: ['Παπαδόπουλος Ιωάννης', 'Μαρία Κωνσταντίνου'],
+            initialAbsent: [],
+            allAgendaItemNumbers: [ref(1), ref(2), ref(3)],
+            discussionOrder: null,
+            attendanceChanges: [
+                makeChange({
+                    name: 'ΠΑΠΑΔΟΠΟΥΛΟΣ ΙΩΑΝΝΗΣ', // uppercase, no accents
+                    type: 'departure',
+                    agendaItem: ref(2),
+                    timing: 'during',
+                }),
+            ],
+        };
+
+        const at3 = computeEffectiveAttendance({
+            ...input,
+            targetAgendaItemNumber: ref(3),
+        });
+        // Should use canonical (first-seen) form
+        expect(at3.presentNames).not.toContain('Παπαδόπουλος Ιωάννης');
+        expect(at3.absentNames).toContain('Παπαδόπουλος Ιωάννης');
+    });
+
     it('handles after-departure with out-of-agenda items in mixed sequence', () => {
         const changes = [
             makeChange({ name: 'Bob', type: 'departure', agendaItem: ref(1, 'outOfAgenda'), timing: 'after' }),

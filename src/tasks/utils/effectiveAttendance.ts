@@ -1,4 +1,4 @@
-import { AttendanceChange, AgendaItemRef, RawExtractedDecision, VoteValue, inferForVotes } from './decisionPdfExtraction.js';
+import { AttendanceChange, AgendaItemRef, RawExtractedDecision, VoteValue, inferForVotes, normalizeGreekName } from './decisionPdfExtraction.js';
 
 function agendaItemRefEquals(a: AgendaItemRef, b: AgendaItemRef): boolean {
     return a.agendaItemIndex === b.agendaItemIndex && a.nonAgendaReason === b.nonAgendaReason;
@@ -52,23 +52,44 @@ export function computeEffectiveAttendance(input: EffectiveAttendanceInput): {
 
     const targetIndex = discussionSequence.findIndex(item => agendaItemRefEquals(item, targetAgendaItemNumber));
 
-    // Start with initial attendance
-    const present = new Set(initialPresent);
-    const absent = new Set(initialAbsent);
+    // Use normalized names as keys in the Sets so that minor name
+    // variations (dashes, diacritics, whitespace) don't prevent matching.
+    // Track canonical (first-seen) form for each normalized key.
+    const canonicalName = new Map<string, string>();
+    const registerName = (name: string): string => {
+        const key = normalizeGreekName(name);
+        if (!canonicalName.has(key)) canonicalName.set(key, name);
+        return key;
+    };
+
+    // Start with initial attendance (normalized keys)
+    const present = new Set(initialPresent.map(registerName));
+    const absent = new Set(initialAbsent.map(registerName));
+
+    // Helper: apply an attendance change using normalized matching
+    const applyChange = (change: AttendanceChange) => {
+        const key = registerName(change.name);
+        if (change.type === 'arrival') {
+            absent.delete(key);
+            present.add(key);
+        } else {
+            present.delete(key);
+            absent.add(key);
+        }
+    };
 
     // Apply session-start arrivals immediately (agendaItem: null, type: arrival)
     for (const change of attendanceChanges) {
         if (change.agendaItem === null && change.type === 'arrival') {
-            absent.delete(change.name);
-            present.add(change.name);
+            applyChange(change);
         }
     }
 
     // If target not found in sequence, return current state
     if (targetIndex === -1) {
         return {
-            presentNames: [...present],
-            absentNames: [...absent],
+            presentNames: [...present].map(k => canonicalName.get(k)!),
+            absentNames: [...absent].map(k => canonicalName.get(k)!),
         };
     }
 
@@ -86,13 +107,7 @@ export function computeEffectiveAttendance(input: EffectiveAttendanceInput): {
                     change.timing === 'after' &&
                     agendaItemRefEquals(change.agendaItem, previousItem)
                 ) {
-                    if (change.type === 'arrival') {
-                        absent.delete(change.name);
-                        present.add(change.name);
-                    } else {
-                        present.delete(change.name);
-                        absent.add(change.name);
-                    }
+                    applyChange(change);
                 }
             }
         }
@@ -104,20 +119,14 @@ export function computeEffectiveAttendance(input: EffectiveAttendanceInput): {
                 change.timing === 'during' &&
                 agendaItemRefEquals(change.agendaItem, currentItem)
             ) {
-                if (change.type === 'arrival') {
-                    absent.delete(change.name);
-                    present.add(change.name);
-                } else {
-                    present.delete(change.name);
-                    absent.add(change.name);
-                }
+                applyChange(change);
             }
         }
     }
 
     return {
-        presentNames: [...present],
-        absentNames: [...absent],
+        presentNames: [...present].map(k => canonicalName.get(k)!),
+        absentNames: [...absent].map(k => canonicalName.get(k)!),
     };
 }
 
