@@ -596,8 +596,23 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         onProgress("extracting PDFs", 50);
         console.log(`\nExtracting ${allExtractionSubjects.length} decision PDFs (${extractionSubjects.length} new, ${needsExtractionSubjects.length} re-extraction)...`);
 
+        // Build subject list for meeting-level attendance computation.
+        // The pipeline uses this to compute effective attendance for ALL subjects
+        // (including those without decisions) using the complete discussion order.
+        let oaCounter = 0;
+        const allMeetingSubjects = request.subjects.map(s => {
+            const isOA = s.nonAgendaReason === 'outOfAgenda';
+            if (isOA) oaCounter++;
+            return {
+                subjectId: s.subjectId,
+                agendaItemIndex: s.agendaItemIndex,
+                outOfAgendaIndex: isOA ? oaCounter : null,
+            };
+        });
+
         const pipelineResult = await extractDecisionsFromPdfs(
             allExtractionSubjects,
+            allMeetingSubjects,
             request.people,
             (stage, percent) => {
                 // Map extraction progress (0-100) to overall progress (50-85)
@@ -735,6 +750,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             warnings: pipelineResult.warnings,
             initialAttendance: pipelineResult.initialAttendance,
             unmatchedInitialAttendance: pipelineResult.unmatchedInitialAttendance,
+            nonDecisionSubjectAttendance: pipelineResult.nonDecisionSubjectAttendance,
         };
     } else if (allExtractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
         console.log(`Skipping extraction: no people provided for name matching`);

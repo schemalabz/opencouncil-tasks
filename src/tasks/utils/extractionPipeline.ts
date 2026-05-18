@@ -7,8 +7,9 @@ import {
     matchPersonByName,
     llmMatchMembers,
     PersonForMatching,
+    AgendaItemRef,
 } from './decisionPdfExtraction.js';
-import { processRawExtraction } from './effectiveAttendance.js';
+import { resolveAndDeduplicateAttendanceChanges, computeAllSubjectAttendance, SubjectForAttendance, MeetingAttendanceData } from './meetingAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
 
 export interface ExtractionSubject {
@@ -30,6 +31,12 @@ export interface ExtractionPipelineResult {
     initialAttendance: { personId: string; status: 'PRESENT' | 'ABSENT' }[];
     /** Names from the initial roll call that couldn't be matched to any person in the database */
     unmatchedInitialAttendance: string[];
+    /** Per-subject effective attendance for subjects without decisions in the extraction */
+    nonDecisionSubjectAttendance: Array<{
+        subjectId: string;
+        presentMemberIds: string[];
+        absentMemberIds: string[];
+    }>;
 }
 
 const BATCH_SIZE = 5;
@@ -37,12 +44,19 @@ const BATCH_SIZE = 5;
 /**
  * Extract structured decision data from PDFs.
  *
- * Each PDF is self-contained for effective attendance: the agenda item list
- * is derived from the PDF's own attendanceChanges, discussionOrder, and
- * subjectInfo rather than requiring external context.
+ * Attendance and vote inference use meeting-level data: attendance changes
+ * and discussion order are aggregated from all PDFs, names are resolved to
+ * canonical forms, and effective attendance is computed once per subject
+ * using the complete discussion order. Vote inference (FOR votes for
+ * unanimous/majority decisions) uses the meeting-level effective attendance.
+ *
+ * @param subjects - Subjects with linked decisions (have PDF URLs)
+ * @param allMeetingSubjects - ALL subjects in the meeting (for discussion order + non-decision attendance)
+ * @param people - People for name matching
  */
 export async function extractDecisionsFromPdfs(
     subjects: ExtractionSubject[],
+    allMeetingSubjects: SubjectForAttendance[],
     people: PersonForMatching[],
     onProgress: (stage: string, percent: number) => void,
     mayorId?: string,
@@ -62,7 +76,7 @@ export async function extractDecisionsFromPdfs(
     if (mayorName) console.log(`Mayor: ${mayorName} (${mayorId})`);
 
     if (subjects.length === 0) {
-        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [] };
+        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [] };
     }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
@@ -160,10 +174,49 @@ export async function extractDecisionsFromPdfs(
 
     console.log(`  Final matched: ${nameToPersonId.size}/${allRawNames.size}`);
 
+    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
+
+    // --- Aggregate meeting-level attendance data from all PDFs ---
+    // All PDFs from the same meeting share the same attendance preamble.
+    // See resolveAndDeduplicateAttendanceChanges for the resolution strategy.
+    let meetingAttendanceData: MeetingAttendanceData | null = null;
+    if (firstWithRoll) {
+        const allInitialNames = [...(firstWithRoll.raw.presentMembers || []), ...(firstWithRoll.raw.absentMembers || [])];
+        const aggregatedChanges = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, allInitialNames);
+
+        // Use the longest discussion order from any PDF (most complete)
+        let bestDiscussionOrder: AgendaItemRef[] | null = null;
+        for (const { raw } of extractions) {
+            if (raw.discussionOrder && (bestDiscussionOrder === null || raw.discussionOrder.length > bestDiscussionOrder.length)) {
+                bestDiscussionOrder = raw.discussionOrder;
+            }
+        }
+
+        meetingAttendanceData = {
+            initialPresent: firstWithRoll.raw.presentMembers || [],
+            initialAbsent: firstWithRoll.raw.absentMembers || [],
+            attendanceChanges: aggregatedChanges,
+            discussionOrder: bestDiscussionOrder,
+            nameToPersonId,
+        };
+
+        // Log attendance changes after resolution
+        if (aggregatedChanges.length > 0) {
+            console.log(`  Attendance changes (${aggregatedChanges.length} after resolution/dedup):`);
+            for (const change of aggregatedChanges) {
+                const personId = nameToPersonId.get(change.name);
+                const status = personId ? '✓' : '✗ unmatched';
+                const agendaLabel = change.agendaItem
+                    ? `${change.timing} ${change.agendaItem.nonAgendaReason === 'outOfAgenda' ? 'OA' : '#'}${change.agendaItem.agendaItemIndex}`
+                    : 'session';
+                console.log(`    ${change.type} "${change.name}" ${agendaLabel} ${status}`);
+            }
+        }
+    }
+
     // --- Build meeting-level initial attendance from the first extraction with roll call data ---
     // All PDFs from the same meeting have the same initial roll, so we use the first one.
     const initialAttendance: ExtractionPipelineResult['initialAttendance'] = [];
-    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
     const unmatchedInitialAttendance: string[] = [];
     if (firstWithRoll) {
         for (const name of firstWithRoll.raw.presentMembers || []) {
@@ -198,37 +251,72 @@ export async function extractDecisionsFromPdfs(
         }
     }
 
-    // --- Phase 3: Build decision results using the name→personId map ---
-    // Each PDF is self-contained: build allAgendaItemNumbers from its own data
+    // --- Phase 3: Compute meeting-level attendance for all subjects ---
+    // Uses the aggregated attendance data (resolved names, complete discussion order)
+    // to compute effective attendance consistently for every subject.
+    //
+    // Assign OA indices from extraction subjectInfo (the PDF knows the actual OA
+    // number) rather than counting in request order (which depends on DB ordering).
+    const oaIndexFromExtraction = new Map<string, number>();
+    for (const { subjectId, raw } of extractions) {
+        if (raw.subjectInfo?.nonAgendaReason === 'outOfAgenda') {
+            oaIndexFromExtraction.set(subjectId, raw.subjectInfo.agendaItemIndex);
+        }
+    }
+    const subjectsWithOAIndices: SubjectForAttendance[] = allMeetingSubjects.map(s => ({
+        ...s,
+        outOfAgendaIndex: oaIndexFromExtraction.get(s.subjectId) ?? s.outOfAgendaIndex ?? null,
+    }));
+
+    const attendanceBySubject = new Map<string, { presentMemberIds: string[]; absentMemberIds: string[] }>();
+    let nonDecisionSubjectAttendance: ExtractionPipelineResult['nonDecisionSubjectAttendance'] = [];
+
+    if (meetingAttendanceData) {
+        const allAttendance = computeAllSubjectAttendance(subjectsWithOAIndices, meetingAttendanceData);
+        for (const a of allAttendance) {
+            attendanceBySubject.set(a.subjectId, { presentMemberIds: a.presentMemberIds, absentMemberIds: a.absentMemberIds });
+        }
+        const decisionSubjectIds = new Set(extractions.map(e => e.subjectId));
+        nonDecisionSubjectAttendance = allAttendance.filter(a => !decisionSubjectIds.has(a.subjectId));
+        console.log(`  Computed attendance for ${allAttendance.length} subjects (${nonDecisionSubjectAttendance.length} without decisions)`);
+    }
+
+    // --- Phase 4: Build decision results ---
+    // Combines raw PDF content (excerpt, explicit votes) with meeting-level
+    // attendance. Vote inference uses the meeting-level present list.
     const decisions: ExtractedDecisionResult[] = [];
 
-    for (const { subjectId, agendaItemIndex, raw, fromCache } of extractions) {
+    for (const { subjectId, raw, fromCache } of extractions) {
         const unmatchedMembers: string[] = [];
 
-        // Compute effective attendance and infer votes
-        const processed = processRawExtraction(raw, agendaItemIndex);
-        if (processed.inferredVoteCount > 0) {
-            console.log(`  [${subjectId}] Inferred ${processed.inferredVoteCount} FOR votes from effective present members`);
+        // Attendance: use meeting-level if available, otherwise raw from PDF
+        const attendance = attendanceBySubject.get(subjectId);
+        let presentMemberIds: string[];
+        let absentMemberIds: string[];
+        if (attendance) {
+            presentMemberIds = attendance.presentMemberIds;
+            absentMemberIds = attendance.absentMemberIds;
+        } else {
+            // Fallback: convert raw names to personIds (no attendance changes applied)
+            presentMemberIds = [];
+            absentMemberIds = [];
+            for (const name of raw.presentMembers || []) {
+                const personId = nameToPersonId.get(name);
+                if (personId) presentMemberIds.push(personId);
+                else unmatchedMembers.push(name);
+            }
+            for (const name of raw.absentMembers || []) {
+                const personId = nameToPersonId.get(name);
+                if (personId) absentMemberIds.push(personId);
+                else unmatchedMembers.push(name);
+            }
         }
 
-        const presentMemberIds: string[] = [];
-        const absentMemberIds: string[] = [];
-
-        for (const name of processed.effectivePresent) {
-            const personId = nameToPersonId.get(name);
-            if (personId) presentMemberIds.push(personId);
-            else unmatchedMembers.push(name);
-        }
-
-        for (const name of processed.effectiveAbsent) {
-            const personId = nameToPersonId.get(name);
-            if (personId) absentMemberIds.push(personId);
-            else unmatchedMembers.push(name);
-        }
-
+        // Explicit votes from PDF (AGAINST, ABSTAIN, PRESENT, DID_NOT_VOTE)
+        // Resolve names to personIds, deduplicate
         const voteDetails: ExtractedDecisionResult['voteDetails'] = [];
         const seenVoterIds = new Set<string>();
-        for (const detail of processed.voteDetails) {
+        for (const detail of raw.voteDetails || []) {
             const personId = nameToPersonId.get(detail.name);
             if (personId) {
                 if (!seenVoterIds.has(personId)) {
@@ -238,6 +326,25 @@ export async function extractDecisionsFromPdfs(
             } else {
                 unmatchedMembers.push(detail.name);
             }
+        }
+
+        // Infer FOR votes for unanimous/majority decisions using meeting-level attendance
+        const isUnanimous = raw.voteResult && /[οό]μ[οό]φων/i.test(raw.voteResult);
+        const isMajority = raw.voteResult && /κατ[άα]\s+πλειοψηφ[ίι]/i.test(raw.voteResult);
+        const hasNoForVotes = voteDetails.every(v => v.vote !== 'FOR');
+
+        let inferredVoteCount = 0;
+        if ((isUnanimous || isMajority) && hasNoForVotes && presentMemberIds.length > 0) {
+            for (const personId of presentMemberIds) {
+                if (!seenVoterIds.has(personId)) {
+                    seenVoterIds.add(personId);
+                    voteDetails.push({ personId, vote: 'FOR' });
+                    inferredVoteCount++;
+                }
+            }
+        }
+        if (inferredVoteCount > 0) {
+            console.log(`  [${subjectId}] Inferred ${inferredVoteCount} FOR votes from effective present members`);
         }
 
         const dedupedUnmatched = [...new Set(unmatchedMembers)];
@@ -279,5 +386,5 @@ export async function extractDecisionsFromPdfs(
     console.log(`  Extracted: ${extractions.length}/${subjects.length}`);
     console.log(`  Warnings: ${warnings.length}`);
 
-    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance };
+    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance, nonDecisionSubjectAttendance };
 }

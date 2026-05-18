@@ -456,6 +456,7 @@ export interface PollDecisionsRequest extends TaskRequest {
         subjectId: string;
         name: string;
         agendaItemIndex: number | null;
+        nonAgendaReason?: string | null;
         existingDecision?: {
             ada: string;
             decisionTitle: string;
@@ -503,6 +504,12 @@ export interface PollDecisionsResult {
         initialAttendance: { personId: string; status: 'PRESENT' | 'ABSENT' }[];
         /** Names from the initial roll call that couldn't be matched to any person in the database */
         unmatchedInitialAttendance: string[];
+        /** Effective attendance for subjects WITHOUT linked decisions — computed using the complete discussion order and aggregated attendance changes from all PDFs */
+        nonDecisionSubjectAttendance?: Array<{
+            subjectId: string;
+            presentMemberIds: string[];
+            absentMemberIds: string[];
+        }>;
     } | null;
     costs: {
         input_tokens: number;
