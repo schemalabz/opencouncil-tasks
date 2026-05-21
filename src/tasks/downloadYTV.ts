@@ -430,7 +430,7 @@ async function updateYtDlp(): Promise<void> {
     console.log('Checking for yt-dlp updates...');
 
     return new Promise((resolve) => {
-        const updateProcess = cp.spawn(binaryPath, ['-U'], {
+        const updateProcess = cp.spawn(binaryPath, ['--update-to', 'nightly'], {
             stdio: ['pipe', 'pipe', 'pipe']
         });
 
