@@ -8,10 +8,8 @@ import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 
 dotenv.config();
 
-const COBALT_API_BASE_URL = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
 const DEFAULT_VIDEO_QUALITY = "720";
 const YTDLP_BIN_PATH = process.env.YTDLP_BIN_PATH;
-const COBALT_ENABLED = process.env.COBALT_ENABLED === 'true'; // default off
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {
     const outputDir = process.env.DATA_DIR || "./data";
@@ -44,13 +42,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
     const needsDownload = !fs.existsSync(videoOutputPath);
     
     if (needsDownload && sourceType === 'YouTube') {
-        if (COBALT_ENABLED) {
-            const cobaltUrl = await getCobaltStreamUrl(youtubeUrl, { videoQuality: DEFAULT_VIDEO_QUALITY });
-            await downloadUrl(cobaltUrl, videoOutputPath);
-            finalVideoPath = videoOutputPath;
-        } else {
-            finalVideoPath = await downloadWithYtDlp(youtubeUrl, videoOutputPath, videoId, onProgress);
-        }
+        finalVideoPath = await downloadWithYtDlp(youtubeUrl, videoOutputPath, videoId, onProgress);
     } else if (needsDownload) {
         await downloadUrl(videoUrl, videoOutputPath);
         finalVideoPath = videoOutputPath;
@@ -256,51 +248,6 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
     });
 }
 
-const getCobaltStreamUrl = async (url: string, options: { videoQuality?: string } = {}) => {
-    const cobaltApiUrl = `${COBALT_API_BASE_URL}`;
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    };
-
-    console.log(`Calling cobalt via ${cobaltApiUrl}`);
-    const response = await fetch(cobaltApiUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ url, videoQuality: options.videoQuality })
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        const errorMessage = errorData?.error 
-            ? `Cobalt API error: ${errorData.error.code}${errorData.error.context ? ` - Context: ${JSON.stringify(errorData.error.context)}` : ''}`
-            : `Cobalt API request failed with status ${response.status}: ${response.statusText}`;
-        throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    
-    if (!data || typeof data !== 'object') {
-        throw new Error('Invalid response from Cobalt API: response is not a valid JSON object');
-    }
-
-    // Handle different response types
-    // see https://github.com/imputnet/cobalt/blob/main/docs/api.md
-    switch (data.status) {
-        case 'error':
-            throw new Error(`Cobalt API error: ${data.error?.code || 'Unknown error'}`);
-        case 'picker':
-            throw new Error('Multiple items found - picker response not supported');
-        case 'redirect':
-        case 'tunnel':
-            if (!data.url || typeof data.url !== 'string') {
-                throw new Error('Invalid response from Cobalt API: missing or invalid url field');
-            }
-            return data.url;
-        default:
-            throw new Error(`Unknown response status from Cobalt API: ${data.status}`);
-    }
-}
 
 const HEADERS = {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
@@ -333,7 +280,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
             throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}. Response: ${truncatedResponse}`);
         }
 
-        // Check for file size from Cobalt headers
+        // Check for file size from response headers
         const contentLength = response.headers.get('content-length');
         const estimatedLength = response.headers.get('estimated-content-length');
         
@@ -465,12 +412,12 @@ async function updateYtDlp(): Promise<void> {
             resolve();
         });
 
-        // Timeout after 30 seconds
+        // Timeout after 60 seconds (nightly binary download can be slow)
         setTimeout(() => {
             updateProcess.kill();
             console.warn('yt-dlp update check timed out');
             resolve();
-        }, 30000);
+        }, 60000);
     });
 }
 

@@ -191,11 +191,5 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 ### Task-Specific Configuration
 - `GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 20) - Maximum concurrent transcription tasks
 - `PYANNOTE_MAX_CONCURRENT_DIARIZATIONS` (default: 5) - Maximum concurrent diarization tasks
-- `YTDLP_PROXY` (default: http://proxy-forwarder:3128) - Proxy for yt-dlp downloads (default downloader)
-  - yt-dlp is the default YouTube downloader, bundled in the Docker image
-  - See [Download Task Guide](docs/downloadYTV.md) for details
-- `COBALT_ENABLED` (default: false) - Enable Cobalt as alternative YouTube downloader
-  - Set to `true` to use Cobalt instead of yt-dlp
-  - Requires `COBALT_API_BASE_URL` and the cobalt-api service
-  - See [Proxy Setup Guide](docs/proxy-setup.md) for residential proxy configuration (works with both yt-dlp and Cobalt)
+- `YTDLP_PROXY` - Residential proxy for YouTube downloads ([pi-proxy](https://github.com/schemalabz/pi-proxy))
 - `LOG_DIR` - Directory for log files

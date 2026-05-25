@@ -13,63 +13,13 @@ services:
       - .env
     environment:
       TZ: "Europe/Athens"
-      YTDLP_PROXY: "http://proxy-forwarder:3128"
+      YTDLP_PROXY: "${YTDLP_PROXY:-}"
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
     restart: unless-stopped
-    networks:
-      - cobalt
-    depends_on:
-      proxy-forwarder:
-        condition: service_healthy
-
-  cobalt-api:
-    profiles: ["cobalt"]  # disabled by default; run with `--profile cobalt`
-    image: git.canine.tools/canine.tools/cobalt:api
-    restart: unless-stopped
-    networks:
-      - cobalt
-    ports:
-      - "127.0.0.1:9000:9000"
-    environment:
-      API_URL: "${COBALT_API_BASE_URL:-http://cobalt-api:9000}"
-      API_NAME: "opencouncil"
-      DURATION_LIMIT: 36000
-      CUSTOM_INNERTUBE_CLIENT: "WEB_EMBEDDED"
-      # HTTP proxy configuration - tells Cobalt's Node.js to route traffic through Squid
-      # Squid then forwards to the residential proxy (configured in squid.conf)
-      HTTP_PROXY: "http://proxy-forwarder:3128"
-      HTTPS_PROXY: "http://proxy-forwarder:3128"
-    labels:
-        - com.centurylinklabs.watchtower.scope=cobalt
-    volumes:
-      - ./secrets:/secrets
-    healthcheck:
-      test: wget -nv --tries=1 --spider http://127.0.0.1:9000 || exit 1
-      interval: 30s
-      timeout: 5s
-      retries: 2
-    depends_on:
-      proxy-forwarder:
-        condition: service_healthy
-
-  proxy-forwarder:
-    image: ubuntu/squid
-    restart: unless-stopped
-    networks:
-      - cobalt
-    ports:
-      - "127.0.0.1:${PROXY_PORT:-3128}:3128"  # HTTP proxy port (configurable via PROXY_PORT env var)
-    volumes:
-      - ./squid.conf:/etc/squid/squid.conf:ro
-    healthcheck:
-      test: squid -k check || exit 1
-      interval: 30s
-      timeout: 5s
-      retries: 2
 
   redis:
     image: redis:7-alpine
@@ -107,7 +57,3 @@ services:
 
 x-buildkit:
   enabled: true
-
-networks:
-  cobalt:
-    driver: bridge

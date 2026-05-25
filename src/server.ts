@@ -60,7 +60,6 @@ app.use(authMiddleware);
 app.get('/health', async (req: express.Request, res: express.Response<HealthResponse>) => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     const services: { [key: string]: any } = {};
-    const cobaltEnabled = process.env.COBALT_ENABLED === 'true';
     const ytdlpBin = process.env.YTDLP_BIN_PATH || 'yt-dlp';
     
     // Check yt-dlp availability/version
@@ -77,20 +76,6 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
         services.ytdlp = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
     }
 
-    // Check Cobalt health only when enabled
-    if (!cobaltEnabled) {
-        services.cobalt = { status: 'disabled' as const };
-    } else {
-        try {
-            const cobaltUrl = process.env.COBALT_API_BASE_URL || 'http://cobalt-api:9000';
-            const cobaltResponse = await fetch(cobaltUrl, { signal: AbortSignal.timeout(3000) });
-            services.cobalt = cobaltResponse.ok 
-                ? { status: 'healthy' as const, ...await cobaltResponse.json() }
-                : { status: 'unhealthy' as const, error: `HTTP ${cobaltResponse.status}` };
-        } catch (error) {
-            services.cobalt = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
-        }
-    }
     
     // If a Bearer token was provided, report whether it's valid.
     // Omitted entirely when no token is sent (plain health check).
