@@ -27,6 +27,15 @@ export const getFromEnvOrFile = (key: string, path: string) => {
 export const validateUrl = (url: string) => /^(https?:\/\/)?([\da-z\.-]+\.([a-z\.]{2,6})|localhost)(:\d+)?(\/[\w\.-]*)*\/?$/.test(url);
 export const validateYoutubeUrl = (url: string) => /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(url);
 
+/**
+ * Extract a meeting identifier from a callback URL.
+ * e.g. "https://opencouncil.gr/api/cities/athens/meetings/may18_3_2026/taskStatuses/..." → "athens/may18_3_2026"
+ */
+export function extractMeetingId(callbackUrl: string): string {
+    const match = callbackUrl.match(/cities\/([^/]+)\/meetings\/([^/]+)/);
+    return match ? `${match[1]}/${match[2]}` : 'unknown';
+}
+
 export const getExpressAppWithCallbacks = (): express.Express => {
     const app = express();
     const port = process.env.PORT || 3000;

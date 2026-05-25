@@ -163,6 +163,13 @@ export async function processBatchesWithState(
         });
         batchStats.push({ segments: batchSegments, utterances: batchUtterances, inputChars: batchInputChars, outputTokens: batchUsage.output_tokens, maxTokens: batchMaxTokens });
 
+        // Detect degenerate response: LLM returned utterance statuses pointing to subjects it didn't include
+        const discussionUtterances = batchResult.utteranceStatuses.filter(s => s.status === DiscussionStatus.SUBJECT_DISCUSSION).length;
+        if (batchResult.subjects.length === 0 && discussionUtterances > 0) {
+            console.error(`\n   🚨 DEGENERATE BATCH: LLM returned 0 subjects but ${discussionUtterances} SUBJECT_DISCUSSION utterances`);
+            console.error(`   This batch's transcript will NOT be incorporated into subject descriptions.`);
+        }
+
         allSummaries.push(...batchResult.segmentSummaries);
 
         // Register any new subject IDs from the LLM in the IdCompressor
@@ -259,8 +266,9 @@ export async function processBatchesWithState(
             console.error(`   📋 All registered IDs:`, Array.from(idCompressor['shortIdToLong'].keys()));
         }
 
+        const llmSubjectCount = batchResult.subjects.length;
         console.log(`\n✅ Batch ${i + 1} processed:`);
-        console.log(`   • Subjects in conversation state: ${batchResult.subjects.length}`);
+        console.log(`   • Subjects returned by LLM: ${llmSubjectCount}`);
         console.log(`   • Utterance statuses created in this batch: ${batchResult.utteranceStatuses.length}`);
 
         // Log all subjects returned by LLM
@@ -487,6 +495,8 @@ export async function processBatchesWithState(
             allUtteranceStatuses: conversationState.allUtteranceStatuses,  // Accumulated across all batches
             meetingProgressSummary: batchResult.meetingProgressSummary  // Pass forward for next batch
         };
+
+        console.log(`   📦 Batch ${i + 1} subjects: ${llmSubjectCount} from LLM → ${conversationState.subjects.length} after preservation`);
 
         // Log meeting progress summary if generated
         if (batchResult.meetingProgressSummary) {

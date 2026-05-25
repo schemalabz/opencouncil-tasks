@@ -7,7 +7,7 @@ import {
 } from "../types.js";
 import { Task } from "./pipeline.js";
 import dotenv from 'dotenv';
-import { IdCompressor } from "../utils.js";
+import { IdCompressor, extractMeetingId } from "../utils.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { compressIds, decompressIds } from "./summarize/compression.js";
 import { logUsage, logMultiPhaseUsage } from "../lib/usageLogging.js";
@@ -18,10 +18,13 @@ import { SubjectInProgress } from "./summarize/types.js";
 dotenv.config();
 
 export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request, onProgress) => {
+    const meetingId = extractMeetingId(request.callbackUrl);
+
     console.log('═══════════════════════════════════════════════════════════');
-    console.log('🚀 SUMMARIZE TASK STARTED');
+    console.log(`🚀 SUMMARIZE TASK STARTED [${meetingId}]`);
     console.log('═══════════════════════════════════════════════════════════');
     console.log(`📊 Request Details:`);
+    console.log(`   • Meeting: ${meetingId}`);
     console.log(`   • Transcript segments: ${request.transcript.length}`);
     console.log(`   • Total utterances: ${request.transcript.reduce((sum, seg) => sum + seg.utterances.length, 0)}`);
     console.log(`   • Requested subjects: ${request.requestedSubjects.length}`);
@@ -239,7 +242,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage },
         { label: 'Phase 3 (Enrichment)', usage: phase3Usage }
     ]);
-    console.log('✅ SUMMARIZE TASK COMPLETED');
+    console.log(`✅ SUMMARIZE TASK COMPLETED [${meetingId}]`);
     console.log('═══════════════════════════════════════════════════════════');
 
     return decompressIds({
