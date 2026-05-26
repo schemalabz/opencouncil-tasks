@@ -86,7 +86,7 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
         status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV === 'development' ? 'development' : 'production',
-        version: packageJson.version,
+        version: fs.existsSync('VERSION') ? fs.readFileSync('VERSION', 'utf8').trim() : packageJson.version,
         name: packageJson.name,
         ...(authenticated !== undefined && { authenticated }),
         services

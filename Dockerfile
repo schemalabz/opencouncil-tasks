@@ -14,6 +14,11 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy the rest of the application code
 COPY . .
 
+# Generate version from git tag
+RUN apk add --no-cache git \
+    && git describe --tags --always > VERSION \
+    || echo "dev" > VERSION
+
 # Build the application
 RUN --mount=type=cache,target=/root/.npm \
     npm run build
@@ -44,8 +49,9 @@ COPY --from=builder /app/package-lock.json ./package-lock.json
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --only=production
 
-# Copy built assets
+# Copy built assets and version
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/VERSION ./VERSION
 
 # Download latest yt-dlp binary and make it user-owned
 RUN mkdir -p /app/bin \
