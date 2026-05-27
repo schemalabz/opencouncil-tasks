@@ -10,6 +10,7 @@ import {
     AgendaItemRef,
 } from './decisionPdfExtraction.js';
 import { resolveAndDeduplicateAttendanceChanges, computeAllSubjectAttendance, SubjectForAttendance, MeetingAttendanceData } from './meetingAttendance.js';
+import { selectDiscussionOrder } from './discussionOrderVote.js';
 import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
 
 export interface ExtractionSubject {
@@ -33,6 +34,12 @@ export interface ExtractionPipelineResult {
     unmatchedInitialAttendance: string[];
     /** Per-subject effective attendance for subjects without decisions in the extraction */
     nonDecisionSubjectAttendance: Array<{
+        subjectId: string;
+        presentMemberIds: string[];
+        absentMemberIds: string[];
+    }>;
+    /** Per-subject effective attendance for ALL subjects (used by caller to recompute non-decision filter after post-processing) */
+    allSubjectAttendance: Array<{
         subjectId: string;
         presentMemberIds: string[];
         absentMemberIds: string[];
@@ -76,7 +83,7 @@ export async function extractDecisionsFromPdfs(
     if (mayorName) console.log(`Mayor: ${mayorName} (${mayorId})`);
 
     if (subjects.length === 0) {
-        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [] };
+        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [], allSubjectAttendance: [] };
     }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
@@ -184,11 +191,25 @@ export async function extractDecisionsFromPdfs(
         const allInitialNames = [...(firstWithRoll.raw.presentMembers || []), ...(firstWithRoll.raw.absentMembers || [])];
         const aggregatedChanges = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, allInitialNames);
 
-        // Use the longest discussion order from any PDF (most complete)
-        let bestDiscussionOrder: AgendaItemRef[] | null = null;
-        for (const { raw } of extractions) {
-            if (raw.discussionOrder && (bestDiscussionOrder === null || raw.discussionOrder.length > bestDiscussionOrder.length)) {
-                bestDiscussionOrder = raw.discussionOrder;
+        // Select discussion order by majority vote across PDFs
+        const discussionOrderVote = selectDiscussionOrder(
+            extractions.map(({ raw }) => raw.discussionOrder),
+        );
+        const bestDiscussionOrder = discussionOrderVote.selected;
+
+        // Log vote breakdown
+        const nonNullCount = discussionOrderVote.totalPdfs - discussionOrderVote.nullCount;
+        if (nonNullCount > 0) {
+            const selectedLabel = bestDiscussionOrder
+                ? `selected (${discussionOrderVote.breakdown[0].count}/${nonNullCount} agree)`
+                : 'no consensus → natural order';
+            console.log(`  Discussion order vote: ${selectedLabel}`);
+            for (const { order, count } of discussionOrderVote.breakdown) {
+                const refs = order.map(r => r.nonAgendaReason === 'outOfAgenda' ? `OA${r.agendaItemIndex}` : `#${r.agendaItemIndex}`);
+                console.log(`    ${count}× [${refs.join(', ')}]`);
+            }
+            if (discussionOrderVote.nullCount > 0) {
+                console.log(`    ${discussionOrderVote.nullCount}× null`);
             }
         }
 
@@ -254,25 +275,13 @@ export async function extractDecisionsFromPdfs(
     // --- Phase 3: Compute meeting-level attendance for all subjects ---
     // Uses the aggregated attendance data (resolved names, complete discussion order)
     // to compute effective attendance consistently for every subject.
-    //
-    // Assign OA indices from extraction subjectInfo (the PDF knows the actual OA
-    // number) rather than counting in request order (which depends on DB ordering).
-    const oaIndexFromExtraction = new Map<string, number>();
-    for (const { subjectId, raw } of extractions) {
-        if (raw.subjectInfo?.nonAgendaReason === 'outOfAgenda') {
-            oaIndexFromExtraction.set(subjectId, raw.subjectInfo.agendaItemIndex);
-        }
-    }
-    const subjectsWithOAIndices: SubjectForAttendance[] = allMeetingSubjects.map(s => ({
-        ...s,
-        outOfAgendaIndex: oaIndexFromExtraction.get(s.subjectId) ?? s.outOfAgendaIndex ?? null,
-    }));
-
     const attendanceBySubject = new Map<string, { presentMemberIds: string[]; absentMemberIds: string[] }>();
     let nonDecisionSubjectAttendance: ExtractionPipelineResult['nonDecisionSubjectAttendance'] = [];
+    let allSubjectAttendance: ExtractionPipelineResult['allSubjectAttendance'] = [];
 
     if (meetingAttendanceData) {
-        const allAttendance = computeAllSubjectAttendance(subjectsWithOAIndices, meetingAttendanceData);
+        const allAttendance = computeAllSubjectAttendance(allMeetingSubjects, meetingAttendanceData);
+        allSubjectAttendance = allAttendance;
         for (const a of allAttendance) {
             attendanceBySubject.set(a.subjectId, { presentMemberIds: a.presentMemberIds, absentMemberIds: a.absentMemberIds });
         }
@@ -386,5 +395,5 @@ export async function extractDecisionsFromPdfs(
     console.log(`  Extracted: ${extractions.length}/${subjects.length}`);
     console.log(`  Warnings: ${warnings.length}`);
 
-    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance, nonDecisionSubjectAttendance };
+    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance, nonDecisionSubjectAttendance, allSubjectAttendance };
 }
