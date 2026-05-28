@@ -274,12 +274,31 @@ export async function extractDecisionsFromPdfs(
                 mayorAdded = true;
             }
         }
+
+        // Deduplicate by personId. When the same person appears in both present
+        // and absent (e.g., truncated name in absent list matched to same personId
+        // as the full name in composition), ABSENT wins — explicit absence is a
+        // stronger signal than presence inferred from composition membership.
+        const attendanceByPersonId = new Map<string, 'PRESENT' | 'ABSENT'>();
+        for (const a of initialAttendance) {
+            const existing = attendanceByPersonId.get(a.personId);
+            if (!existing || a.status === 'ABSENT') {
+                attendanceByPersonId.set(a.personId, a.status);
+            }
+        }
+        const deduplicatedCount = initialAttendance.length - attendanceByPersonId.size;
+        initialAttendance.length = 0;
+        for (const [personId, status] of attendanceByPersonId) {
+            initialAttendance.push({ personId, status });
+        }
+
         const presentCount = initialAttendance.filter(a => a.status === 'PRESENT').length;
         const absentCount = initialAttendance.filter(a => a.status === 'ABSENT').length;
         const totalExtracted = winningRollCall.presentMembers.length + winningRollCall.absentMembers.length;
         const matchedCount = presentCount + absentCount;
         const mayorNote = mayorAdded ? ' (includes mayor from narrative)' : '';
-        console.log(`  Initial attendance: ${presentCount} present, ${absentCount} absent — ${matchedCount} matched from ${totalExtracted} extracted${mayorNote}`);
+        const dedupNote = deduplicatedCount > 0 ? ` (${deduplicatedCount} duplicate${deduplicatedCount > 1 ? 's' : ''} resolved)` : '';
+        console.log(`  Initial attendance: ${presentCount} present, ${absentCount} absent — ${matchedCount} matched from ${totalExtracted} extracted${mayorNote}${dedupNote}`);
         if (unmatchedInitialAttendance.length > 0) {
             console.warn(`  ⚠ ${unmatchedInitialAttendance.length} unmatched members in initial roll call:`);
             for (const name of unmatchedInitialAttendance) {
