@@ -11,6 +11,7 @@ import {
 } from './decisionPdfExtraction.js';
 import { resolveAndDeduplicateAttendanceChanges, computeAllSubjectAttendance, SubjectForAttendance, MeetingAttendanceData } from './meetingAttendance.js';
 import { selectDiscussionOrder } from './discussionOrderVote.js';
+import { selectRollCall } from './rollCallVote.js';
 import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
 
 export interface ExtractionSubject {
@@ -181,14 +182,30 @@ export async function extractDecisionsFromPdfs(
 
     console.log(`  Final matched: ${nameToPersonId.size}/${allRawNames.size}`);
 
-    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
+    // --- Select initial roll call by majority vote across all PDFs ---
+    // All PDFs from the same meeting should have the same attendance preamble,
+    // but extraction errors or a PDF from a different session can produce outliers.
+    // Majority vote ensures one wrong PDF doesn't poison the entire meeting's attendance.
+    const rollCallVote = selectRollCall(extractions.map(({ raw }) => ({
+        presentMembers: raw.presentMembers,
+        absentMembers: raw.absentMembers,
+        mayorPresent: raw.mayorPresent,
+    })));
+    const winningRollCall = rollCallVote.selected;
+
+    if (rollCallVote.breakdown.length > 1) {
+        console.log(`  Roll call vote: ${rollCallVote.breakdown[0].count}/${rollCallVote.totalPdfs - rollCallVote.emptyCount} PDFs agree (${rollCallVote.breakdown.length} distinct roll calls found)`);
+        for (const { entry, count } of rollCallVote.breakdown) {
+            console.log(`    ${count}× ${entry.presentMembers.length}p/${entry.absentMembers.length}a, mayor ${entry.mayorPresent?.present ? 'present' : 'absent'}`);
+        }
+    }
 
     // --- Aggregate meeting-level attendance data from all PDFs ---
-    // All PDFs from the same meeting share the same attendance preamble.
-    // See resolveAndDeduplicateAttendanceChanges for the resolution strategy.
+    // Attendance changes are resolved with majority voting (resolveAndDeduplicateAttendanceChanges).
+    // Discussion order uses majority vote (selectDiscussionOrder).
     let meetingAttendanceData: MeetingAttendanceData | null = null;
-    if (firstWithRoll) {
-        const allInitialNames = [...(firstWithRoll.raw.presentMembers || []), ...(firstWithRoll.raw.absentMembers || [])];
+    if (winningRollCall) {
+        const allInitialNames = [...winningRollCall.presentMembers, ...winningRollCall.absentMembers];
         const aggregatedChanges = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, allInitialNames);
 
         // Select discussion order by majority vote across PDFs
@@ -214,8 +231,8 @@ export async function extractDecisionsFromPdfs(
         }
 
         meetingAttendanceData = {
-            initialPresent: firstWithRoll.raw.presentMembers || [],
-            initialAbsent: firstWithRoll.raw.absentMembers || [],
+            initialPresent: winningRollCall.presentMembers,
+            initialAbsent: winningRollCall.absentMembers,
             attendanceChanges: aggregatedChanges,
             discussionOrder: bestDiscussionOrder,
             nameToPersonId,
@@ -235,32 +252,31 @@ export async function extractDecisionsFromPdfs(
         }
     }
 
-    // --- Build meeting-level initial attendance from the first extraction with roll call data ---
-    // All PDFs from the same meeting have the same initial roll, so we use the first one.
+    // --- Build meeting-level initial attendance from majority-voted roll call ---
     const initialAttendance: ExtractionPipelineResult['initialAttendance'] = [];
     const unmatchedInitialAttendance: string[] = [];
-    if (firstWithRoll) {
-        for (const name of firstWithRoll.raw.presentMembers || []) {
+    if (winningRollCall) {
+        for (const name of winningRollCall.presentMembers) {
             const personId = nameToPersonId.get(name);
             if (personId) initialAttendance.push({ personId, status: 'PRESENT' });
             else unmatchedInitialAttendance.push(name);
         }
-        for (const name of firstWithRoll.raw.absentMembers || []) {
+        for (const name of winningRollCall.absentMembers) {
             const personId = nameToPersonId.get(name);
             if (personId) initialAttendance.push({ personId, status: 'ABSENT' });
             else unmatchedInitialAttendance.push(name);
         }
         // Include mayor if extracted from decision narrative
         let mayorAdded = false;
-        if (firstWithRoll.raw.mayorPresent?.present != null && mayorId) {
+        if (winningRollCall.mayorPresent?.present != null && mayorId) {
             if (!initialAttendance.some(a => a.personId === mayorId)) {
-                initialAttendance.push({ personId: mayorId, status: firstWithRoll.raw.mayorPresent.present ? 'PRESENT' : 'ABSENT' });
+                initialAttendance.push({ personId: mayorId, status: winningRollCall.mayorPresent.present ? 'PRESENT' : 'ABSENT' });
                 mayorAdded = true;
             }
         }
         const presentCount = initialAttendance.filter(a => a.status === 'PRESENT').length;
         const absentCount = initialAttendance.filter(a => a.status === 'ABSENT').length;
-        const totalExtracted = (firstWithRoll.raw.presentMembers?.length ?? 0) + (firstWithRoll.raw.absentMembers?.length ?? 0);
+        const totalExtracted = winningRollCall.presentMembers.length + winningRollCall.absentMembers.length;
         const matchedCount = presentCount + absentCount;
         const mayorNote = mayorAdded ? ' (includes mayor from narrative)' : '';
         console.log(`  Initial attendance: ${presentCount} present, ${absentCount} absent — ${matchedCount} matched from ${totalExtracted} extracted${mayorNote}`);
