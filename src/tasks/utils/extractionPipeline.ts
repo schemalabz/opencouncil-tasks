@@ -240,14 +240,14 @@ export async function extractDecisionsFromPdfs(
 
         // Log attendance changes after resolution
         if (aggregatedChanges.length > 0) {
-            console.log(`  Attendance changes (${aggregatedChanges.length} after resolution/dedup):`);
+            console.log(`  Attendance changes (${aggregatedChanges.length} after resolution/dedup, majority threshold >50% of ${extractions.length} PDFs):`);
             for (const change of aggregatedChanges) {
                 const personId = nameToPersonId.get(change.name);
                 const status = personId ? '✓' : '✗ unmatched';
                 const agendaLabel = change.agendaItem
                     ? `${change.timing} ${change.agendaItem.nonAgendaReason === 'outOfAgenda' ? 'OA' : '#'}${change.agendaItem.agendaItemIndex}`
                     : 'session';
-                console.log(`    ${change.type} "${change.name}" ${agendaLabel} ${status}`);
+                console.log(`    ${change.type} "${change.name}" ${agendaLabel} ${status} (${change.reportingPdfCount}/${change.totalPdfCount} PDFs)`);
             }
         }
     }

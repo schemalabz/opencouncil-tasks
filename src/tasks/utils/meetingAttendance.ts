@@ -19,11 +19,20 @@ import { computeEffectiveAttendance } from './effectiveAttendance.js';
  * @param nameToPersonId - Name → personId mapping from the matching phase
  * @param initialNames - All names from the initial roll call (present + absent)
  */
+export interface AttendanceChangeWithAgreement extends AttendanceChange {
+    /** How many PDFs reported this change */
+    reportingPdfCount: number;
+    /** Total PDFs that were extracted */
+    totalPdfCount: number;
+}
+
 export function resolveAndDeduplicateAttendanceChanges(
     extractions: Array<{ raw: Pick<RawExtractedDecision, 'attendanceChanges'> }>,
     nameToPersonId: Map<string, string>,
     initialNames: string[],
-): AttendanceChange[] {
+): AttendanceChangeWithAgreement[] {
+    const totalPdfCount = extractions.length;
+
     // Build personId → canonical initial-list name mapping
     const personIdToInitialName = new Map<string, string>();
     for (const name of initialNames) {
@@ -38,6 +47,7 @@ export function resolveAndDeduplicateAttendanceChanges(
     const groups = new Map<string, {
         change: AttendanceChange;
         timingVotes: Map<string, number>; // timing value → count
+        reportingPdfCount: number; // how many PDFs reported this change at all
     }>();
 
     for (const { raw } of extractions) {
@@ -60,17 +70,26 @@ export function resolveAndDeduplicateAttendanceChanges(
                 groups.set(key, {
                     change: { ...change, name: resolvedName },
                     timingVotes: new Map([[timingKey, 1]]),
+                    reportingPdfCount: 1,
                 });
             } else {
-                // Add timing vote
                 group.timingVotes.set(timingKey, (group.timingVotes.get(timingKey) ?? 0) + 1);
+                group.reportingPdfCount++;
             }
         }
     }
 
-    // Build final list with majority-voted timing
-    const result: AttendanceChange[] = [];
-    for (const { change, timingVotes } of groups.values()) {
+    // Build final list — only include changes with sufficient agreement.
+    // A change reported by a single PDF when multiple were extracted is likely
+    // a hallucination. Require >50% of PDFs to report the change.
+    // Exception: when only 1-2 PDFs were extracted, require all to agree.
+    const result: AttendanceChangeWithAgreement[] = [];
+    for (const { change, timingVotes, reportingPdfCount } of groups.values()) {
+        // Consensus check: change must be reported by majority of PDFs
+        if (reportingPdfCount <= totalPdfCount / 2) {
+            continue; // Not enough agreement — skip this change
+        }
+
         // Pick timing with most votes; on tie, prefer specified over null
         let bestTiming: 'during' | 'after' | null = null;
         let bestCount = 0;
@@ -85,7 +104,7 @@ export function resolveAndDeduplicateAttendanceChanges(
                 bestCount = count;
             }
         }
-        result.push({ ...change, timing: bestTiming });
+        result.push({ ...change, timing: bestTiming, reportingPdfCount, totalPdfCount });
     }
 
     return result;
