@@ -52,16 +52,25 @@ export function enableLogPersistence(): void {
   const logDir = process.env.LOG_DIR || './logs';
   logPath = join(logDir, 'app.log');
 
+  let warned = false;
+  const warnOnce = (reason: string) => {
+    if (warned) return;
+    warned = true;
+    process.stderr.write(`⚠ Log persistence: ${reason} — logs will only appear in stdout\n`);
+  };
+
   try {
     mkdirSync(logDir, { recursive: true });
-  } catch {
-    return; // can't create dir — skip file logging silently
+  } catch (e) {
+    warnOnce(`cannot create ${logDir} (${(e as NodeJS.ErrnoException).code})`);
+    return;
   }
 
   try {
     stream = createWriteStream(logPath, { flags: 'a' });
-    stream.on('error', () => {}); // suppress — never crash the app for logging
-  } catch {
+    stream.on('error', (e) => warnOnce(`cannot write to ${logPath} (${(e as NodeJS.ErrnoException).code ?? e.message})`));
+  } catch (e) {
+    warnOnce(`cannot open ${logPath} (${(e as NodeJS.ErrnoException).code})`);
     return;
   }
 

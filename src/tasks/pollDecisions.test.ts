@@ -14,9 +14,8 @@ vi.mock('@schemalabs/diavgeia-cli', () => ({
 
 // Mock aiChat + usage helpers
 vi.mock("../lib/ai.js", () => ({
-    aiChat: vi.fn(async () => ({ result: [], usage: NO_USAGE_MOCK })),
+    aiChat: vi.fn(async () => ({ result: { matches: [], reassignments: [], unmatched: [] }, usage: NO_USAGE_MOCK })),
     NO_USAGE: NO_USAGE_MOCK,
-    HAIKU_MODEL: 'claude-haiku-4-5-20251001',
     addUsage: (a: Record<string, number>, b: Record<string, number>) => ({
         input_tokens: a.input_tokens + b.input_tokens,
         output_tokens: a.output_tokens + b.output_tokens,
@@ -27,7 +26,11 @@ vi.mock("../lib/ai.js", () => ({
 
 // Mock extractionPipeline (extraction is tested separately)
 vi.mock("./utils/extractionPipeline.js", () => ({
-    extractDecisionsFromPdfs: vi.fn(async () => ({ decisions: [], warnings: [], usage: NO_USAGE_MOCK, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [] })),
+    extractDecisionsFromPdfs: vi.fn(async () => ({
+        decisions: [], warnings: [], usage: NO_USAGE_MOCK,
+        initialAttendance: [], unmatchedInitialAttendance: [],
+        nonDecisionSubjectAttendance: [], allSubjectAttendance: [],
+    })),
 }));
 
 import { aiChat } from "../lib/ai.js";
@@ -81,12 +84,12 @@ function makeRequest(overrides: Partial<PollDecisionsRequest> = {}): PollDecisio
 beforeEach(() => {
     vi.clearAllMocks();
     mockSearchAll.mockReturnValue(asyncIter([]));
-    // Default: LLM returns no matches
-    mockAiChat.mockResolvedValue({ result: [], usage: noUsage });
+    // Default: resolver returns empty results
+    mockAiChat.mockResolvedValue({ result: { matches: [], reassignments: [], unmatched: [] }, usage: noUsage });
 });
 
-describe("pollDecisions - matching behavior", () => {
-    it("linked subjects are excluded from matching passes", async () => {
+describe("pollDecisions - resolver matching", () => {
+    it("linked subjects are excluded from matching, resolver not called", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έγκριση προϋπολογισμού 2025",
@@ -111,9 +114,10 @@ describe("pollDecisions - matching behavior", () => {
         expect(result.matches).toHaveLength(0);
         expect(result.unmatchedSubjects).toHaveLength(0);
         expect(result.reassignments).toHaveLength(0);
+        expect(mockAiChat).not.toHaveBeenCalled();
     });
 
-    it("matches a non-conflicting decision normally", async () => {
+    it("resolver matches unlinked subjects to decisions", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έγκριση προϋπολογισμού 2025",
@@ -125,6 +129,16 @@ describe("pollDecisions - matching behavior", () => {
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1, D2]));
+
+        // Resolver returns a match for the unlinked subject
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subB", ada: "ADA-D2", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
 
         const result = await pollDecisions(
             makeRequest({
@@ -145,9 +159,10 @@ describe("pollDecisions - matching behavior", () => {
         expect(matchB).toBeDefined();
         expect(matchB!.ada).toBe("ADA-D2");
         expect(result.reassignments).toHaveLength(0);
+        expect(result.unmatchedSubjects).toHaveLength(0);
     });
 
-    it("works with subjects that have no existingDecision field (backward compat)", async () => {
+    it("resolver leaves subjects unmatched with reasoning", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έγκριση προϋπολογισμού 2025",
@@ -155,24 +170,66 @@ describe("pollDecisions - matching behavior", () => {
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
 
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [],
+                reassignments: [],
+                unmatched: [{ subjectId: "subA", reasoning: "No decision matches this subject" }],
+            },
+            usage: noUsage,
+        });
+
         const result = await pollDecisions(
             makeRequest({
                 subjects: [
-                    { subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 1 },
+                    { subjectId: "subA", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 1 },
                 ],
             }),
             noopProgress,
         );
 
-        expect(result.matches).toHaveLength(1);
-        expect(result.matches[0].ada).toBe("ADA-D1");
-        expect(result.reassignments).toHaveLength(0);
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects).toHaveLength(1);
+        expect(result.unmatchedSubjects[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects[0].reason).toBe("No decision matches this subject");
+    });
+
+    it("subjects not mentioned by resolver are added to unmatched", async () => {
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Έγκριση προϋπολογισμού 2025",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        // Resolver doesn't mention subA at all (not in matches nor unmatched)
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [
+                    { subjectId: "subA", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 1 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects).toHaveLength(1);
+        expect(result.unmatchedSubjects[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects[0].reason).toBe("Not mentioned in resolver output");
     });
 });
 
-describe("pollDecisions - conflict resolution", () => {
-    it("reassigns when unlinked subject matches a linked ADA and LLM confirms", async () => {
-        // D1 is the only decision. A incorrectly holds it. B is the correct owner.
+describe("pollDecisions - resolver reassignments", () => {
+    it("resolver can reassign a linked decision to a different subject", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Παράταση προθεσμίας του έργου ανάπλασης",
@@ -180,10 +237,12 @@ describe("pollDecisions - conflict resolution", () => {
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
 
-        // B matches D1 in the first pass (high word coverage).
-        // Conflict resolution detects the collision and calls LLM.
         mockAiChat.mockResolvedValueOnce({
-            result: { winner: "A", reason: "Subject A is semantically closer to the decision" },
+            result: {
+                matches: [{ subjectId: "subB", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [{ ada: "ADA-D1", fromSubjectId: "subA", toSubjectId: "subB", reasoning: "Subject B is the correct match for this decision" }],
+                unmatched: [],
+            },
             usage: noUsage,
         });
 
@@ -202,35 +261,70 @@ describe("pollDecisions - conflict resolution", () => {
             noopProgress,
         );
 
-        // D1 reassigned from subA to subB
         expect(result.reassignments).toHaveLength(1);
         expect(result.reassignments[0]).toEqual({
             ada: "ADA-D1",
             fromSubjectId: "subA",
             toSubjectId: "subB",
-            reason: "Subject A is semantically closer to the decision",
+            reason: "Subject B is the correct match for this decision",
         });
 
-        // subB in matches with D1
         const matchB = result.matches.find(m => m.subjectId === "subB");
         expect(matchB).toBeDefined();
         expect(matchB!.ada).toBe("ADA-D1");
     });
 
-    it("keeps linked assignment when LLM says linked is correct", async () => {
-        // Both A and B have similar names to D1. A is linked. B matches D1 too.
+    it("reassignment reason comes from resolver reasoning", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
-            subject: "Έγκριση προϋπολογισμού 2025",
+            subject: "Παράταση προθεσμίας του έργου ανάπλασης",
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
 
-        // B matches D1 in first pass (exact match). Conflict resolution: linked wins.
+        const expectedReason = "Subject A is unrelated; subject B matches the extension project";
         mockAiChat.mockResolvedValueOnce({
-            result: { winner: "B", reason: "Subject B is the correct match" },
+            result: {
+                matches: [{ subjectId: "subB", ada: "ADA-D1", confidence: "medium", reasoning: "Partial match" }],
+                reassignments: [{ ada: "ADA-D1", fromSubjectId: "subA", toSubjectId: "subB", reasoning: expectedReason }],
+                unmatched: [],
+            },
             usage: noUsage,
         });
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [
+                    {
+                        subjectId: "subA",
+                        name: "Ψήφισμα κατά της βίας",
+                        agendaItemIndex: 1,
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
+                    },
+                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 2 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        expect(result.reassignments).toHaveLength(1);
+        expect(result.reassignments[0].reason).toBe(expectedReason);
+    });
+});
+
+describe("pollDecisions - resolver edge cases", () => {
+    it("works with no unlinked subjects (resolver skipped)", async () => {
+        const D1 = makeDecision({
+            ada: "ADA-D1",
+            subject: "Έγκριση προϋπολογισμού 2025",
+        });
+        const D2 = makeDecision({
+            ada: "ADA-D2",
+            subject: "Τροποποίηση κανονισμού",
+            protocolNumber: "2/2025",
+        });
+
+        mockSearchAll.mockReturnValue(asyncIter([D1, D2]));
 
         const result = await pollDecisions(
             makeRequest({
@@ -241,148 +335,71 @@ describe("pollDecisions - conflict resolution", () => {
                         agendaItemIndex: 1,
                         existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Έγκριση τεχνικού προϋπολογισμού 2025", agendaItemIndex: 2 },
+                    {
+                        subjectId: "subB",
+                        name: "Τροποποίηση κανονισμού",
+                        agendaItemIndex: 2,
+                        existingDecision: { ada: "ADA-D2", decisionTitle: "Τροποποίηση κανονισμού", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D2" },
+                    },
                 ],
             }),
             noopProgress,
         );
 
-        // No reassignment — linked subject keeps D1
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects).toHaveLength(0);
         expect(result.reassignments).toHaveLength(0);
-        // subB removed from matches and added to unmatched
-        expect(result.matches.find(m => m.subjectId === "subB")).toBeUndefined();
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subB")).toBeDefined();
+        expect(mockAiChat).not.toHaveBeenCalled();
     });
 
-    it("skips conflict resolution when linked ADA is not in fetched decisions", async () => {
-        // D1 (linked to A) was NOT fetched — outside date range. D2 is fetched.
-        const D2 = makeDecision({
-            ada: "ADA-D2",
-            subject: "Άλλη απόφαση",
-        });
+    it("works with no decisions fetched", async () => {
+        mockSearchAll.mockReturnValue(asyncIter([]));
 
-        mockSearchAll.mockReturnValue(asyncIter([D2]));
-
-        // LLM matching pass for unmatched B (D2 is available)
+        // Resolver called but no candidates, returns all unmatched
         mockAiChat.mockResolvedValueOnce({
-            result: [{ subjectId: "subB", ada: null, confidence: "none", reasoning: "No match" }],
+            result: {
+                matches: [],
+                reassignments: [],
+                unmatched: [{ subjectId: "subA", reasoning: "No decisions available" }],
+            },
             usage: noUsage,
         });
 
         const result = await pollDecisions(
             makeRequest({
                 subjects: [
-                    {
-                        subjectId: "subA",
-                        name: "Old subject",
-                        agendaItemIndex: 1,
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Old decision outside range", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
-                    },
-                    { subjectId: "subB", name: "Unmatched subject", agendaItemIndex: 2 },
+                    { subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 1 },
                 ],
             }),
             noopProgress,
         );
 
-        // No conflict (B didn't match ADA-D1 since it's not in fetched decisions)
-        expect(mockAiChat).toHaveBeenCalledTimes(1); // Only LLM matching pass
-        expect(result.reassignments).toHaveLength(0);
+        expect(mockAiChat).toHaveBeenCalledTimes(1);
+        expect(result.matches).toHaveLength(0);
+        expect(result.unmatchedSubjects).toHaveLength(1);
+        expect(result.unmatchedSubjects[0].subjectId).toBe("subA");
     });
 });
 
-describe("pollDecisions - mixed scenario", () => {
-    it("handles normal matches, reassignments, and unmatched subjects together", async () => {
-        const D1 = makeDecision({
-            ada: "ADA-D1",
-            subject: "Παράταση προθεσμίας έργου ανάπλασης",
-            protocolNumber: "1/2025",
-        });
-        const D2 = makeDecision({
-            ada: "ADA-D2",
-            subject: "Τροποποίηση κανονισμού λειτουργίας",
-            protocolNumber: "2/2025",
-        });
-        const D3 = makeDecision({
-            ada: "ADA-D3",
-            subject: "Ορισμός μελών επιτροπής",
-            protocolNumber: "3/2025",
-        });
-
-        mockSearchAll.mockReturnValue(asyncIter([D1, D2, D3]));
-
-        // Flow:
-        // First pass: subC ("Παράταση έργου ανάπλασης") matches D1 (word coverage).
-        //             subD ("Κάτι εντελώς διαφορετικό") — no match.
-        // LLM pass:   subD vs available [D2, D3] — no match (1st aiChat).
-        // Conflict:   subC's match D1 collides with subA's linked D1 (2nd aiChat).
-        mockAiChat
-            .mockResolvedValueOnce({
-                // LLM matching for subD — no match
-                result: [{ subjectId: "subD", ada: null, confidence: "none", reasoning: "No match" }],
-                usage: noUsage,
-            })
-            .mockResolvedValueOnce({
-                // Conflict resolution: subC vs subA for D1 — subC wins
-                result: { winner: "A", reason: "Subject C better matches the decision" },
-                usage: noUsage,
-            });
-
-        const result = await pollDecisions(
-            makeRequest({
-                subjects: [
-                    // subA incorrectly holds D1
-                    {
-                        subjectId: "subA",
-                        name: "Ψήφισμα",
-                        agendaItemIndex: 1,
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
-                    },
-                    // subB correctly holds D2
-                    {
-                        subjectId: "subB",
-                        name: "Τροποποίηση κανονισμού λειτουργίας",
-                        agendaItemIndex: 2,
-                        existingDecision: { ada: "ADA-D2", decisionTitle: "Τροποποίηση κανονισμού λειτουργίας", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D2" },
-                    },
-                    // subC should get D1 via reassignment
-                    { subjectId: "subC", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 3 },
-                    // subD has no match
-                    { subjectId: "subD", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 4 },
-                ],
-            }),
-            noopProgress,
-        );
-
-        // subC matched D1, triggering reassignment from subA
-        expect(result.reassignments).toHaveLength(1);
-        expect(result.reassignments[0].ada).toBe("ADA-D1");
-        expect(result.reassignments[0].fromSubjectId).toBe("subA");
-        expect(result.reassignments[0].toSubjectId).toBe("subC");
-
-        // subC in matches with D1
-        const matchC = result.matches.find(m => m.subjectId === "subC");
-        expect(matchC).toBeDefined();
-        expect(matchC!.ada).toBe("ADA-D1");
-
-        // subD unmatched
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subD")).toBeDefined();
-
-        // Linked subjects not in matches
-        expect(result.matches.find(m => m.subjectId === "subA")).toBeUndefined();
-        expect(result.matches.find(m => m.subjectId === "subB")).toBeUndefined();
-    });
-});
-
-describe("pollDecisions - verification", () => {
+describe("pollDecisions - subjectInfo warnings", () => {
     const people = [{ id: "person1", name: "Test Person" }];
 
-    it("discards match when PDF subject number mismatches agendaItemIndex", async () => {
+    it("emits warning but preserves match when PDF subject number mismatches agendaItemIndex", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έγκριση προϋπολογισμού 2025",
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
 
         mockExtractDecisions.mockResolvedValueOnce({
             decisions: [{
@@ -402,6 +419,7 @@ describe("pollDecisions - verification", () => {
             initialAttendance: [],
             unmatchedInitialAttendance: [],
             nonDecisionSubjectAttendance: [],
+            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -414,24 +432,30 @@ describe("pollDecisions - verification", () => {
             noopProgress,
         );
 
-        // Match discarded — subject moved to unmatched
-        expect(result.matches).toHaveLength(0);
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
+        // Match preserved — mismatch emitted as warning only
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects).toHaveLength(0);
         expect(result.extractions?.warnings.length).toBeGreaterThan(0);
+        expect(result.extractions?.warnings[0]).toContain("subjectInfo mismatch");
     });
 
-    it("re-matches to correct subject when number mismatch has a candidate", async () => {
-        // D1 matches subA by title, but PDF says it's subject #5, not #3
-        // subB is item #5 and currently unmatched
+    it("emits warning but preserves match for number mismatch (no cascade)", async () => {
+        // D1 matches subA by title, but PDF says it's subject #5, not #3.
+        // Previously this would cascade into re-matching; now it stays with subA.
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έγκριση προϋπολογισμού 2025",
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
-        // LLM matching for subB (no match for it)
+
         mockAiChat.mockResolvedValueOnce({
-            result: [{ subjectId: "subB", ada: null, confidence: "none", reasoning: "No match" }],
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [{ subjectId: "subB", reasoning: "No matching decision" }],
+            },
             usage: noUsage,
         });
 
@@ -453,6 +477,7 @@ describe("pollDecisions - verification", () => {
             initialAttendance: [],
             unmatchedInitialAttendance: [],
             nonDecisionSubjectAttendance: [],
+            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -466,23 +491,27 @@ describe("pollDecisions - verification", () => {
             noopProgress,
         );
 
-        // subA match discarded, re-matched to subB
-        expect(result.matches.find(m => m.subjectId === "subA")).toBeUndefined();
-        const matchB = result.matches.find(m => m.subjectId === "subB");
-        expect(matchB).toBeDefined();
-        expect(matchB!.ada).toBe("ADA-D1");
-        // subA in unmatched (removed from original match), subB no longer unmatched
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subB")).toBeUndefined();
+        // subA match preserved — no cascade re-matching
+        expect(result.matches.find(m => m.subjectId === "subA")).toBeDefined();
+        expect(result.extractions?.warnings.some(w => w.includes("subjectInfo mismatch"))).toBe(true);
     });
 
-    it("keeps match for outOfAgenda subject when PDF says isOutOfAgenda: true", async () => {
+    it("keeps match for outOfAgenda subject when PDF says isOutOfAgenda: true (no warning)", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έκτακτο θέμα",
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
 
         mockExtractDecisions.mockResolvedValueOnce({
             decisions: [{
@@ -502,6 +531,7 @@ describe("pollDecisions - verification", () => {
             initialAttendance: [],
             unmatchedInitialAttendance: [],
             nonDecisionSubjectAttendance: [],
+            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -514,19 +544,29 @@ describe("pollDecisions - verification", () => {
             noopProgress,
         );
 
-        // Match kept — outOfAgenda consistent
+        // Match kept — outOfAgenda consistent, no warning
         expect(result.matches).toHaveLength(1);
         expect(result.matches[0].subjectId).toBe("subA");
         expect(result.unmatchedSubjects).toHaveLength(0);
+        expect(result.extractions?.warnings).toHaveLength(0);
     });
 
-    it("discards outOfAgenda match when PDF says regular item", async () => {
+    it("emits warning but preserves match when outOfAgenda subject PDF says regular item", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Έκτακτο θέμα",
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
 
         mockExtractDecisions.mockResolvedValueOnce({
             decisions: [{
@@ -546,6 +586,7 @@ describe("pollDecisions - verification", () => {
             initialAttendance: [],
             unmatchedInitialAttendance: [],
             nonDecisionSubjectAttendance: [],
+            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -558,18 +599,29 @@ describe("pollDecisions - verification", () => {
             noopProgress,
         );
 
-        // Match discarded — PDF says regular item but subject is outOfAgenda
-        expect(result.matches).toHaveLength(0);
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
+        // Match preserved — warning emitted instead of discard
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects).toHaveLength(0);
+        expect(result.extractions?.warnings.some(w => w.includes("subjectInfo mismatch"))).toBe(true);
     });
 
-    it("discards regular match when PDF says out-of-agenda", async () => {
+    it("emits warning but preserves match when regular subject PDF says out-of-agenda", async () => {
         const D1 = makeDecision({
             ada: "ADA-D1",
             subject: "Θέμα 3ο",
         });
 
         mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
 
         mockExtractDecisions.mockResolvedValueOnce({
             decisions: [{
@@ -589,6 +641,7 @@ describe("pollDecisions - verification", () => {
             initialAttendance: [],
             unmatchedInitialAttendance: [],
             nonDecisionSubjectAttendance: [],
+            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -601,21 +654,34 @@ describe("pollDecisions - verification", () => {
             noopProgress,
         );
 
-        // Match discarded — regular subject but PDF says out-of-agenda
-        expect(result.matches).toHaveLength(0);
-        expect(result.unmatchedSubjects.find(u => u.subjectId === "subA")).toBeDefined();
+        // Match preserved — warning emitted instead of discard
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects).toHaveLength(0);
+        expect(result.extractions?.warnings.some(w => w.includes("subjectInfo mismatch"))).toBe(true);
     });
 
-    it("re-matches cascading mismatches when similar titles cause shifted assignments", async () => {
-        // Three similar-titled decisions: title matching pairs each to the wrong subject
-        // sub6 (#6) → PDF-for-#7, sub7 (#7) → PDF-for-#8, sub8 (#8) → PDF-for-#9
-        // With single-pass, sub7 can't be reassigned because it's still "matched".
-        // Two-pass frees all three simultaneously, allowing correct reassignment.
+    it("emits per-subject warnings for cascading mismatches without re-matching", async () => {
+        // Previously, similar titles caused cascading re-assignments.
+        // Now, all matches are preserved and each mismatch emits an independent warning.
         const D1 = makeDecision({ ada: "ADA-D1", subject: "Διαγραφή οφειλών ΤΑΠ Α" });
         const D2 = makeDecision({ ada: "ADA-D2", subject: "Διαγραφή οφειλών ΤΑΠ Β" });
         const D3 = makeDecision({ ada: "ADA-D3", subject: "Διαγραφή οφειλών ΤΑΠ Γ" });
 
         mockSearchAll.mockReturnValue(asyncIter([D1, D2, D3]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [
+                    { subjectId: "sub6", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" },
+                    { subjectId: "sub7", ada: "ADA-D2", confidence: "high", reasoning: "Title matches" },
+                    { subjectId: "sub8", ada: "ADA-D3", confidence: "high", reasoning: "Title matches" },
+                ],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
 
         mockExtractDecisions.mockResolvedValueOnce({
             decisions: [
@@ -643,6 +709,7 @@ describe("pollDecisions - verification", () => {
             initialAttendance: [],
             unmatchedInitialAttendance: [],
             nonDecisionSubjectAttendance: [],
+            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -657,16 +724,14 @@ describe("pollDecisions - verification", () => {
             noopProgress,
         );
 
-        // sub6's PDF says #7 → reassigned to sub7
-        // sub7's PDF says #8 → reassigned to sub8
-        // sub8's PDF says #9 → no subject #9, but sub8 was already filled above
+        // All matches preserved — no cascade re-matching
         const matchedIds = result.matches.map(m => m.subjectId);
+        expect(matchedIds).toContain("sub6");
         expect(matchedIds).toContain("sub7");
         expect(matchedIds).toContain("sub8");
-        expect(matchedIds).not.toContain("sub6");
+        expect(result.unmatchedSubjects).toHaveLength(0);
 
-        // Only sub6 stays unmatched — nothing points to #6
-        const unmatchedIds = result.unmatchedSubjects.map(u => u.subjectId);
-        expect(unmatchedIds).toEqual(["sub6"]);
+        // Three warnings emitted — one per mismatch
+        expect(result.extractions?.warnings.filter(w => w.includes("subjectInfo mismatch"))).toHaveLength(3);
     });
 });

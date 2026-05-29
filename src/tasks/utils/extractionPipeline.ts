@@ -10,6 +10,8 @@ import {
     AgendaItemRef,
 } from './decisionPdfExtraction.js';
 import { resolveAndDeduplicateAttendanceChanges, computeAllSubjectAttendance, SubjectForAttendance, MeetingAttendanceData } from './meetingAttendance.js';
+import { selectDiscussionOrder } from './discussionOrderVote.js';
+import { selectRollCall } from './rollCallVote.js';
 import { validateRawExtraction, validateProcessedDecision } from './decisionValidation.js';
 
 export interface ExtractionSubject {
@@ -33,6 +35,12 @@ export interface ExtractionPipelineResult {
     unmatchedInitialAttendance: string[];
     /** Per-subject effective attendance for subjects without decisions in the extraction */
     nonDecisionSubjectAttendance: Array<{
+        subjectId: string;
+        presentMemberIds: string[];
+        absentMemberIds: string[];
+    }>;
+    /** Per-subject effective attendance for ALL subjects (used by caller to recompute non-decision filter after post-processing) */
+    allSubjectAttendance: Array<{
         subjectId: string;
         presentMemberIds: string[];
         absentMemberIds: string[];
@@ -76,7 +84,7 @@ export async function extractDecisionsFromPdfs(
     if (mayorName) console.log(`Mayor: ${mayorName} (${mayorId})`);
 
     if (subjects.length === 0) {
-        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [] };
+        return { decisions: [], warnings: [], usage: totalUsage, initialAttendance: [], unmatchedInitialAttendance: [], nonDecisionSubjectAttendance: [], allSubjectAttendance: [] };
     }
 
     // --- Phase 1: Extract all PDFs (batched for concurrency) ---
@@ -174,27 +182,57 @@ export async function extractDecisionsFromPdfs(
 
     console.log(`  Final matched: ${nameToPersonId.size}/${allRawNames.size}`);
 
-    const firstWithRoll = extractions.find(e => (e.raw.presentMembers?.length ?? 0) > 0 || (e.raw.absentMembers?.length ?? 0) > 0);
+    // --- Select initial roll call by majority vote across all PDFs ---
+    // All PDFs from the same meeting should have the same attendance preamble,
+    // but extraction errors or a PDF from a different session can produce outliers.
+    // Majority vote ensures one wrong PDF doesn't poison the entire meeting's attendance.
+    const rollCallVote = selectRollCall(extractions.map(({ raw }) => ({
+        presentMembers: raw.presentMembers,
+        absentMembers: raw.absentMembers,
+        mayorPresent: raw.mayorPresent,
+    })));
+    const winningRollCall = rollCallVote.selected;
+
+    if (rollCallVote.breakdown.length > 1) {
+        console.log(`  Roll call vote: ${rollCallVote.breakdown[0].count}/${rollCallVote.totalPdfs - rollCallVote.emptyCount} PDFs agree (${rollCallVote.breakdown.length} distinct roll calls found)`);
+        for (const { entry, count } of rollCallVote.breakdown) {
+            console.log(`    ${count}× ${entry.presentMembers.length}p/${entry.absentMembers.length}a, mayor ${entry.mayorPresent?.present ? 'present' : 'absent'}`);
+        }
+    }
 
     // --- Aggregate meeting-level attendance data from all PDFs ---
-    // All PDFs from the same meeting share the same attendance preamble.
-    // See resolveAndDeduplicateAttendanceChanges for the resolution strategy.
+    // Attendance changes are resolved with majority voting (resolveAndDeduplicateAttendanceChanges).
+    // Discussion order uses majority vote (selectDiscussionOrder).
     let meetingAttendanceData: MeetingAttendanceData | null = null;
-    if (firstWithRoll) {
-        const allInitialNames = [...(firstWithRoll.raw.presentMembers || []), ...(firstWithRoll.raw.absentMembers || [])];
+    if (winningRollCall) {
+        const allInitialNames = [...winningRollCall.presentMembers, ...winningRollCall.absentMembers];
         const aggregatedChanges = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, allInitialNames);
 
-        // Use the longest discussion order from any PDF (most complete)
-        let bestDiscussionOrder: AgendaItemRef[] | null = null;
-        for (const { raw } of extractions) {
-            if (raw.discussionOrder && (bestDiscussionOrder === null || raw.discussionOrder.length > bestDiscussionOrder.length)) {
-                bestDiscussionOrder = raw.discussionOrder;
+        // Select discussion order by majority vote across PDFs
+        const discussionOrderVote = selectDiscussionOrder(
+            extractions.map(({ raw }) => raw.discussionOrder),
+        );
+        const bestDiscussionOrder = discussionOrderVote.selected;
+
+        // Log vote breakdown
+        const nonNullCount = discussionOrderVote.totalPdfs - discussionOrderVote.nullCount;
+        if (nonNullCount > 0) {
+            const selectedLabel = bestDiscussionOrder
+                ? `selected (${discussionOrderVote.breakdown[0].count}/${nonNullCount} agree)`
+                : 'no consensus → natural order';
+            console.log(`  Discussion order vote: ${selectedLabel}`);
+            for (const { order, count } of discussionOrderVote.breakdown) {
+                const refs = order.map(r => r.nonAgendaReason === 'outOfAgenda' ? `OA${r.agendaItemIndex}` : `#${r.agendaItemIndex}`);
+                console.log(`    ${count}× [${refs.join(', ')}]`);
+            }
+            if (discussionOrderVote.nullCount > 0) {
+                console.log(`    ${discussionOrderVote.nullCount}× null`);
             }
         }
 
         meetingAttendanceData = {
-            initialPresent: firstWithRoll.raw.presentMembers || [],
-            initialAbsent: firstWithRoll.raw.absentMembers || [],
+            initialPresent: winningRollCall.presentMembers,
+            initialAbsent: winningRollCall.absentMembers,
             attendanceChanges: aggregatedChanges,
             discussionOrder: bestDiscussionOrder,
             nameToPersonId,
@@ -202,47 +240,65 @@ export async function extractDecisionsFromPdfs(
 
         // Log attendance changes after resolution
         if (aggregatedChanges.length > 0) {
-            console.log(`  Attendance changes (${aggregatedChanges.length} after resolution/dedup):`);
+            console.log(`  Attendance changes (${aggregatedChanges.length} after resolution/dedup, majority threshold >50% of ${extractions.length} PDFs):`);
             for (const change of aggregatedChanges) {
                 const personId = nameToPersonId.get(change.name);
                 const status = personId ? '✓' : '✗ unmatched';
                 const agendaLabel = change.agendaItem
                     ? `${change.timing} ${change.agendaItem.nonAgendaReason === 'outOfAgenda' ? 'OA' : '#'}${change.agendaItem.agendaItemIndex}`
                     : 'session';
-                console.log(`    ${change.type} "${change.name}" ${agendaLabel} ${status}`);
+                console.log(`    ${change.type} "${change.name}" ${agendaLabel} ${status} (${change.reportingPdfCount}/${change.totalPdfCount} PDFs)`);
             }
         }
     }
 
-    // --- Build meeting-level initial attendance from the first extraction with roll call data ---
-    // All PDFs from the same meeting have the same initial roll, so we use the first one.
+    // --- Build meeting-level initial attendance from majority-voted roll call ---
     const initialAttendance: ExtractionPipelineResult['initialAttendance'] = [];
     const unmatchedInitialAttendance: string[] = [];
-    if (firstWithRoll) {
-        for (const name of firstWithRoll.raw.presentMembers || []) {
+    if (winningRollCall) {
+        for (const name of winningRollCall.presentMembers) {
             const personId = nameToPersonId.get(name);
             if (personId) initialAttendance.push({ personId, status: 'PRESENT' });
             else unmatchedInitialAttendance.push(name);
         }
-        for (const name of firstWithRoll.raw.absentMembers || []) {
+        for (const name of winningRollCall.absentMembers) {
             const personId = nameToPersonId.get(name);
             if (personId) initialAttendance.push({ personId, status: 'ABSENT' });
             else unmatchedInitialAttendance.push(name);
         }
         // Include mayor if extracted from decision narrative
         let mayorAdded = false;
-        if (firstWithRoll.raw.mayorPresent?.present != null && mayorId) {
+        if (winningRollCall.mayorPresent?.present != null && mayorId) {
             if (!initialAttendance.some(a => a.personId === mayorId)) {
-                initialAttendance.push({ personId: mayorId, status: firstWithRoll.raw.mayorPresent.present ? 'PRESENT' : 'ABSENT' });
+                initialAttendance.push({ personId: mayorId, status: winningRollCall.mayorPresent.present ? 'PRESENT' : 'ABSENT' });
                 mayorAdded = true;
             }
         }
+
+        // Deduplicate by personId. When the same person appears in both present
+        // and absent (e.g., truncated name in absent list matched to same personId
+        // as the full name in composition), ABSENT wins — explicit absence is a
+        // stronger signal than presence inferred from composition membership.
+        const attendanceByPersonId = new Map<string, 'PRESENT' | 'ABSENT'>();
+        for (const a of initialAttendance) {
+            const existing = attendanceByPersonId.get(a.personId);
+            if (!existing || a.status === 'ABSENT') {
+                attendanceByPersonId.set(a.personId, a.status);
+            }
+        }
+        const deduplicatedCount = initialAttendance.length - attendanceByPersonId.size;
+        initialAttendance.length = 0;
+        for (const [personId, status] of attendanceByPersonId) {
+            initialAttendance.push({ personId, status });
+        }
+
         const presentCount = initialAttendance.filter(a => a.status === 'PRESENT').length;
         const absentCount = initialAttendance.filter(a => a.status === 'ABSENT').length;
-        const totalExtracted = (firstWithRoll.raw.presentMembers?.length ?? 0) + (firstWithRoll.raw.absentMembers?.length ?? 0);
+        const totalExtracted = winningRollCall.presentMembers.length + winningRollCall.absentMembers.length;
         const matchedCount = presentCount + absentCount;
         const mayorNote = mayorAdded ? ' (includes mayor from narrative)' : '';
-        console.log(`  Initial attendance: ${presentCount} present, ${absentCount} absent — ${matchedCount} matched from ${totalExtracted} extracted${mayorNote}`);
+        const dedupNote = deduplicatedCount > 0 ? ` (${deduplicatedCount} duplicate${deduplicatedCount > 1 ? 's' : ''} resolved)` : '';
+        console.log(`  Initial attendance: ${presentCount} present, ${absentCount} absent — ${matchedCount} matched from ${totalExtracted} extracted${mayorNote}${dedupNote}`);
         if (unmatchedInitialAttendance.length > 0) {
             console.warn(`  ⚠ ${unmatchedInitialAttendance.length} unmatched members in initial roll call:`);
             for (const name of unmatchedInitialAttendance) {
@@ -254,25 +310,13 @@ export async function extractDecisionsFromPdfs(
     // --- Phase 3: Compute meeting-level attendance for all subjects ---
     // Uses the aggregated attendance data (resolved names, complete discussion order)
     // to compute effective attendance consistently for every subject.
-    //
-    // Assign OA indices from extraction subjectInfo (the PDF knows the actual OA
-    // number) rather than counting in request order (which depends on DB ordering).
-    const oaIndexFromExtraction = new Map<string, number>();
-    for (const { subjectId, raw } of extractions) {
-        if (raw.subjectInfo?.nonAgendaReason === 'outOfAgenda') {
-            oaIndexFromExtraction.set(subjectId, raw.subjectInfo.agendaItemIndex);
-        }
-    }
-    const subjectsWithOAIndices: SubjectForAttendance[] = allMeetingSubjects.map(s => ({
-        ...s,
-        outOfAgendaIndex: oaIndexFromExtraction.get(s.subjectId) ?? s.outOfAgendaIndex ?? null,
-    }));
-
     const attendanceBySubject = new Map<string, { presentMemberIds: string[]; absentMemberIds: string[] }>();
     let nonDecisionSubjectAttendance: ExtractionPipelineResult['nonDecisionSubjectAttendance'] = [];
+    let allSubjectAttendance: ExtractionPipelineResult['allSubjectAttendance'] = [];
 
     if (meetingAttendanceData) {
-        const allAttendance = computeAllSubjectAttendance(subjectsWithOAIndices, meetingAttendanceData);
+        const allAttendance = computeAllSubjectAttendance(allMeetingSubjects, meetingAttendanceData);
+        allSubjectAttendance = allAttendance;
         for (const a of allAttendance) {
             attendanceBySubject.set(a.subjectId, { presentMemberIds: a.presentMemberIds, absentMemberIds: a.absentMemberIds });
         }
@@ -386,5 +430,5 @@ export async function extractDecisionsFromPdfs(
     console.log(`  Extracted: ${extractions.length}/${subjects.length}`);
     console.log(`  Warnings: ${warnings.length}`);
 
-    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance, nonDecisionSubjectAttendance };
+    return { decisions, warnings, usage: totalUsage, initialAttendance, unmatchedInitialAttendance, nonDecisionSubjectAttendance, allSubjectAttendance };
 }

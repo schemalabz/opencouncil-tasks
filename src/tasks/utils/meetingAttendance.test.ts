@@ -104,6 +104,58 @@ describe('resolveAndDeduplicateAttendanceChanges', () => {
         expect(result[0].timing).toBe('during');
     });
 
+    it('filters out changes reported by only 1 PDF when multiple are extracted', () => {
+        // 5 PDFs, only 1 reports a change → hallucination, should be filtered
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+            { raw: { attendanceChanges: [] } },
+            { raw: { attendanceChanges: [] } },
+            { raw: { attendanceChanges: [] } },
+            { raw: { attendanceChanges: [] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(0);
+    });
+
+    it('includes changes reported by majority of PDFs', () => {
+        // 4 PDFs, 3 report a change → above 50% threshold
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+            { raw: { attendanceChanges: [] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+        expect(result[0].reportingPdfCount).toBe(3);
+        expect(result[0].totalPdfCount).toBe(4);
+    });
+
+    it('filters out changes at exactly 50% (requires strict majority)', () => {
+        // 4 PDFs, 2 report → exactly 50%, NOT strict majority
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+            { raw: { attendanceChanges: [] } },
+            { raw: { attendanceChanges: [] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(0);
+    });
+
+    it('accepts single-PDF change when only 1 PDF is extracted', () => {
+        // 1 PDF, 1 reports → 1 > 0.5 → accepted
+        const extractions = [
+            { raw: { attendanceChanges: [makeChange({ name: 'ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ', type: 'departure' as const, agendaItem: ref(1), timing: 'during' as const })] } },
+        ];
+
+        const result = resolveAndDeduplicateAttendanceChanges(extractions, nameToPersonId, initialNames);
+        expect(result).toHaveLength(1);
+    });
+
     it('keeps unmatched names as-is', () => {
         const extractions = [{
             raw: { attendanceChanges: [
