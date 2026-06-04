@@ -60,6 +60,7 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
       systemPrompt,
       userPrompt,
       parseJson: false,
+      batchFirst: true,
       tools: [{
         type: "web_search_20250305",
         name: "web_search",
