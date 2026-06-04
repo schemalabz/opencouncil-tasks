@@ -359,6 +359,7 @@ ${fullDiscussion}
     try {
         const result = await aiChat<{ speakerContributions: SpeakerContribution[] }>({
             model: "claude-opus-4-6",
+            batchFirst: true,
             systemPrompt,
             userPrompt,
             outputFormat: {

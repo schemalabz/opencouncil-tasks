@@ -89,29 +89,32 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 
     console.log(`   Processing ${primarySubjects.length} primary subjects...`);
 
-    for (let i = 0; i < subjects.length; i++) {
-        const subject = subjects[i];
-
-        // Skip secondary subjects - they were discussed jointly
+    // Mark secondary subjects and process primary subjects in parallel
+    for (const subject of subjects) {
         if (subject.discussedIn !== null) {
-            console.log(`   [${i + 1}/${subjects.length}] Skipping "${subject.name}" (discussed in primary subject ${subject.discussedIn})`);
-            subject.speakerContributions = [];  // Ensure empty
-            continue;
+            console.log(`   Skipping "${subject.name}" (discussed in primary subject ${subject.discussedIn})`);
+            subject.speakerContributions = [];
         }
-
-        console.log(`   [${i + 1}/${subjects.length}] Processing subject: "${subject.name}"`);
-        onProgress("speaker_contributions", i / subjects.length);
-        const { contributions, usage } = await generateSpeakerContributions(
-            subject,
-            allUtteranceStatuses,
-            compressedRequest.transcript,
-            idCompressor,
-            request.administrativeBodyName
-        );
-        subject.speakerContributions = contributions;
-        phase2Usage = addUsage(phase2Usage, usage);
-        console.log(`      → Generated ${contributions.length} speaker contributions`);
     }
+
+    let completedCount = 0;
+    await Promise.all(
+        subjects.filter(s => s.discussedIn === null).map(async (subject) => {
+            console.log(`   Processing subject: "${subject.name}"`);
+            const { contributions, usage } = await generateSpeakerContributions(
+                subject,
+                allUtteranceStatuses,
+                compressedRequest.transcript,
+                idCompressor,
+                request.administrativeBodyName
+            );
+            subject.speakerContributions = contributions;
+            phase2Usage = addUsage(phase2Usage, usage);
+            completedCount++;
+            onProgress("speaker_contributions", completedCount / primarySubjects.length);
+            console.log(`      → [${completedCount}/${primarySubjects.length}] Generated ${contributions.length} speaker contributions for "${subject.name}"`);
+        })
+    );
 
     console.log(`✅ Speaker contributions complete for ${subjects.length} subjects`);
     logUsage('Phase 2 tokens', phase2Usage);
