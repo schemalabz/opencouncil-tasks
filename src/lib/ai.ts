@@ -11,6 +11,8 @@ export type ResultWithUsage<T> = {
     usage: Anthropic.Messages.Usage;
     maxTokens?: number;
     response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
+    resolvedModel?: string;
+    batchMode?: boolean;
 };
 export const NO_USAGE: Anthropic.Messages.Usage = {
     input_tokens: 0,
@@ -27,7 +29,9 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     cache_creation_input_tokens: (usage.cache_creation_input_tokens || 0) + (otherUsage.cache_creation_input_tokens || 0),
     cache_read_input_tokens: (usage.cache_read_input_tokens || 0) + (otherUsage.cache_read_input_tokens || 0),
     cache_creation: null,  // Don't aggregate cache_creation details
-    server_tool_use: null, // Don't aggregate server_tool_use details
+    server_tool_use: {
+        web_search_requests: (usage.server_tool_use?.web_search_requests || 0) + (otherUsage.server_tool_use?.web_search_requests || 0),
+    },
     service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
 });
 
@@ -334,7 +338,9 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             return {
                 usage: addUsage(response.usage, response2.usage),
                 result: response2.result,
-                maxTokens
+                maxTokens,
+                resolvedModel,
+                batchMode: batchFirst
             }
         }
 
@@ -370,7 +376,9 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             usage: response.usage,
             result: responseJson,
             maxTokens,
-            response: response
+            response: response,
+            resolvedModel,
+            batchMode: batchFirst
         };
     } catch (e) {
         console.error(`Error in aiChat: ${e}`);

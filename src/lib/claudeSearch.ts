@@ -110,7 +110,9 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
         citationUrls
       },
       usage: result.usage,
-      response: result.response
+      response: result.response,
+      resolvedModel: result.resolvedModel,
+      batchMode: result.batchMode
     };
   } catch (error) {
     console.error('Error getting subject context with Claude:', error);

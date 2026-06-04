@@ -20,7 +20,7 @@ export async function generateSpeakerContributions(
     transcript: CompressedTranscript,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
-): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage }> {
+): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage; resolvedModel?: string; batchMode?: boolean }> {
     // Find utterance statuses for this subject
     const relevantStatuses = allUtteranceStatuses.filter(s =>
         s.subjectId === subject.id &&
@@ -182,7 +182,7 @@ export async function generateSpeakerContributionsInBatches(
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
-): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage }> {
+): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage; resolvedModel?: string; batchMode?: boolean }> {
     const speakerIds = Object.keys(utterancesBySpeaker);
     const totalSpeakers = speakerIds.length;
 
@@ -194,6 +194,8 @@ export async function generateSpeakerContributionsInBatches(
 
     const allContributions: SpeakerContribution[] = [];
     let totalUsage = NO_USAGE;
+    let resolvedModel: string | undefined;
+    let batchMode: boolean | undefined;
     let currentBatchSize = INITIAL_BATCH_SIZE;
     let batchNumber = 0;
 
@@ -214,7 +216,7 @@ export async function generateSpeakerContributionsInBatches(
 
         try {
             // Process this batch using the existing single-call function
-            const { contributions: batchContributions, usage: batchUsage } = await generateAllSpeakerContributionsInOneCall(
+            const batchResult = await generateAllSpeakerContributionsInOneCall(
                 batchUtterancesBySpeaker,
                 allSubjectUtterances,  // Full context for understanding
                 subject,
@@ -222,9 +224,13 @@ export async function generateSpeakerContributionsInBatches(
                 administrativeBodyName
             );
 
-            allContributions.push(...batchContributions);
-            totalUsage = addUsage(totalUsage, batchUsage);
-            console.log(`   ✓ Batch ${batchNumber} completed: ${batchContributions.length} contributions generated (${formatTokenCount(batchUsage.input_tokens)} input, ${formatTokenCount(batchUsage.output_tokens)} output)`);
+            allContributions.push(...batchResult.contributions);
+            totalUsage = addUsage(totalUsage, batchResult.usage);
+            if (resolvedModel === undefined) {
+                resolvedModel = batchResult.resolvedModel;
+                batchMode = batchResult.batchMode;
+            }
+            console.log(`   ✓ Batch ${batchNumber} completed: ${batchResult.contributions.length} contributions generated (${formatTokenCount(batchResult.usage.input_tokens)} input, ${formatTokenCount(batchResult.usage.output_tokens)} output)`);
 
             // Move forward by the actual number of speakers processed
             i += batchSpeakerIds.length;
@@ -288,7 +294,7 @@ export async function generateSpeakerContributionsInBatches(
         .map(([, contrib], i) => ({ ...contrib, order: i }));
     console.log(`   📊 After deduplication: ${deduplicatedContributions.length} unique contributions`);
 
-    return { contributions: deduplicatedContributions, usage: totalUsage };
+    return { contributions: deduplicatedContributions, usage: totalUsage, resolvedModel, batchMode };
 }
 
 /**
@@ -307,7 +313,7 @@ export async function generateAllSpeakerContributionsInOneCall(
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
-): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage }> {
+): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage; resolvedModel?: string; batchMode?: boolean }> {
     const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName);
 
     // Build a mapping from speaker keys to their display names
@@ -418,7 +424,9 @@ ${fullDiscussion}
 
         return {
             contributions: validContributions,
-            usage: result.usage
+            usage: result.usage,
+            resolvedModel: result.resolvedModel,
+            batchMode: result.batchMode
         };
     } catch (error) {
         console.error("Error generating speaker contributions:", error);

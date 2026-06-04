@@ -42,6 +42,8 @@ export async function processBatchesWithState(
     subjects: SubjectInProgress[];
     allUtteranceStatuses: UtteranceStatus[];
     usage: Anthropic.Messages.Usage;
+    resolvedModel?: string;
+    batchMode?: boolean;
 }> {
     const BATCH_INPUT_CHAR_LIMIT = 120_000;
     const batches = splitTranscript(request.transcript, BATCH_INPUT_CHAR_LIMIT);
@@ -54,6 +56,8 @@ export async function processBatchesWithState(
 
     const allSummaries: BatchProcessingResult['segmentSummaries'] = [];
     let totalUsage = NO_USAGE;
+    let resolvedModel: string | undefined;
+    let batchMode: boolean | undefined;
     const batchStats: Array<{ segments: number; utterances: number; inputChars: number; outputTokens: number; maxTokens: number }> = [];
 
     const MAX_BATCH_RETRIES = 3;
@@ -121,6 +125,10 @@ export async function processBatchesWithState(
                 batchResult = response.result;
                 batchUsage = response.usage;
                 batchMaxTokens = response.maxTokens;
+                if (resolvedModel === undefined) {
+                    resolvedModel = response.resolvedModel;
+                    batchMode = response.batchMode;
+                }
                 break;
             } catch (e) {
                 if (i > 0 && classifyTransientError(e) && attempt <= MAX_BATCH_RETRIES) {
@@ -522,7 +530,9 @@ export async function processBatchesWithState(
         speakerSegmentSummaries: allSummaries,
         subjects: conversationState.subjects,
         allUtteranceStatuses: conversationState.allUtteranceStatuses,
-        usage: totalUsage
+        usage: totalUsage,
+        resolvedModel,
+        batchMode
     };
 }
 
@@ -544,7 +554,7 @@ export async function processSingleBatch(
         additionalInstructions?: string;
     },
     previousMeetingProgressSummary?: string
-): Promise<{ result: BatchProcessingResult; usage: Anthropic.Messages.Usage; maxTokens: number }> {
+): Promise<{ result: BatchProcessingResult; usage: Anthropic.Messages.Usage; maxTokens: number; resolvedModel?: string; batchMode?: boolean }> {
     const systemPrompt = getBatchProcessingSystemPrompt(metadata);
     if (batchIndex === 0) {
         console.log(`   📏 System prompt: ${(systemPrompt.length / 1000).toFixed(1)}K chars`);
@@ -667,5 +677,5 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
         subject.speakerContributions = [];
     }
 
-    return { result: response.result, usage: response.usage, maxTokens: response.maxTokens! };
+    return { result: response.result, usage: response.usage, maxTokens: response.maxTokens!, resolvedModel: response.resolvedModel, batchMode: response.batchMode };
 }

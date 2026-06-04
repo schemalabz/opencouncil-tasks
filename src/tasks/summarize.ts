@@ -45,7 +45,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('');
     console.log('📝 PHASE 1: Batch Processing');
     onProgress("batch_processing", 0);
-    let { speakerSegmentSummaries, subjects, allUtteranceStatuses, usage: phase1Usage } =
+    let { speakerSegmentSummaries, subjects, allUtteranceStatuses, usage: phase1Usage, resolvedModel: phase1Model, batchMode: phase1Batch } =
         await processBatchesWithState(compressedRequest, idCompressor, onProgress);
 
     console.log(`✅ Batch processing complete:`);
@@ -62,6 +62,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     subjects = mergeResult.subjects;
     allUtteranceStatuses = mergeResult.allUtteranceStatuses;
     const phase1_5Usage = mergeResult.usage;
+    const phase1_5Model = mergeResult.resolvedModel;
+    const phase1_5Batch = mergeResult.batchMode;
     if (mergeResult.mergeCount > 0) {
         console.log(`   Subjects after merge: ${subjects.length}`);
     }
@@ -73,6 +75,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('💬 PHASE 2: Speaker Contributions');
     onProgress("speaker_contributions", 0);
     let phase2Usage = NO_USAGE;
+    let phase2Model: string | undefined;
+    let phase2Batch: boolean | undefined;
 
     // Count and skip secondary subjects
     const secondarySubjects = subjects.filter(s => s.discussedIn !== null);
@@ -89,10 +93,9 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 
     console.log(`   Processing ${primarySubjects.length} primary subjects...`);
 
-    // Mark secondary subjects and process primary subjects in parallel
+    // Mark secondary subjects before parallel processing
     for (const subject of subjects) {
         if (subject.discussedIn !== null) {
-            console.log(`   Skipping "${subject.name}" (discussed in primary subject ${subject.discussedIn})`);
             subject.speakerContributions = [];
         }
     }
@@ -101,18 +104,22 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     await Promise.all(
         subjects.filter(s => s.discussedIn === null).map(async (subject) => {
             console.log(`   Processing subject: "${subject.name}"`);
-            const { contributions, usage } = await generateSpeakerContributions(
+            const result = await generateSpeakerContributions(
                 subject,
                 allUtteranceStatuses,
                 compressedRequest.transcript,
                 idCompressor,
                 request.administrativeBodyName
             );
-            subject.speakerContributions = contributions;
-            phase2Usage = addUsage(phase2Usage, usage);
+            subject.speakerContributions = result.contributions;
+            phase2Usage = addUsage(phase2Usage, result.usage);
+            if (phase2Model === undefined) {
+                phase2Model = result.resolvedModel;
+                phase2Batch = result.batchMode;
+            }
             completedCount++;
             onProgress("speaker_contributions", completedCount / primarySubjects.length);
-            console.log(`      → [${completedCount}/${primarySubjects.length}] Generated ${contributions.length} speaker contributions for "${subject.name}"`);
+            console.log(`      → [${completedCount}/${primarySubjects.length}] Generated ${result.contributions.length} speaker contributions for "${subject.name}"`);
         })
     );
 
@@ -124,6 +131,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('🔍 PHASE 3: Enrichment (geocoding, context, summaries)');
     onProgress("enrichment", 0);
     let phase3Usage = NO_USAGE;
+    let phase3Model: string | undefined;
+    let phase3Batch: boolean | undefined;
     const enrichmentResults = await Promise.all(
         subjects.map((s, i) => {
             return enrichSubject(s, request.cityName, request.administrativeBodyName, request.date).then(result => {
@@ -137,6 +146,10 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     // Extract enriched subjects and accumulate usage
     const enrichedSubjects = enrichmentResults.map(r => {
         phase3Usage = addUsage(phase3Usage, r.usage);
+        if (phase3Model === undefined) {
+            phase3Model = r.resolvedModel;
+            phase3Batch = r.batchMode;
+        }
         return r.result;
     });
 
@@ -240,10 +253,10 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 
     // Calculate and display total token usage
     logMultiPhaseUsage('📊 TOTAL TOKEN USAGE', [
-        { label: 'Phase 1 (Batch Processing)', usage: phase1Usage },
-        { label: 'Phase 1.5 (Subject Merge)', usage: phase1_5Usage },
-        { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage },
-        { label: 'Phase 3 (Enrichment)', usage: phase3Usage }
+        { label: 'Phase 1 (Batch Processing)', usage: phase1Usage, model: phase1Model, batch: phase1Batch },
+        { label: 'Phase 1.5 (Subject Merge)', usage: phase1_5Usage, model: phase1_5Model, batch: phase1_5Batch },
+        { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage, model: phase2Model, batch: phase2Batch },
+        { label: 'Phase 3 (Enrichment)', usage: phase3Usage, model: phase3Model, batch: phase3Batch }
     ]);
     console.log(`✅ SUMMARIZE TASK COMPLETED [${meetingId}]`);
     console.log('═══════════════════════════════════════════════════════════');

@@ -65,6 +65,8 @@ export async function enrichSubjectData(
     // Step 2: Fetch web context using Claude API with web search
     let context: SubjectContext;
     let usage: Anthropic.Messages.Usage;
+    let resolvedModel: string | undefined;
+    let batchMode: boolean | undefined;
     try {
         const contextResult = await getSubjectContextWithClaude({
             subjectName: input.name,
@@ -75,6 +77,8 @@ export async function enrichSubjectData(
         });
         context = contextResult.result;
         usage = contextResult.usage;
+        resolvedModel = contextResult.resolvedModel;
+        batchMode = contextResult.batchMode;
     } catch (error) {
         console.error("Error fetching subject context:", error);
         // Return empty context on error
@@ -102,6 +106,8 @@ export async function enrichSubjectData(
             ...(input.withdrawn ? { withdrawn: true } : {}),
             discussedIn: input.discussedIn
         },
-        usage
+        usage,
+        resolvedModel,
+        batchMode
     };
 }

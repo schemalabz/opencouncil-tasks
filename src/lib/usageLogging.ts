@@ -37,7 +37,7 @@ export function logUsage(label: string, usage: Anthropic.Messages.Usage, detaile
  */
 export function logMultiPhaseUsage(
     title: string,
-    phases: { label: string; usage: Anthropic.Messages.Usage }[]
+    phases: { label: string; usage: Anthropic.Messages.Usage; model?: string; batch?: boolean }[]
 ): void {
     console.log('');
     console.log('═══════════════════════════════════════════════════════════');
@@ -59,9 +59,26 @@ export function logMultiPhaseUsage(
         totalUsage = addUsage(totalUsage, phases[i].usage);
     }
 
-    // Log individual phases
-    phases.forEach(({ label, usage }) => {
-        console.log(`   ${label}: ${formatTokenCount(usage.input_tokens)}/${formatTokenCount(usage.output_tokens)}`);
+    // Log individual phases with model, mode, and per-phase cache stats
+    phases.forEach(({ label, usage, model, batch }) => {
+        const tags: string[] = [];
+        if (model) tags.push(model);
+        if (batch) tags.push('batch');
+        const tagStr = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
+
+        const details: string[] = [];
+        const cacheWrite = usage.cache_creation_input_tokens || 0;
+        const cacheRead = usage.cache_read_input_tokens || 0;
+        if (cacheWrite > 0 || cacheRead > 0) {
+            details.push(`cache: ${formatTokenCount(cacheWrite)} write, ${formatTokenCount(cacheRead)} read`);
+        }
+        const webSearches = usage.server_tool_use?.web_search_requests || 0;
+        if (webSearches > 0) {
+            details.push(`${webSearches} web searches`);
+        }
+        const detailStr = details.length > 0 ? ` (${details.join(', ')})` : '';
+
+        console.log(`   ${label}${tagStr}: ${formatTokenCount(usage.input_tokens)}/${formatTokenCount(usage.output_tokens)}${detailStr}`);
     });
 
     // Separator

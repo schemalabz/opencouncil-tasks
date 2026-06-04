@@ -36,6 +36,8 @@ export async function mergeSubjects(
     allUtteranceStatuses: UtteranceStatus[];
     usage: Anthropic.Messages.Usage;
     mergeCount: number;
+    resolvedModel?: string;
+    batchMode?: boolean;
 }> {
     // Skip if fewer than 2 subjects — nothing to merge
     if (subjects.length < 2) {
@@ -96,7 +98,7 @@ ${JSON.stringify(subjectList, null, 2)}
 
 Remember: Only BEFORE_AGENDA subjects can appear in removeIds. If no merges are needed, return {"merges": []}.`;
 
-    const { result, usage } = await aiChat<MergeAIResponse>({
+    const { result, usage, resolvedModel, batchMode } = await aiChat<MergeAIResponse>({
         model: "claude-opus-4-6",
         systemPrompt,
         userPrompt,
@@ -128,7 +130,7 @@ Remember: Only BEFORE_AGENDA subjects can appear in removeIds. If no merges are 
 
     if (!result.merges || result.merges.length === 0) {
         console.log('   ✅ No merges needed');
-        return { subjects, allUtteranceStatuses, usage, mergeCount: 0 };
+        return { subjects, allUtteranceStatuses, usage, mergeCount: 0, resolvedModel, batchMode };
     }
 
     // Apply merges with safety checks
@@ -197,6 +199,8 @@ Remember: Only BEFORE_AGENDA subjects can appear in removeIds. If no merges are 
         subjects: mergedSubjects,
         allUtteranceStatuses: mergedStatuses,
         usage,
-        mergeCount: totalRemoved
+        mergeCount: totalRemoved,
+        resolvedModel,
+        batchMode
     };
 }

@@ -105,11 +105,11 @@ describe('addUsage', () => {
         expect(result.cache_read_input_tokens).toBe(0);
     });
 
-    it('always sets non-aggregatable detail fields to null', () => {
+    it('always sets non-aggregatable detail fields to null (except server_tool_use)', () => {
         const result = addUsage(NO_USAGE, NO_USAGE);
 
         expect(result.cache_creation).toBeNull();
-        expect(result.server_tool_use).toBeNull();
+        expect(result.server_tool_use).toEqual({ web_search_requests: 0 });
     });
 
     it('preserves the first non-null service_tier', () => {
