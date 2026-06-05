@@ -4,8 +4,7 @@
  * reconciles near-duplicate or fragmented subjects with all subjects visible at once.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
-import { aiChat, addUsage, NO_USAGE } from "../../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
 import { SubjectInProgress, UtteranceStatus } from "./types.js";
 
 interface MergeOperation {
@@ -34,22 +33,19 @@ export async function mergeSubjects(
 ): Promise<{
     subjects: SubjectInProgress[];
     allUtteranceStatuses: UtteranceStatus[];
-    usage: Anthropic.Messages.Usage;
     mergeCount: number;
-    resolvedModel?: string;
-    batchMode?: boolean;
-}> {
+} & UsageStats> {
     // Skip if fewer than 2 subjects — nothing to merge
     if (subjects.length < 2) {
         console.log('   ⏭️  Skipping merge: fewer than 2 subjects');
-        return { subjects, allUtteranceStatuses, usage: NO_USAGE, mergeCount: 0 };
+        return { subjects, allUtteranceStatuses, mergeCount: 0, ...NO_USAGE_STATS };
     }
 
     // Count BEFORE_AGENDA subjects — only these can be removed
     const beforeAgendaCount = subjects.filter(s => s.type === 'BEFORE_AGENDA').length;
     if (beforeAgendaCount === 0) {
         console.log('   ⏭️  Skipping merge: no BEFORE_AGENDA subjects to merge');
-        return { subjects, allUtteranceStatuses, usage: NO_USAGE, mergeCount: 0 };
+        return { subjects, allUtteranceStatuses, mergeCount: 0, ...NO_USAGE_STATS };
     }
 
     const systemPrompt = `You are an expert at analyzing meeting subject lists and identifying duplicates or fragments that should be merged.

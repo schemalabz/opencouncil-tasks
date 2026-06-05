@@ -6,14 +6,16 @@ import { promises as fs } from 'fs';
 dotenv.config();
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-export type ResultWithUsage<T> = {
-    result: T;
+export type UsageStats = {
     usage: Anthropic.Messages.Usage;
-    maxTokens?: number;
-    response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
     resolvedModel?: string;
     batchMode?: boolean;
 };
+export type ResultWithUsage<T> = {
+    result: T;
+    maxTokens?: number;
+    response?: Anthropic.Messages.Message;  // Full response for accessing citations, etc.
+} & UsageStats;
 export const NO_USAGE: Anthropic.Messages.Usage = {
     input_tokens: 0,
     output_tokens: 0,
@@ -23,6 +25,7 @@ export const NO_USAGE: Anthropic.Messages.Usage = {
     server_tool_use: null,
     service_tier: null
 };
+export const NO_USAGE_STATS: UsageStats = { usage: NO_USAGE };
 export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage): Anthropic.Messages.Usage => ({
     input_tokens: usage.input_tokens + otherUsage.input_tokens,
     output_tokens: usage.output_tokens + otherUsage.output_tokens,

@@ -1,8 +1,7 @@
 import { Subject, SubjectContext, SpeakerContribution } from '../types.js';
 import { geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
-import { ResultWithUsage, NO_USAGE } from './ai.js';
-import Anthropic from '@anthropic-ai/sdk';
+import { ResultWithUsage, NO_USAGE_STATS, type UsageStats } from './ai.js';
 
 /**
  * Input shape for subject enrichment, compatible with both ExtractedSubject and SubjectInProgress
@@ -64,9 +63,7 @@ export async function enrichSubjectData(
 
     // Step 2: Fetch web context using Claude API with web search
     let context: SubjectContext;
-    let usage: Anthropic.Messages.Usage;
-    let resolvedModel: string | undefined;
-    let batchMode: boolean | undefined;
+    let usageStats: UsageStats = NO_USAGE_STATS;
     try {
         const contextResult = await getSubjectContextWithClaude({
             subjectName: input.name,
@@ -76,17 +73,10 @@ export async function enrichSubjectData(
             date: config.date
         });
         context = contextResult.result;
-        usage = contextResult.usage;
-        resolvedModel = contextResult.resolvedModel;
-        batchMode = contextResult.batchMode;
+        usageStats = { usage: contextResult.usage, resolvedModel: contextResult.resolvedModel, batchMode: contextResult.batchMode };
     } catch (error) {
         console.error("Error fetching subject context:", error);
-        // Return empty context on error
-        context = {
-            text: "",
-            citationUrls: []
-        };
-        usage = NO_USAGE;
+        context = { text: "", citationUrls: [] };
     }
 
     // Step 3: Construct complete Subject object
@@ -106,8 +96,6 @@ export async function enrichSubjectData(
             ...(input.withdrawn ? { withdrawn: true } : {}),
             discussedIn: input.discussedIn
         },
-        usage,
-        resolvedModel,
-        batchMode
+        ...usageStats
     };
 }

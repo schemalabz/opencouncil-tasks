@@ -253,10 +253,10 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 
     // Calculate and display total token usage
     logMultiPhaseUsage('📊 TOTAL TOKEN USAGE', [
-        { label: 'Phase 1 (Batch Processing)', usage: phase1Usage, model: phase1Model, batch: phase1Batch },
-        { label: 'Phase 1.5 (Subject Merge)', usage: phase1_5Usage, model: phase1_5Model, batch: phase1_5Batch },
-        { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage, model: phase2Model, batch: phase2Batch },
-        { label: 'Phase 3 (Enrichment)', usage: phase3Usage, model: phase3Model, batch: phase3Batch }
+        { label: 'Phase 1 (Batch Processing)', usage: phase1Usage, resolvedModel: phase1Model, batchMode: phase1Batch },
+        { label: 'Phase 1.5 (Subject Merge)', usage: phase1_5Usage, resolvedModel: phase1_5Model, batchMode: phase1_5Batch },
+        { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage, resolvedModel: phase2Model, batchMode: phase2Batch },
+        { label: 'Phase 3 (Enrichment)', usage: phase3Usage, resolvedModel: phase3Model, batchMode: phase3Batch }
     ]);
     console.log(`✅ SUMMARIZE TASK COMPLETED [${meetingId}]`);
     console.log('═══════════════════════════════════════════════════════════');

@@ -3,10 +3,10 @@
  * Extracts speaker utterances from discussion ranges and generates summaries.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+
 import { DiscussionStatus, SpeakerContribution } from "../../types.js";
 import { IdCompressor, formatTime, formatTokenCount } from "../../utils.js";
-import { aiChat, addUsage, NO_USAGE } from "../../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
 import { getSpeakerContributionsSystemPrompt } from "./prompts.js";
 import { CompressedTranscript, SubjectInProgress, ExtractedUtterances, UtteranceStatus } from "./types.js";
 
@@ -20,7 +20,7 @@ export async function generateSpeakerContributions(
     transcript: CompressedTranscript,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
-): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage; resolvedModel?: string; batchMode?: boolean }> {
+): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     // Find utterance statuses for this subject
     const relevantStatuses = allUtteranceStatuses.filter(s =>
         s.subjectId === subject.id &&
@@ -29,7 +29,7 @@ export async function generateSpeakerContributions(
 
     if (relevantStatuses.length === 0) {
         console.log(`   ⚠️  Subject "${subject.name}": No SUBJECT_DISCUSSION utterances found`);
-        return { contributions: [], usage: NO_USAGE };
+        return { contributions: [], ...NO_USAGE_STATS };
     }
 
     console.log(`   🔍 Subject "${subject.name}" has ${relevantStatuses.length} relevant utterances`);
@@ -42,12 +42,12 @@ export async function generateSpeakerContributions(
 
     if (allSubjectUtterances.length === 0) {
         console.log(`   ⚠️  Subject "${subject.name}": No utterances found!`);
-        return { contributions: [], usage: NO_USAGE };
+        return { contributions: [], ...NO_USAGE_STATS };
     }
 
     if (speakerCount === 0) {
         console.log(`   ⚠️  Subject "${subject.name}": No speakers with utterances!`);
-        return { contributions: [], usage: NO_USAGE };
+        return { contributions: [], ...NO_USAGE_STATS };
     }
 
     // Generate speaker contributions in batches to avoid token exhaustion
@@ -182,7 +182,7 @@ export async function generateSpeakerContributionsInBatches(
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
-): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage; resolvedModel?: string; batchMode?: boolean }> {
+): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     const speakerIds = Object.keys(utterancesBySpeaker);
     const totalSpeakers = speakerIds.length;
 
@@ -313,7 +313,7 @@ export async function generateAllSpeakerContributionsInOneCall(
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
     administrativeBodyName?: string
-): Promise<{ contributions: SpeakerContribution[]; usage: Anthropic.Messages.Usage; resolvedModel?: string; batchMode?: boolean }> {
+): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName);
 
     // Build a mapping from speaker keys to their display names
@@ -437,7 +437,7 @@ ${fullDiscussion}
                 speakerName: speakerKeyToName.get(key) || (key.startsWith('name:') ? key.slice(5) : null),
                 text: "Σφάλμα κατά τη δημιουργία περίληψης."
             })),
-            usage: NO_USAGE
+            ...NO_USAGE_STATS
         };
     }
 }

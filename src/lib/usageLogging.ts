@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { formatTokenCount } from '../utils.js';
-import { addUsage } from './ai.js';
+import { addUsage, type UsageStats } from './ai.js';
 
 /**
  * Log token usage for a single operation or phase
@@ -37,7 +37,7 @@ export function logUsage(label: string, usage: Anthropic.Messages.Usage, detaile
  */
 export function logMultiPhaseUsage(
     title: string,
-    phases: { label: string; usage: Anthropic.Messages.Usage; model?: string; batch?: boolean }[]
+    phases: ({ label: string } & UsageStats)[]
 ): void {
     console.log('');
     console.log('═══════════════════════════════════════════════════════════');
@@ -60,10 +60,10 @@ export function logMultiPhaseUsage(
     }
 
     // Log individual phases with model, mode, and per-phase cache stats
-    phases.forEach(({ label, usage, model, batch }) => {
+    phases.forEach(({ label, usage, resolvedModel, batchMode }) => {
         const tags: string[] = [];
-        if (model) tags.push(model);
-        if (batch) tags.push('batch');
+        if (resolvedModel) tags.push(resolvedModel);
+        if (batchMode) tags.push('batch');
         const tagStr = tags.length > 0 ? ` [${tags.join(', ')}]` : '';
 
         const details: string[] = [];

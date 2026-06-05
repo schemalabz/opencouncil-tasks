@@ -6,7 +6,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
-import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile } from "../../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile, type UsageStats } from "../../lib/ai.js";
 import { getBatchProcessingSystemPrompt } from "./prompts.js";
 import {
     CompressedTranscript,
@@ -41,10 +41,7 @@ export async function processBatchesWithState(
     speakerSegmentSummaries: BatchProcessingResult['segmentSummaries'];
     subjects: SubjectInProgress[];
     allUtteranceStatuses: UtteranceStatus[];
-    usage: Anthropic.Messages.Usage;
-    resolvedModel?: string;
-    batchMode?: boolean;
-}> {
+} & UsageStats> {
     const BATCH_INPUT_CHAR_LIMIT = 120_000;
     const batches = splitTranscript(request.transcript, BATCH_INPUT_CHAR_LIMIT);
 
@@ -554,7 +551,7 @@ export async function processSingleBatch(
         additionalInstructions?: string;
     },
     previousMeetingProgressSummary?: string
-): Promise<{ result: BatchProcessingResult; usage: Anthropic.Messages.Usage; maxTokens: number; resolvedModel?: string; batchMode?: boolean }> {
+): Promise<{ result: BatchProcessingResult; maxTokens: number } & UsageStats> {
     const systemPrompt = getBatchProcessingSystemPrompt(metadata);
     if (batchIndex === 0) {
         console.log(`   📏 System prompt: ${(systemPrompt.length / 1000).toFixed(1)}K chars`);
