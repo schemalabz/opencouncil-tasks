@@ -109,7 +109,13 @@ fi
 echo "Next version: $NEXT_VERSION"
 ```
 
-## Step 4: Analyze and Generate
+## Step 4: Check Task Versions
+
+For each versioned task in `src/server.ts`, check whether the release range includes changes that make results different for consumers (new/removed output fields, new enum values, input contract changes, fixes for prior failures). Compare the diff against `src/tasks/`, `src/types.ts`, and related files.
+
+If a task's results changed but its version wasn't bumped, flag it to the user before generating release content. If a version was bumped, note the old→new version and summarize what changed — this goes into the release notes.
+
+## Step 5: Analyze and Generate
 
 Analyze the changes — group by impact, not by commit type. Write for someone deciding whether to deploy this update.
 
@@ -120,7 +126,7 @@ Generate two outputs, each following its template. Read each template before gen
 
 Present both outputs to the user for review before proceeding.
 
-## Step 5: Tag and Publish
+## Step 6: Tag and Publish
 
 **Skip this step if `DRY_RUN=true`.**
 

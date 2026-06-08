@@ -56,7 +56,7 @@ npm test                              # unit tests (vitest)
 
 ## Task versioning
 
-Tasks in `src/server.ts` have a `version` field in their `registerTask()` metadata. This version is sent with callbacks and stored on `TaskStatus` in the opencouncil database. Bump it when a task's output shape or semantics change (new fields, changed extraction logic, modified prompts). Don't bump for internal refactors that don't affect the result.
+Tasks in `src/server.ts` have a `version` field in their `registerTask()` metadata. This version is sent with callbacks and stored on `TaskStatus` in the opencouncil database. Bump when consumers need to know results are different.
 
 ## External services
 

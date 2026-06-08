@@ -29,6 +29,11 @@ Write for someone deciding whether to deploy this update — lead with impact, n
 <!-- What was broken and how it's fixed. -->
 <!-- Omit if none. -->
 
+## Task Versions
+
+<!-- List any task version bumps: "**taskName** v3 → v4 — one-line summary of what changed" -->
+<!-- Omit if no versions were bumped. -->
+
 ## Internal
 
 <!-- Refactors, CI, dependencies — one line each, keep brief. -->
