@@ -158,15 +158,20 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
         const absoluteOutput = path.resolve(output);
 
         const args = [
-            '-i', absoluteInput,
             '-y'  // Overwrite output file if it exists
         ];
 
+        // -ss/-t before -i: seek directly to the offset instead of decoding
+        // from the start of the file (an output-side -ss decodes and discards
+        // everything before the seek point, which is quadratic across segments)
         if (startTime !== undefined) args.push('-ss', startTime.toFixed(3));
         if (duration !== undefined) args.push('-t', duration.toFixed(3));
 
-        // Add some ffmpeg optimizations
-        args.push('-acodec', 'libmp3lame', '-b:a', '128k');
+        args.push('-i', absoluteInput);
+
+        // The input is already mp3 (produced by downloadYTV), so stream-copy
+        // instead of re-encoding; cuts align to mp3 frame boundaries (~26ms)
+        args.push('-c:a', 'copy');
 
         args.push(absoluteOutput);
 
