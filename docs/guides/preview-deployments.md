@@ -225,7 +225,7 @@ CDN_BASE_URL=https://your-cdn-url.com
 # =============================================================================
 # External Services
 # =============================================================================
-GLADIA_API_KEY=your-gladia-key
+ELEVENLABS_API_KEY=your-elevenlabs-key
 PYANNOTE_DIARIZE_API_URL=https://your-pyannote-url
 PYANNOTE_API_TOKEN=your-pyannote-token
 MUX_TOKEN_ID=your-mux-token-id

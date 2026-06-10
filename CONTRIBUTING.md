@@ -79,7 +79,7 @@ Test contracts, not wiring. Pure functions that parse, format, transform, or com
 
 ### Smoke Test (End-to-End)
 
-The smoke test runs the full pipeline against a real YouTube video, exercising downloads, external AI services (Gladia, Pyannote), storage (MinIO), and the callback server.
+The smoke test runs the full pipeline against a real YouTube video, exercising downloads, external AI services (ElevenLabs Scribe, Pyannote), storage (MinIO), and the callback server.
 
 ```bash
 # Fully automated — starts MinIO + ngrok, runs pipeline, validates result, cleans up
@@ -95,7 +95,7 @@ The smoke test runs the full pipeline against a real YouTube video, exercising d
 **Prerequisites:**
 - Nix dev shell (`nix develop`) — provides MinIO, ngrok, node, npm
 - ngrok authenticated (`ngrok config add-authtoken <token>`)
-- `.env` with API keys for Gladia, Pyannote
+- `.env` with API keys for ElevenLabs, Pyannote
 
 The script handles everything else: starts MinIO with a fresh data directory, opens an ngrok tunnel, configures env vars, runs the pipeline, validates the result shape, and tears down services on exit.
 
@@ -113,7 +113,7 @@ Run this after significant pipeline changes or when onboarding to verify the ful
 
 **Smoke test** (slow, requires network + API keys, run manually):
 
-- **`scripts/smoke.sh`** — full pipeline end-to-end: YouTube download → ffmpeg → MinIO upload → Pyannote diarization → Gladia transcription → result validation
+- **`scripts/smoke.sh`** — full pipeline end-to-end: YouTube download → ffmpeg → MinIO upload → Pyannote diarization → Scribe transcription → result validation
 
 ### What We Explicitly Skip (in Unit Tests)
 

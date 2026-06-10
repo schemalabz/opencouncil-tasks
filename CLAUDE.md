@@ -4,7 +4,7 @@ Refer to [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, testing con
 
 ## Project
 
-opencouncil-tasks — TypeScript service that orchestrates media processing pipelines: YouTube download, audio extraction (ffmpeg), speaker diarization (Pyannote), transcription (Gladia), and video hosting (Mux). Express server with a CLI interface.
+opencouncil-tasks — TypeScript service that orchestrates media processing pipelines: YouTube download, audio extraction (ffmpeg), speaker diarization (Pyannote), transcription (ElevenLabs Scribe), and video hosting (Mux). Express server with a CLI interface.
 
 ## Development Environment
 
@@ -43,7 +43,7 @@ npm test                              # unit tests (vitest)
 - **`src/tasks/*.ts`** — Each file exports a `Task<Args, Ret>` function (the unit of work)
 - **`src/tasks/pipeline.ts`** — Orchestrates tasks via `createPipeline(deps)` factory (dependency injection)
 - **`src/tasks/utils/`** — Pure helper functions (parsing, formatting, filters)
-- **`src/lib/`** — Service clients (Gladia, Pyannote, Mux, S3/MinIO, callback server)
+- **`src/lib/`** — Service clients (ElevenLabs Scribe, Pyannote, Mux, S3/MinIO, callback server)
 - **`src/types.ts`** — Shared type definitions
 - **`src/server.ts`** — Express API server
 - **`src/cli.ts`** — CLI interface (pipeline, individual tasks, smoke test)
@@ -61,11 +61,11 @@ Tasks in `src/server.ts` have a `version` field in their `registerTask()` metada
 ## External services
 
 - **Pyannote** — speaker diarization (async, posts result to callback URL)
-- **Gladia** — speech-to-text transcription (async, posts result to callback URL)
+- **ElevenLabs Scribe** — speech-to-text transcription (synchronous API, ~12s per audio-minute)
 - **Mux** — video hosting and playback
 - **S3-compatible storage** — DigitalOcean Spaces (production) or MinIO (development)
 
-The callback server (`src/lib/CallbackServer.ts`) receives async results from Pyannote and Gladia. It requires `PUBLIC_URL` to be set to a publicly reachable address (e.g. via ngrok for local dev).
+The callback server (`src/lib/CallbackServer.ts`) receives async results from Pyannote. It requires `PUBLIC_URL` to be set to a publicly reachable address (e.g. via ngrok for local dev).
 
 ## Deployment
 

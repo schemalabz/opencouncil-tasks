@@ -1,12 +1,15 @@
 import { Task } from "./pipeline.js";
 import dotenv from 'dotenv';
 import { Transcript } from "../types.js";
-import { gladiaTranscriber } from "../lib/GladiaTranscribe.js";
+import { scribeTranscriber } from "../lib/ScribeTranscribe.js";
 
 dotenv.config();
 
 export interface TranscribeArgs {
     segments: { url: string; start: number }[];
+    // Accepted for API compatibility but not sent to Scribe v2: the validated
+    // configuration uses no context prompt or vocabulary (Scribe's keyterms
+    // parameter exists but hasn't been benchmarked)
     customVocabulary?: string[];
     customPrompt?: string;
 }
@@ -46,9 +49,13 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
     let completedSegments = 0;
     const totalSegments = segments.length;
 
+    if (customVocabulary?.length || customPrompt) {
+        console.log("Note: customVocabulary/customPrompt are not used with Scribe v2, ignoring");
+    }
+
     let transcriptPromises = segments.map(async ({ url, start }) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-        const transcript = await gladiaTranscriber.transcribe({ audioUrl: fullUrl, customVocabulary, customPrompt });
+        const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl });
         completedSegments++;
         onProgress("transcribing", (completedSegments / totalSegments) * 100);
         return { ...transcript, start };

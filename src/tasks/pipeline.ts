@@ -66,8 +66,10 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
 
             console.log("Uploaded audio to spaces and diarized");
 
+            // 15-minute segments: Scribe's sync API takes ~12s per audio-minute, and the
+            // response must arrive before fetch's 5-minute response header timeout
             const transcript =
-                await deps.splitAudioDiarization({ file: audioOnly, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-video"))
+                await deps.splitAudioDiarization({ file: audioOnly, maxDuration: 15 * 60, diarization }, createProgressHandler("segmenting-video"))
                     .then(async (audioSegments) => {
                         const audioUrls = await deps.uploadToSpaces({
                             files: audioSegments.map((segment) => segment.path),

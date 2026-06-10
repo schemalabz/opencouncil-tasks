@@ -446,7 +446,7 @@ program
             const publicUrl = process.env.PUBLIC_URL;
             if (!publicUrl) {
                 console.error('PUBLIC_URL is not set. The pipeline requires a publicly reachable callback server');
-                console.error('for external services (Gladia, Pyannote) to post results back.\n');
+                console.error('for external services (Pyannote) to post results back.\n');
                 console.error('Options:');
                 console.error('  1. Start ngrok:  ngrok http <port>');
                 console.error('  2. Set PUBLIC_URL=https://your-ngrok-url.ngrok.io');
