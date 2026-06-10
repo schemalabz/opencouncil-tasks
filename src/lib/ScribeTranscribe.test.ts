@@ -43,6 +43,20 @@ describe("scribeWordsToUtterances", () => {
         expect(utterances.map(u => u.text)).toEqual(["Ο κ. Δημάκης της Κ.Κ.Ε. ψήφισε."]);
     });
 
+    it("does not split at a trail-off ellipsis when the speaker continues", () => {
+        const words = scribeWords([
+            ["Θέλω", 0, 0.3],
+            ["να", 0.4, 0.5],
+            ["τονίσω…", 0.6, 1.2],
+            ["ότι", 1.4, 1.6],
+            ["διαφωνώ.", 1.7, 2.3],
+        ]);
+
+        const utterances = scribeWordsToUtterances(words, "el");
+
+        expect(utterances.map(u => u.text)).toEqual(["Θέλω να τονίσω… ότι διαφωνώ."]);
+    });
+
     it("splits at pauses longer than the threshold", () => {
         const words = scribeWords([
             ["πρώτο", 0, 0.5],

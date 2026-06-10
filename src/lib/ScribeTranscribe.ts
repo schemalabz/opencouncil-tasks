@@ -15,6 +15,9 @@ export const MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS = 15 * 60;
 const SCRIBE_API_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 const MAX_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 5000;
+// Hard per-request cap so a stalled request can't pin a concurrency slot:
+// a 15-minute segment should respond in ~3 minutes, so 10 is generous
+const SCRIBE_REQUEST_TIMEOUT_MS = 10 * 60 * 1000;
 
 function getScribeKey(): string {
     const key = process.env.ELEVENLABS_API_KEY;
@@ -55,7 +58,9 @@ const KNOWN_ABBREVIATIONS = new Set(["δηλ", "βλ", "σελ", "αριθ", "κ
 // A missed abbreviation only causes a mid-sentence utterance split, but κ.
 // is everywhere in roll-calls, so the common cases matter.
 function endsSentence(text: string): boolean {
-    if (/[!?;;…]$/.test(text)) { // both ';' and U+037E are Greek question marks
+    // '…' is excluded: Scribe emits it when a speaker trails off mid-thought
+    // and continues; the pause rule splits the genuine stops.
+    if (/[!?;;]$/.test(text)) { // both ';' and U+037E are Greek question marks
         return true;
     }
     if (!text.endsWith(".")) {
@@ -250,9 +255,11 @@ class ScribeTranscriber {
                 method: "POST",
                 headers: { "xi-api-key": apiKey },
                 body: form,
+                signal: AbortSignal.timeout(SCRIBE_REQUEST_TIMEOUT_MS),
             });
         } catch (error) {
-            // Network failures and fetch timeouts are retryable
+            // Network failures and timeouts (our AbortSignal or undici's own
+            // header/body timeouts) are retryable
             return { ok: false, retryable: true, error: error as Error };
         }
 
