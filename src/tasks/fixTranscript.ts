@@ -107,10 +107,14 @@ async function processSpeakerSegment(
 
     let usage = NO_USAGE;
     for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+        // Retries are triggered by structural mismatches, so remind the model
+        // of the output contract instead of resending the identical prompt
+        const structureReminder = attempt === 1 ? "" :
+            `\n\nIMPORTANT: Output ONLY the ${segment.utterances.length} corrected numbered lines, exactly one line per input number, with no preamble or explanations.`;
         const result = await aiChat<string>({
             model: "claude-sonnet-4-6",
             systemPrompt,
-            userPrompt,
+            userPrompt: userPrompt + structureReminder,
             parseJson: false
         });
         usage = addUsage(usage, result.usage);
