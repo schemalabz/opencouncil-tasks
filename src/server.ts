@@ -152,7 +152,9 @@ app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
 app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   summary: 'Fix transcript formatting',
   description: 'Cleans and corrects transcription output for improved accuracy',
-  version: 1,
+  // version 2: prompt rewritten for Scribe v2 clean-read output (names-first,
+  // homophones, digit house style) with numbered-line structure validation
+  version: 2,
 }));
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {

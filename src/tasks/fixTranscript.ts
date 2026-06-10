@@ -4,68 +4,86 @@ import { Task } from "../tasks/pipeline.js";
 import { addUsage, aiChat, NO_USAGE, ResultWithUsage } from "../lib/ai.js";
 
 const MAX_PARALLEL_API_CALLS = 20;
+// Attempts per segment: the numbered-line structure is validated
+// programmatically, and a count mismatch gets a fresh retry
+const MAX_FIX_ATTEMPTS = 3;
 
-const systemPrompt = `You are a system responsible for improving an existing automatic transcription of city council meeting in Greece. The transcript is made up of Speaker Segments, spoken by a certain speaker, which have Utterances. You are given a single speaker segment, spoken by the same speaker, in the following format:
+const systemPrompt = `You are correcting an automatic transcription (made by ElevenLabs Scribe) of a Greek city council meeting. You receive ONE speaker segment: consecutive utterances spoken by the same person, as numbered lines:
 
-Utterance 1 || Utterance 2 || Utterance 3 || ... || Last Utterance
+1. <utterance>
+2. <utterance>
+...
 
-For example:
+OUTPUT: the same numbered lines, same count, each line corrected. No explanations. Never merge, split, reorder, or renumber lines — utterance boundaries carry timestamps and must not move, even if a sentence spans two lines.
 
-Καλησπέρα κύριοι συνάδελφοι. || Ξεκινάει η 5η συνεδρίαση || του Δημοτικού Συμβουλίου της Αθήνας
+WHAT TO FIX (in priority order):
 
+1. NAMES — the most common error. The speech-to-text often misspells names phonetically (e.g. «Ρημάκης» for «Δημάκης», «Ξυδαροπούλου» for «Ξηνταροπούλου»). Before anything else, check every person, party, and place name against the roster and agenda provided. If a name in the text is phonetically close to a roster/agenda name, use the roster/agenda spelling. If it matches nothing, keep it as transcribed.
 
-Your input speaker segment might contain mistakes that occurred as part of the speech-to-text process. You are responsible for editing the utterances to fix spelling errors, punctuation, accents (τόνοι in greek), syntax/grammar errors, obvious transcription mistakes, person and entity names.
+2. HOMOPHONE MISSPELLINGS — same sound, wrong letters: «απόν»→«απών», «πολεδομία»→«πολεοδομία», «κλιματολόγιο»→«κτηματολόγιο» (context: land registry), «ονομάδων»→«ονομάτων», ο/ω, η/ι/υ, αι/ε confusions. Use sentence meaning to pick the right word.
 
-It's important to avoid changing the meaning of what was said: your purpose is only to fix transcription mistakes, and make the transcript look more polished and correct. Your output will form the official meeting transcription.
+3. HOUSE STYLE for numbers and dates — the official record uses digits: «τριακοστή πέμπτη συνεδρίαση»→«35η συνεδρίαση», «πέντε Δεκεμβρίου του 2025»→«05/12/2025» for full dates, «άρθρο εβδομήντα πέντε»→«άρθρο 75». Money and percentages also as digits («2,5 εκατομμύρια ευρώ», «15%»).
 
-It's important to fix spelling, grammar, and transcription mistakes (e.g. words that were transcribed incorrectly because they are acoustically similar). Do not fix factual mistakes, and don't change the meaning of what was said.
+4. Greek punctuation and accents: «;» for questions (never «?»), proper τόνοι («Μαρια;»→«Μαρία;»), capitalize proper nouns normally («ΖΕΜΕΝΟ»→«Ζεμενό»).
 
-Ιt's important to fix as many grammar mistakes and spelling mistakes and mistakes in speaker and party names as possible! The final transcript must be correct and look polished.
+WHAT NOT TO TOUCH:
 
-Indicative examples of corrections you should make:
-1. In the text "Ζωγράφος από το ΖΕΜΕΝΟ.", you should change it to "Ζωγράφος από το Ζεμενό.", because place names should be properly capitalized and not in all caps.
+- Never change the meaning, add content, or summarize. You fix transcription, not the speaker.
+- Do not fix factual errors, grammar the speaker actually produced, or colloquial word choices («γραφούν» stays «γραφούν», not «εγγραφούν»). Spoken Greek in the record stays spoken Greek, correctly spelled.
+- Do not delete short interjections or crosstalk fragments from other speakers («ναι ναι», «το γράψατε;») — they are real speech; leave them where they are.
+- If you are not confident a word is a transcription error, leave it unchanged. An unfixed error is recoverable; a wrong "fix" corrupts the official record.`;
 
-2. In the text "θα μοιραστεί στους επικεφαλείς και σε όλους τους", you should change it to "θα μοιραστεί στους επικεφαλής και σε όλους τους", because "επικεφαλής" is the correct spelling of this word.
+export function buildUserPrompt(
+    cityName: string,
+    parties: FixTranscriptRequest['partiesWithPeople'],
+    agenda: { name: string }[],
+    personName: string,
+    utterances: string[]
+): string {
+    const agendaBlock = agenda.length > 0
+        ? `Agenda items of this meeting (source for street/project/entity names):\n${agenda.map((s, i) => `${i + 1}. ${s.name}`).join('\n')}\n`
+        : '';
+    return `City: ${cityName}
+Speaker: ${personName}
+Roster (party — members):
+${parties.map(p => `${p.name}: ${p.people.map(x => x.name).join(', ')}`).join('\n')}
+${agendaBlock}Correct the numbered utterances:
+${utterances.map((u, i) => `${i + 1}. ${u}`).join('\n')}`;
+}
 
-3. In the text "Μαρια?", you should change it to "Μαρία;", because in Greek, questions should use the question mark (;) rather than the English question mark (?), and because the original text was missing an accent.
+/**
+ * Parses the model's numbered-line output back into utterances.
+ *
+ * Lines must be numbered sequentially from 1; non-empty lines that don't start
+ * the next expected number are treated as wrapped continuations of the previous
+ * utterance. Returns null when the structure or count doesn't match, so the
+ * caller can retry instead of corrupting utterance/timestamp alignment.
+ */
+export function parseNumberedUtterances(text: string, expectedCount: number): string[] | null {
+    const parsed: string[] = [];
 
-4. In the text "Θέλω να ρωτήσω ποια ήταν η δαπάνη για την πόλη του Ξυλοκάστρου και ποια ήταν για τη Δημοτική Ενότητα της Ευρωστήνης.", you should change it to "Θέλω να ρωτήσω ποια ήταν η δαπάνη για την πόλη του Ξυλοκάστρου και ποια ήταν για τη Δημοτική Ενότητα της Ευρωστίνης.", because municipal entity names should be spelled correctly ("Ευρωστίνης" is the correct spelling).
+    for (const line of text.trim().split('\n')) {
+        const match = line.match(/^\s*(\d+)\.\s?(.*)$/);
+        if (match && parseInt(match[1], 10) === parsed.length + 1) {
+            parsed.push(match[2].trim());
+        } else if (line.trim() === '') {
+            continue;
+        } else if (parsed.length > 0) {
+            parsed[parsed.length - 1] += ' ' + line.trim();
+        } else {
+            return null; // preamble before the first numbered line
+        }
+    }
 
-5. In the text "εσείς τα έχετε πρόχειρα;", you should change it to "εσείς; Ή δεν τα έχετε πρόχειρα;", because the context shows this was a two-part question that was incorrectly transcribed as one.
-
-6. In the text "Κύριε Μπακούλη.", you should change it to "Κύριε Μπρακούλια.", because person names should be transcribed correctly, and context shows this is the correct spelling of the name.
-
-7. In the text "Ήδη έγινε σηματοδότηση φάνη από χτες το βράδυ", you should change it to "Ήδη έγινε σηματοδότηση από χτες το βράδυ", because "φάνη" appears to be an erroneous transcription of background noise or unclear speech.
-
-8. In the text "να εξασφαλίσουμε την απαρτία με την ανάγνωση των ονομάδων.", you should suggest changing "ονομάδων" to "ονομάτων", because it fixes a spelling error and makes the meaning clearer (reading names to ensure quorum, not teams).
-
-9. In the text "Επιηκός. Παρακαλώ λίγο εσύ εκεί να ολοκληρώσεις τον κύριο Σμπομπολάκης.", you should suggest changing "Επιηκός" to "Επιεικώς", because it fixes a spelling error for the adverb meaning "leniently".
-
-10. In the text "αφορά τη διόρθωση του κλιματολογίου., σε ένα ακίνητο που ανήκει στην περιοχή στα χωραφάκια πάνω,", you should suggest changing "κλιματολογίου" to "κτηματολογίου", because it fixes a mistranscription and makes the meaning clearer (correction of the land registry, not climatology).
-
-11. In the text "Και βγήκε η πολεδομία και σας έγραψε για φθαίρετες εργασίες εκεί πέρα.", you should suggest changing "πολεδομία" to "πολεοδομία" and "φθαίρετες" to "αυθαίρετες", because it fixes spelling errors for the words "urban planning" and "arbitrary".
-
-Your output should be only the input speaker segment with any fixes you applied, with the utterances separated by ||. It's important to preserve the original count of utterances (e.g. if your input had 5 utterances, you must preserve this structure and output 5 utterances). Do not output an explanation or anything else; just the utterances separated by ||.`;
-
-function buildUserPrompt(cityName: string, partiesWithPeople: any, personName: string, utterances: string): string {
-    return `You are improving the transcript for city ${cityName},
-with the following parties and persons names:
-
-${JSON.stringify(partiesWithPeople)}
-
-Please fix the transcription mistakes and errors in the speaker segment spoken by ${personName} below:
-
-${utterances}
-
-Reply only with the fixed speaker segment, with the utterances separated by ||:`;
+    return parsed.length === expectedCount ? parsed : null;
 }
 
 export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
-    const { transcript, partiesWithPeople, cityName } = request;
+    const { transcript, partiesWithPeople, cityName, agendaItems } = request;
     console.log(`Fixing transcript for ${cityName} with ${transcript.length} segments`);
     const inputUtterances = transcript.flatMap(s => s.utterances.map(u => u.text)).length;
 
-    const allResults = await fixSpeakerSegments(transcript, cityName, partiesWithPeople, onProgress);
+    const allResults = await fixSpeakerSegments(transcript, cityName, partiesWithPeople, agendaItems ?? [], onProgress);
     const markedUncertain = allResults.result.filter(r => r.markUncertain).length;
     console.log(`Proposing ${allResults.result.length} updates (${allResults.result.length / inputUtterances * 100}%), ${markedUncertain} marked uncertain`);
     console.log(`Total usage: ${allResults.usage.input_tokens} input tokens, ${allResults.usage.output_tokens} output tokens`);
@@ -73,48 +91,65 @@ export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = as
     return { updateUtterances: allResults.result, usage: allResults.usage };
 };
 
-async function processSpeakerSegment(segment: FixTranscriptRequest['transcript'][0], cityName: string, partiesWithPeople: any): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
+async function processSpeakerSegment(
+    segment: FixTranscriptRequest['transcript'][0],
+    cityName: string,
+    partiesWithPeople: FixTranscriptRequest['partiesWithPeople'],
+    agendaItems: { name: string }[]
+): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
     if (segment.utterances.length === 0) {
         console.warn(`Speaker segment has no utterances: skipping`);
         return { result: [], usage: NO_USAGE };
     }
 
-    const utterancesText = segment.utterances.map(u => u.text).join("||");
-    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, segment.speakerName || "(unknown)", utterancesText);
+    const utteranceTexts = segment.utterances.map(u => u.text);
+    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, segment.speakerName || "(unknown)", utteranceTexts);
 
-    const result = await aiChat<string>({
-        model: "claude-sonnet-4-6",
-        systemPrompt,
-        userPrompt,
-        parseJson: false
-    });
+    let usage = NO_USAGE;
+    for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
+        const result = await aiChat<string>({
+            model: "claude-sonnet-4-6",
+            systemPrompt,
+            userPrompt,
+            parseJson: false
+        });
+        usage = addUsage(usage, result.usage);
 
-    const fixedUtterances = result.result.split("||");
-
-    if (fixedUtterances.length !== segment.utterances.length) {
-        console.error(`Fixed utterances length does not match original utterances length: input had ${segment.utterances.length} utterances, output has ${fixedUtterances.length} utterances`);
-        return { result: [], usage: NO_USAGE };
-    }
-
-    const utteranceUpdates = fixedUtterances.map((u, index) => {
-        const utterance = segment.utterances[index];
-        if (utterance.text.trim() === u.trim()) {
-            return null; // no change, omit
+        const fixedUtterances = parseNumberedUtterances(result.result, segment.utterances.length);
+        if (!fixedUtterances) {
+            console.error(`Output structure mismatch for ${segment.speakerName} (attempt ${attempt}/${MAX_FIX_ATTEMPTS}): expected ${segment.utterances.length} numbered utterances`);
+            continue;
         }
 
-        return {
-            utteranceId: utterance.utteranceId,
-            text: u,
-            markUncertain: false
-        };
-    }).filter(u => u !== null);
+        const utteranceUpdates = fixedUtterances.map((u, index) => {
+            const utterance = segment.utterances[index];
+            if (utterance.text.trim() === u) {
+                return null; // no change, omit
+            }
 
-    console.log(`Fixed ${utteranceUpdates.length} (${utteranceUpdates.length / segment.utterances.length * 100}%) utterances for ${segment.speakerName}`);
+            return {
+                utteranceId: utterance.utteranceId,
+                text: u,
+                markUncertain: false
+            };
+        }).filter(u => u !== null);
 
-    return { result: utteranceUpdates, usage: result.usage };
+        console.log(`Fixed ${utteranceUpdates.length} (${utteranceUpdates.length / segment.utterances.length * 100}%) utterances for ${segment.speakerName}`);
+
+        return { result: utteranceUpdates, usage };
+    }
+
+    console.error(`Giving up on segment for ${segment.speakerName} after ${MAX_FIX_ATTEMPTS} attempts`);
+    return { result: [], usage };
 }
 
-async function fixSpeakerSegments(speakerSegments: FixTranscriptRequest['transcript'], cityName: string, partiesWithPeople: any, onProgress: (stage: string, progress: number) => void): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
+async function fixSpeakerSegments(
+    speakerSegments: FixTranscriptRequest['transcript'],
+    cityName: string,
+    partiesWithPeople: FixTranscriptRequest['partiesWithPeople'],
+    agendaItems: { name: string }[],
+    onProgress: (stage: string, progress: number) => void
+): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
     const allResults: FixTranscriptResult['updateUtterances'] = [];
     let processedCount = 0;
 
@@ -124,7 +159,7 @@ async function fixSpeakerSegments(speakerSegments: FixTranscriptRequest['transcr
     for (let i = 0; i < speakerSegments.length; i += MAX_PARALLEL_API_CALLS) {
         const batch = speakerSegments.slice(i, i + MAX_PARALLEL_API_CALLS);
         const batchPromises = batch.map(segment =>
-            processSpeakerSegment(segment, cityName, partiesWithPeople)
+            processSpeakerSegment(segment, cityName, partiesWithPeople, agendaItems)
         );
 
         const batchResults = await Promise.all(batchPromises);

@@ -273,7 +273,11 @@ export interface RequestOnTranscript extends TaskRequest {
  * Fix Transcript
  */
 
-export interface FixTranscriptRequest extends RequestOnTranscript { }
+export interface FixTranscriptRequest extends RequestOnTranscript {
+    // Agenda/subject titles of the meeting — a source for street, project, and
+    // entity names that the party roster doesn't cover
+    agendaItems?: { name: string }[];
+}
 
 export interface FixTranscriptResult {
     updateUtterances: {
