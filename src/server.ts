@@ -9,6 +9,7 @@ import { taskManager } from './lib/TaskManager.js';
 import { getExpressAppWithCallbacks, validateUrl } from './utils.js';
 import { TranscribeRequest, HealthResponse } from './types.js';
 import { authMiddleware, verifyBearerToken } from './lib/auth.js';
+import { logObservabilityStatus } from './lib/observability.js';
 import fs from 'fs';
 import { spawnSync } from 'child_process';
 import { summarize } from './tasks/summarize.js';
@@ -240,6 +241,7 @@ process.on('SIGTERM', async () => {
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
+    logObservabilityStatus();
 
     console.log('\nAvailable Endpoints:');
     (app as any)._router.stack.forEach((middleware: any) => {

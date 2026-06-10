@@ -26,6 +26,7 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "ffmpeg-static": "^5.2.0",
+    "langfuse": "^3.38.20",
     "mime": "^4.0.4",
     "multer": "^2.1.1",
     "node-fetch": "^3.3.2",
