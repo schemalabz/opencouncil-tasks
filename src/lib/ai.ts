@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import path from 'path';
 import { promises as fs } from 'fs';
+import { observeGeneration, GenerationHandle } from './observability.js';
 
 dotenv.config();
 
@@ -84,6 +85,7 @@ type AiChatOptions = {
     outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
     batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
+    label?: string;  // Observability: generation name shown in Langfuse (defaults to "aiChat")
 }
 
 export type TransientErrorKind = 'connection' | 'server' | false;
@@ -238,8 +240,9 @@ export function continuationPrompt(partial: string): string {
     return `Your previous response was cut off by the output token limit. It currently ends with:\n${tail}\n\nContinue EXACTLY from where it stopped: output only the remaining content, completing the line you were in the middle of if it was cut mid-line. Do not repeat anything already written, do not add any preamble or commentary, and do not restart any numbering or structure from the beginning.`;
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
+    let generation: GenerationHandle | undefined;
     try {
         console.log(`Sending message to claude${batchFirst ? ' (batch-first)' : ''}...`);
         let messages: Anthropic.Messages.MessageParam[] = [];
@@ -302,6 +305,18 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
 
         await logToFile("Claude Request", requestParams);
 
+        generation = observeGeneration({
+            name: label || 'aiChat',
+            model: resolvedModel,
+            input: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt },
+                ...(prefillSystemResponse && !outputFormat ? [{ role: 'assistant', content: prefillSystemResponse }] : []),
+            ],
+            systemPrompt,
+            metadata: { batchFirst, cacheSystemPrompt, maxTokens, hasTools: Boolean(tools), hasDocument: Boolean(documentBase64) },
+        });
+
         // Prepare request options with beta headers if needed
         const requestOptions: Anthropic.RequestOptions = outputFormat ? {
             headers: {
@@ -314,6 +329,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         // is slower (minutes of queue time) but immune to connection drops.
         // batchFirst: skip streaming entirely, go direct to Batches API (300K output limit).
         let response: Anthropic.Messages.Message;
+        let usedBatch = batchFirst;
         if (batchFirst) {
             response = await executeBatch(requestParams, requestOptions);
         } else {
@@ -326,6 +342,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 if (classifyTransientError(e)) {
                     console.log(`Streaming failed after retries, falling back to batch mode...`);
                     response = await executeBatch(requestParams, requestOptions);
+                    usedBatch = true;
                 } else {
                     throw e;
                 }
@@ -351,6 +368,12 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
 
         // Concatenate all text blocks
         let responseText = textBlocks.map(block => block.text).join("");
+
+        generation.end({
+            output: responseText,
+            usage: response.usage,
+            metadata: { batchMode: usedBatch, stopReason: response.stop_reason },
+        });
 
         if (response.stop_reason === "max_tokens") {
             // Structured outputs are incompatible with the prefill-based continuation
@@ -380,7 +403,8 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 parseJson,
                 maxTokens: maxTokensParam,
                 tools,
-                cacheSystemPrompt  // Preserve caching on continuation
+                cacheSystemPrompt,  // Preserve caching on continuation
+                label: label ? `${label}:continuation` : undefined
             });
             return {
                 usage: addUsage(response.usage, response2.usage),
@@ -428,6 +452,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             batchMode: batchFirst
         };
     } catch (e) {
+        generation?.error(e instanceof Error ? e.message : String(e));
         console.error(`Error in aiChat: ${e}`);
         // Log full error details for stream terminations to aid reproduction
         // (see https://github.com/anthropics/anthropic-sdk-typescript/issues/774)

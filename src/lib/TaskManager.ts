@@ -3,6 +3,7 @@ import { Task } from '../tasks/pipeline.js';
 import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
+import { runWithTaskTrace } from './observability.js';
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -110,21 +111,24 @@ class TaskManager {
             // Send initial callback immediately
             await this.sendCallback(callbackUrl, initialUpdate);
 
-            const result = await task(input, (stage, progressPercent) => {
-                const now = new Date();
-                const update: RunningTask = {
-                    status: "processing",
-                    stage,
-                    progressPercent,
-                    createdAt,
-                    lastUpdatedAt: now,
-                    taskType,
-                    callbackUrl,
-                    version
-                };
-                this.runningTasks.set(taskId, update);
-                this.sendCallback(callbackUrl, update);
-            });
+            const result = await runWithTaskTrace(
+                { taskType, version, input, callbackUrl },
+                () => task(input, (stage, progressPercent) => {
+                    const now = new Date();
+                    const update: RunningTask = {
+                        status: "processing",
+                        stage,
+                        progressPercent,
+                        createdAt,
+                        lastUpdatedAt: now,
+                        taskType,
+                        callbackUrl,
+                        version
+                    };
+                    this.runningTasks.set(taskId, update);
+                    this.sendCallback(callbackUrl, update);
+                })
+            );
 
             const finalUpdate: TaskUpdate<R> & { createdAt: Date, lastUpdatedAt: Date, taskType: string } = {
                 status: "success",
