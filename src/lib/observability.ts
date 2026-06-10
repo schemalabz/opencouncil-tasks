@@ -56,6 +56,14 @@ function getClient(): Langfuse | null {
     return client;
 }
 
+/**
+ * The Langfuse client, for code that queries the API directly (e.g. the
+ * `runs` CLI commands). Null when observability is not configured.
+ */
+export function getLangfuseClient(): Langfuse | null {
+    return getClient();
+}
+
 /** Log observability status at server startup. */
 export function logObservabilityStatus(): void {
     if (isObservabilityEnabled()) {

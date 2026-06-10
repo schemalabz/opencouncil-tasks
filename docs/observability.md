@@ -63,6 +63,40 @@ The `prompts:` tag distinguishes runs at the same task version that used edited 
 
 To instrument a new task's phases, wrap them with `withPhaseSpan('Phase name', () => ...)` and pass `label` to `aiChat()` calls. Nothing else is required — the trace is created by `TaskManager` for every task automatically.
 
+## Comparing runs
+
+The `runs` CLI command group turns the traced runs into a prompt-evaluation workflow:
+
+```bash
+# What runs exist? (newest first)
+npm run cli -- runs list --meeting orestiada/feb11_2026
+npm run cli -- runs list --task summarize --since 7
+
+# Compare two runs by trace ID
+npm run cli -- runs compare <traceId-A> <traceId-B>
+
+# The common case: compare the two most recent successful runs of a meeting
+npm run cli -- runs compare --meeting orestiada/feb11_2026
+```
+
+`runs compare` fetches both results from Langfuse, matches subjects by agenda index, and writes a JSON comparison plus a self-contained HTML diff (word-level description/contribution diffs, utterance distribution bars) to `data/comparisons/`.
+
+Each matched subject gets a **verdict**:
+
+- `identical` — no differences (REF link IDs are ignored)
+- `cosmetic` — rewording without behavioral change: same speakers, description length within 30%, utterance assignment within 20%. Typical LLM generation variance.
+- `structural` — a behavioral difference worth investigating: topic reassignment, speakers added/removed, description resized >30%, utterance assignment shifted >20%, withdrawn flag changed.
+
+The run-level summary (`N structural, M cosmetic, K identical`) is the primary signal for "did my prompt change actually do anything, or am I looking at generation noise?"
+
+### Verifying the setup
+
+```bash
+npm run cli -- observability-check
+```
+
+Runs a dummy task through the real TaskManager → trace → phase span → one small Haiku call path, so a single command verifies the whole integration. The trace appears under tag `task:observability-check`.
+
 ## Notes
 
 - Trace propagation uses `AsyncLocalStorage`, so `aiChat()` finds the active trace without parameter threading. Code paths that run outside a task (CLI commands, tests) simply produce no traces.
