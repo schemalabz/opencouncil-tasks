@@ -1,3 +1,4 @@
+import { TaskWarning } from '../../types.js';
 import { RawExtractedDecision, VoteValue } from './decisionPdfExtraction.js';
 
 // --- Warning types ---
@@ -23,11 +24,7 @@ export type DecisionWarningCode =
     | 'EXTRACTION_INCOMPLETE'
     | 'NO_VOTE_DETAILS';
 
-export interface DecisionWarning {
-    code: DecisionWarningCode;
-    severity: 'info' | 'warning' | 'error';
-    message: string;
-}
+export type DecisionWarning = TaskWarning<DecisionWarningCode>;
 
 // --- Raw-level validation ---
 

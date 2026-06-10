@@ -176,7 +176,7 @@ export function generateSubjectUUID(
     subject: {
         name: string;
         description: string;
-        agendaItemIndex?: number | string | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
+        agendaItemIndex?: number | string | "BEFORE_AGENDA" | "OUT_OF_AGENDA" | null;
     },
     truncate?: number
 ): string {

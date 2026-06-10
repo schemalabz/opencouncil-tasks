@@ -193,6 +193,7 @@ export interface Subject {
 
 export interface ProcessAgendaResult {
     subjects: Subject[];
+    warnings: TaskWarning[];
 }
 
 /*
@@ -414,12 +415,15 @@ export interface GenerateVoiceprintResult {
  * Extract Decisions (PDF → structured data)
  */
 
-/** Per-decision warning from the extraction pipeline. See DecisionWarningCode in decisionValidation.ts for the full list of codes. */
-export interface DecisionWarning {
-    code: string;
+/** Shared warning shape for all task results. */
+export interface TaskWarning<TCode extends string = string> {
+    code: TCode;
     severity: 'info' | 'warning' | 'error';
     message: string;
 }
+
+/** Per-decision warning. See DecisionWarningCode in decisionValidation.ts for the full list of codes. */
+export type DecisionWarning = TaskWarning;
 
 export interface ExtractedDecisionResult {
     subjectId: string;

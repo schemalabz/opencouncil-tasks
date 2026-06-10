@@ -1,7 +1,9 @@
 import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
-import { ProcessAgendaRequest, ProcessAgendaResult, Subject, TopicLabelInfo } from "../types.js";
+import { ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
+
+export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX';
 import { formatTopicLabels } from "../lib/promptUtils.js";
 import { Task } from "./pipeline.js";
 import { generateSubjectUUID, extractMeetingId } from "../utils.js";
@@ -73,6 +75,8 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     const extracted = result.result;
     const extractionModel = result.resolvedModel;
     const extractionBatch = result.batchMode;
+    const warnings = fillMissingAgendaIndices(extracted);
+
     const importanceDist = { doNotNotify: 0, normal: 0, high: 0 };
     let introducerCount = 0;
     let topicCount = 0;
@@ -139,7 +143,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     console.log(`✅ PROCESS AGENDA COMPLETED [${meetingId}]`);
     console.log('═══════════════════════════════════════════════════════════');
 
-    return { subjects };
+    return { subjects, warnings };
 };
 
 const downloadFileToBase64 = async (url: string) => {
@@ -165,7 +169,7 @@ export const extractedSubjectToApiSubject = async (
         topicImportance: subject.topicImportance,
         proximityImportance: subject.proximityImportance,
         topicLabel: subject.topicLabel,
-        agendaItemIndex: subject.agendaItemIndex,
+        agendaItemIndex: subject.agendaItemIndex!,
         introducedByPersonId: subject.introducedByPersonId,
         speakerContributions: subject.speakerContributions,
         discussedIn: null  // Agenda items are always independent initially
@@ -177,10 +181,30 @@ export const extractedSubjectToApiSubject = async (
     });
 }
 
+export function fillMissingAgendaIndices(subjects: Array<{ agendaItemIndex: number | null }>): TaskWarning<AgendaWarningCode>[] {
+    const nullCount = subjects.filter(s => s.agendaItemIndex === null).length;
+    if (nullCount === 0) return [];
+
+    const maxIndex = subjects.reduce((max, s) =>
+        typeof s.agendaItemIndex === 'number' ? Math.max(max, s.agendaItemIndex) : max, 0);
+    let nextIndex = maxIndex + 1;
+    for (const s of subjects) {
+        if (s.agendaItemIndex === null) {
+            s.agendaItemIndex = nextIndex++;
+        }
+    }
+    console.warn(`   ⚠️  ${nullCount} subject(s) missing agenda item number — assigning sequential indices`);
+    return [{
+        code: 'MISSING_AGENDA_ITEM_INDEX',
+        severity: 'warning',
+        message: `${nullCount} subject(s) had no agenda item number in the PDF — assigned sequential indices`,
+    }];
+}
+
 export type ExtractedSubject = {
     name: string;
     description: string;
-    agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";
+    agendaItemIndex: number | null;
     introducedByPersonId: string | null;
     speakerContributions: {
         speakerId: string | null;
