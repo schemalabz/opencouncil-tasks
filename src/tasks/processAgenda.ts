@@ -1,14 +1,25 @@
-import { aiChat, addUsage, NO_USAGE } from "../lib/ai.js";
+import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { ProcessAgendaRequest, ProcessAgendaResult, Subject, TopicLabelInfo } from "../types.js";
 import { formatTopicLabels } from "../lib/promptUtils.js";
 import { Task } from "./pipeline.js";
-import { generateSubjectUUID } from "../utils.js";
-import { logUsage } from "../lib/usageLogging.js";
+import { generateSubjectUUID, extractMeetingId } from "../utils.js";
+import { logMultiPhaseUsage } from "../lib/usageLogging.js";
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
-    console.log("Processing agenda request:", request);
+    const meetingId = extractMeetingId(request.callbackUrl);
+
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`🚀 PROCESS AGENDA STARTED [${meetingId}]`);
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`📊 Request Details:`);
+    console.log(`   • City: ${request.cityName}`);
+    console.log(`   • Date: ${request.date}`);
+    console.log(`   • Agenda: ${request.agendaUrl}`);
+    console.log(`   • People: ${request.people.length}`);
+    console.log(`   • Topic labels: ${request.topicLabels.length}`);
+    console.log('───────────────────────────────────────────────────────────');
 
     if (!request.agendaUrl) {
         throw new Error("Agenda is required");
@@ -18,13 +29,22 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         throw new Error("Agenda must be a PDF file");
     }
 
+    console.log('');
+    console.log('📄 PHASE 1: PDF Download');
     const base64 = await downloadFileToBase64(request.agendaUrl);
+    const pdfSizeKB = Math.round(base64.length * 3 / 4 / 1024);
+    console.log(`   Downloaded ${pdfSizeKB}KB`);
+
+    console.log('');
+    console.log('📝 PHASE 2: Extraction');
+    onProgress("extraction", 0);
 
     const result = await aiChat<Omit<ExtractedSubject, "speakerContributions">[]>({
         model: "claude-opus-4-6",
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
         documentBase64: base64,
+        batchFirst: true,
         outputFormat: {
             type: "json_schema",
             schema: {
@@ -48,25 +68,76 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         }
     });
 
-    // Track usage from enrichment
+    onProgress("extraction", 1);
+
+    const extracted = result.result;
+    const extractionModel = result.resolvedModel;
+    const extractionBatch = result.batchMode;
+    const importanceDist = { doNotNotify: 0, normal: 0, high: 0 };
+    let introducerCount = 0;
+    let topicCount = 0;
+    let locationTextCount = 0;
+    for (const s of extracted) {
+        importanceDist[s.topicImportance]++;
+        if (s.introducedByPersonId) introducerCount++;
+        if (s.topicLabel) topicCount++;
+        if (s.locationText) locationTextCount++;
+    }
+
+    console.log(`   Extracted ${extracted.length} subjects`);
+    console.log(`   Importance: ${importanceDist.high} high, ${importanceDist.normal} normal, ${importanceDist.doNotNotify} doNotNotify`);
+    console.log(`   Introducers matched: ${introducerCount}/${extracted.length}`);
+    console.log(`   Topics assigned: ${topicCount}/${extracted.length}`);
+    console.log(`   Locations found: ${locationTextCount}/${extracted.length}`);
+
+    const usagePhases: ({ label: string } & UsageStats)[] = [
+        { label: 'Phase 2 (Extraction)', usage: result.usage, resolvedModel: extractionModel, batchMode: extractionBatch }
+    ];
+
+    console.log('');
+    console.log('🔍 PHASE 3: Enrichment');
+    onProgress("enrichment", 0);
+
     let enrichmentUsage = NO_USAGE;
+    let enrichmentModel: string | undefined;
+    let enrichmentBatchMode: boolean | undefined;
     const enrichmentResults = await Promise.all(
-        result.result.map(s => extractedSubjectToApiSubject(
+        extracted.map((s, i) => extractedSubjectToApiSubject(
             { ...s, speakerContributions: [] },
             request.cityName,
             request.date
-        ))
+        ).then(r => {
+            onProgress("enrichment", (i + 1) / extracted.length);
+            return r;
+        }))
     );
 
-    // Extract subjects and accumulate usage
     const subjects = enrichmentResults.map(r => {
         enrichmentUsage = addUsage(enrichmentUsage, r.usage);
+        if (enrichmentModel === undefined) {
+            enrichmentModel = r.resolvedModel;
+            enrichmentBatchMode = r.batchMode;
+        }
         return r.result;
     });
 
-    console.log(`Extracted ${subjects.length} subjects`);
-    logUsage('Extraction usage', result.usage);
-    logUsage('Enrichment usage', enrichmentUsage);
+    const geocodedCount = subjects.filter(s => s.location !== null).length;
+    const webContextCount = subjects.filter(s => s.context && s.context.text !== "").length;
+
+    console.log(`   Enriched ${subjects.length}/${extracted.length} subjects`);
+    console.log(`   Geocoded: ${geocodedCount}/${locationTextCount} locations`);
+    console.log(`   Web context: ${webContextCount}/${subjects.length} subjects`);
+
+    usagePhases.push({
+        label: 'Phase 3 (Enrichment)',
+        usage: enrichmentUsage,
+        resolvedModel: enrichmentModel,
+        batchMode: enrichmentBatchMode
+    });
+
+    logMultiPhaseUsage(`📊 TOTAL TOKEN USAGE [${meetingId}]`, usagePhases);
+    console.log(`✅ PROCESS AGENDA COMPLETED [${meetingId}]`);
+    console.log('═══════════════════════════════════════════════════════════');
 
     return { subjects };
 };
