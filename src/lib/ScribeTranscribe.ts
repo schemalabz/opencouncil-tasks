@@ -3,10 +3,14 @@ import { Transcript, Utterance, Word } from "../types.js";
 
 dotenv.config();
 
-// Scribe's sync API takes ~12s per audio-minute, so keep concurrency low
-// (segments are also capped at 15 minutes in pipeline.ts so each response
-// arrives before fetch's 5-minute header timeout).
+// Scribe's sync API takes ~12s per audio-minute, so keep concurrency low.
 const SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS = parseInt(process.env.SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS || '5', 10);
+
+// Cap for audio segments sent to Scribe: at ~12s per audio-minute, a 15-minute
+// segment responds in ~3 minutes, safely before fetch's 5-minute response
+// header timeout. All splitAudioDiarization call sites that feed transcription
+// must use this.
+export const MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS = 15 * 60;
 
 const SCRIBE_API_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 const MAX_ATTEMPTS = 5;
@@ -43,7 +47,26 @@ export interface ScribeResponse {
 // assign speakers downstream by merging pyannote diarization), so we segment
 // it into utterances at sentence-final punctuation and pauses. Utterances must
 // stay short enough that "one speaker per utterance" holds for that merge.
-const SENTENCE_END_PUNCTUATION = /[.!?;;…]$/; // both ';' and U+037E are Greek question marks
+// Abbreviations that are longer than two letters but still don't end a sentence
+const KNOWN_ABBREVIATIONS = new Set(["δηλ", "βλ", "σελ", "αριθ", "κεφ", "λεωφ", "τηλ"]);
+
+// A trailing '.' ends the sentence unless the token looks like an abbreviation:
+// short forms (κ., αρ., οδ.) or dotted acronyms (Κ.Κ.Ε., π.χ.).
+// A missed abbreviation only causes a mid-sentence utterance split, but κ.
+// is everywhere in roll-calls, so the common cases matter.
+function endsSentence(text: string): boolean {
+    if (/[!?;;…]$/.test(text)) { // both ';' and U+037E are Greek question marks
+        return true;
+    }
+    if (!text.endsWith(".")) {
+        return false;
+    }
+    const core = text.slice(0, -1);
+    const isAbbreviation = core.length <= 2
+        || KNOWN_ABBREVIATIONS.has(core.toLowerCase())
+        || /^(\p{L}\.)+\p{L}{0,3}$/u.test(core);
+    return !isAbbreviation;
+}
 const UTTERANCE_PAUSE_SECONDS = 1;
 const UTTERANCE_MAX_DURATION_SECONDS = 30;
 
@@ -100,7 +123,7 @@ export function scribeWordsToUtterances(words: ScribeWord[], language: string): 
         });
         currentText += entry.text;
 
-        if (SENTENCE_END_PUNCTUATION.test(entry.text) || end - currentWords[0].start >= UTTERANCE_MAX_DURATION_SECONDS) {
+        if (endsSentence(entry.text) || end - currentWords[0].start >= UTTERANCE_MAX_DURATION_SECONDS) {
             flush();
         }
     }

@@ -28,6 +28,21 @@ describe("scribeWordsToUtterances", () => {
         expect(utterances[1]).toMatchObject({ start: 1.1, end: 2.0 });
     });
 
+    it("does not split at abbreviations or dotted acronyms", () => {
+        const words = scribeWords([
+            ["Ο", 0, 0.1],
+            ["κ.", 0.2, 0.4],
+            ["Δημάκης", 0.5, 1.0],
+            ["της", 1.1, 1.3],
+            ["Κ.Κ.Ε.", 1.4, 2.0],
+            ["ψήφισε.", 2.1, 2.6],
+        ]);
+
+        const utterances = scribeWordsToUtterances(words, "el");
+
+        expect(utterances.map(u => u.text)).toEqual(["Ο κ. Δημάκης της Κ.Κ.Ε. ψήφισε."]);
+    });
+
     it("splits at pauses longer than the threshold", () => {
         const words = scribeWords([
             ["πρώτο", 0, 0.5],

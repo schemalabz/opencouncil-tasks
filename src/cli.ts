@@ -20,6 +20,7 @@ import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 import { DiarizeResult } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
+import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
 import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
 
 const program = new Command();
@@ -43,7 +44,7 @@ program
 program
     .command('split-audio <file>')
     .description('Split an audio file into segments')
-    .option('-d, --max-duration <seconds>', 'Maximum duration of each segment in seconds', '3600')
+    .option('-d, --max-duration <seconds>', 'Maximum duration of each segment in seconds', String(MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS))
     .option('-m, --method <method>', 'Method to use for splitting', 'diarization')
     .option('-D, --diarization-file <file>', 'Diarization file')
     .action(async (file: string, options: { maxDuration: string, method: string, diarizationFile?: string }) => {
@@ -146,7 +147,7 @@ program
         const { diarization } = await diarize({ audioUrl: uploadedFileUrl[0], voiceprints }, createProgressHandler("diarizing"));
         console.log("Diarized audio");
 
-        const audioSegments = await splitAudioDiarization({ file, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-audio"));
+        const audioSegments = await splitAudioDiarization({ file, maxDuration: MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS, diarization }, createProgressHandler("segmenting-audio"));
         console.log("Split audio into segments");
 
         const audioUrls = await uploadToSpaces({
