@@ -604,6 +604,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
         model: "claude-opus-4-7",
         maxTokens: 128000,
         batchFirst: useBatchFirst,
+        label: `batch-processing:${batchIndex + 1}/${totalBatches}`,
         systemPrompt,
         userPrompt,
         outputFormat: {

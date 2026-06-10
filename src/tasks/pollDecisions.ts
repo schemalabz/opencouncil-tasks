@@ -315,6 +315,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         const resolverStart = Date.now();
         const { result: resolverOutput, usage: resolverUsage } = await aiChat<ResolverOutput>({
             model: RESOLVER_MODEL,
+            label: "decision-resolver",
             systemPrompt: RESOLVER_SYSTEM_PROMPT,
             userPrompt: resolverPrompt,
             outputFormat: {
@@ -444,6 +445,7 @@ ${gapCandidateLines}`;
                             const gapResolverStart = Date.now();
                             const { result: gapResolverOutput, usage: gapResolverUsage } = await aiChat<ResolverOutput>({
                                 model: RESOLVER_MODEL,
+                                label: "protocol-gap-resolver",
                                 systemPrompt: gapResolverSystemPrompt,
                                 userPrompt: gapResolverPrompt,
                                 outputFormat: {

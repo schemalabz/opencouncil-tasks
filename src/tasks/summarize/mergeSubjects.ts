@@ -96,6 +96,7 @@ Remember: Only BEFORE_AGENDA subjects can appear in removeIds. If no merges are 
 
     const { result, usage, resolvedModel, batchMode } = await aiChat<MergeAIResponse>({
         model: "claude-opus-4-6",
+        label: "subject-merge",
         systemPrompt,
         userPrompt,
         outputFormat: {

@@ -43,6 +43,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 
     const result = await aiChat<Omit<ExtractedSubject, "speakerContributions">[]>({
         model: "claude-opus-4-6",
+        label: "agenda-extraction",
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
         documentBase64: base64,

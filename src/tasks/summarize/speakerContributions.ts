@@ -366,6 +366,7 @@ ${fullDiscussion}
         const result = await aiChat<{ speakerContributions: SpeakerContribution[] }>({
             model: "claude-opus-4-6",
             batchFirst: true,
+            label: `contributions:${subject.name.slice(0, 40)}`,
             systemPrompt,
             userPrompt,
             outputFormat: {
