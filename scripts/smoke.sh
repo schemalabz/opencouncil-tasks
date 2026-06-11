@@ -10,7 +10,7 @@
 # Prerequisites:
 #   - nix develop shell (provides minio, mc, ngrok, node, npm)
 #   - ngrok authenticated (ngrok config add-authtoken <token>)
-#   - .env configured with API keys for Gladia, Pyannote, etc.
+#   - .env configured with API keys for ElevenLabs, Pyannote, etc.
 #
 set -euo pipefail
 

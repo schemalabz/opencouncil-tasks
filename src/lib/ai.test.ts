@@ -1,6 +1,50 @@
 import { describe, it, expect } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary } from './ai.js';
+
+// ===========================================================================
+// cutToLineBoundary — truncated partials stitch at line boundaries so the
+// continuation regenerates the cut line instead of resuming mid-word
+// ===========================================================================
+
+describe('cutToLineBoundary', () => {
+
+    it('drops the trailing incomplete line', () => {
+        expect(cutToLineBoundary('1. ένα\n2. δύο\n3. τρ')).toBe('1. ένα\n2. δύο\n');
+    });
+
+    it('returns single-line output unchanged (byte-exact stitch fallback)', () => {
+        const singleLine = '{"key": "value", "tru';
+        expect(cutToLineBoundary(singleLine)).toBe(singleLine);
+    });
+
+    it('keeps a partial that already ends at a line boundary intact', () => {
+        expect(cutToLineBoundary('1. ένα\n2. δύο\n')).toBe('1. ένα\n2. δύο\n');
+    });
+});
+
+// ===========================================================================
+// continuationPrompt — continuation goes in a user turn; trailing-assistant
+// prefill returns 400 on Claude 4.6+ models
+// ===========================================================================
+
+describe('continuationPrompt', () => {
+
+    it('echoes only the tail of the partial to anchor the continuation point', () => {
+        const partial = 'x'.repeat(300) + '37. Καλημέρα σας';
+        const prompt = continuationPrompt(partial);
+
+        expect(prompt).toContain('37. Καλημέρα σας');
+        expect(prompt).not.toContain('x'.repeat(250));
+    });
+
+    it('instructs the model not to repeat or restart numbering', () => {
+        const prompt = continuationPrompt('1. ένα\n2. δύο\n3. τρ');
+
+        expect(prompt).toContain('Do not repeat');
+        expect(prompt).toContain('do not restart any numbering');
+    });
+});
 
 // Helper: build SDK error instances using the SDK's own factory.
 function makeApiError(status: number, errorType: string, errorMessage: string) {

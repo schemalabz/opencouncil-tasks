@@ -69,7 +69,14 @@ type AiChatOptions = {
     documentBase64?: string;
     systemPrompt: string;
     userPrompt: string;
+    // WARNING: trailing-assistant prefill returns 400 on Claude 4.6+ models
+    // ("This model does not support assistant message prefill"). Only pass
+    // this for older models (current callers use Haiku 4.5 / Sonnet 4.0).
     prefillSystemResponse?: string;
+    // Partial output from a max_tokens-truncated response: sent back as a
+    // non-final assistant turn followed by a user instruction to continue
+    // (the prefill-based continuation is rejected by Claude 4.6+ models)
+    continueFromPartial?: string;
     prependToResponse?: string;
     parseJson?: boolean;
     maxTokens?: number;
@@ -210,7 +217,28 @@ async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParam
     }
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
+/**
+ * Cuts a max_tokens-truncated partial back to its last complete line, so the
+ * continuation regenerates the cut line whole instead of resuming mid-word
+ * (the seam of a mid-line stitch can drop characters). Returns the partial
+ * unchanged when it has no usable line boundary (e.g. single-line JSON).
+ */
+export function cutToLineBoundary(partial: string): string {
+    const lastNewline = partial.lastIndexOf('\n');
+    return lastNewline > 0 ? partial.slice(0, lastNewline + 1) : partial;
+}
+
+/**
+ * The user-turn instruction that continues a max_tokens-truncated response.
+ * The full partial precedes it as an assistant turn; the tail is repeated here
+ * to anchor the exact continuation point.
+ */
+export function continuationPrompt(partial: string): string {
+    const tail = partial.slice(-200);
+    return `Your previous response was cut off by the output token limit. It currently ends with:\n${tail}\n\nContinue EXACTLY from where it stopped: output only the remaining content, completing the line you were in the middle of if it was cut mid-line. Do not repeat anything already written, do not add any preamble or commentary, and do not restart any numbering or structure from the beginning.`;
+}
+
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     try {
         console.log(`Sending message to claude${batchFirst ? ' (batch-first)' : ''}...`);
@@ -235,6 +263,17 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         // Only use prefill if NOT using structured outputs (they're incompatible)
         if (prefillSystemResponse && !outputFormat) {
             messages.push({ "role": "assistant", "content": prefillSystemResponse });
+        }
+
+        // Continuation of a truncated response: the partial goes back as a
+        // non-final assistant turn (mid-conversation assistant messages are
+        // allowed on all models) with a user turn asking to resume from there.
+        // NOTE: mutually exclusive with prefillSystemResponse — passing both
+        // would emit two back-to-back assistant turns (the max_tokens recursion
+        // folds any caller prefill into the partial instead)
+        if (continueFromPartial && !outputFormat) {
+            messages.push({ "role": "assistant", "content": continueFromPartial });
+            messages.push({ "role": "user", "content": continuationPrompt(continueFromPartial) });
         }
 
         // Convert system prompt to array format with cache control if caching is enabled
@@ -326,13 +365,18 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
 
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
+            // Cut the partial back to the last complete line: the model can't
+            // resume mid-word byte-exactly, so a mid-line seam can drop
+            // characters ("για τονδήμο") — it regenerates the cut line whole
+            // instead. Falls back to a byte-exact stitch for single-line output.
+            const partialSoFar = cutToLineBoundary((continueFromPartial ?? prefillSystemResponse ?? '') + responseText);
             const response2 = await aiChat<T>({
                 model,
                 systemPrompt,
                 documentBase64,
                 userPrompt,
-                prefillSystemResponse: ((prefillSystemResponse || '') + responseText).trim(),
-                prependToResponse: ((prependToResponse || '') + responseText).trim(),
+                continueFromPartial: partialSoFar,
+                prependToResponse: partialSoFar,
                 parseJson,
                 maxTokens: maxTokensParam,
                 tools,

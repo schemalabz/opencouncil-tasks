@@ -133,7 +133,8 @@ app.post('/transcribe', (
     next();
 }, taskManager.registerTask(pipeline, {
     summary: 'Transcribe audio/video content',
-    description: 'Convert audio or video content to text using speech recognition'
+    description: 'Convert audio or video content to text using speech recognition',
+    version: 1,
 }));
 
 app.post('/summarize', taskManager.registerTask(summarize, {
@@ -150,7 +151,7 @@ app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
 app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   summary: 'Fix transcript formatting',
   description: 'Cleans and corrects transcription output for improved accuracy',
-  version: 1,
+  version: 2,
 }));
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {

@@ -36,6 +36,7 @@
     "typescript": "^5.5.4",
     "typescript-json-schema": "^0.65.1",
     "underscore": "^1.13.7",
+    "undici": "^6.26.0",
     "ytdlp-nodejs": "^2.3.5"
   },
   "devDependencies": {

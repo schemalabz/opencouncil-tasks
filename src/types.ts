@@ -198,7 +198,9 @@ export interface ProcessAgendaResult {
 
 /*
  * Transcript
- * see https://docs.gladia.io/api-reference/v2/transcription/get#response-result
+ * The shape follows Gladia's v2 response format, which downstream consumers
+ * (opencouncil) depend on. Transcription now runs on ElevenLabs Scribe v2 —
+ * src/lib/ScribeTranscribe.ts maps Scribe responses into this shape.
  */
 
 export interface Transcript {
@@ -271,7 +273,11 @@ export interface RequestOnTranscript extends TaskRequest {
  * Fix Transcript
  */
 
-export interface FixTranscriptRequest extends RequestOnTranscript { }
+export interface FixTranscriptRequest extends RequestOnTranscript {
+    // Agenda/subject titles of the meeting — a source for street, project, and
+    // entity names that the party roster doesn't cover
+    agendaItems?: { name: string }[];
+}
 
 export interface FixTranscriptResult {
     updateUtterances: {

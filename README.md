@@ -171,7 +171,7 @@ The service uses environment variables for configuration. Not all variables are 
 
 ### External Services
 - `ANTHROPIC_API_KEY` - Required for summarization and content generation
-- `GLADIA_API_KEY` - Required for transcription
+- `ELEVENLABS_API_KEY` - Required for transcription (ElevenLabs Scribe v2; the key needs the `speech_to_text` permission)
 - `PERPLEXITY_API_KEY` - Required for agenda processing
 - `MUX_TOKEN_ID` and `MUX_TOKEN_SECRET` - Required for video processing
 - `GOOGLE_API_KEY` - Required for geocoding
@@ -189,7 +189,7 @@ The service uses environment variables for configuration. Not all variables are 
 See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 
 ### Task-Specific Configuration
-- `GLADIA_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 20) - Maximum concurrent transcription tasks
+- `SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 15) - Maximum concurrent transcription requests per process; account-wide overflow returns 429s, which are retried with backoff
 - `PYANNOTE_MAX_CONCURRENT_DIARIZATIONS` (default: 5) - Maximum concurrent diarization tasks
 - `YTDLP_PROXY` - Residential proxy for YouTube downloads ([pi-proxy](https://github.com/schemalabz/pi-proxy))
 - `LOG_DIR` - Directory for log files

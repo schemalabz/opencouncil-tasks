@@ -9,6 +9,7 @@ import { type TranscribeArgs } from "./transcribe.js";
 import { uploadToSpaces } from "./uploadToSpaces.js";
 import { type UploadFilesArgs } from "./uploadToSpaces.js";
 import { createMuxAsset, deleteMuxAsset, type MuxResult } from "../lib/mux.js";
+import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
 import _ from 'underscore';
 import dotenv from "dotenv";
 
@@ -67,7 +68,7 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
             console.log("Uploaded audio to spaces and diarized");
 
             const transcript =
-                await deps.splitAudioDiarization({ file: audioOnly, maxDuration: 60 * 60, diarization }, createProgressHandler("segmenting-video"))
+                await deps.splitAudioDiarization({ file: audioOnly, maxDuration: MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS, diarization }, createProgressHandler("segmenting-video"))
                     .then(async (audioSegments) => {
                         const audioUrls = await deps.uploadToSpaces({
                             files: audioSegments.map((segment) => segment.path),
