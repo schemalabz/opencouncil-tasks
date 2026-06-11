@@ -1,6 +1,29 @@
 import { describe, it, expect } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt } from './ai.js';
+
+// ===========================================================================
+// continuationPrompt — continuation goes in a user turn; trailing-assistant
+// prefill returns 400 on Claude 4.6+ models
+// ===========================================================================
+
+describe('continuationPrompt', () => {
+
+    it('echoes only the tail of the partial to anchor the continuation point', () => {
+        const partial = 'x'.repeat(300) + '37. Καλημέρα σας';
+        const prompt = continuationPrompt(partial);
+
+        expect(prompt).toContain('37. Καλημέρα σας');
+        expect(prompt).not.toContain('x'.repeat(250));
+    });
+
+    it('instructs the model not to repeat or restart numbering', () => {
+        const prompt = continuationPrompt('1. ένα\n2. δύο\n3. τρ');
+
+        expect(prompt).toContain('Do not repeat');
+        expect(prompt).toContain('do not restart any numbering');
+    });
+});
 
 // Helper: build SDK error instances using the SDK's own factory.
 function makeApiError(status: number, errorType: string, errorMessage: string) {
