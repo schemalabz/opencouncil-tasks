@@ -303,8 +303,6 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             })
         };
 
-        await logToFile("Claude Request", requestParams);
-
         generation = observeGeneration({
             name: label || 'aiChat',
             model: resolvedModel,
@@ -348,8 +346,6 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 }
             }
         }
-
-        await logToFile("Claude Response", response);
 
         console.log(`Claude stop_reason: ${response.stop_reason}, tokens: ${response.usage.output_tokens}/${maxTokens}`);
 
@@ -440,8 +436,6 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         } else {
             responseJson = responseContent as T;
         }
-
-        await logToFile("Parsed Result", responseJson);
 
         return {
             usage: response.usage,
