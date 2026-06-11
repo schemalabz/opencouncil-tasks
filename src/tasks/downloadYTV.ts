@@ -100,7 +100,28 @@ type LoudnormStats = {
 };
 
 const LOUDNORM_TARGET = { I: -14, TP: -1.5, LRA: 11 };
+// Within this distance of the integrated-loudness target, the correction is
+// too small to justify re-encoding the audio and re-muxing the whole file.
+// Files we already normalized measure at the target, so reprocessing a cached
+// video skips the expensive pass entirely.
+const LOUDNORM_TOLERANCE_LU = 1;
 const AUDIO_BITRATE = '128k';
+
+export function needsLoudnormCorrection(stats: LoudnormStats): boolean {
+    const deltaI = Math.abs(LOUDNORM_TARGET.I - parseFloat(stats.input_i));
+    // Non-finite measurements (ffmpeg emits "-inf" on silent audio) fall
+    // through to normalization, preserving the old always-normalize behavior
+    if (!Number.isFinite(deltaI)) {
+        return true;
+    }
+    // Only loudness deviation triggers normalization. True peak deliberately
+    // does NOT: the AAC re-encode in pass 2 overshoots the true-peak limiter
+    // (observed in production: TP went +0.69 → +1.98 dBTP through one
+    // normalize cycle while loudness stayed on target), so a TP-only trigger
+    // re-normalizes the same file on every rerun, degrading audio each time
+    // and never converging.
+    return deltaI > LOUDNORM_TOLERANCE_LU;
+}
 
 export function parseLoudnormStats(stderr: string): LoudnormStats {
     // ffmpeg's loudnorm filter outputs a JSON block at the end of stderr
@@ -149,9 +170,14 @@ async function normalizeVideoAudio(filePath: string): Promise<void> {
     const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
     const filename = path.basename(filePath);
 
-    // Pass 1: measure loudness
+    // Pass 1: measure loudness. Input-side -vn keeps ffmpeg from decoding
+    // the video stream, which would otherwise dominate the runtime of a
+    // measurement that only reads audio (~35 minutes of video decode for a
+    // 6.5h meeting).
+    console.log(`[loudnorm] ${filename}: measuring loudness...`);
     const pass1Start = Date.now();
     const { stderr } = await runFfmpeg([
+        '-vn',
         '-i', filePath,
         '-af', `${loudnormFilter}:print_format=json`,
         '-f', 'null', '-',
@@ -161,6 +187,11 @@ async function normalizeVideoAudio(filePath: string): Promise<void> {
     const stats = parseLoudnormStats(stderr);
     const deltaI = (I - parseFloat(stats.input_i)).toFixed(1);
     console.log(`[loudnorm] ${filename}: I=${stats.input_i} LUFS (target ${I}, Δ${parseFloat(deltaI) >= 0 ? '+' : ''}${deltaI}) | TP=${stats.input_tp} dBTP (ceiling ${TP}) | LRA=${stats.input_lra} (target ${LRA}) | thresh=${stats.input_thresh} | measure=${pass1Duration}s`);
+
+    if (!needsLoudnormCorrection(stats)) {
+        console.log(`[loudnorm] ${filename}: within ${LOUDNORM_TOLERANCE_LU} LU of the ${I} LUFS target, skipping normalization`);
+        return;
+    }
 
     // Pass 2: apply normalization with linear mode
     const tempPath = filePath + '.normalized.mp4';

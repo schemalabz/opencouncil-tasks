@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getVideoIdAndUrl, formatBytes, parseLoudnormStats } from './downloadYTV.js';
+import { getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection } from './downloadYTV.js';
 
 describe('getVideoIdAndUrl', () => {
   it('extracts ID from youtube.com/watch?v=...', () => {
@@ -104,5 +104,42 @@ size=N/A time=01:23:45.67 bitrate=N/A speed= 125x
     expect(() => parseLoudnormStats(incomplete)).toThrow(
       'Missing loudnorm field',
     );
+  });
+});
+
+describe('needsLoudnormCorrection', () => {
+  const stats = (input_i: string, input_tp: string) => ({
+    input_i,
+    input_tp,
+    input_lra: '11.00',
+    input_thresh: '-25.00',
+  });
+
+  it('skips correction when loudness is within tolerance', () => {
+    expect(needsLoudnormCorrection(stats('-14.46', '-2.10'))).toBe(false);
+  });
+
+  it('skips correction for an already-normalized file measuring at the target', () => {
+    expect(needsLoudnormCorrection(stats('-14.00', '-1.50'))).toBe(false);
+  });
+
+  // The AAC re-encode overshoots the true-peak limiter (observed: TP went
+  // +0.69 → +1.98 dBTP through one normalize cycle), so TP alone must not
+  // trigger normalization — it would re-normalize the same file on every
+  // rerun without ever converging.
+  it('does not re-normalize for true-peak overshoot when loudness is on target', () => {
+    expect(needsLoudnormCorrection(stats('-14.64', '1.98'))).toBe(false);
+  });
+
+  it('corrects when the audio is too quiet', () => {
+    expect(needsLoudnormCorrection(stats('-27.10', '-8.34'))).toBe(true);
+  });
+
+  it('corrects when the audio is too loud', () => {
+    expect(needsLoudnormCorrection(stats('-11.20', '-3.00'))).toBe(true);
+  });
+
+  it('corrects when measurements are not parseable numbers', () => {
+    expect(needsLoudnormCorrection(stats('-inf', '-inf'))).toBe(true);
   });
 });
