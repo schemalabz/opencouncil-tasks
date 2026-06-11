@@ -268,9 +268,14 @@ class ScribeTranscriber {
 
             if (result.rateLimited) {
                 // Saturation isn't this request's fault: wait it out without
-                // consuming the attempt budget, bounded by MAX_SATURATION_WAIT_MS
+                // consuming the attempt budget, bounded by MAX_SATURATION_WAIT_MS.
+                // Floor the wait at the base delay — a Retry-After of 0 must not
+                // turn this into a zero-delay spin that never consumes the budget.
                 rateLimitStreak++;
-                const delayMs = result.retryAfterMs ?? Math.min(RATE_LIMIT_BACKOFF_CAP_MS, BASE_RETRY_DELAY_MS * Math.pow(2, rateLimitStreak - 1));
+                const delayMs = Math.max(
+                    BASE_RETRY_DELAY_MS,
+                    result.retryAfterMs ?? Math.min(RATE_LIMIT_BACKOFF_CAP_MS, BASE_RETRY_DELAY_MS * Math.pow(2, rateLimitStreak - 1)),
+                );
                 saturationWaitMs += delayMs;
                 if (saturationWaitMs > MAX_SATURATION_WAIT_MS) {
                     throw result.error;
