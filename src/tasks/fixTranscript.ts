@@ -51,6 +51,10 @@ ${agendaBlock}Correct the numbered utterances:
 ${utterances.map((u, i) => `${i + 1}. ${u}`).join('\n')}`;
 }
 
+function countNumberedLines(text: string): number {
+    return text.split('\n').filter((line) => /^\s*\d+\.\s/.test(line)).length;
+}
+
 /**
  * Parses the model's numbered-line output back into utterances.
  *
@@ -106,11 +110,8 @@ async function processSpeakerSegment(
     const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, segment.speakerName || "(unknown)", utteranceTexts);
 
     let usage = NO_USAGE;
+    let structureReminder = "";
     for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
-        // Retries are triggered by structural mismatches, so remind the model
-        // of the output contract instead of resending the identical prompt
-        const structureReminder = attempt === 1 ? "" :
-            `\n\nIMPORTANT: Output ONLY the ${segment.utterances.length} corrected numbered lines, exactly one line per input number, with no preamble or explanations.`;
         const result = await aiChat<string>({
             model: "claude-sonnet-4-6",
             systemPrompt,
@@ -121,7 +122,11 @@ async function processSpeakerSegment(
 
         const fixedUtterances = parseNumberedUtterances(result.result, segment.utterances.length);
         if (!fixedUtterances) {
-            console.error(`Output structure mismatch for ${segment.speakerName} (attempt ${attempt}/${MAX_FIX_ATTEMPTS}): expected ${segment.utterances.length} numbered utterances`);
+            // aiChat pins temperature 0, so an identical retry prompt would get
+            // an identical response — tell the model what was wrong instead
+            const observedLines = countNumberedLines(result.result);
+            structureReminder = `\n\nIMPORTANT (retry ${attempt + 1}): your previous response could not be used because it contained ${observedLines} numbered lines but the input has ${segment.utterances.length} utterances. Output ONLY lines numbered 1. to ${segment.utterances.length}, exactly one line per input utterance, with no preamble or explanations.`;
+            console.error(`Output structure mismatch for ${segment.speakerName} (attempt ${attempt}/${MAX_FIX_ATTEMPTS}): expected ${segment.utterances.length} numbered utterances, got ${observedLines}`);
             continue;
         }
 

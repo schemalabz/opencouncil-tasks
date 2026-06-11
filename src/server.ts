@@ -134,7 +134,6 @@ app.post('/transcribe', (
 }, taskManager.registerTask(pipeline, {
     summary: 'Transcribe audio/video content',
     description: 'Convert audio or video content to text using speech recognition',
-    // version 1: transcription switched from Gladia to ElevenLabs Scribe v2
     version: 1,
 }));
 
@@ -152,8 +151,6 @@ app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
 app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   summary: 'Fix transcript formatting',
   description: 'Cleans and corrects transcription output for improved accuracy',
-  // version 2: prompt rewritten for Scribe v2 clean-read output (names-first,
-  // homophones, digit house style) with numbered-line structure validation
   version: 2,
 }));
 
