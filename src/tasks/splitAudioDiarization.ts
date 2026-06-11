@@ -150,6 +150,34 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
     return audioSegments;
 };
 
+export const buildFfmpegSplitArgs = (input: string, output: string, startTime?: number, duration?: number): string[] => {
+    const args = [
+        '-y'  // Overwrite output file if it exists
+    ];
+
+    // -ss/-t before -i: seek directly to the offset instead of decoding
+    // from the start of the file (an output-side -ss decodes and discards
+    // everything before the seek point, which is quadratic across segments)
+    if (startTime !== undefined) args.push('-ss', startTime.toFixed(3));
+    if (duration !== undefined) args.push('-t', duration.toFixed(3));
+
+    args.push('-i', input);
+
+    // Pipeline input is always mp3 (produced by downloadYTV), so stream-copy
+    // instead of re-encoding; cuts align to mp3 frame boundaries (~26ms).
+    // Anything else (ad-hoc CLI inputs) can't be muxed into an mp3 container,
+    // so keep the old re-encode path for those.
+    if (path.extname(input).toLowerCase() === '.mp3') {
+        args.push('-c:a', 'copy');
+    } else {
+        args.push('-acodec', 'libmp3lame', '-b:a', '128k');
+    }
+
+    args.push(output);
+
+    return args;
+};
+
 // Helper function to promisify ffmpeg operations
 const ffmpegPromise = (input: string, output: string, startTime?: number, duration?: number): Promise<void> => {
     return new Promise((resolve, reject) => {
@@ -157,18 +185,7 @@ const ffmpegPromise = (input: string, output: string, startTime?: number, durati
         const absoluteInput = path.resolve(input);
         const absoluteOutput = path.resolve(output);
 
-        const args = [
-            '-i', absoluteInput,
-            '-y'  // Overwrite output file if it exists
-        ];
-
-        if (startTime !== undefined) args.push('-ss', startTime.toFixed(3));
-        if (duration !== undefined) args.push('-t', duration.toFixed(3));
-
-        // Add some ffmpeg optimizations
-        args.push('-acodec', 'libmp3lame', '-b:a', '128k');
-
-        args.push(absoluteOutput);
+        const args = buildFfmpegSplitArgs(absoluteInput, absoluteOutput, startTime, duration);
 
         const ffmpegBin = ffmpegPath();
         console.log(`Executing ffmpeg command: ${ffmpegBin} ${args.join(' ')}`);
