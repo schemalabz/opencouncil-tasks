@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { fetch, Agent, FormData } from "undici";
 import { Transcript, Utterance, Word } from "../types.js";
 
 dotenv.config();
@@ -7,17 +8,30 @@ dotenv.config();
 const SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS = parseInt(process.env.SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS || '5', 10);
 
 // Cap for audio segments sent to Scribe: at ~12s per audio-minute, a 15-minute
-// segment responds in ~3 minutes, safely before fetch's 5-minute response
-// header timeout. All splitAudioDiarization call sites that feed transcription
-// must use this.
+// segment responds in ~3 minutes — keeping parallelism high and the cost of a
+// timed-out or retried request bounded. All splitAudioDiarization call sites
+// that feed transcription must use this.
 export const MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS = 15 * 60;
 
 const SCRIBE_API_URL = "https://api.elevenlabs.io/v1/speech-to-text";
 const MAX_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 5000;
-// Hard per-request cap so a stalled request can't pin a concurrency slot:
-// a 15-minute segment should respond in ~3 minutes, so 10 is generous
+// 429s mean the account-wide concurrency cap is full (possibly from outside
+// this process), which can outlast any fixed attempt budget — so they get
+// their own waiting rules instead of consuming attempts.
+const RATE_LIMIT_BACKOFF_CAP_MS = 60_000;
+const MAX_SATURATION_WAIT_MS = 30 * 60 * 1000;
+// Hard per-request cap so a stalled request can't pin a concurrency slot.
+// undici's default headersTimeout would give up at 5 minutes; the dispatcher
+// below raises it so this AbortSignal is the single effective bound.
 const SCRIBE_REQUEST_TIMEOUT_MS = 10 * 60 * 1000;
+
+const scribeDispatcher = new Agent({
+    headersTimeout: SCRIBE_REQUEST_TIMEOUT_MS,
+    bodyTimeout: SCRIBE_REQUEST_TIMEOUT_MS,
+});
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function getScribeKey(): string {
     const key = process.env.ELEVENLABS_API_KEY;
@@ -50,17 +64,19 @@ export interface ScribeResponse {
 // assign speakers downstream by merging pyannote diarization), so we segment
 // it into utterances at sentence-final punctuation and pauses. Utterances must
 // stay short enough that "one speaker per utterance" holds for that merge.
-// Abbreviations that are longer than two letters but still don't end a sentence
-const KNOWN_ABBREVIATIONS = new Set(["δηλ", "βλ", "σελ", "αριθ", "κεφ", "λεωφ", "τηλ"]);
+const UTTERANCE_PAUSE_SECONDS = 1;
+const UTTERANCE_MAX_DURATION_SECONDS = 30;
 
 // A trailing '.' ends the sentence unless the token looks like an abbreviation:
-// short forms (κ., αρ., οδ.) or dotted acronyms (Κ.Κ.Ε., π.χ.).
-// A missed abbreviation only causes a mid-sentence utterance split, but κ.
-// is everywhere in roll-calls, so the common cases matter.
+// short forms (κ., αρ., οδ.), dotted acronyms (Κ.Κ.Ε., π.χ.), or the known
+// longer forms below. A missed abbreviation only causes a mid-sentence
+// utterance split, but κ. is everywhere in roll-calls, so the common cases matter.
+const KNOWN_ABBREVIATIONS = new Set(["δηλ", "βλ", "σελ", "αριθ", "κεφ", "λεωφ", "τηλ"]);
+
 function endsSentence(text: string): boolean {
     // '…' is excluded: Scribe emits it when a speaker trails off mid-thought
     // and continues; the pause rule splits the genuine stops.
-    if (/[!?;;]$/.test(text)) { // both ';' and U+037E are Greek question marks
+    if (/[!?;;]$/.test(text)) { // ';' and U+037E, the Greek question mark
         return true;
     }
     if (!text.endsWith(".")) {
@@ -72,11 +88,11 @@ function endsSentence(text: string): boolean {
         || /^(\p{L}\.)+\p{L}{0,3}$/u.test(core);
     return !isAbbreviation;
 }
-const UTTERANCE_PAUSE_SECONDS = 1;
-const UTTERANCE_MAX_DURATION_SECONDS = 30;
 
 export function scribeWordsToUtterances(words: ScribeWord[], language: string): Utterance[] {
     const utterances: Utterance[] = [];
+    const flushCounts = { punctuation: 0, pause: 0, maxDuration: 0 };
+    const sentenceEndWords = new Set<string>();
 
     let currentWords: Word[] = [];
     let currentText = "";
@@ -116,6 +132,7 @@ export function scribeWordsToUtterances(words: ScribeWord[], language: string): 
         const end = entry.end ?? start;
 
         if (currentWords.length > 0 && start - lastEnd > UTTERANCE_PAUSE_SECONDS) {
+            flushCounts.pause++;
             flush();
         }
 
@@ -128,11 +145,26 @@ export function scribeWordsToUtterances(words: ScribeWord[], language: string): 
         });
         currentText += entry.text;
 
-        if (endsSentence(entry.text) || end - currentWords[0].start >= UTTERANCE_MAX_DURATION_SECONDS) {
+        if (endsSentence(entry.text)) {
+            flushCounts.punctuation++;
+            sentenceEndWords.add(entry.text);
+            flush();
+        } else if (end - currentWords[0].start >= UTTERANCE_MAX_DURATION_SECONDS) {
+            flushCounts.maxDuration++;
             flush();
         }
     }
     flush();
+
+    // Production visibility into endsSentence: a missed abbreviation shows up
+    // here directly instead of as a misattributed speaker three steps downstream
+    const wordCount = words.filter((w) => w.type === "word").length;
+    console.log(`[Scribe] ${wordCount} words → ${utterances.length} utterances (punctuation: ${flushCounts.punctuation}, pause: ${flushCounts.pause}, maxDuration: ${flushCounts.maxDuration})`);
+    if (sentenceEndWords.size > 0) {
+        const sample = [...sentenceEndWords].slice(0, 200);
+        const more = sentenceEndWords.size - sample.length;
+        console.log(`[Scribe] sentence-end words: ${sample.join(" ")}${more > 0 ? ` (+${more} more)` : ""}`);
+    }
 
     return utterances;
 }
@@ -179,6 +211,9 @@ type TranscribeRequest = {
 class ScribeTranscriber {
     private queue: TranscribeRequest[] = [];
     private activeTranscriptions = 0;
+    // When ElevenLabs reports account saturation (429), every request holds
+    // off until this time instead of piling more retries onto a full account
+    private pausedUntil = 0;
 
     async transcribe(request: { audioUrl: string }): Promise<Transcript> {
         return new Promise((resolve, reject) => {
@@ -217,24 +252,49 @@ class ScribeTranscriber {
     }
 
     private async requestWithRetries(audioUrl: string): Promise<ScribeResponse> {
-        for (let attempt = 1; ; attempt++) {
+        let failures = 0;
+        let saturationWaitMs = 0;
+        let rateLimitStreak = 0;
+
+        for (; ;) {
+            while (Date.now() < this.pausedUntil) {
+                await sleep(this.pausedUntil - Date.now());
+            }
+
             const result = await this.attemptRequest(audioUrl);
             if (result.ok) {
                 return result.response;
             }
-            if (!result.retryable || attempt >= MAX_ATTEMPTS) {
+
+            if (result.rateLimited) {
+                // Saturation isn't this request's fault: wait it out without
+                // consuming the attempt budget, bounded by MAX_SATURATION_WAIT_MS
+                rateLimitStreak++;
+                const delayMs = result.retryAfterMs ?? Math.min(RATE_LIMIT_BACKOFF_CAP_MS, BASE_RETRY_DELAY_MS * Math.pow(2, rateLimitStreak - 1));
+                saturationWaitMs += delayMs;
+                if (saturationWaitMs > MAX_SATURATION_WAIT_MS) {
+                    throw result.error;
+                }
+                this.pausedUntil = Math.max(this.pausedUntil, Date.now() + delayMs);
+                console.log(`Scribe account saturated (429), holding all requests for ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
+                continue;
+            }
+
+            rateLimitStreak = 0;
+            failures++;
+            if (!result.retryable || failures >= MAX_ATTEMPTS) {
                 throw result.error;
             }
 
-            const delayMs = result.retryAfterMs ?? BASE_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
-            console.log(`Scribe request failed (attempt ${attempt}/${MAX_ATTEMPTS}), retrying in ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
-            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            const delayMs = BASE_RETRY_DELAY_MS * Math.pow(2, failures - 1);
+            console.log(`Scribe request failed (attempt ${failures}/${MAX_ATTEMPTS}), retrying in ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
+            await sleep(delayMs);
         }
     }
 
     private async attemptRequest(audioUrl: string): Promise<
         { ok: true; response: ScribeResponse } |
-        { ok: false; retryable: boolean; retryAfterMs?: number; error: Error }
+        { ok: false; retryable: boolean; rateLimited?: boolean; retryAfterMs?: number; error: Error }
     > {
         const apiKey = getScribeKey();
 
@@ -249,32 +309,33 @@ class ScribeTranscriber {
         form.append("diarize", "false");
         form.append("source_url", audioUrl);
 
-        let response: Response;
         try {
-            response = await fetch(SCRIBE_API_URL, {
+            const response = await fetch(SCRIBE_API_URL, {
                 method: "POST",
                 headers: { "xi-api-key": apiKey },
                 body: form,
                 signal: AbortSignal.timeout(SCRIBE_REQUEST_TIMEOUT_MS),
+                dispatcher: scribeDispatcher,
             });
+
+            if (response.ok) {
+                return { ok: true, response: await response.json() as ScribeResponse };
+            }
+
+            const body = await response.text().catch(() => "");
+            const retryAfterSeconds = parseInt(response.headers.get("retry-after") ?? "", 10);
+            return {
+                ok: false,
+                retryable: response.status >= 500,
+                rateLimited: response.status === 429,
+                retryAfterMs: Number.isNaN(retryAfterSeconds) ? undefined : retryAfterSeconds * 1000,
+                error: new Error(`Scribe API returned ${response.status}: ${body.slice(0, 500)}`),
+            };
         } catch (error) {
-            // Network failures and timeouts (our AbortSignal or undici's own
-            // header/body timeouts) are retryable
+            // Network failures, timeouts (AbortSignal or dispatcher header/body
+            // timeouts), and truncated/unparseable 200 bodies are all retryable
             return { ok: false, retryable: true, error: error as Error };
         }
-
-        if (response.ok) {
-            return { ok: true, response: await response.json() as ScribeResponse };
-        }
-
-        const body = await response.text().catch(() => "");
-        const retryAfterSeconds = parseInt(response.headers.get("retry-after") ?? "", 10);
-        return {
-            ok: false,
-            retryable: response.status === 429 || response.status >= 500,
-            retryAfterMs: Number.isNaN(retryAfterSeconds) ? undefined : retryAfterSeconds * 1000,
-            error: new Error(`Scribe API returned ${response.status}: ${body.slice(0, 500)}`),
-        };
     }
 }
 

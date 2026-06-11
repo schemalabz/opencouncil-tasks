@@ -53,15 +53,31 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
         console.log("Note: customVocabulary/customPrompt are not used with Scribe v2, ignoring");
     }
 
-    let transcriptPromises = segments.map(async ({ url, start }) => {
+    const transcribeSegment = async ({ url, start }: TranscribeArgs['segments'][0]) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
         const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl });
         completedSegments++;
         onProgress("transcribing", (completedSegments / totalSegments) * 100);
         return { ...transcript, start };
-    });
+    };
 
-    const results = await Promise.all(transcriptPromises);
+    // One segment exhausting its retries must not discard the others: by this
+    // point the expensive download/diarization work is already done, so give
+    // failed segments a second pass — sequentially, after the parallel burst
+    // is over — before failing the pipeline.
+    const settled = await Promise.allSettled(segments.map(transcribeSegment));
+
+    const failedCount = settled.filter((r) => r.status === "rejected").length;
+    if (failedCount > 0) {
+        const firstFailure = settled.find((r): r is PromiseRejectedResult => r.status === "rejected")!;
+        console.log(`${failedCount} of ${totalSegments} segments failed (${firstFailure.reason}), retrying them sequentially`);
+    }
+
+    const results: (Transcript & { start: number })[] = [];
+    for (let i = 0; i < settled.length; i++) {
+        const result = settled[i];
+        results.push(result.status === "fulfilled" ? result.value : await transcribeSegment(segments[i]));
+    }
 
     const startIndexedResults = results.map((transcript, index) => {
         return {
