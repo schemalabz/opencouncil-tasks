@@ -110,7 +110,9 @@ const AUDIO_BITRATE = '128k';
 export function needsLoudnormCorrection(stats: LoudnormStats): boolean {
     const deltaI = Math.abs(LOUDNORM_TARGET.I - parseFloat(stats.input_i));
     const truePeak = parseFloat(stats.input_tp);
-    if (Number.isNaN(deltaI) || Number.isNaN(truePeak)) {
+    // Non-finite measurements (ffmpeg emits "-inf" on silent audio) fall
+    // through to normalization, preserving the old always-normalize behavior
+    if (!Number.isFinite(deltaI) || !Number.isFinite(truePeak)) {
         return true;
     }
     return deltaI > LOUDNORM_TOLERANCE_LU || truePeak > LOUDNORM_TARGET.TP;
@@ -163,14 +165,15 @@ async function normalizeVideoAudio(filePath: string): Promise<void> {
     const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
     const filename = path.basename(filePath);
 
-    // Pass 1: measure loudness. -vn keeps ffmpeg from decoding the video
-    // stream, which would otherwise dominate the runtime of a measurement
-    // that only reads audio (~35 minutes of video decode for a 6.5h meeting).
+    // Pass 1: measure loudness. Input-side -vn keeps ffmpeg from decoding
+    // the video stream, which would otherwise dominate the runtime of a
+    // measurement that only reads audio (~35 minutes of video decode for a
+    // 6.5h meeting).
     console.log(`[loudnorm] ${filename}: measuring loudness...`);
     const pass1Start = Date.now();
     const { stderr } = await runFfmpeg([
-        '-i', filePath,
         '-vn',
+        '-i', filePath,
         '-af', `${loudnormFilter}:print_format=json`,
         '-f', 'null', '-',
     ]);

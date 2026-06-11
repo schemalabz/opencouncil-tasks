@@ -138,4 +138,8 @@ describe('needsLoudnormCorrection', () => {
   it('corrects when measurements are not parseable numbers', () => {
     expect(needsLoudnormCorrection(stats('-inf', '-inf'))).toBe(true);
   });
+
+  it('corrects when a measurement parses to a non-finite number', () => {
+    expect(needsLoudnormCorrection(stats('-14.00', '-Infinity'))).toBe(true);
+  });
 });
