@@ -50,19 +50,40 @@ export const decompressIds = (
     result: { speakerSegmentSummaries: any[], subjects: Subject[], utteranceDiscussionStatuses: any[] },
     idCompressor: IdCompressor
 ): SummarizeResult => {
+    // Unknown short IDs are LLM hallucinations (e.g. "j8oj87q4_2" for a real "j8oj87q4", or
+    // literal words like "Zoom"). Swallow them — drop the entry or null the field — instead of
+    // decompressing to undefined, which makes the whole result unusable on the opencouncil side.
+    const isKnownId = (shortId: string, context: string): boolean => {
+        if (idCompressor.hasShortId(shortId)) return true;
+        console.warn(`⚠️  Dropping ${context} with unknown ID "${shortId}" — likely hallucinated by the LLM`);
+        return false;
+    };
+    const decompressOrNull = (shortId: string | null | undefined, context: string): string | null => {
+        if (!shortId) return null;
+        if (!idCompressor.hasShortId(shortId)) {
+            console.warn(`⚠️  Nulling ${context} with unknown ID "${shortId}" — likely hallucinated by the LLM`);
+            return null;
+        }
+        return idCompressor.getLongId(shortId);
+    };
+
     return {
-        speakerSegmentSummaries: result.speakerSegmentSummaries.map(s => ({
-            speakerSegmentId: idCompressor.getLongId(s.id),
-            summary: s.summary,
-            topicLabels: s.labels,
-            type: s.type
-        })),
-        subjects: result.subjects.map(s => ({
+        speakerSegmentSummaries: result.speakerSegmentSummaries
+            .filter(s => isKnownId(s.id, 'speaker segment summary'))
+            .map(s => ({
+                speakerSegmentId: idCompressor.getLongId(s.id),
+                summary: s.summary,
+                topicLabels: s.labels,
+                type: s.type
+            })),
+        subjects: result.subjects
+            .filter(s => isKnownId(s.id, `subject "${s.name}"`))
+            .map(s => ({
             ...s,
             id: idCompressor.getLongId(s.id),  // Decompress subject ID
             description: decompressReferencesInMarkdown(s.description, idCompressor),  // Decompress references in description
-            introducedByPersonId: s.introducedByPersonId ? idCompressor.getLongId(s.introducedByPersonId) : null,  // Decompress person ID
-            discussedIn: s.discussedIn ? idCompressor.getLongId(s.discussedIn) : null,  // Decompress discussedIn subject ID
+            introducedByPersonId: decompressOrNull(s.introducedByPersonId, `introducedByPersonId of subject "${s.name}"`),
+            discussedIn: decompressOrNull(s.discussedIn, `discussedIn of subject "${s.name}"`),
             speakerContributions: s.speakerContributions
                 .filter(c => {
                     if (!c.text) {
@@ -72,13 +93,15 @@ export const decompressIds = (
                     return true;
                 })
                 .map(c => ({
-                    speakerId: c.speakerId ? idCompressor.getLongId(c.speakerId) : null,
+                    speakerId: decompressOrNull(c.speakerId, `speakerId of contribution by "${c.speakerName}"`),
                     speakerName: c.speakerName,
                     text: decompressReferencesInMarkdown(c.text, idCompressor),
                     order: c.order
                 }))
         })),
-        utteranceDiscussionStatuses: result.utteranceDiscussionStatuses.map(u => {
+        utteranceDiscussionStatuses: result.utteranceDiscussionStatuses
+            .filter(u => isKnownId(u.utteranceId, 'utterance status'))
+            .map(u => {
             let decompressedSubjectId: string | null = null;
 
             if (u.subjectId) {

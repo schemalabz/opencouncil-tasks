@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { IdCompressor } from '../../utils.js';
 import { compressIds, decompressIds, decompressReferencesInMarkdown } from './compression.js';
-import { DiscussionStatus } from '../../types.js';
+import { DiscussionStatus, Subject } from '../../types.js';
 
 describe('compressIds', () => {
   it('compresses speakerSegmentId in transcript', () => {
@@ -307,6 +307,132 @@ describe('decompressIds', () => {
     const decompressed = decompressIds(result, idCompressor);
 
     expect(decompressed.subjects[0].speakerContributions).toHaveLength(1);
+    expect(decompressed.subjects[0].speakerContributions[0].speakerName).toBe('Alice');
+  });
+});
+
+describe('decompressIds with unknown IDs (hallucinated by LLM)', () => {
+  const makeSubject = (overrides: Partial<Subject> & { id: string }) => ({
+    name: 'Test',
+    description: 'Desc',
+    agendaItemIndex: 1,
+    introducedByPersonId: null,
+    speakerContributions: [],
+    topicImportance: 'normal' as const,
+    proximityImportance: 'none' as const,
+    location: null,
+    topicLabel: null,
+    context: null,
+    discussedIn: null,
+    ...overrides
+  });
+
+  it('drops speaker segment summaries with unknown id', () => {
+    const idCompressor = new IdCompressor();
+    const knownShortId = idCompressor.addLongId('segment-uuid');
+
+    const result = {
+      speakerSegmentSummaries: [
+        { id: knownShortId, summary: 'Valid', labels: [], type: 'SUBSTANTIAL' as const },
+        { id: 'j8oj87q4_2', summary: '', labels: [], type: 'PROCEDURAL' as const },
+      ],
+      subjects: [],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.speakerSegmentSummaries).toHaveLength(1);
+    expect(decompressed.speakerSegmentSummaries[0].speakerSegmentId).toBe('segment-uuid');
+  });
+
+  it('drops utterance statuses with unknown utteranceId', () => {
+    const idCompressor = new IdCompressor();
+    const knownShortId = idCompressor.addLongId('utterance-uuid');
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [],
+      utteranceDiscussionStatuses: [
+        { utteranceId: knownShortId, status: DiscussionStatus.OTHER, subjectId: null },
+        { utteranceId: 'Zoom', status: DiscussionStatus.OTHER, subjectId: null },
+      ]
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.utteranceDiscussionStatuses).toHaveLength(1);
+    expect(decompressed.utteranceDiscussionStatuses[0].utteranceId).toBe('utterance-uuid');
+  });
+
+  it('drops subjects with unknown id', () => {
+    const idCompressor = new IdCompressor();
+    const knownShortId = idCompressor.addLongId('subject-uuid');
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [
+        makeSubject({ id: knownShortId, name: 'Valid' }),
+        makeSubject({ id: 'unknown1', name: 'Hallucinated' }),
+      ],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects).toHaveLength(1);
+    expect(decompressed.subjects[0].id).toBe('subject-uuid');
+  });
+
+  it('nulls unknown introducedByPersonId', () => {
+    const idCompressor = new IdCompressor();
+    const subjectShortId = idCompressor.addLongId('subject-uuid');
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [makeSubject({ id: subjectShortId, introducedByPersonId: 'Zoom' })],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects[0].introducedByPersonId).toBeNull();
+  });
+
+  it('nulls unknown discussedIn', () => {
+    const idCompressor = new IdCompressor();
+    const subjectShortId = idCompressor.addLongId('subject-uuid');
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [makeSubject({ id: subjectShortId, discussedIn: 'unknown1' })],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects[0].discussedIn).toBeNull();
+  });
+
+  it('nulls unknown speakerId in contributions, keeping the contribution', () => {
+    const idCompressor = new IdCompressor();
+    const subjectShortId = idCompressor.addLongId('subject-uuid');
+
+    const result = {
+      speakerSegmentSummaries: [],
+      subjects: [makeSubject({
+        id: subjectShortId,
+        speakerContributions: [
+          { speakerId: 'unknown1', speakerName: 'Alice', text: 'Said something' },
+        ]
+      })],
+      utteranceDiscussionStatuses: []
+    };
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects[0].speakerContributions).toHaveLength(1);
+    expect(decompressed.subjects[0].speakerContributions[0].speakerId).toBeNull();
     expect(decompressed.subjects[0].speakerContributions[0].speakerName).toBe('Alice');
   });
 });
