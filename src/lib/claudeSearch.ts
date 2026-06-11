@@ -60,6 +60,7 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
       systemPrompt,
       userPrompt,
       parseJson: false,
+      label: `subject-context-search:${params.subjectName.slice(0, 40)}`,
       tools: [{
         type: "web_search_20250305",
         name: "web_search",

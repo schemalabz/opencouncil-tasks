@@ -11,6 +11,7 @@ import { IdCompressor, extractMeetingId } from "../utils.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { compressIds, decompressIds } from "./summarize/compression.js";
 import { logUsage, logMultiPhaseUsage } from "../lib/usageLogging.js";
+import { withPhaseSpan } from "../lib/observability.js";
 import { processBatchesWithState } from "./summarize/batchProcessing.js";
 import { generateSpeakerContributions } from "./summarize/speakerContributions.js";
 import { mergeSubjects } from "./summarize/mergeSubjects.js";
@@ -46,7 +47,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('📝 PHASE 1: Batch Processing');
     onProgress("batch_processing", 0);
     let { speakerSegmentSummaries, subjects, allUtteranceStatuses, usage: phase1Usage, resolvedModel: phase1Model, batchMode: phase1Batch } =
-        await processBatchesWithState(compressedRequest, idCompressor, onProgress);
+        await withPhaseSpan('Phase 1: Batch Processing', () =>
+            processBatchesWithState(compressedRequest, idCompressor, onProgress));
 
     console.log(`✅ Batch processing complete:`);
     console.log(`   • Speaker segment summaries: ${speakerSegmentSummaries.length}`);
@@ -58,7 +60,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('');
     console.log('🔀 PHASE 1.5: Subject Merge');
     onProgress("subject_merge", 0);
-    const mergeResult = await mergeSubjects(subjects, allUtteranceStatuses);
+    const mergeResult = await withPhaseSpan('Phase 1.5: Subject Merge', () =>
+        mergeSubjects(subjects, allUtteranceStatuses));
     subjects = mergeResult.subjects;
     allUtteranceStatuses = mergeResult.allUtteranceStatuses;
     const phase1_5Usage = mergeResult.usage;
@@ -101,7 +104,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     }
 
     let completedCount = 0;
-    await Promise.all(
+    await withPhaseSpan('Phase 2: Speaker Contributions', () => Promise.all(
         subjects.filter(s => s.discussedIn === null).map(async (subject) => {
             console.log(`   Processing subject: "${subject.name}"`);
             const result = await generateSpeakerContributions(
@@ -121,7 +124,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
             onProgress("speaker_contributions", completedCount / primarySubjects.length);
             console.log(`      → [${completedCount}/${primarySubjects.length}] Generated ${result.contributions.length} speaker contributions for "${subject.name}"`);
         })
-    );
+    ));
 
     console.log(`✅ Speaker contributions complete for ${subjects.length} subjects`);
     logUsage('Phase 2 tokens', phase2Usage);
@@ -133,7 +136,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     let phase3Usage = NO_USAGE;
     let phase3Model: string | undefined;
     let phase3Batch: boolean | undefined;
-    const enrichmentResults = await Promise.all(
+    const enrichmentResults = await withPhaseSpan('Phase 3: Enrichment', () => Promise.all(
         subjects.map((s, i) => {
             return enrichSubject(s, request.cityName, request.administrativeBodyName, request.date).then(result => {
                 console.log(`   Enriched subject ${i + 1}/${subjects.length}: "${result.result.name}"`);
@@ -141,7 +144,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
                 return result;
             });
         })
-    );
+    ));
 
     // Extract enriched subjects and accumulate usage
     const enrichedSubjects = enrichmentResults.map(r => {

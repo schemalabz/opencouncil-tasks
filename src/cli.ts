@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { Command, InvalidArgumentError } from 'commander';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
-import { pipeline } from './tasks/pipeline.js';
+import { pipeline, Task } from './tasks/pipeline.js';
 import { downloadYTV } from './tasks/downloadYTV.js';
 import { uploadToSpaces, deleteFromSpacesByPrefix, checkSpacesConnection } from './tasks/uploadToSpaces.js';
 import { transcribe } from './tasks/transcribe.js';
@@ -12,7 +12,14 @@ import { pollDecisions } from './tasks/pollDecisions.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
-import { formatUsage } from './lib/ai.js';
+import { aiChat, formatUsage, HAIKU_MODEL } from './lib/ai.js';
+import { taskManager } from './lib/TaskManager.js';
+import { isObservabilityEnabled, withPhaseSpan } from './lib/observability.js';
+import { listRuns, fetchRun } from './lib/runs/fetch.js';
+import { showRun } from './lib/runs/show.js';
+import { compareRuns } from './lib/runs/compare.js';
+import { renderComparisonHtml } from './lib/runs/html.js';
+import path from 'path';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -672,6 +679,176 @@ program
             }
         } catch (error) {
             console.error('Error extracting decision:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('observability-check')
+    .description('Verify Langfuse tracing end-to-end: runs a dummy task through TaskManager with one small LLM call')
+    .action(async () => {
+        try {
+            if (!isObservabilityEnabled()) {
+                console.error('Langfuse is not configured. Set LANGFUSE_SECRET_KEY/LANGFUSE_PUBLIC_KEY in .env.');
+                process.exitCode = 1;
+                return;
+            }
+
+            const addr = server.address();
+            const boundPort = typeof addr === 'object' && addr ? addr.port : 0;
+            // The cities/.../meetings/... path exercises meeting tag extraction;
+            // the local callback server answers it (any /callback/:id), keeping the run self-contained.
+            const callbackUrl = `http://localhost:${boundPort}/callback/cities/dev/meetings/observability-check`;
+
+            const checkTask: Task<Record<string, never>, { ok: string }> = async (_input, onProgress) => {
+                onProgress('health_check', 0);
+                const response = await withPhaseSpan('Phase: health check', () =>
+                    aiChat<string>({
+                        model: HAIKU_MODEL,
+                        systemPrompt: 'You are a health check for LLM observability. Reply with exactly: ok',
+                        userPrompt: 'Reply with exactly: ok',
+                        parseJson: false,
+                        maxTokens: 1024,
+                        label: 'observability-check',
+                    })
+                );
+                onProgress('health_check', 1);
+                return { ok: response.result.trim() };
+            };
+
+            console.log('Running observability check (one Haiku call through TaskManager)...');
+            await taskManager.runTaskWithCallback(checkTask, {}, callbackUrl, 'observability-check');
+            await taskManager.finish();
+
+            console.log('\n✅ Check task completed. Verify the trace in Langfuse:');
+            console.log(`   ${process.env.LANGFUSE_BASEURL || 'https://cloud.langfuse.com'} → Traces → filter tag "task:observability-check"`);
+            console.log('   Expected: trace "observability-check" with span "Phase: health check" containing one generation.');
+        } catch (error) {
+            console.error('Observability check failed:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+const runsCommand = program
+    .command('runs')
+    .description('Inspect and compare traced task runs (requires Langfuse env vars)');
+
+const parseIntOption = (value: string): number => {
+    const parsed = parseInt(value, 10);
+    if (isNaN(parsed)) throw new InvalidArgumentError('expected a number');
+    return parsed;
+};
+
+runsCommand
+    .command('list')
+    .description('List traced runs, newest first')
+    .option('-t, --task <type>', 'Filter by task type', 'summarize')
+    .option('-m, --meeting <cityId/meetingId>', 'Filter by meeting')
+    .option('-s, --since <days>', 'Only runs from the last N days', parseIntOption)
+    .option('-l, --limit <n>', 'Maximum number of runs', parseIntOption, 30)
+    .action(async (options: { task: string; meeting?: string; since?: number; limit: number }) => {
+        try {
+            const runs = await listRuns({
+                task: options.task,
+                meeting: options.meeting,
+                sinceDays: options.since,
+                limit: options.limit,
+            });
+
+            if (runs.length === 0) {
+                console.log('No traced runs found for these filters.');
+                return;
+            }
+
+            console.log(`TRACE ID${' '.repeat(28)} DATE${' '.repeat(13)} MEETING${' '.repeat(25)} VER  ENV          PROMPTS       COST`);
+            for (const run of runs) {
+                const cost = run.totalCost !== null ? `$${run.totalCost.toFixed(2)}` : '-';
+                const error = run.isError ? ' ⚠ error' : '';
+                console.log(
+                    `${run.traceId.padEnd(36)} ${run.timestamp.slice(0, 16).padEnd(17)} ` +
+                    `${(run.meeting ?? '-').padEnd(32)} ${(run.version ?? '-').padEnd(4)} ` +
+                    `${(run.env ?? '-').padEnd(12)} ${(run.promptsHash ?? '-').padEnd(13)} ${cost}${error}`
+                );
+            }
+        } catch (error) {
+            console.error('Error listing runs:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+runsCommand
+    .command('show <traceId>')
+    .description('Show a traced run: tags, output stats, and the span/generation tree with usage and cost')
+    .action(async (traceId: string) => {
+        try {
+            await showRun(traceId);
+        } catch (error) {
+            console.error('Error showing run:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+runsCommand
+    .command('compare [traceA] [traceB]')
+    .description('Compare two summarize runs (by trace IDs, or --meeting for the two most recent)')
+    .option('-m, --meeting <cityId/meetingId>', 'Compare the two most recent successful runs of this meeting')
+    .option('-o, --out-dir <dir>', 'Output directory', 'data/comparisons')
+    .action(async (traceA: string | undefined, traceB: string | undefined, options: { meeting?: string; outDir: string }) => {
+        try {
+            let fromId = traceA;
+            let toId = traceB;
+
+            if (!fromId || !toId) {
+                if (!options.meeting) {
+                    console.error('Provide two trace IDs, or --meeting to compare its two most recent runs.');
+                    process.exitCode = 1;
+                    return;
+                }
+                const runs = (await listRuns({ task: 'summarize', meeting: options.meeting, limit: 10 }))
+                    .filter(r => !r.isError);
+                if (runs.length < 2) {
+                    console.error(`Found ${runs.length} successful run(s) for ${options.meeting} — need at least 2 to compare.`);
+                    process.exitCode = 1;
+                    return;
+                }
+                // Newest-first listing: older run is "from", newer is "to"
+                toId = runs[0].traceId;
+                fromId = runs[1].traceId;
+                console.log(`Comparing the two most recent runs of ${options.meeting}:`);
+                console.log(`  from: ${fromId} (${runs[1].timestamp.slice(0, 16)})`);
+                console.log(`  to:   ${toId} (${runs[0].timestamp.slice(0, 16)})`);
+            }
+
+            const [from, to] = await Promise.all([fetchRun(fromId), fetchRun(toId)]);
+            const comparison = compareRuns(from, to);
+
+            const slug = (from.info.meeting ?? 'run').replace(/\//g, '-');
+            const baseName = `compare-${slug}-${fromId.slice(0, 8)}-${toId.slice(0, 8)}`;
+            fs.mkdirSync(options.outDir, { recursive: true });
+            const jsonPath = path.join(options.outDir, `${baseName}.json`);
+            const htmlPath = path.join(options.outDir, `${baseName}.html`);
+            fs.writeFileSync(jsonPath, JSON.stringify(comparison, null, 2));
+            fs.writeFileSync(htmlPath, renderComparisonHtml(comparison));
+
+            const v = comparison.verdictSummary;
+            console.log(`\n${comparison.subjects.matched.length} matched subjects: ${v.structural} structural, ${v.cosmetic} cosmetic, ${v.identical} identical`);
+            console.log(`Unmatched: ${comparison.subjects.fromOnly.length} from-only, ${comparison.subjects.toOnly.length} to-only`);
+            console.log(`Segment diffs sampled: ${comparison.segmentSamples.length}\n`);
+            for (const m of comparison.subjects.matched) {
+                console.log(`  #${m.agendaItemIndex} [${m.verdict}] ${m.from.name.slice(0, 60)}${m.changes.length > 0 ? ` — ${m.changes.join(', ')}` : ''}`);
+            }
+            console.log(`\nJSON: ${jsonPath}`);
+            console.log(`HTML: ${htmlPath} — open in a browser to review.`);
+        } catch (error) {
+            console.error('Error comparing runs:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();

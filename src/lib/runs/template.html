@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Run Comparison</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; line-height: 1.6; }
+.mono { font-family: 'SF Mono', 'Consolas', 'Courier New', monospace; font-size: 0.85em; }
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 2rem; }
+.header h1 { font-size: 1.5rem; margin-bottom: 0.3rem; }
+.header .version-badges { display: flex; gap: 0.5rem; align-items: center; margin: 0.8rem 0 0.5rem; }
+.version-badge { padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600; }
+.version-badge.from { background: #6c757d; }
+.version-badge.to { background: #28a745; }
+.header .timestamp { opacity: 0.5; font-size: 0.8rem; }
+.controls { position: sticky; top: 0; z-index: 100; background: white; border-bottom: 1px solid #dee2e6; padding: 0.6rem 1.5rem; display: flex; gap: 0.8rem; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+.controls button { padding: 0.3rem 0.8rem; border: 1px solid #dee2e6; border-radius: 4px; background: white; cursor: pointer; font-size: 0.8rem; }
+.controls button:hover { background: #f0f0f0; }
+.controls .verdict-summary { margin-left: auto; font-size: 0.8rem; color: #6c757d; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+.stat-card { background: white; border-radius: 8px; padding: 1rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.stat-card.stat-diff { border: 2px solid #ffc107; }
+.stat-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+.stat-values { font-size: 1.3rem; font-weight: 700; }
+.from-val { color: #6c757d; } .to-val { color: #28a745; } .stat-arrow { color: #999; margin: 0 0.3rem; font-size: 0.9rem; }
+.content { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 2rem; }
+h2 { margin: 2rem 0 1rem; font-size: 1.3rem; color: #1a1a2e; border-bottom: 2px solid #e0e0e0; padding-bottom: 0.5rem; }
+.badge { display: inline-block; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600; margin-left: 0.3rem; vertical-align: middle; }
+.badge-yellow { background: #fff3cd; color: #856404; }
+.badge-red { background: #f8d7da; color: #721c24; }
+.badge-green { background: #d4edda; color: #155724; }
+.badge-gray { background: #e9ecef; color: #495057; }
+.badge-blue { background: #cce5ff; color: #004085; }
+.subject-detail { background: white; border-radius: 8px; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.subject-detail summary { padding: 0.8rem 1rem; cursor: pointer; font-weight: 600; font-size: 0.95rem; }
+.subject-detail summary:hover { background: #f8f9fa; border-radius: 8px; }
+.subject-body { padding: 0 1rem 1rem; }
+.subject-body h4 { margin: 1rem 0 0.5rem; font-size: 0.9rem; color: #1a1a2e; }
+.field-row { padding: 0.3rem 0; font-size: 0.9rem; }
+.field-label { font-weight: 600; color: #555; }
+.field-alert { color: #dc3545; font-weight: 600; }
+.from-tag { background: #e9ecef; padding: 0.1rem 0.4rem; border-radius: 3px; }
+.to-tag { background: #d4edda; padding: 0.1rem 0.4rem; border-radius: 3px; }
+.diff-removed { background: #ffeef0; color: #b31d28; text-decoration: line-through; padding: 1px 2px; border-radius: 2px; }
+.diff-added { background: #e6ffec; color: #22863a; padding: 1px 2px; border-radius: 2px; }
+.desc-text { font-size: 0.9rem; color: #555; white-space: pre-wrap; padding: 0.5rem; background: #f8f9fa; border-radius: 4px; max-height: 300px; overflow-y: auto; }
+.desc-diff { font-size: 0.9rem; white-space: pre-wrap; padding: 0.5rem; background: #fafafa; border-radius: 4px; max-height: 400px; overflow-y: auto; line-height: 1.8; }
+.side-by-side { display: none; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0.5rem 0; }
+.side-by-side.visible { display: grid; }
+@media (max-width: 900px) { .side-by-side { grid-template-columns: 1fr; } .unmatched-grid { grid-template-columns: 1fr; } }
+.sbs-col { padding: 0.8rem; border-radius: 6px; font-size: 0.85rem; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+.sbs-col h5 { font-size: 0.8rem; margin-bottom: 0.4rem; color: #555; }
+.from-col { background: #f8f9fa; border-left: 3px solid #6c757d; }
+.to-col { background: #f0faf0; border-left: 3px solid #28a745; }
+.toggle-sbs-btn { margin: 0.5rem 0; padding: 0.2rem 0.6rem; border: 1px solid #dee2e6; border-radius: 3px; background: white; cursor: pointer; font-size: 0.75rem; color: #6c757d; }
+.contributions-section { margin: 0.5rem 0; }
+.contrib-item { padding: 0.6rem; margin: 0.4rem 0; border-radius: 6px; border: 1px solid #eee; }
+.contrib-added { background: #f0fdf4; border-color: #86efac; }
+.contrib-removed { background: #fef2f2; border-color: #fca5a5; }
+.contrib-changed { background: #fffbeb; border-color: #fde68a; }
+.contrib-identical { background: #f9fafb; }
+.contrib-speaker { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.3rem; }
+.contrib-text { font-size: 0.85rem; white-space: pre-wrap; color: #555; }
+.contrib-text.from-text { color: #b31d28; } .contrib-text.to-text { color: #22863a; }
+.contrib-diff { font-size: 0.85rem; white-space: pre-wrap; line-height: 1.7; }
+.utt-bars { margin: 0.5rem 0; }
+.utt-bar-row { display: flex; align-items: center; gap: 0.5rem; margin: 0.3rem 0; font-size: 0.8rem; }
+.utt-bar-label { width: 160px; text-align: right; font-weight: 500; color: #555; flex-shrink: 0; }
+.utt-bar-pair { display: flex; align-items: center; gap: 0.3rem; flex: 1; }
+.utt-bar { height: 18px; border-radius: 3px; display: inline-flex; align-items: center; padding: 0 6px; font-size: 0.7rem; font-weight: 600; color: white; min-width: 28px; }
+.utt-bar.from-bar { background: #6c757d; } .utt-bar.to-bar { background: #28a745; }
+.utt-bar-arrow { color: #999; font-size: 0.75rem; }
+.utt-bar-delta { font-size: 0.75rem; font-weight: 600; margin-left: 0.3rem; }
+.delta-pos { color: #28a745; } .delta-neg { color: #dc3545; }
+.unmatched-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.from-only-card, .to-only-card { border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; }
+.from-only-card { background: #fef2f2; border-left: 4px solid #dc3545; }
+.to-only-card { background: #f0fdf4; border-left: 4px solid #28a745; }
+.unmatched-header { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.4rem; }
+.unmatched-meta { font-size: 0.8rem; margin-bottom: 0.5rem; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.unmatched-desc { font-size: 0.85rem; color: #555; }
+.segment-sample { background: white; border-radius: 6px; padding: 0.8rem; margin: 0.5rem 0; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+.seg-header { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.4rem; }
+.seg-diff { font-size: 0.85rem; white-space: pre-wrap; line-height: 1.7; }
+.review-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 1000; background: white; overflow-y: auto; }
+.review-overlay.active { display: flex; flex-direction: column; }
+.review-header { position: sticky; top: 0; z-index: 10; background: #1a1a2e; color: white; padding: 0.6rem 1rem; display: flex; align-items: center; gap: 0.8rem; }
+.review-header button { padding: 0.3rem 0.8rem; border: 1px solid rgba(255,255,255,0.3); border-radius: 4px; background: transparent; color: white; cursor: pointer; font-size: 0.85rem; }
+.review-header button:hover { background: rgba(255,255,255,0.1); }
+.review-counter { font-family: monospace; font-size: 0.9rem; }
+.review-title { flex: 1; font-weight: 600; font-size: 0.95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.review-depth-bar { display: flex; gap: 0.5rem; padding: 0.5rem 1rem; background: #f0f0f0; border-bottom: 1px solid #ddd; }
+.review-depth-bar button { padding: 0.3rem 0.8rem; border: 1px solid #ccc; border-radius: 4px; background: white; cursor: pointer; font-size: 0.8rem; }
+.review-depth-bar button.active { background: #0f3460; color: white; border-color: #0f3460; }
+.review-body { flex: 1; padding: 1.5rem; max-width: 900px; margin: 0 auto; width: 100%; }
+.review-hint { text-align: center; padding: 0.8rem; color: #999; font-size: 0.75rem; background: #f5f5f5; border-top: 1px solid #eee; }
+</style>
+</head>
+<body>
+
+<div class="header" id="header"></div>
+
+<div class="controls">
+  <button onclick="toggleAll(true)">Expand All</button>
+  <button onclick="toggleAll(false)">Collapse All</button>
+  <button onclick="startReview()">Review Mode (←→)</button>
+  <div class="verdict-summary" id="verdict-summary"></div>
+</div>
+
+<div class="stats-grid" id="stats-grid"></div>
+
+<div class="content">
+  <h2 id="matched-heading">Matched Subjects</h2>
+  <div id="matched-subjects"></div>
+
+  <h2>Unmatched Subjects</h2>
+  <div class="unmatched-grid">
+    <div>
+      <h3 style="color:#dc3545;font-size:1rem;margin-bottom:0.8rem" id="from-only-heading">From Only</h3>
+      <div id="from-only"></div>
+    </div>
+    <div>
+      <h3 style="color:#28a745;font-size:1rem;margin-bottom:0.8rem" id="to-only-heading">To Only</h3>
+      <div id="to-only"></div>
+    </div>
+  </div>
+
+  <h2 id="segments-heading">Segment Samples</h2>
+  <details>
+    <summary style="cursor:pointer;font-weight:600" id="segments-summary">Show segment differences</summary>
+    <div style="margin-top:0.5rem" id="segment-samples"></div>
+  </details>
+</div>
+
+<div class="review-overlay" id="review-overlay">
+  <div class="review-header">
+    <button onclick="reviewNav(-1)">← Prev</button>
+    <span class="review-counter" id="review-counter"></span>
+    <button onclick="reviewNav(1)">Next →</button>
+    <span class="review-title" id="review-title"></span>
+    <button onclick="exitReview()">Exit (Esc)</button>
+  </div>
+  <div class="review-depth-bar">
+    <button id="depth-desc" class="active" onclick="setDepth('desc')">Description</button>
+    <button id="depth-contribs" onclick="setDepth('contribs')">Contributions</button>
+  </div>
+  <div class="review-body" id="review-body"></div>
+  <div class="review-hint">←→ navigate subjects · ↓ contributions · ↑ description · Esc exit</div>
+</div>
+
+<script type="application/json" id="comparison-data">__COMPARISON_DATA__</script>
+<script>
+__CLIENT_JS__
+</script>
+</body>
+</html>

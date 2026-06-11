@@ -30,6 +30,18 @@ npm test                              # unit tests (vitest)
 
 **Before committing, always run:** `npm run typecheck && npm test`
 
+## Debugging LLM calls (Langfuse)
+
+Task runs are traced to Langfuse (needs `LANGFUSE_*` env vars — see [docs/observability.md](./docs/observability.md)): verbatim prompts, outputs, token usage, and cost for every call. Debug LLM behavior from the trace, not from logs.
+
+```bash
+npm run cli -- runs list --task summarize --meeting <cityId/meetingId>  # find runs
+npm run cli -- runs show <traceId>                                      # phase/call tree with usage & cost
+npm run cli -- runs compare --meeting <cityId/meetingId>                # diff two summarize runs
+```
+
+Full prompt/output text of a call: `curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" "$LANGFUSE_BASEURL/api/public/traces/<traceId>"`
+
 ## Code conventions
 
 - TypeScript strict mode, ESM (`"type": "module"`)

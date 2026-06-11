@@ -119,6 +119,7 @@ async function processSpeakerSegment(
     for (let attempt = 1; attempt <= MAX_FIX_ATTEMPTS; attempt++) {
         const result = await aiChat<string>({
             model: "claude-sonnet-4-6",
+            label: "transcript-fix",
             systemPrompt,
             userPrompt: userPrompt + structureReminder,
             parseJson: false
