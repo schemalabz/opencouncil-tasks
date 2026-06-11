@@ -46,7 +46,6 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         systemPrompt: getSystemPrompt(),
         userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
         documentBase64: base64,
-        batchFirst: true,
         outputFormat: {
             type: "json_schema",
             schema: {
