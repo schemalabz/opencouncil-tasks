@@ -1,6 +1,27 @@
 import { describe, it, expect } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary } from './ai.js';
+
+// ===========================================================================
+// cutToLineBoundary — truncated partials stitch at line boundaries so the
+// continuation regenerates the cut line instead of resuming mid-word
+// ===========================================================================
+
+describe('cutToLineBoundary', () => {
+
+    it('drops the trailing incomplete line', () => {
+        expect(cutToLineBoundary('1. ένα\n2. δύο\n3. τρ')).toBe('1. ένα\n2. δύο\n');
+    });
+
+    it('returns single-line output unchanged (byte-exact stitch fallback)', () => {
+        const singleLine = '{"key": "value", "tru';
+        expect(cutToLineBoundary(singleLine)).toBe(singleLine);
+    });
+
+    it('keeps a partial that already ends at a line boundary intact', () => {
+        expect(cutToLineBoundary('1. ένα\n2. δύο\n')).toBe('1. ένα\n2. δύο\n');
+    });
+});
 
 // ===========================================================================
 // continuationPrompt — continuation goes in a user turn; trailing-assistant

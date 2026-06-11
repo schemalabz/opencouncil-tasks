@@ -267,8 +267,11 @@ class ScribeTranscriber {
         let rateLimitStreak = 0;
 
         for (; ;) {
+            // Wake from saturation pauses with jitter so paused requests
+            // trickle back instead of re-hitting the API in a synchronized
+            // wave when only a few account slots have freed
             while (Date.now() < this.pausedUntil) {
-                await sleep(this.pausedUntil - Date.now());
+                await sleep(this.pausedUntil - Date.now() + Math.random() * 3000);
             }
 
             const result = await this.attemptRequest(audioUrl);

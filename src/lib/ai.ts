@@ -218,6 +218,17 @@ async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParam
 }
 
 /**
+ * Cuts a max_tokens-truncated partial back to its last complete line, so the
+ * continuation regenerates the cut line whole instead of resuming mid-word
+ * (the seam of a mid-line stitch can drop characters). Returns the partial
+ * unchanged when it has no usable line boundary (e.g. single-line JSON).
+ */
+export function cutToLineBoundary(partial: string): string {
+    const lastNewline = partial.lastIndexOf('\n');
+    return lastNewline > 0 ? partial.slice(0, lastNewline + 1) : partial;
+}
+
+/**
  * The user-turn instruction that continues a max_tokens-truncated response.
  * The full partial precedes it as an assistant turn; the tail is repeated here
  * to anchor the exact continuation point.
@@ -354,17 +365,18 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
 
             console.log(`Claude stopped because it reached the max tokens of ${maxTokens}`);
             console.log(`Attempting to continue with a longer response...`);
-            // The partial is NOT trimmed: the stitch below concatenates it
-            // byte-for-byte with the continuation, so trailing whitespace
-            // (e.g. a newline mid numbered list) must survive the round trip
-            const partialSoFar = (continueFromPartial ?? prefillSystemResponse ?? '') + responseText;
+            // Cut the partial back to the last complete line: the model can't
+            // resume mid-word byte-exactly, so a mid-line seam can drop
+            // characters ("για τονδήμο") — it regenerates the cut line whole
+            // instead. Falls back to a byte-exact stitch for single-line output.
+            const partialSoFar = cutToLineBoundary((continueFromPartial ?? prefillSystemResponse ?? '') + responseText);
             const response2 = await aiChat<T>({
                 model,
                 systemPrompt,
                 documentBase64,
                 userPrompt,
                 continueFromPartial: partialSoFar,
-                prependToResponse: (prependToResponse ?? '') + responseText,
+                prependToResponse: partialSoFar,
                 parseJson,
                 maxTokens: maxTokensParam,
                 tools,
