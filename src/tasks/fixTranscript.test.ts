@@ -27,13 +27,18 @@ describe("parseNumberedUtterances", () => {
         ]);
     });
 
-    it("does not treat utterance-internal numbering as a new line", () => {
-        // "3." inside utterance 1 must not be mistaken for line 3 — only the
-        // next expected number (2) starts a new utterance
-        const text = "1. το άρθρο\n3. του κανονισμού\n2. δεύτερο";
+    it("rejects out-of-sequence numbered lines instead of merging them", () => {
+        // Folding a misnumbered line into the previous utterance would corrupt
+        // the record silently — a retry is always safer
+        expect(parseNumberedUtterances("1. ένα\n3. τρία\n2. δύο", 2)).toBeNull();
+        expect(parseNumberedUtterances("1. ένα\n2. δύο\n2. τρία\n3. τέσσερα", 4)).toBeNull();
+    });
+
+    it("treats lines starting with a decimal number as continuations", () => {
+        const text = "1. το κόστος ανέρχεται σε\n3.5 εκατομμύρια ευρώ\n2. δεύτερο";
 
         expect(parseNumberedUtterances(text, 2)).toEqual([
-            "το άρθρο 3. του κανονισμού",
+            "το κόστος ανέρχεται σε 3.5 εκατομμύρια ευρώ",
             "δεύτερο",
         ]);
     });

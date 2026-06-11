@@ -67,9 +67,14 @@ export function parseNumberedUtterances(text: string, expectedCount: number): st
     const parsed: string[] = [];
 
     for (const line of text.trim().split('\n')) {
-        const match = line.match(/^\s*(\d+)\.\s?(.*)$/);
+        const match = line.match(/^\s*(\d+)\.\s+(.*)$/);
         if (match && parseInt(match[1], 10) === parsed.length + 1) {
             parsed.push(match[2].trim());
+        } else if (match) {
+            // A numbered line with the wrong index means skipped, duplicated,
+            // or reordered numbering. Folding it into the previous utterance
+            // would corrupt the record silently — reject so the caller retries.
+            return null;
         } else if (line.trim() === '') {
             continue;
         } else if (parsed.length > 0) {
