@@ -419,6 +419,28 @@ export function matchPersonByName(
     return null;
 }
 
+// Structured-outputs schema for llmMatchMembers — replaces the '[' assistant
+// prefill, which Claude 4.6+ models reject
+const MEMBER_MATCH_SCHEMA = {
+    type: 'object' as const,
+    properties: {
+        matches: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    personId: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+                },
+                required: ['name', 'personId'],
+                additionalProperties: false,
+            },
+        },
+    },
+    required: ['matches'],
+    additionalProperties: false,
+};
+
 /**
  * Step 2: LLM fallback for names that couldn't be matched by token-sort.
  * Sends unmatched names + available people to haiku for semantic matching.
@@ -433,7 +455,7 @@ export async function llmMatchMembers(
 
     console.log(`  LLM matching ${unmatchedNames.length} unmatched names against ${availablePeople.length} people`);
 
-    const { result: rawResponse, usage } = await aiChat<string>({
+    const { result: response, usage } = await aiChat<{ matches: { name: string; personId: string | null }[] }>({
         systemPrompt: `You are a Greek name matcher for municipal council members.
 
 Match each name from "unmatchedNames" to its corresponding person from "availablePeople".
@@ -446,8 +468,8 @@ Names may differ in:
 
 **Key strategy**: When the surname matches exactly between an unmatched name and only ONE available person shares that surname, the first name is very likely a diminutive — match them even if the first name looks very different. If multiple available people share the same surname, only match when you can confidently identify the diminutive.
 
-Return ONLY a JSON array with one entry per unmatched name, no other text:
-[{"name": "<exact name from unmatchedNames>", "personId": "<id from availablePeople or null>"}]
+Return one entry in "matches" per unmatched name:
+{"matches": [{"name": "<exact name from unmatchedNames>", "personId": "<id from availablePeople or null>"}]}
 
 Rules:
 - "name" must be the EXACT string from unmatchedNames
@@ -458,19 +480,11 @@ Rules:
             unmatchedNames,
             availablePeople: availablePeople.map(p => ({ id: p.id, name: p.name })),
         }),
-        prefillSystemResponse: '[',
-        prependToResponse: '[',
-        parseJson: false,
+        outputFormat: { type: 'json_schema', schema: MEMBER_MATCH_SCHEMA },
         model: HAIKU_MODEL,
     });
 
-    // Strip any trailing text after the JSON array (LLM sometimes adds explanations)
-    const jsonEnd = rawResponse.lastIndexOf(']');
-    if (jsonEnd === -1) {
-        console.warn(`  LLM returned no valid JSON array, treating all as unmatched`);
-        return { matched: [], stillUnmatched: unmatchedNames, usage };
-    }
-    const result: { name: string; personId: string | null }[] = JSON.parse(rawResponse.slice(0, jsonEnd + 1));
+    const result = response.matches;
 
     const matched: { name: string; personId: string }[] = [];
     const stillUnmatched: string[] = [];
@@ -526,9 +540,93 @@ export async function matchAllMembers(
 
 // --- PDF extraction ---
 
-const EXTRACTION_MODEL = 'claude-sonnet-4-20250514';
-/** Max output tokens for extraction — needs headroom for decisions with large tables (budget amendments, etc.). */
-const EXTRACTION_MAX_TOKENS = 16384;
+const EXTRACTION_MODEL = 'claude-sonnet-4-6';
+
+/**
+ * Max output tokens for extraction — needs headroom for decisions with large
+ * tables (budget amendments, etc.). Structured outputs cannot use aiChat's
+ * max_tokens continuation, so the ceiling is generous; aiChat streams, so
+ * values above 16K don't risk HTTP timeouts.
+ */
+const EXTRACTION_MAX_TOKENS = 32768;
+
+// Structured-outputs schemas mirroring RawLlmExtraction — they replace the
+// '{' assistant prefill, which Claude 4.6+ models reject
+
+const AGENDA_ITEM_REF_SCHEMA = {
+    type: 'object' as const,
+    properties: {
+        agendaItemIndex: { type: 'integer' },
+        nonAgendaReason: { anyOf: [{ type: 'string', enum: ['outOfAgenda'] }, { type: 'null' }] },
+    },
+    required: ['agendaItemIndex', 'nonAgendaReason'],
+    additionalProperties: false,
+};
+
+const EXTRACTION_OUTPUT_SCHEMA = {
+    type: 'object' as const,
+    properties: {
+        attendanceFormat: { type: 'string', enum: ['composition_and_absent', 'explicit_present_absent'] },
+        compositionMembers: { anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }] },
+        presentMembers: { anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }] },
+        absentMembers: { type: 'array', items: { type: 'string' } },
+        mayorPresent: {
+            anyOf: [
+                {
+                    type: 'object',
+                    properties: {
+                        present: { type: 'boolean' },
+                        rawText: { type: 'string' },
+                    },
+                    required: ['present', 'rawText'],
+                    additionalProperties: false,
+                },
+                { type: 'null' },
+            ],
+        },
+        decisionExcerpt: { type: 'string' },
+        decisionNumber: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        references: { type: 'string' },
+        voteResult: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        voteDetails: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    vote: { type: 'string', enum: ['FOR', 'AGAINST', 'ABSTAIN', 'PRESENT', 'DID_NOT_VOTE'] },
+                },
+                required: ['name', 'vote'],
+                additionalProperties: false,
+            },
+        },
+        attendanceChanges: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    name: { type: 'string' },
+                    type: { type: 'string', enum: ['arrival', 'departure'] },
+                    agendaItem: { anyOf: [AGENDA_ITEM_REF_SCHEMA, { type: 'null' }] },
+                    timing: { anyOf: [{ type: 'string', enum: ['during', 'after'] }, { type: 'null' }] },
+                    rawText: { type: 'string' },
+                },
+                required: ['name', 'type', 'agendaItem', 'timing', 'rawText'],
+                additionalProperties: false,
+            },
+        },
+        discussionOrder: { anyOf: [{ type: 'array', items: AGENDA_ITEM_REF_SCHEMA }, { type: 'null' }] },
+        subjectInfo: { anyOf: [AGENDA_ITEM_REF_SCHEMA, { type: 'null' }] },
+        incomplete: { type: 'boolean' },
+    },
+    required: [
+        'attendanceFormat', 'compositionMembers', 'presentMembers', 'absentMembers',
+        'mayorPresent', 'decisionExcerpt', 'decisionNumber', 'references',
+        'voteResult', 'voteDetails', 'attendanceChanges', 'discussionOrder',
+        'subjectInfo', 'incomplete',
+    ],
+    additionalProperties: false,
+};
 
 /** Page count threshold: PDFs with this many pages or fewer are sent whole. */
 const SMALL_PDF_THRESHOLD = 10;
@@ -569,8 +667,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             systemPrompt: EXTRACTION_SYSTEM_PROMPT,
             userPrompt,
             documentBase64: base64,
-            prefillSystemResponse: '{',
-            prependToResponse: '{',
+            outputFormat: { type: 'json_schema', schema: EXTRACTION_OUTPUT_SCHEMA },
             model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
@@ -600,8 +697,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             systemPrompt: EXTRACTION_SYSTEM_PROMPT,
             userPrompt: partialPrompt,
             documentBase64: partialBase64,
-            prefillSystemResponse: '{',
-            prependToResponse: '{',
+            outputFormat: { type: 'json_schema', schema: EXTRACTION_OUTPUT_SCHEMA },
             model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
@@ -638,8 +734,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             systemPrompt: EXTRACTION_SYSTEM_PROMPT,
             userPrompt: tailPrompt,
             documentBase64: tailBase64,
-            prefillSystemResponse: '{',
-            prependToResponse: '{',
+            outputFormat: { type: 'json_schema', schema: EXTRACTION_OUTPUT_SCHEMA },
             model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
         });
