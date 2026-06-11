@@ -53,7 +53,11 @@
           version = "1.0.0";
           src = ./.;
 
-          npmDepsHash = "sha256-P9hdMBD9Rsdl00m1Sp3aawafWUHb1j4y8iWu0jWdGfU=";
+          # importNpmLock fetches each package using the integrity hashes
+          # already in package-lock.json, so there is no aggregate npmDepsHash
+          # to keep in sync when the lockfile changes (e.g. dependabot bumps).
+          npmDeps = pkgs.importNpmLock { npmRoot = ./.; };
+          npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
           # Handle peer dependency conflicts and skip postinstall scripts
           # (puppeteer downloads Chromium, ffmpeg-static downloads ffmpeg)

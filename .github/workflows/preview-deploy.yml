@@ -85,7 +85,10 @@ jobs:
         with:
           name: ${{ env.CACHIX_CACHE_NAME }}
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
-          pushFilter: "opencouncil-tasks-prod"
+          # Exclude the prod build itself (pushed explicitly below) and npm
+          # deps (per-package .tgz fetchurls + the lockfile sources derivation),
+          # all cheaply re-fetched from the npm registry.
+          pushFilter: "(opencouncil-tasks-prod|\\.tgz$|opencouncil-tasks-.*-sources$)"
 
       - name: Build production package
         run: |
