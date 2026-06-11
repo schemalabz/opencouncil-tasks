@@ -1,46 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { compareRuns } from './compare.js';
-import { RunWithResult } from './types.js';
-import { DiscussionStatus, Subject, SummarizeResult } from '../../types.js';
-
-function makeSubject(overrides: Partial<Subject> & { id: string; name: string }): Subject {
-    return {
-        description: 'Περιγραφή θέματος.',
-        agendaItemIndex: 1,
-        introducedByPersonId: null,
-        speakerContributions: [],
-        topicImportance: 'normal',
-        proximityImportance: 'none',
-        location: null,
-        topicLabel: 'Διοίκηση',
-        context: null,
-        discussedIn: null,
-        ...overrides,
-    };
-}
-
-function makeRun(traceId: string, subjects: Subject[], extras?: Partial<SummarizeResult>): RunWithResult {
-    return {
-        info: {
-            traceId,
-            timestamp: '2026-06-10T12:00:00Z',
-            name: 'summarize',
-            meeting: 'dev/test',
-            version: 'test',
-            env: 'development',
-            promptsHash: null,
-            isError: false,
-            totalCost: null,
-            latencySeconds: null,
-        },
-        result: {
-            speakerSegmentSummaries: [],
-            subjects,
-            utteranceDiscussionStatuses: [],
-            ...extras,
-        },
-    };
-}
+import { makeRun, makeSubject } from './fixtures.js';
+import { DiscussionStatus } from '../../types.js';
 
 describe('compareRuns', () => {
     it('classifies identical subjects', () => {
