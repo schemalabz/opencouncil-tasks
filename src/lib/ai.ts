@@ -256,7 +256,10 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
 
         // Continuation of a truncated response: the partial goes back as a
         // non-final assistant turn (mid-conversation assistant messages are
-        // allowed on all models) with a user turn asking to resume from there
+        // allowed on all models) with a user turn asking to resume from there.
+        // NOTE: mutually exclusive with prefillSystemResponse — passing both
+        // would emit two back-to-back assistant turns (the max_tokens recursion
+        // folds any caller prefill into the partial instead)
         if (continueFromPartial && !outputFormat) {
             messages.push({ "role": "assistant", "content": continueFromPartial });
             messages.push({ "role": "user", "content": continuationPrompt(continueFromPartial) });
