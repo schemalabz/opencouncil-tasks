@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getVideoIdAndUrl, formatBytes, parseLoudnormStats } from './downloadYTV.js';
+import { getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection } from './downloadYTV.js';
 
 describe('getVideoIdAndUrl', () => {
   it('extracts ID from youtube.com/watch?v=...', () => {
@@ -104,5 +104,38 @@ size=N/A time=01:23:45.67 bitrate=N/A speed= 125x
     expect(() => parseLoudnormStats(incomplete)).toThrow(
       'Missing loudnorm field',
     );
+  });
+});
+
+describe('needsLoudnormCorrection', () => {
+  const stats = (input_i: string, input_tp: string) => ({
+    input_i,
+    input_tp,
+    input_lra: '11.00',
+    input_thresh: '-25.00',
+  });
+
+  it('skips correction when loudness is within tolerance and peak is under the ceiling', () => {
+    expect(needsLoudnormCorrection(stats('-14.46', '-2.10'))).toBe(false);
+  });
+
+  it('skips correction for an already-normalized file measuring at the target', () => {
+    expect(needsLoudnormCorrection(stats('-14.00', '-1.50'))).toBe(false);
+  });
+
+  it('corrects when the audio is too quiet', () => {
+    expect(needsLoudnormCorrection(stats('-27.10', '-8.34'))).toBe(true);
+  });
+
+  it('corrects when the audio is too loud', () => {
+    expect(needsLoudnormCorrection(stats('-11.20', '-3.00'))).toBe(true);
+  });
+
+  it('corrects when loudness is on target but the true peak exceeds the ceiling', () => {
+    expect(needsLoudnormCorrection(stats('-14.46', '0.69'))).toBe(true);
+  });
+
+  it('corrects when measurements are not parseable numbers', () => {
+    expect(needsLoudnormCorrection(stats('-inf', '-inf'))).toBe(true);
   });
 });
