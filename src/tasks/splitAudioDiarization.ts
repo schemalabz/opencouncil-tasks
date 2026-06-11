@@ -163,9 +163,15 @@ export const buildFfmpegSplitArgs = (input: string, output: string, startTime?: 
 
     args.push('-i', input);
 
-    // The input is already mp3 (produced by downloadYTV), so stream-copy
-    // instead of re-encoding; cuts align to mp3 frame boundaries (~26ms)
-    args.push('-c:a', 'copy');
+    // Pipeline input is always mp3 (produced by downloadYTV), so stream-copy
+    // instead of re-encoding; cuts align to mp3 frame boundaries (~26ms).
+    // Anything else (ad-hoc CLI inputs) can't be muxed into an mp3 container,
+    // so keep the old re-encode path for those.
+    if (path.extname(input).toLowerCase() === '.mp3') {
+        args.push('-c:a', 'copy');
+    } else {
+        args.push('-acodec', 'libmp3lame', '-b:a', '128k');
+    }
 
     args.push(output);
 
