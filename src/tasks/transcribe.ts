@@ -58,9 +58,12 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
         // Audio longer than any segment can be means the file doesn't belong
         // to this run's segmentation (stale upload or CDN cache). Its
         // timestamps would land in other segments' ranges — publishing that
-        // would silently corrupt the record, so fail loudly instead
+        // would silently corrupt the record, so fail loudly instead.
+        // A single segment is exempt: callers like the CLI's transcribe-single
+        // pass unsplit audio of arbitrary length, and with one segment at
+        // offset zero there are no other ranges to corrupt.
         const maxExpected = MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS + 60;
-        if (transcript.metadata.audio_duration > maxExpected) {
+        if (totalSegments > 1 && transcript.metadata.audio_duration > maxExpected) {
             throw new Error(`${segmentLabel(index)}: transcribed audio is ${Math.round(transcript.metadata.audio_duration)}s long, but segments are capped at ${MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS}s — ${fullUrl} does not match this run's segmentation`);
         }
 
