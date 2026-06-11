@@ -125,7 +125,10 @@ async function processSpeakerSegment(
             // aiChat pins temperature 0, so an identical retry prompt would get
             // an identical response — tell the model what was wrong instead
             const observedLines = countNumberedLines(result.result);
-            structureReminder = `\n\nIMPORTANT (retry ${attempt + 1}): your previous response could not be used because it contained ${observedLines} numbered lines but the input has ${segment.utterances.length} utterances. Output ONLY lines numbered 1. to ${segment.utterances.length}, exactly one line per input utterance, with no preamble or explanations.`;
+            const problem = observedLines === segment.utterances.length
+                ? "its numbered lines were malformed (they must start at 1., increase sequentially, and have no text before the first numbered line)"
+                : `it contained ${observedLines} numbered lines but the input has ${segment.utterances.length} utterances`;
+            structureReminder = `\n\nIMPORTANT (retry ${attempt + 1}): your previous response could not be used because ${problem}. Output ONLY lines numbered 1. to ${segment.utterances.length}, exactly one line per input utterance, with no preamble or explanations.`;
             console.error(`Output structure mismatch for ${segment.speakerName} (attempt ${attempt}/${MAX_FIX_ATTEMPTS}): expected ${segment.utterances.length} numbered utterances, got ${observedLines}`);
             continue;
         }
