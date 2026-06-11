@@ -109,13 +109,18 @@ const AUDIO_BITRATE = '128k';
 
 export function needsLoudnormCorrection(stats: LoudnormStats): boolean {
     const deltaI = Math.abs(LOUDNORM_TARGET.I - parseFloat(stats.input_i));
-    const truePeak = parseFloat(stats.input_tp);
     // Non-finite measurements (ffmpeg emits "-inf" on silent audio) fall
     // through to normalization, preserving the old always-normalize behavior
-    if (!Number.isFinite(deltaI) || !Number.isFinite(truePeak)) {
+    if (!Number.isFinite(deltaI)) {
         return true;
     }
-    return deltaI > LOUDNORM_TOLERANCE_LU || truePeak > LOUDNORM_TARGET.TP;
+    // Only loudness deviation triggers normalization. True peak deliberately
+    // does NOT: the AAC re-encode in pass 2 overshoots the true-peak limiter
+    // (observed in production: TP went +0.69 → +1.98 dBTP through one
+    // normalize cycle while loudness stayed on target), so a TP-only trigger
+    // re-normalizes the same file on every rerun, degrading audio each time
+    // and never converging.
+    return deltaI > LOUDNORM_TOLERANCE_LU;
 }
 
 export function parseLoudnormStats(stderr: string): LoudnormStats {
@@ -184,7 +189,7 @@ async function normalizeVideoAudio(filePath: string): Promise<void> {
     console.log(`[loudnorm] ${filename}: I=${stats.input_i} LUFS (target ${I}, Δ${parseFloat(deltaI) >= 0 ? '+' : ''}${deltaI}) | TP=${stats.input_tp} dBTP (ceiling ${TP}) | LRA=${stats.input_lra} (target ${LRA}) | thresh=${stats.input_thresh} | measure=${pass1Duration}s`);
 
     if (!needsLoudnormCorrection(stats)) {
-        console.log(`[loudnorm] ${filename}: within ${LOUDNORM_TOLERANCE_LU} LU of target and true peak under ${TP} dBTP, skipping normalization`);
+        console.log(`[loudnorm] ${filename}: within ${LOUDNORM_TOLERANCE_LU} LU of the ${I} LUFS target, skipping normalization`);
         return;
     }
 
