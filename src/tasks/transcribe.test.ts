@@ -3,6 +3,7 @@ import type { Transcript } from "../types.js";
 
 vi.mock("../lib/ScribeTranscribe.js", () => ({
     scribeTranscriber: { transcribe: vi.fn() },
+    MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS: 900,
 }));
 
 import { transcribe } from "./transcribe.js";
