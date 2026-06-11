@@ -4,8 +4,10 @@ import { Transcript, Utterance, Word } from "../types.js";
 
 dotenv.config();
 
-// Scribe's sync API takes ~12s per audio-minute, so keep concurrency low.
-const SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS = parseInt(process.env.SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS || '5', 10);
+// In-process cap on parallel Scribe requests. The account-wide concurrency
+// limit is shared with every other environment and consumer of the API key —
+// exceeding it returns 429s, which the saturation handling below waits out.
+const SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS = parseInt(process.env.SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS || '15', 10);
 
 // Cap for audio segments sent to Scribe: at ~12s per audio-minute, a 15-minute
 // segment responds in ~3 minutes — keeping parallelism high and the cost of a
