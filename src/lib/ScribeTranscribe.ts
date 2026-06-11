@@ -91,7 +91,7 @@ function endsSentence(text: string): boolean {
     return !isAbbreviation;
 }
 
-export function scribeWordsToUtterances(words: ScribeWord[], language: string): Utterance[] {
+export function scribeWordsToUtterances(words: ScribeWord[], language: string, logLabel = ""): Utterance[] {
     const utterances: Utterance[] = [];
     const flushCounts = { punctuation: 0, pause: 0, maxDuration: 0 };
     const sentenceEndWords = new Set<string>();
@@ -160,12 +160,13 @@ export function scribeWordsToUtterances(words: ScribeWord[], language: string): 
 
     // Production visibility into endsSentence: a missed abbreviation shows up
     // here directly instead of as a misattributed speaker three steps downstream
+    const prefix = logLabel ? `[Scribe] ${logLabel}:` : "[Scribe]";
     const wordCount = words.filter((w) => w.type === "word").length;
-    console.log(`[Scribe] ${wordCount} words → ${utterances.length} utterances (punctuation: ${flushCounts.punctuation}, pause: ${flushCounts.pause}, maxDuration: ${flushCounts.maxDuration})`);
+    console.log(`${prefix} ${wordCount} words → ${utterances.length} utterances (punctuation: ${flushCounts.punctuation}, pause: ${flushCounts.pause}, maxDuration: ${flushCounts.maxDuration})`);
     if (sentenceEndWords.size > 0) {
         const sample = [...sentenceEndWords].slice(0, 200);
         const more = sentenceEndWords.size - sample.length;
-        console.log(`[Scribe] sentence-end words: ${sample.join(" ")}${more > 0 ? ` (+${more} more)` : ""}`);
+        console.log(`${prefix} sentence-end words: ${sample.join(" ")}${more > 0 ? ` (+${more} more)` : ""}`);
     }
 
     return utterances;
@@ -184,9 +185,9 @@ function normalizeLanguageCode(code: string): string {
     return code === "ell" ? "el" : code;
 }
 
-export function scribeResponseToTranscript(response: ScribeResponse, transcriptionTimeSeconds: number): Transcript {
+export function scribeResponseToTranscript(response: ScribeResponse, transcriptionTimeSeconds: number, logLabel = ""): Transcript {
     const language = normalizeLanguageCode(response.language_code);
-    const utterances = scribeWordsToUtterances(response.words, language);
+    const utterances = scribeWordsToUtterances(response.words, language, logLabel);
     const audioDuration = response.audio_duration_secs ?? (utterances.length > 0 ? utterances[utterances.length - 1].end : 0);
 
     return {
@@ -206,6 +207,7 @@ export function scribeResponseToTranscript(response: ScribeResponse, transcripti
 
 type TranscribeRequest = {
     audioUrl: string;
+    label: string; // identifies the segment in logs (15 requests can be in flight at once)
     resolve: (transcript: Transcript) => void;
     reject: (error: Error) => void;
 }
@@ -217,10 +219,11 @@ class ScribeTranscriber {
     // off until this time instead of piling more retries onto a full account
     private pausedUntil = 0;
 
-    async transcribe(request: { audioUrl: string }): Promise<Transcript> {
+    async transcribe(request: { audioUrl: string; label?: string }): Promise<Transcript> {
         return new Promise((resolve, reject) => {
             this.queue.push({
-                ...request,
+                audioUrl: request.audioUrl,
+                label: request.label ?? request.audioUrl.split('/').pop() ?? request.audioUrl,
                 resolve,
                 reject,
             });
@@ -235,11 +238,13 @@ class ScribeTranscriber {
 
         this.activeTranscriptions++;
         const request = this.queue.shift()!;
+        console.log(`[Scribe] ${request.label}: starting (${this.activeTranscriptions}/${SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS} slots active, ${this.queue.length} queued)`);
 
         try {
-            const transcript = await this.transcribeSegment(request.audioUrl);
+            const transcript = await this.transcribeSegment(request.audioUrl, request.label);
             request.resolve(transcript);
         } catch (error) {
+            console.log(`[Scribe] ${request.label}: FAILED: ${error}`);
             request.reject(error as Error);
         } finally {
             this.activeTranscriptions--;
@@ -247,13 +252,16 @@ class ScribeTranscriber {
         }
     }
 
-    private async transcribeSegment(audioUrl: string): Promise<Transcript> {
+    private async transcribeSegment(audioUrl: string, label: string): Promise<Transcript> {
         const startedAt = Date.now();
-        const response = await this.requestWithRetries(audioUrl);
-        return scribeResponseToTranscript(response, (Date.now() - startedAt) / 1000);
+        const response = await this.requestWithRetries(audioUrl, label);
+        const elapsedSeconds = (Date.now() - startedAt) / 1000;
+        const transcript = scribeResponseToTranscript(response, elapsedSeconds, label);
+        console.log(`[Scribe] ${label}: transcribed ${(transcript.metadata.audio_duration / 60).toFixed(1)}min of audio in ${Math.round(elapsedSeconds)}s`);
+        return transcript;
     }
 
-    private async requestWithRetries(audioUrl: string): Promise<ScribeResponse> {
+    private async requestWithRetries(audioUrl: string, label: string): Promise<ScribeResponse> {
         let failures = 0;
         let saturationWaitMs = 0;
         let rateLimitStreak = 0;
@@ -283,7 +291,7 @@ class ScribeTranscriber {
                     throw result.error;
                 }
                 this.pausedUntil = Math.max(this.pausedUntil, Date.now() + delayMs);
-                console.log(`Scribe account saturated (429), holding all requests for ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
+                console.log(`[Scribe] ${label}: account saturated (429), holding all requests for ${Math.round(delayMs / 1000)}s (${Math.round(saturationWaitMs / 1000)}s waited of ${Math.round(MAX_SATURATION_WAIT_MS / 60000)}min budget): ${result.error.message}`);
                 continue;
             }
 
@@ -294,7 +302,7 @@ class ScribeTranscriber {
             }
 
             const delayMs = BASE_RETRY_DELAY_MS * Math.pow(2, failures - 1);
-            console.log(`Scribe request failed (attempt ${failures}/${MAX_ATTEMPTS}), retrying in ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
+            console.log(`[Scribe] ${label}: request failed (attempt ${failures}/${MAX_ATTEMPTS}), retrying in ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
             await sleep(delayMs);
         }
     }
