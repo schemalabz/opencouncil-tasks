@@ -45,6 +45,15 @@ describe("transcribe", () => {
         expect(result.transcription.full_transcript).toContain("δύο");
     });
 
+    it("rejects audio longer than the segment cap (stale upload guard)", async () => {
+        const staleHourLong = fakeTranscript("παλιό περιεχόμενο");
+        staleHourLong.metadata.audio_duration = 3600;
+        mockTranscribe.mockResolvedValue(staleHourLong);
+
+        await expect(transcribe({ segments: [segments[0]] }, () => { }))
+            .rejects.toThrow("does not match this run's segmentation");
+    });
+
     it("fails when a segment still fails on the second pass", async () => {
         mockTranscribe
             .mockResolvedValueOnce(fakeTranscript("ένα"))

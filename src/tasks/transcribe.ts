@@ -1,7 +1,7 @@
 import { Task } from "./pipeline.js";
 import dotenv from 'dotenv';
 import { Transcript } from "../types.js";
-import { scribeTranscriber } from "../lib/ScribeTranscribe.js";
+import { scribeTranscriber, MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
 import { createScopedLogger } from "./utils/scopedLogger.js";
 import { formatTime } from "../utils.js";
 
@@ -54,6 +54,16 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, c
     const transcribeSegment = async ({ url, start }: TranscribeArgs['segments'][0], index: number) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
         const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl, label: segmentLabel(index) });
+
+        // Audio longer than any segment can be means the file doesn't belong
+        // to this run's segmentation (stale upload or CDN cache). Its
+        // timestamps would land in other segments' ranges — publishing that
+        // would silently corrupt the record, so fail loudly instead
+        const maxExpected = MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS + 60;
+        if (transcript.metadata.audio_duration > maxExpected) {
+            throw new Error(`${segmentLabel(index)}: transcribed audio is ${Math.round(transcript.metadata.audio_duration)}s long, but segments are capped at ${MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS}s — ${fullUrl} does not match this run's segmentation`);
+        }
+
         completedSegments++;
         log(`${segmentLabel(index)} done (${completedSegments}/${totalSegments} segments complete)`);
         onProgress("transcribing", (completedSegments / totalSegments) * 100);

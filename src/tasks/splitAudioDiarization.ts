@@ -82,6 +82,15 @@ async function searchForSilences(diarization: Diarization, start: number, end: n
 }
 
 
+// Spaces object keys are derived from this basename, and uploadToSpaces skips
+// the upload when the key already exists. Embedding the time range makes the
+// name unique to the segment's actual boundaries: a re-run with different
+// segmentation (e.g. a changed maxDuration) gets fresh keys and fresh CDN URLs
+// instead of silently transcribing stale audio from a previous run.
+export function segmentFileName(baseName: string, start: number, end: number): string {
+    return `${baseName}_${Math.round(start)}-${Math.round(end)}.mp3`;
+}
+
 const longSilenceThreshold = 5;
 // if the last diarization ends before the end of the audio, we return segments until the end of the diarization
 export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async ({ file, diarization, maxDuration }, onProgress) => {
@@ -95,7 +104,7 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
     // If the audio is already shorter than maxDuration, return it as a single segment
     if (duration <= maxDuration) {
         console.log(`Audio duration (${duration}s) is already shorter than or equal to maxDuration (${maxDuration}s). No splitting needed.`);
-        const outputPath = path.join(outputDir, `${fileName}_full.mp3`);
+        const outputPath = path.join(outputDir, segmentFileName(`${fileName}_full`, 0, duration));
         await ffmpegPromise(file, outputPath, 0, duration);
         return [{ path: outputPath, startTime: 0 }];
     }
@@ -139,7 +148,7 @@ export const splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]> = async
     const audioSegments: AudioSegment[] = [];
     for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
-        const outputPath = path.join(outputDir, `${fileName}_segment_${i}.mp3`);
+        const outputPath = path.join(outputDir, segmentFileName(`${fileName}_segment_${i}`, segment.start, segment.end));
         console.log(`Splitting segment ${i + 1} of ${segments.length}: ${formatTime(segment.start)} to ${formatTime(segment.end)}`);
         await retryFfmpeg(file, outputPath, segment.start, segment.end - segment.start);
         console.log(`DONE splitting segment ${i + 1} of ${segments.length}: ${formatTime(segment.start)} to ${formatTime(segment.end)}`);
