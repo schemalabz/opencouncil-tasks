@@ -545,10 +545,11 @@ const EXTRACTION_MODEL = 'claude-sonnet-4-6';
 /**
  * Max output tokens for extraction — needs headroom for decisions with large
  * tables (budget amendments, etc.). Structured outputs cannot use aiChat's
- * max_tokens continuation, so the ceiling is generous; aiChat streams, so
- * values above 16K don't risk HTTP timeouts.
+ * max_tokens continuation (hitting the cap is a hard failure), so this is
+ * Sonnet 4.6's full output ceiling; aiChat streams, so large values don't
+ * risk HTTP timeouts.
  */
-const EXTRACTION_MAX_TOKENS = 32768;
+const EXTRACTION_MAX_TOKENS = 64000;
 
 // Structured-outputs schemas mirroring RawLlmExtraction — they replace the
 // '{' assistant prefill, which Claude 4.6+ models reject
