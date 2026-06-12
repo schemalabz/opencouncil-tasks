@@ -482,6 +482,7 @@ Rules:
         }),
         outputFormat: { type: 'json_schema', schema: MEMBER_MATCH_SCHEMA },
         model: HAIKU_MODEL,
+        label: 'member-match',
     });
 
     const result = response.matches;
@@ -671,6 +672,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             outputFormat: { type: 'json_schema', schema: EXTRACTION_OUTPUT_SCHEMA },
             model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
+            label: 'decision-extraction',
         });
 
         const result = normalizeExtraction(raw);
@@ -701,6 +703,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             outputFormat: { type: 'json_schema', schema: EXTRACTION_OUTPUT_SCHEMA },
             model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
+            label: 'decision-extraction:partial',
         });
 
         totalUsage = addUsage(totalUsage, usage);
@@ -738,6 +741,7 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             outputFormat: { type: 'json_schema', schema: EXTRACTION_OUTPUT_SCHEMA },
             model: EXTRACTION_MODEL,
             maxTokens: EXTRACTION_MAX_TOKENS,
+            label: 'decision-extraction:tail',
         });
 
         totalUsage = addUsage(totalUsage, usage);
