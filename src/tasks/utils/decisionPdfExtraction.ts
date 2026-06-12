@@ -273,25 +273,10 @@ Extract the following information from the PDF:
 13. **mayorPresent**: Whether the city mayor (Δήμαρχος/Δήμαρχο) was present at the session. This is usually stated in a narrative paragraph separate from the council member attendance list. Look for phrases like "Ο/Η Δήμαρχος ... προσκλήθηκε νομίμως και παρέστη" or "Ο/Η Δήμαρχος ... παρών/παρούσα" (present), or "Ο/Η Δήμαρχος ... δεν ήταν παρών/παρούσα" or "απουσίαζε" (absent). Return an object with "present" (boolean) and "rawText" (the original sentence from the PDF describing the mayor's presence/absence). Return null if mayor presence is not mentioned.
 14. **incomplete**: Set to true ONLY if the document appears physically truncated — i.e. you can see attendance lists and preamble but the decision section starting with "ΑΠΟΦΑΣΙΖΕΙ" is not present because the provided pages end before reaching it. Set to false if you can see the "ΑΠΟΦΑΣΙΖΕΙ" section, even if some fields within it (like the vote result phrase) are missing or unclear. Missing data in a complete document is a data quality issue, not truncation.
 
-Return valid JSON matching this schema:
-{
-  "attendanceFormat": "composition_and_absent" | "explicit_present_absent",
-  "compositionMembers": string[] | null,
-  "presentMembers": string[] | null,
-  "absentMembers": string[],
-  "mayorPresent": { "present": boolean, "rawText": string } | null,
-  "decisionExcerpt": string,
-  "decisionNumber": string | null,
-  "references": string,
-  "voteResult": string | null,
-  "voteDetails": { "name": string, "vote": "FOR" | "AGAINST" | "ABSTAIN" | "PRESENT" | "DID_NOT_VOTE" }[],
-  "attendanceChanges": { "name": string, "type": "arrival" | "departure", "agendaItem": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null, "timing": "during" | "after" | null, "rawText": string }[],
-  "discussionOrder": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null }[] | null,
-  "subjectInfo": { "agendaItemIndex": number, "nonAgendaReason": "outOfAgenda" | null } | null,
-  "incomplete": boolean
-}
-
 If a field cannot be found, use empty array for lists, empty string for text, and null where indicated.`;
+// The output shape itself is not described here — it is enforced by
+// EXTRACTION_OUTPUT_SCHEMA via structured outputs, so the prompt only needs
+// the field-finding guidance above.
 
 // --- Greek name matching ---
 
