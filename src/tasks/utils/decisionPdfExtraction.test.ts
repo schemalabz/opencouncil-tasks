@@ -233,10 +233,12 @@ describe('llmMatchMembers', () => {
 
     it('returns LLM-matched names with personIds and usage', async () => {
         mockAiChat.mockResolvedValueOnce({
-            result: JSON.stringify([
-                { name: 'ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ', personId: 'p1' },
-                { name: 'ΑΓΝΩΣΤΟΣ', personId: null },
-            ]),
+            result: {
+                matches: [
+                    { name: 'ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ', personId: 'p1' },
+                    { name: 'ΑΓΝΩΣΤΟΣ', personId: null },
+                ],
+            },
             usage: { input_tokens: 50, output_tokens: 25 },
         });
 
@@ -267,10 +269,12 @@ describe('llmMatchMembers', () => {
 
     it('prevents duplicate personId matches', async () => {
         mockAiChat.mockResolvedValueOnce({
-            result: JSON.stringify([
-                { name: 'NAME1', personId: 'p1' },
-                { name: 'NAME2', personId: 'p1' }, // duplicate
-            ]),
+            result: {
+                matches: [
+                    { name: 'NAME1', personId: 'p1' },
+                    { name: 'NAME2', personId: 'p1' }, // duplicate
+                ],
+            },
             usage: noUsage,
         });
 
@@ -283,19 +287,17 @@ describe('llmMatchMembers', () => {
         expect(result.stillUnmatched).toEqual(['NAME2']);
     });
 
-    it('handles trailing text after JSON array', async () => {
+    it('requests structured output instead of a prefill (rejected on Claude 4.6+)', async () => {
         mockAiChat.mockResolvedValueOnce({
-            result: '[{"name": "TEST", "personId": "p1"}]\n\nThe matching was done.',
+            result: { matches: [{ name: 'TEST', personId: 'p1' }] },
             usage: noUsage,
         });
 
-        const result = await llmMatchMembers(
-            ['TEST'],
-            [{ id: 'p1', name: 'Test Person' }],
-        );
+        await llmMatchMembers(['TEST'], [{ id: 'p1', name: 'Test Person' }]);
 
-        expect(result.matched).toEqual([{ name: 'TEST', personId: 'p1' }]);
-        expect(result.stillUnmatched).toEqual([]);
+        const callArgs = mockAiChat.mock.calls[0][0];
+        expect(callArgs.outputFormat).toBeDefined();
+        expect(callArgs.prefillSystemResponse).toBeUndefined();
     });
 });
 
@@ -319,9 +321,7 @@ describe('matchAllMembers', () => {
     it('falls back to LLM for token-sort misses', async () => {
         // "ΓΙΑΝΝΗΣ" is a nickname for "Ιωάννης" — token-sort can't match this
         mockAiChat.mockResolvedValueOnce({
-            result: JSON.stringify([
-                { name: 'ΠΑΠΑΔΟΠΟΥΛΟΣ ΓΙΑΝΝΗΣ', personId: 'p2' },
-            ]),
+            result: { matches: [{ name: 'ΠΑΠΑΔΟΠΟΥΛΟΣ ΓΙΑΝΝΗΣ', personId: 'p2' }] },
             usage: noUsage,
         });
 
@@ -342,9 +342,7 @@ describe('matchAllMembers', () => {
 
     it('reports truly unmatched names after both steps', async () => {
         mockAiChat.mockResolvedValueOnce({
-            result: JSON.stringify([
-                { name: 'ΑΓΝΩΣΤΟΣ ΑΝΘΡΩΠΟΣ', personId: null },
-            ]),
+            result: { matches: [{ name: 'ΑΓΝΩΣΤΟΣ ΑΝΘΡΩΠΟΣ', personId: null }] },
             usage: noUsage,
         });
 
@@ -489,7 +487,7 @@ describe('extractDecisionFromPdf', () => {
         fetchSpy.mockRestore();
     });
 
-    it('calls aiChat with correct model and prefill parameters', async () => {
+    it('calls aiChat with the current model and structured output (no prefill)', async () => {
         const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
             ok: true,
             arrayBuffer: () => Promise.resolve(new ArrayBuffer(50)),
@@ -512,10 +510,11 @@ describe('extractDecisionFromPdf', () => {
         await extractDecisionFromPdf('https://example.com/test-ai-params-url.pdf');
 
         expect(mockAiChat).toHaveBeenCalledWith(expect.objectContaining({
-            model: 'claude-sonnet-4-20250514',
-            prefillSystemResponse: '{',
-            prependToResponse: '{',
+            model: 'claude-sonnet-4-6',
+            outputFormat: expect.objectContaining({ type: 'json_schema' }),
         }));
+        // Assistant prefill is rejected by Claude 4.6+ models
+        expect(mockAiChat.mock.calls[0][0].prefillSystemResponse).toBeUndefined();
         expect(mockAiChat.mock.calls[0][0].documentBase64).toBeDefined();
         expect(mockAiChat.mock.calls[0][0].systemPrompt).toContain('ΠΑΡΟΝΤΕΣ');
 
