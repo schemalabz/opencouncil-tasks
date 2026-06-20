@@ -1,5 +1,6 @@
 import { ResultWithUsage, addUsage, NO_USAGE } from "../lib/ai.js";
 import {
+    CityLanguage,
     SummarizeRequest,
     SummarizeResult,
     Subject,
@@ -112,7 +113,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
                 allUtteranceStatuses,
                 compressedRequest.transcript,
                 idCompressor,
-                request.administrativeBodyName
+                request.administrativeBodyName,
+                request.cityLanguage
             );
             subject.speakerContributions = result.contributions;
             phase2Usage = addUsage(phase2Usage, result.usage);
@@ -138,7 +140,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     let phase3Batch: boolean | undefined;
     const enrichmentResults = await withPhaseSpan('Phase 3: Enrichment', () => Promise.all(
         subjects.map((s, i) => {
-            return enrichSubject(s, request.cityName, request.administrativeBodyName, request.date).then(result => {
+            return enrichSubject(s, request.cityName, request.cityLanguage, request.administrativeBodyName, request.date).then(result => {
                 console.log(`   Enriched subject ${i + 1}/${subjects.length}: "${result.result.name}"`);
                 onProgress("enrichment", (i + 1) / subjects.length);
                 return result;
@@ -275,6 +277,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 async function enrichSubject(
     subject: SubjectInProgress,
     cityName: string,
+    cityLanguage: CityLanguage,
     administrativeBodyName: string,
     date: string
 ): Promise<ResultWithUsage<Subject>> {
@@ -294,6 +297,7 @@ async function enrichSubject(
 
     return enrichSubjectData(input, subject.id, {
         cityName,
+        cityLanguage,
         administrativeBodyName,
         date
     });

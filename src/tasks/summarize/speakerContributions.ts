@@ -4,9 +4,10 @@
  */
 
 
-import { DiscussionStatus, SpeakerContribution } from "../../types.js";
+import { CityLanguage, DiscussionStatus, SpeakerContribution } from "../../types.js";
 import { IdCompressor, formatTime, formatTokenCount } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
+import { getLanguageConfig } from "../../lib/language.js";
 import { getSpeakerContributionsSystemPrompt } from "./prompts.js";
 import { CompressedTranscript, SubjectInProgress, ExtractedUtterances, UtteranceStatus } from "./types.js";
 
@@ -19,7 +20,8 @@ export async function generateSpeakerContributions(
     allUtteranceStatuses: UtteranceStatus[],
     transcript: CompressedTranscript,
     idCompressor: IdCompressor,
-    administrativeBodyName?: string
+    administrativeBodyName?: string,
+    cityLanguage?: CityLanguage
 ): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     // Find utterance statuses for this subject
     const relevantStatuses = allUtteranceStatuses.filter(s =>
@@ -56,7 +58,8 @@ export async function generateSpeakerContributions(
         allSubjectUtterances,
         subject,
         idCompressor,
-        administrativeBodyName
+        administrativeBodyName,
+        cityLanguage
     );
 }
 
@@ -181,7 +184,8 @@ export async function generateSpeakerContributionsInBatches(
     }>,
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
-    administrativeBodyName?: string
+    administrativeBodyName?: string,
+    cityLanguage?: CityLanguage
 ): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     const speakerIds = Object.keys(utterancesBySpeaker);
     const totalSpeakers = speakerIds.length;
@@ -221,7 +225,8 @@ export async function generateSpeakerContributionsInBatches(
                 allSubjectUtterances,  // Full context for understanding
                 subject,
                 idCompressor,
-                administrativeBodyName
+                administrativeBodyName,
+                cityLanguage
             );
 
             allContributions.push(...batchResult.contributions);
@@ -256,7 +261,7 @@ export async function generateSpeakerContributionsInBatches(
                 allContributions.push({
                     speakerId: isNameBased ? null : key,
                     speakerName: isNameBased ? key.slice(5) : null,
-                    text: "Σφάλμα κατά τη δημιουργία περίληψης."
+                    text: getLanguageConfig(cityLanguage).summaryErrorText
                 });
             }
             // Move forward past the failed batch
@@ -312,9 +317,10 @@ export async function generateAllSpeakerContributionsInOneCall(
     }>,
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
-    administrativeBodyName?: string
+    administrativeBodyName?: string,
+    cityLanguage?: CityLanguage
 ): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
-    const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName);
+    const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName, cityLanguage);
 
     // Build a mapping from speaker keys to their display names
     // For name-based keys (name:Παπαδόπουλος), extract the name
@@ -436,7 +442,7 @@ ${fullDiscussion}
             contributions: Object.keys(utterancesBySpeaker).map(key => ({
                 speakerId: key.startsWith('name:') ? null : key,
                 speakerName: speakerKeyToName.get(key) || (key.startsWith('name:') ? key.slice(5) : null),
-                text: "Σφάλμα κατά τη δημιουργία περίληψης."
+                text: getLanguageConfig(cityLanguage).summaryErrorText
             })),
             ...NO_USAGE_STATS
         };

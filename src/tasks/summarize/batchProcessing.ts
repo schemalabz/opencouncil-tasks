@@ -4,7 +4,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { DiscussionStatus, TopicLabelInfo } from "../../types.js";
+import { CityLanguage, DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile, type UsageStats } from "../../lib/ai.js";
 import { getBatchProcessingSystemPrompt } from "./prompts.js";
@@ -29,6 +29,7 @@ export async function processBatchesWithState(
         transcript: CompressedTranscript;
         existingSubjects: any[];
         cityName: string;
+        cityLanguage?: CityLanguage;
         date: string;
         topicLabels: TopicLabelInfo[];
         administrativeBodyName?: string;
@@ -111,6 +112,7 @@ export async function processBatchesWithState(
                     conversationState,
                     {
                         cityName: request.cityName,
+                        cityLanguage: request.cityLanguage,
                         date: request.date,
                         topicLabels: request.topicLabels,
                         administrativeBodyName: request.administrativeBodyName,
@@ -544,6 +546,7 @@ export async function processSingleBatch(
     conversationState: { subjects: SubjectInProgress[] },
     metadata: {
         cityName: string;
+        cityLanguage?: CityLanguage;
         date: string;
         topicLabels: TopicLabelInfo[];
         administrativeBodyName?: string;

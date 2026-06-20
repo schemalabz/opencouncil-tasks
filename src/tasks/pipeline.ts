@@ -82,8 +82,7 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
 
                         return deps.transcribe({
                             segments,
-                            customVocabulary: request.customVocabulary,
-                            customPrompt: request.customPrompt
+                            language: request.cityLanguage
                         }, createProgressHandler("transcribing"));
                     });
 

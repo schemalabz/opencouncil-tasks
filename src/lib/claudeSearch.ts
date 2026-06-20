@@ -1,5 +1,6 @@
-import { SubjectContext } from '../types.js';
+import { CityLanguage, SubjectContext } from '../types.js';
 import { aiChat, ResultWithUsage, NO_USAGE } from './ai.js';
+import { getLanguageConfig, languageDirectiveSuffix } from './language.js';
 
 /**
  * Use Claude's web search capability to find relevant context about a subject
@@ -9,20 +10,23 @@ export async function getSubjectContextWithClaude(params: {
   subjectName: string;
   subjectDescription: string;
   cityName: string;
+  cityLanguage?: CityLanguage;
   administrativeBodyName: string;
   date: string;
 }): Promise<ResultWithUsage<SubjectContext>> {
   try {
-    const systemPrompt = `You are a helpful assistant that provides background context for Greek citizens reading about municipal council meeting topics.
+    const { promptName } = getLanguageConfig(params.cityLanguage);
+    const langDirective = languageDirectiveSuffix(params.cityLanguage);
+    const systemPrompt = `You are a helpful assistant that provides background context for citizens reading about municipal council meeting topics.
 
-Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citizens understand the context. Focus on:
+Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} that helps ordinary citizens understand the context. Focus on:
 - What the subject is about (technical terms, regulations, policies)
 - Why it's important or relevant
 - Recent news or developments related to this topic
 - Historical context if applicable
 
 **IMPORTANT RESTRICTIONS:**
-- Write ENTIRELY in Greek (Ελληνικά)
+- Write ENTIRELY in ${promptName}
 - Keep it SHORT: 2-3 paragraphs maximum (150-250 words)
 - Do NOT include meta-commentary like "Θα ψάξω για..." or "Ας δούμε..."
 - Do NOT discuss what was said IN THE MEETING - only provide EXTERNAL context
@@ -32,7 +36,7 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
 - Do NOT include a "Πηγές:" or "Sources:" section
 
 **Example format:**
-Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού και την υλικοτεχνική υποδομή. Οι πρόσφατες αλλαγές στην νομοθεσία στοχεύουν στη βελτίωση της ποιότητας των παρεχόμενων υπηρεσιών.`;
+Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού και την υλικοτεχνική υποδομή. Οι πρόσφατες αλλαγές στην νομοθεσία στοχεύουν στη βελτίωση της ποιότητας των παρεχόμενων υπηρεσιών.${langDirective}`;
 
     const userPrompt = `Παράθεσε ΕΞΩΤΕΡΙΚΟ πλαίσιο για πολίτες που διαβάζουν για αυτό το θέμα που συζητήθηκε σε συνεδρίαση ${params.administrativeBodyName}.
 
@@ -53,7 +57,7 @@ Provide concise, factual EXTERNAL information IN GREEK that helps ordinary citiz
 ΜΗΝ προσθέσεις χειροκίνητα αριθμούς αναφορών [1], [2], [3].
 ΜΗΝ συμπεριλάβεις τμήμα "Πηγές:" ή "Sources:".
 
-Ξεκίνα την απάντησή σου ΑΠΕΥΘΕΙΑΣ με το πλαίσιο - ΧΩΡΙΣ μετα-σχόλια.`;
+Ξεκίνα την απάντησή σου ΑΠΕΥΘΕΙΑΣ με το πλαίσιο - ΧΩΡΙΣ μετα-σχόλια.${langDirective}`;
 
 
     const result = await aiChat<string>({

@@ -47,6 +47,7 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
 
 const baseRequest = {
     youtubeUrl: "https://youtube.com/watch?v=abc",
+    cityLanguage: "el" as const,
 };
 
 describe("createPipeline", () => {

@@ -1,14 +1,17 @@
-import { FixTranscriptResult } from "../types.js";
+import { CityLanguage, FixTranscriptResult } from "../types.js";
 import { FixTranscriptRequest } from "../types.js";
 import { Task } from "../tasks/pipeline.js";
 import { addUsage, aiChat, NO_USAGE, ResultWithUsage } from "../lib/ai.js";
+import { getLanguageConfig } from "../lib/language.js";
 
 const MAX_PARALLEL_API_CALLS = 20;
 // Attempts per segment: the numbered-line structure is validated
 // programmatically, and a count mismatch gets a fresh retry
 const MAX_FIX_ATTEMPTS = 3;
 
-const systemPrompt = `You are correcting an automatic transcription (made by ElevenLabs Scribe) of a Greek city council meeting. You receive ONE speaker segment: consecutive utterances spoken by the same person, as numbered lines:
+function buildSystemPrompt(language: CityLanguage): string {
+    const config = getLanguageConfig(language);
+    return `You are correcting an automatic transcription (made by ElevenLabs Scribe) of a ${config.promptName} city council meeting. You receive ONE speaker segment: consecutive utterances spoken by the same person, as numbered lines:
 
 1. <utterance>
 2. <utterance>
@@ -16,22 +19,8 @@ const systemPrompt = `You are correcting an automatic transcription (made by Ele
 
 OUTPUT: the same numbered lines, same count, each line corrected. No explanations. Never merge, split, reorder, or renumber lines — utterance boundaries carry timestamps and must not move, even if a sentence spans two lines.
 
-WHAT TO FIX (in priority order):
-
-1. NAMES — the most common error. The speech-to-text often misspells names phonetically (e.g. «Ρημάκης» for «Δημάκης», «Ξυδαροπούλου» for «Ξηνταροπούλου»). Before anything else, check every person, party, and place name against the roster and agenda provided. If a name in the text is phonetically close to a roster/agenda name, use the roster/agenda spelling. If it matches nothing, keep it as transcribed.
-
-2. HOMOPHONE MISSPELLINGS — same sound, wrong letters: «απόν»→«απών», «πολεδομία»→«πολεοδομία», «κλιματολόγιο»→«κτηματολόγιο» (context: land registry), «ονομάδων»→«ονομάτων», ο/ω, η/ι/υ, αι/ε confusions. Use sentence meaning to pick the right word.
-
-3. HOUSE STYLE for numbers and dates — the official record uses digits: «τριακοστή πέμπτη συνεδρίαση»→«35η συνεδρίαση», «πέντε Δεκεμβρίου του 2025»→«05/12/2025» for full dates, «άρθρο εβδομήντα πέντε»→«άρθρο 75». Money and percentages also as digits («2,5 εκατομμύρια ευρώ», «15%»).
-
-4. Greek punctuation and accents: «;» for questions (never «?»), proper τόνοι («Μαρια;»→«Μαρία;»), capitalize proper nouns normally («ΖΕΜΕΝΟ»→«Ζεμενό»).
-
-WHAT NOT TO TOUCH:
-
-- Never change the meaning, add content, or summarize. You fix transcription, not the speaker.
-- Do not fix factual errors, grammar the speaker actually produced, or colloquial word choices («γραφούν» stays «γραφούν», not «εγγραφούν»). Spoken Greek in the record stays spoken Greek, correctly spelled.
-- Do not delete short interjections or crosstalk fragments from other speakers («ναι ναι», «το γράψατε;») — they are real speech; leave them where they are.
-- If you are not confident a word is a transcription error, leave it unchanged. An unfixed error is recoverable; a wrong "fix" corrupts the official record.`;
+${config.fixTranscriptNotes}`;
+}
 
 export function buildUserPrompt(
     cityName: string,
@@ -88,11 +77,11 @@ export function parseNumberedUtterances(text: string, expectedCount: number): st
 }
 
 export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
-    const { transcript, partiesWithPeople, cityName, agendaItems } = request;
-    console.log(`Fixing transcript for ${cityName} with ${transcript.length} segments`);
+    const { transcript, partiesWithPeople, cityName, cityLanguage, agendaItems } = request;
+    console.log(`Fixing transcript for ${cityName} (${cityLanguage}) with ${transcript.length} segments`);
     const inputUtterances = transcript.flatMap(s => s.utterances.map(u => u.text)).length;
 
-    const allResults = await fixSpeakerSegments(transcript, cityName, partiesWithPeople, agendaItems ?? [], onProgress);
+    const allResults = await fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress);
     const markedUncertain = allResults.result.filter(r => r.markUncertain).length;
     console.log(`Proposing ${allResults.result.length} updates (${allResults.result.length / inputUtterances * 100}%), ${markedUncertain} marked uncertain`);
     console.log(`Total usage: ${allResults.usage.input_tokens} input tokens, ${allResults.usage.output_tokens} output tokens`);
@@ -103,6 +92,7 @@ export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = as
 async function processSpeakerSegment(
     segment: FixTranscriptRequest['transcript'][0],
     cityName: string,
+    cityLanguage: CityLanguage,
     partiesWithPeople: FixTranscriptRequest['partiesWithPeople'],
     agendaItems: { name: string }[]
 ): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
@@ -113,6 +103,7 @@ async function processSpeakerSegment(
 
     const utteranceTexts = segment.utterances.map(u => u.text);
     const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, segment.speakerName || "(unknown)", utteranceTexts);
+    const systemPrompt = buildSystemPrompt(cityLanguage);
 
     let usage = NO_USAGE;
     let structureReminder = "";
@@ -164,6 +155,7 @@ async function processSpeakerSegment(
 async function fixSpeakerSegments(
     speakerSegments: FixTranscriptRequest['transcript'],
     cityName: string,
+    cityLanguage: CityLanguage,
     partiesWithPeople: FixTranscriptRequest['partiesWithPeople'],
     agendaItems: { name: string }[],
     onProgress: (stage: string, progress: number) => void
@@ -177,7 +169,7 @@ async function fixSpeakerSegments(
     for (let i = 0; i < speakerSegments.length; i += MAX_PARALLEL_API_CALLS) {
         const batch = speakerSegments.slice(i, i + MAX_PARALLEL_API_CALLS);
         const batchPromises = batch.map(segment =>
-            processSpeakerSegment(segment, cityName, partiesWithPeople, agendaItems)
+            processSpeakerSegment(segment, cityName, cityLanguage, partiesWithPeople, agendaItems)
         );
 
         const batchResults = await Promise.all(batchPromises);

@@ -1,7 +1,8 @@
 import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
-import { ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
+import { languageDirectiveSuffix } from "../lib/language.js";
+import { CityLanguage, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
 export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX';
 import { formatTopicLabels } from "../lib/promptUtils.js";
@@ -44,8 +45,8 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     const result = await aiChat<Omit<ExtractedSubject, "speakerContributions">[]>({
         model: "claude-opus-4-6",
         label: "agenda-extraction",
-        systemPrompt: getSystemPrompt(),
-        userPrompt: getUserPrompt(base64, request.cityName, request.date, request.people, request.topicLabels),
+        systemPrompt: getSystemPrompt(request.cityLanguage),
+        userPrompt: getUserPrompt(base64, request.cityName, request.cityLanguage, request.date, request.people, request.topicLabels),
         documentBase64: base64,
         outputFormat: {
             type: "json_schema",
@@ -109,6 +110,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         extracted.map((s, i) => extractedSubjectToApiSubject(
             { ...s, speakerContributions: [] },
             request.cityName,
+            request.cityLanguage,
             request.date
         ).then(r => {
             onProgress("enrichment", (i + 1) / extracted.length);
@@ -158,6 +160,7 @@ const downloadFileToBase64 = async (url: string) => {
 export const extractedSubjectToApiSubject = async (
     subject: ExtractedSubject,
     cityName: string,
+    cityLanguage: CityLanguage,
     date: string
 ) => {
     const id = generateSubjectUUID(subject, 36);
@@ -177,6 +180,7 @@ export const extractedSubjectToApiSubject = async (
 
     return enrichSubjectData(input, id, {
         cityName,
+        cityLanguage,
         date
     });
 }
@@ -217,7 +221,7 @@ export type ExtractedSubject = {
     proximityImportance: 'none' | 'near' | 'wide';
 }
 
-export const getSystemPrompt = () => {
+export const getSystemPrompt = (cityLanguage: CityLanguage) => {
     return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων στην Ελλάδα. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένας πίνακας (array) με objects με το ακόλουθο structure:
 
 {
@@ -237,10 +241,10 @@ export const getSystemPrompt = () => {
 
 ${IMPORTANCE_GUIDELINES}
 
-Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.`;
+Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.${languageDirectiveSuffix(cityLanguage)}`;
 }
 
-export const getUserPrompt = (agendaPdfBase64: string, cityName: string, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: TopicLabelInfo[]) => {
+export const getUserPrompt = (agendaPdfBase64: string, cityName: string, cityLanguage: CityLanguage, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: TopicLabelInfo[]) => {
     const formattedTopics = formatTopicLabels(topicLabels);
 
     return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.
@@ -259,5 +263,5 @@ ${JSON.stringify(people, null, 2)}
 Τα topic labels που μπορεί να έχουν τα θέματα είναι (χρησιμοποίησε ΜΟΝΟ το όνομα, πριν το —):
 ${formattedTopics}
 
-Παρακαλώ να εξάγεις ΟΛΑ τα θέματα από αυτό το έγγραφο.`;
+Παρακαλώ να εξάγεις ΟΛΑ τα θέματα από αυτό το έγγραφο.${languageDirectiveSuffix(cityLanguage)}`;
 }
