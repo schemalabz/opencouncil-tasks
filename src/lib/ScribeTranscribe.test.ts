@@ -132,6 +132,18 @@ describe("scribeResponseToTranscript", () => {
         expect(transcript.transcription.utterances).toHaveLength(1);
     });
 
+    it("normalizes the French ISO-639-3 code 'fra' to 'fr'", () => {
+        const frResponse: ScribeResponse = {
+            language_code: "fra",
+            language_probability: 0.99,
+            text: "Bonjour.",
+            words: scribeWords([["Bonjour.", 0, 0.5]]),
+            audio_duration_secs: 0.6,
+        };
+        const transcript = scribeResponseToTranscript(frResponse, 10);
+        expect(transcript.transcription.languages).toEqual(["fr"]);
+    });
+
     it("falls back to the last utterance end when audio_duration_secs is missing", () => {
         const transcript = scribeResponseToTranscript({ ...response, audio_duration_secs: null }, 35);
 

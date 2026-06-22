@@ -24,7 +24,7 @@ import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
-import { DiarizeResult } from './types.js';
+import { CityLanguage, DiarizeResult } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
@@ -32,6 +32,13 @@ import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
 
 const program = new Command();
 const app = getExpressAppWithCallbacks();
+
+// Commander coercion for the --language option: reject anything but el/fr so a
+// typo errors out instead of silently falling back to Greek.
+function parseLanguageOption(value: string): CityLanguage {
+    if (value !== 'el' && value !== 'fr') throw new InvalidArgumentError("expected 'el' or 'fr'");
+    return value;
+}
 
 // Mount MinIO file-serving routes when using local storage (needed for smoke tests)
 if (isUsingMinIO()) {
@@ -81,10 +88,11 @@ program
     .command('pipeline <youtubeUrl>')
     .description('Run the full pipeline on a YouTube video')
     .requiredOption('-O, --output-file <file>', 'Output file for the pipeline')
-    .action(async (youtubeUrl: string, options: { outputFile: string }) => {
+    .option('-l, --language <language>', 'Content language of the meeting (el|fr)', parseLanguageOption, 'el')
+    .action(async (youtubeUrl: string, options: { outputFile: string; language: CityLanguage }) => {
         console.log('Running pipeline, output to', options.outputFile);
         const result = await pipeline(
-            { youtubeUrl },
+            { youtubeUrl, cityLanguage: options.language },
             (stage: string, progressPercent: number) => {
                 process.stdout.write(`\rRunning pipeline... [${stage}] ${progressPercent.toFixed(2)}%`);
             }
@@ -124,8 +132,9 @@ program
     .command('transcribe-single <url>')
     .description('Transcribe an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
-    .action(async (url: string, options: { outputFile: string }) => {
-        const result = await transcribe({ segments: [{ url, start: 0 }] }, (stage: string, progressPercent: number) => {
+    .option('-l, --language <language>', 'Content language of the audio (el|fr)', parseLanguageOption, 'el')
+    .action(async (url: string, options: { outputFile: string; language: CityLanguage }) => {
+        const result = await transcribe({ segments: [{ url, start: 0 }], language: options.language }, (stage: string, progressPercent: number) => {
             process.stdout.write(`\rTranscribing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
 
@@ -140,7 +149,8 @@ program
     .description('Transcribe an audio file')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
     .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
-    .action(async (file: string, options: { outputFile: string; voiceprints?: string }) => {
+    .option('-l, --language <language>', 'Content language of the audio (el|fr)', parseLanguageOption, 'el')
+    .action(async (file: string, options: { outputFile: string; voiceprints?: string; language: CityLanguage }) => {
         const createProgressHandler = (stage: string) => {
             return (subStage: string, perc: number) => {
                 process.stdout.write(`\r${stage}:${subStage} ${perc.toFixed(2)}%`);
@@ -169,7 +179,8 @@ program
         }));
 
         const result = await transcribe({
-            segments
+            segments,
+            language: options.language
         }, createProgressHandler("transcribing"));
         console.log("Transcribed audio");
 
@@ -445,7 +456,8 @@ program
     .description('Run a full pipeline smoke test and validate the result')
     .option('-O, --output-file <file>', 'Save full result to a JSON file')
     .option('--skip-preflight', 'Skip the callback server reachability check')
-    .action(async (youtubeUrl: string | undefined, options: { outputFile?: string; skipPreflight?: boolean }) => {
+    .option('-l, --language <language>', 'Content language of the meeting (el|fr)', parseLanguageOption, 'el')
+    .action(async (youtubeUrl: string | undefined, options: { outputFile?: string; skipPreflight?: boolean; language: CityLanguage }) => {
         const url = youtubeUrl || process.env.SMOKE_TEST_VIDEO_URL || DEFAULT_SMOKE_TEST_VIDEO;
         console.log(`Running smoke test with: ${url}\n`);
 
@@ -520,7 +532,7 @@ program
         const startTime = Date.now();
         try {
             const result = await pipeline(
-                { youtubeUrl: url },
+                { youtubeUrl: url, cityLanguage: options.language },
                 (stage: string, progressPercent: number) => {
                     process.stdout.write(`\r  [${stage}] ${progressPercent.toFixed(2)}%`);
                 }

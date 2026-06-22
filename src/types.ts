@@ -34,13 +34,19 @@ export interface HealthResponse {
 export type MediaType = "audio" | "video";
 
 /*
+ * Content language of a city's meetings. Drives ASR language and the language
+ * of all LLM-generated output. Independent of the UI locale a user views the
+ * site in. Sent by the frontend on task requests alongside cityName.
+ */
+export type CityLanguage = 'el' | 'fr';
+
+/*
  * Task: Transcribe
  */
 
 export interface TranscribeRequest extends TaskRequest {
     youtubeUrl: string;
-    customVocabulary?: string[];
-    customPrompt?: string;
+    cityLanguage: CityLanguage;
     voiceprints?: Voiceprint[];
 }
 
@@ -122,6 +128,7 @@ export interface ProcessAgendaRequest extends TaskRequest {
     }[];
     topicLabels: TopicLabelInfo[];
     cityName: string;
+    cityLanguage: CityLanguage;
     date: string;
 }
 
@@ -258,6 +265,7 @@ export interface RequestOnTranscript extends TaskRequest {
     }[];
     topicLabels: TopicLabelInfo[];
     cityName: string;
+    cityLanguage: CityLanguage;
     administrativeBodyName: string;  // e.g., "Δημοτικό Συμβούλιο"
     partiesWithPeople: {
         name: string;

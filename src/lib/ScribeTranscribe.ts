@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import { fetch, Agent, FormData } from "undici";
-import { Transcript, Utterance, Word } from "../types.js";
+import { CityLanguage, Transcript, Utterance, Word } from "../types.js";
+import { getLanguageConfig } from "./language.js";
 
 dotenv.config();
 
@@ -179,10 +180,12 @@ function logprobToConfidence(logprob: number | null | undefined): number {
     return Math.min(1, Math.exp(logprob));
 }
 
-// Scribe uses ISO-639-3 codes ("ell"); downstream consumers expect the
-// two-letter codes Gladia produced ("el")
+// Scribe uses ISO-639-3 codes ("ell", "fra"); downstream consumers expect the
+// two-letter codes Gladia produced ("el", "fr")
 function normalizeLanguageCode(code: string): string {
-    return code === "ell" ? "el" : code;
+    if (code === "ell") return "el";
+    if (code === "fra") return "fr";
+    return code;
 }
 
 export function scribeResponseToTranscript(response: ScribeResponse, transcriptionTimeSeconds: number, logLabel = ""): Transcript {
@@ -208,6 +211,7 @@ export function scribeResponseToTranscript(response: ScribeResponse, transcripti
 type TranscribeRequest = {
     audioUrl: string;
     label: string; // identifies the segment in logs (15 requests can be in flight at once)
+    languageCode: string; // ISO-639-3 code sent to Scribe ("ell", "fra")
     resolve: (transcript: Transcript) => void;
     reject: (error: Error) => void;
 }
@@ -219,11 +223,12 @@ class ScribeTranscriber {
     // off until this time instead of piling more retries onto a full account
     private pausedUntil = 0;
 
-    async transcribe(request: { audioUrl: string; label?: string }): Promise<Transcript> {
+    async transcribe(request: { audioUrl: string; label?: string; language?: CityLanguage }): Promise<Transcript> {
         return new Promise((resolve, reject) => {
             this.queue.push({
                 audioUrl: request.audioUrl,
                 label: request.label ?? request.audioUrl.split('/').pop() ?? request.audioUrl,
+                languageCode: getLanguageConfig(request.language).scribeCode,
                 resolve,
                 reject,
             });
@@ -241,7 +246,7 @@ class ScribeTranscriber {
         console.log(`[Scribe] ${request.label}: starting (${this.activeTranscriptions}/${SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS} slots active, ${this.queue.length} queued)`);
 
         try {
-            const transcript = await this.transcribeSegment(request.audioUrl, request.label);
+            const transcript = await this.transcribeSegment(request.audioUrl, request.label, request.languageCode);
             request.resolve(transcript);
         } catch (error) {
             console.log(`[Scribe] ${request.label}: FAILED: ${error}`);
@@ -252,16 +257,16 @@ class ScribeTranscriber {
         }
     }
 
-    private async transcribeSegment(audioUrl: string, label: string): Promise<Transcript> {
+    private async transcribeSegment(audioUrl: string, label: string, languageCode: string): Promise<Transcript> {
         const startedAt = Date.now();
-        const response = await this.requestWithRetries(audioUrl, label);
+        const response = await this.requestWithRetries(audioUrl, label, languageCode);
         const elapsedSeconds = (Date.now() - startedAt) / 1000;
         const transcript = scribeResponseToTranscript(response, elapsedSeconds, label);
         console.log(`[Scribe] ${label}: transcribed ${(transcript.metadata.audio_duration / 60).toFixed(1)}min of audio in ${Math.round(elapsedSeconds)}s`);
         return transcript;
     }
 
-    private async requestWithRetries(audioUrl: string, label: string): Promise<ScribeResponse> {
+    private async requestWithRetries(audioUrl: string, label: string, languageCode: string): Promise<ScribeResponse> {
         let failures = 0;
         let saturationWaitMs = 0;
         let rateLimitStreak = 0;
@@ -274,7 +279,7 @@ class ScribeTranscriber {
                 await sleep(this.pausedUntil - Date.now() + Math.random() * 3000);
             }
 
-            const result = await this.attemptRequest(audioUrl);
+            const result = await this.attemptRequest(audioUrl, languageCode);
             if (result.ok) {
                 return result.response;
             }
@@ -310,7 +315,7 @@ class ScribeTranscriber {
         }
     }
 
-    private async attemptRequest(audioUrl: string): Promise<
+    private async attemptRequest(audioUrl: string, languageCode: string): Promise<
         { ok: true; response: ScribeResponse } |
         { ok: false; retryable: boolean; rateLimited?: boolean; retryAfterMs?: number; error: Error }
     > {
@@ -318,7 +323,7 @@ class ScribeTranscriber {
 
         const form = new FormData();
         form.append("model_id", "scribe_v2");
-        form.append("language_code", "ell");
+        form.append("language_code", languageCode);
         // Strips fillers and false starts, matching how transcript correctors write the record
         form.append("no_verbatim", "true");
         form.append("tag_audio_events", "false");

@@ -1,6 +1,7 @@
-import { Subject, SubjectContext, SpeakerContribution } from '../types.js';
+import { CityLanguage, Subject, SubjectContext, SpeakerContribution } from '../types.js';
 import { geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
+import { getLanguageConfig } from './language.js';
 import { ResultWithUsage, NO_USAGE_STATS, type UsageStats } from './ai.js';
 
 /**
@@ -25,6 +26,7 @@ export interface EnrichmentInput {
  */
 export interface EnrichmentConfig {
     cityName: string;
+    cityLanguage?: CityLanguage;
     administrativeBodyName?: string;
     date: string;
 }
@@ -69,7 +71,8 @@ export async function enrichSubjectData(
             subjectName: input.name,
             subjectDescription: input.description,
             cityName: config.cityName,
-            administrativeBodyName: config.administrativeBodyName || "Δημοτικό Συμβούλιο",
+            cityLanguage: config.cityLanguage,
+            administrativeBodyName: config.administrativeBodyName || getLanguageConfig(config.cityLanguage).defaultAdministrativeBodyName,
             date: config.date
         });
         context = contextResult.result;

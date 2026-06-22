@@ -1,6 +1,6 @@
 import { Task } from "./pipeline.js";
 import dotenv from 'dotenv';
-import { Transcript } from "../types.js";
+import { CityLanguage, Transcript } from "../types.js";
 import { scribeTranscriber, MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
 import { createScopedLogger } from "./utils/scopedLogger.js";
 import { formatTime } from "../utils.js";
@@ -11,11 +11,9 @@ const log = createScopedLogger("transcribe");
 
 export interface TranscribeArgs {
     segments: { url: string; start: number }[];
-    // Accepted for API compatibility but not sent to Scribe v2: the validated
-    // configuration uses no context prompt or vocabulary (Scribe's keyterms
-    // parameter exists but hasn't been benchmarked)
-    customVocabulary?: string[];
-    customPrompt?: string;
+    // Content language of the meeting; selects the Scribe ASR language. Defaults
+    // to Greek when omitted.
+    language?: CityLanguage;
 }
 
 const combineTranscripts = (transcripts: Transcript[]): Transcript => {
@@ -40,20 +38,16 @@ const combineTranscripts = (transcripts: Transcript[]): Transcript => {
     return combinedTranscript;
 }
 
-export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, customVocabulary, customPrompt }, onProgress) => {
+export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, language }, onProgress) => {
     let completedSegments = 0;
     const totalSegments = segments.length;
     const startedAt = Date.now();
-
-    if (customVocabulary?.length || customPrompt) {
-        log("Note: customVocabulary/customPrompt are not used with Scribe v2, ignoring");
-    }
 
     const segmentLabel = (index: number) => `segment ${index + 1}/${totalSegments} @ ${formatTime(segments[index].start)}`;
 
     const transcribeSegment = async ({ url, start }: TranscribeArgs['segments'][0], index: number) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-        const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl, label: segmentLabel(index) });
+        const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl, label: segmentLabel(index), language });
 
         // Audio longer than any segment can be means the file doesn't belong
         // to this run's segmentation (stale upload or CDN cache). Its

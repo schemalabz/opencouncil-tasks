@@ -4,8 +4,9 @@
  */
 
 import { IMPORTANCE_GUIDELINES } from "../../lib/importanceGuidelines.js";
+import { languageDirectiveSuffix } from "../../lib/language.js";
 import { formatTopicLabels } from "../../lib/promptUtils.js";
-import { TopicLabelInfo } from "../../types.js";
+import { CityLanguage, TopicLabelInfo } from "../../types.js";
 
 /**
  * Markdown reference format instructions (used in multiple prompts)
@@ -58,6 +59,7 @@ export const MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS = `
  */
 export function getBatchProcessingSystemPrompt(metadata: {
   cityName: string;
+  cityLanguage?: CityLanguage;
   date: string;
   topicLabels: TopicLabelInfo[];
   administrativeBodyName?: string;
@@ -445,14 +447,14 @@ MEETING PROGRESS SUMMARY (ΝΕΟ ΠΕΔΙΟ):
 
 ${metadata.additionalInstructions || ''}
 
-ΣΗΜΑΝΤΙΚΟ: Απάντησε ΜΟΝΟ με JSON, χωρίς επεξηγήσεις ή σχόλια.
+ΣΗΜΑΝΤΙΚΟ: Απάντησε ΜΟΝΟ με JSON, χωρίς επεξηγήσεις ή σχόλια.${languageDirectiveSuffix(metadata.cityLanguage)}
 `;
 }
 
 /**
  * System prompt for generating speaker contributions for a specific subject.
  */
-export function getSpeakerContributionsSystemPrompt(administrativeBodyName?: string): string {
+export function getSpeakerContributionsSystemPrompt(administrativeBodyName?: string, cityLanguage?: CityLanguage): string {
   const bodyInfo = administrativeBodyName
     ? ` Το όργανο είναι: ${administrativeBodyName}.`
     : '';
@@ -583,6 +585,6 @@ ${MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS}
   * Ομιλητές με ΜΟΝΟ διαδικαστικά (ανακοινώσεις διαλειμμάτων, εισαγωγή χωρίς θέση)
 - **ΑΝ ο Πρόεδρος έχει και διαδικαστικά ΚΑΙ ουσιαστική τοποθέτηση:**
   * Περίλαβε ΜΟΝΟ την ουσιαστική τοποθέτηση
-  * Αγνόησε τα διαδικαστικά μέρη
+  * Αγνόησε τα διαδικαστικά μέρη${languageDirectiveSuffix(cityLanguage)}
 `;
 }
