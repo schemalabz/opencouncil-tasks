@@ -1,7 +1,7 @@
 import { createMuxAsset } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile } from "./utils/mediaOperations.js";
+import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile, computeUpscalePlan } from "./utils/mediaOperations.js";
 
 /**
  * Merge consecutive video segments to simplify FFmpeg operations
@@ -151,6 +151,18 @@ export const generateHighlight: Task<
       partProgress(10);
     }
 
+    // Resolve the minimum-resolution upscale (default path only; social has its
+    // own sizing). The effective dimensions drive caption/overlay preset lookup
+    // so text is sized for the post-scale frame, not the source.
+    const upscale = computeUpscalePlan(
+      isSocial ? undefined : render.minResolution,
+      inputVideoWidth,
+      inputVideoHeight,
+    );
+    if (upscale.filter) {
+      console.log(`⬆️  Upscaling ${inputVideoWidth}x${inputVideoHeight} → ${upscale.width}x${upscale.height} to meet minResolution=${render.minResolution}; output quality is bounded by the source resolution.`);
+    }
+
     // Step 1: Social transformation (if needed)
     let baseFilter = '';
     if (isSocial) {
@@ -169,7 +181,7 @@ export const generateHighlight: Task<
     let speakerFilter = '';
     if (render.includeSpeakerOverlay) {
       console.log(`👤 Generating speaker overlays for ${adjustedUtterances.length} utterances`);
-      speakerFilter = await generateSpeakerOverlayFilter(adjustedUtterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
+      speakerFilter = await generateSpeakerOverlayFilter(adjustedUtterances, aspectRatio, upscale.width, upscale.height);
       partProgress(isSocial ? 18 : 10);
     }
 
@@ -178,12 +190,14 @@ export const generateHighlight: Task<
     let captionFilter = '';
     if (render.includeCaptions) {
       console.log(`📝 Generating captions for ${adjustedUtterances.length} utterances in ${aspectRatio} format`);
-      captionFilter = await generateCaptionFilters(adjustedUtterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
+      captionFilter = await generateCaptionFilters(adjustedUtterances, aspectRatio, upscale.width, upscale.height);
       partProgress(isSocial ? 20 : 15);
     }
 
-    // Combine all filters in the correct order
-    const filterParts = [baseFilter, speakerFilter, captionFilter].filter(f => f.length > 0);
+    // Combine all filters in the correct order. The upscale must run first, on
+    // the raw concatenated frames, so captions/overlays are drawn at the
+    // post-scale pixel positions their presets assume.
+    const filterParts = [upscale.filter, baseFilter, speakerFilter, captionFilter].filter(f => f.length > 0);
     if (filterParts.length > 0) {
       videoFilters = filterParts.join(',');
       console.log(`🎬 Combined filter chain: ${filterParts.length} filter(s)`);

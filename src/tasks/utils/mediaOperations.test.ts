@@ -11,6 +11,7 @@ import {
   calculateSpeakerDisplaySegments,
   wrapSpeakerText,
   formatSpeakerInfo,
+  computeUpscalePlan,
 } from './mediaOperations.js';
 
 describe('normalizeUtteranceTimestamps', () => {
@@ -135,6 +136,59 @@ describe('getPresetConfig', () => {
     // 1280x720 → look up swapped 720x1280 → returns { width: 720, height: 1280 }
     expect(dimensions.width).toBe(720);
     expect(dimensions.height).toBe(1280);
+  });
+
+  it('returns the dedicated preset for upscaled 16:9 resolutions', () => {
+    const { config, dimensions } = getPresetConfig('1920x1080', 'default');
+    expect(dimensions).toEqual({ width: 1920, height: 1080 });
+    expect(config.caption['default'].startFont).toBe(48);
+    expect(config.overlay['default'].baseFontSize).toBe(42);
+  });
+
+  it('still falls back to the first (social-capable) preset when a swap-matched preset has no social config', () => {
+    // 1080x1920 → swapped 1920x1080 exists but is default-only. Using it would
+    // leave the social config undefined, so it must fall back to 1280x720.
+    const { config } = getPresetConfig('1080x1920', 'social-9x16');
+    expect(config.caption['social-9x16']).toBeDefined();
+    expect(config.overlay['social-9x16']).toBeDefined();
+  });
+});
+
+describe('computeUpscalePlan', () => {
+  it('returns no filter when no minResolution is requested', () => {
+    const plan = computeUpscalePlan(undefined, 1280, 720);
+    expect(plan.filter).toBe('');
+    expect(plan).toMatchObject({ width: 1280, height: 720 });
+  });
+
+  it('passes through (and defaults) when source dimensions are unknown', () => {
+    const plan = computeUpscalePlan('1080p', undefined, undefined);
+    expect(plan.filter).toBe('');
+    expect(plan).toMatchObject({ width: 1280, height: 720 });
+  });
+
+  it('does not downscale a source already at or above the target', () => {
+    expect(computeUpscalePlan('1080p', 1920, 1080).filter).toBe('');
+    const taller = computeUpscalePlan('720p', 1920, 1080);
+    expect(taller.filter).toBe('');
+    expect(taller).toMatchObject({ width: 1920, height: 1080 });
+  });
+
+  it('upscales a sub-target 16:9 source to the target height', () => {
+    const plan = computeUpscalePlan('1080p', 1280, 720);
+    expect(plan).toEqual({
+      filter: 'scale=1920:1080:flags=lanczos,setsar=1',
+      width: 1920,
+      height: 1080,
+    });
+  });
+
+  it('rounds the derived width up to an even number for libx264', () => {
+    // 1282x720 → 1282*1080/720 = 1923 (odd) → bumped to 1924
+    const plan = computeUpscalePlan('1080p', 1282, 720);
+    expect(plan.width % 2).toBe(0);
+    expect(plan.width).toBe(1924);
+    expect(plan.filter).toBe('scale=1924:1080:flags=lanczos,setsar=1');
   });
 });
 

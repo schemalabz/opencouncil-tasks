@@ -4,7 +4,7 @@ import { ffmpegPath } from '../../lib/ffmpegPath.js';
 import fs from "fs";
 import { promisify } from "util";
 import { uploadToSpaces } from "../uploadToSpaces.js";
-import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
+import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio, MinResolution } from "../../types.js";
 
 const execAsync = promisify(cp.exec);
 
@@ -134,7 +134,140 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
             // NOTE: social-9x16 Defaults to 1080p's social-9x16 preset
         },
     },
+    // The presets below back the `render.minResolution` upscale path. Values are
+    // scaled proportionally from the 1280x720 'default' preset (x1.5 / x2 / x3) so
+    // captions and overlays stay legible on the larger frame. They carry no
+    // social-9x16 sub-config: minResolution only applies to the 16:9 ('default')
+    // path, and the social swap-lookup falls back when no social config exists.
+    // Keyed for 16:9 output; non-16:9 upscales fall back to the 1280x720 preset.
+    // 1920x1080 (Full HD)
+    "1920x1080": {
+        caption: {
+            'default': {
+                startFont: 48,
+                maxFont: 54,
+                bottomPadding: 210,
+                sidePadding: 45,
+                maxLines: 3
+            },
+        },
+        overlay: {
+            'default': {
+                topPadding: 30,
+                leftPadding: 30,
+                baseFontSize: 42,
+                maxWidth: 675,
+                paddingH: 18,
+                paddingV: 12,
+                lineSpacing: 6,
+                accentWidth: 5,
+            },
+        },
+    },
+    // 2560x1440 (QHD)
+    "2560x1440": {
+        caption: {
+            'default': {
+                startFont: 64,
+                maxFont: 72,
+                bottomPadding: 280,
+                sidePadding: 60,
+                maxLines: 3
+            },
+        },
+        overlay: {
+            'default': {
+                topPadding: 40,
+                leftPadding: 40,
+                baseFontSize: 56,
+                maxWidth: 900,
+                paddingH: 24,
+                paddingV: 16,
+                lineSpacing: 8,
+                accentWidth: 6,
+            },
+        },
+    },
+    // 3840x2160 (4K UHD)
+    "3840x2160": {
+        caption: {
+            'default': {
+                startFont: 96,
+                maxFont: 108,
+                bottomPadding: 420,
+                sidePadding: 90,
+                maxLines: 3
+            },
+        },
+        overlay: {
+            'default': {
+                topPadding: 60,
+                leftPadding: 60,
+                baseFontSize: 84,
+                maxWidth: 1350,
+                paddingH: 36,
+                paddingV: 24,
+                lineSpacing: 12,
+                accentWidth: 9,
+            },
+        },
+    },
 };
+
+// Minimum output height (px) for each supported minResolution tier.
+const MIN_RESOLUTION_HEIGHT: Record<MinResolution, number> = {
+    '720p': 720,
+    '1080p': 1080,
+    '1440p': 1440,
+    '2160p': 2160,
+};
+
+/**
+ * Work out how to satisfy a `minResolution` floor for the default (16:9) path.
+ *
+ * Returns the ffmpeg scale filter (empty when no scaling is needed) plus the
+ * effective output dimensions, which callers feed into `getPresetConfig` so
+ * caption/overlay sizing matches the post-scale frame rather than the source.
+ *
+ * Behaviour:
+ * - No target, or unknown source dimensions: no scaling, dimensions pass through
+ *   (falling back to 1280x720 when unknown, matching the rest of the pipeline).
+ * - Source already at or above the target height: no scaling (this is a floor,
+ *   never a downscale).
+ * - Source below the target: scale to the target height, width derived from the
+ *   source aspect ratio and rounded to an even number (libx264 requires even
+ *   dimensions). The width is written explicitly into the filter so the filter
+ *   and the dimensions used for preset lookup cannot diverge. `setsar=1` keeps
+ *   anamorphic (non-square-pixel) sources displaying correctly.
+ */
+export function computeUpscalePlan(
+    minResolution: MinResolution | undefined,
+    inputWidth: number | undefined,
+    inputHeight: number | undefined,
+): { filter: string; width: number; height: number } {
+    const passthroughWidth = inputWidth ?? 1280;
+    const passthroughHeight = inputHeight ?? 720;
+
+    if (!minResolution || !inputWidth || !inputHeight) {
+        return { filter: '', width: passthroughWidth, height: passthroughHeight };
+    }
+
+    const targetHeight = MIN_RESOLUTION_HEIGHT[minResolution];
+    if (inputHeight >= targetHeight) {
+        return { filter: '', width: inputWidth, height: inputHeight };
+    }
+
+    let scaledWidth = Math.round((inputWidth * targetHeight) / inputHeight);
+    if (scaledWidth % 2 !== 0) {
+        scaledWidth += 1;
+    }
+
+    return {
+        filter: `scale=${scaledWidth}:${targetHeight}:flags=lanczos,setsar=1`,
+        width: scaledWidth,
+        height: targetHeight,
+    };
+}
 
 /**
  * Get preset configuration and dimensions for a given resolution and aspect ratio
@@ -149,16 +282,20 @@ export function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
     if (aspectRatio === 'social-9x16') {
         const [width, height] = resolution.split('x').map(n => parseInt(n, 10));
         const swappedResolution = `${height}x${width}`;
-        
-        // Try exact match first
-        if (RESOLUTION_PRESETS[swappedResolution]) {
+
+        // Use the swap-matched preset only if it actually carries a social-9x16
+        // config; otherwise fall back. Some presets are default-only (e.g. the
+        // minResolution upscale presets and 640x360), and returning one here
+        // would leave callers with an undefined social config and throw.
+        const swapped = RESOLUTION_PRESETS[swappedResolution];
+        if (swapped && swapped.caption['social-9x16'] && swapped.overlay['social-9x16']) {
             return {
-                config: RESOLUTION_PRESETS[swappedResolution],
+                config: swapped,
                 dimensions: { width: height, height: width } // Swapped for social
             };
         }
-        
-        // Fallback: use first available preset for social
+
+        // Fallback: first preset that has a social config (1280x720 ships one).
         const firstPresetKey = Object.keys(RESOLUTION_PRESETS)[0];
         const [fallbackWidth, fallbackHeight] = firstPresetKey.split('x').map(n => parseInt(n, 10));
         return {
