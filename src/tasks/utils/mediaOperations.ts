@@ -304,7 +304,7 @@ export function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
         };
     }
     
-    // Default aspect ratio - direct lookup with fallback
+    // Default aspect ratio - exact lookup first
     if (RESOLUTION_PRESETS[resolution]) {
         const [width, height] = resolution.split('x').map(n => parseInt(n, 10));
         return {
@@ -312,8 +312,28 @@ export function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
             dimensions: { width, height }
         };
     }
-    
-    // Fallback: use first available preset
+
+    const [reqWidth, reqHeight] = resolution.split('x').map(n => parseInt(n, 10));
+
+    // No exact match: pick the preset whose height is closest to the requested
+    // one. Upscaled frames rarely land on an exact preset key (e.g. a 1282x720
+    // source becomes 1924x1080), so matching on height keeps caption/overlay
+    // sizing tied to the real output resolution instead of always collapsing to
+    // the smallest preset.
+    if (Number.isFinite(reqHeight)) {
+        const nearest = Object.keys(RESOLUTION_PRESETS)
+            .map(key => {
+                const [width, height] = key.split('x').map(n => parseInt(n, 10));
+                return { key, width, height };
+            })
+            .sort((a, b) => Math.abs(a.height - reqHeight) - Math.abs(b.height - reqHeight))[0];
+        return {
+            config: RESOLUTION_PRESETS[nearest.key],
+            dimensions: { width: nearest.width, height: nearest.height }
+        };
+    }
+
+    // Unparseable resolution: fall back to the first preset.
     const firstPresetKey = Object.keys(RESOLUTION_PRESETS)[0];
     const [fallbackWidth, fallbackHeight] = firstPresetKey.split('x').map(n => parseInt(n, 10));
     return {

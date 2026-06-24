@@ -126,9 +126,19 @@ describe('getPresetConfig', () => {
     expect(config.caption['default'].startFont).toBe(32);
   });
 
-  it('falls back to first preset for unknown resolution', () => {
-    const { config } = getPresetConfig('9999x9999', 'default');
+  it('matches the nearest-height preset for an unknown resolution', () => {
+    // 9999 height is closest to the 2160 preset.
+    const { config, dimensions } = getPresetConfig('9999x9999', 'default');
     expect(config.caption['default']).toBeDefined();
+    expect(dimensions.height).toBe(2160);
+  });
+
+  it('uses the nearest-height preset for upscaled non-standard widths', () => {
+    // A 1282x720 source upscaled to 1080p becomes 1924x1080 — no exact key, but
+    // it must size captions/overlays for 1080p, not collapse to 720p.
+    const { config } = getPresetConfig('1924x1080', 'default');
+    expect(config.caption['default'].startFont).toBe(48);
+    expect(config.overlay['default'].baseFontSize).toBe(42);
   });
 
   it('swaps dimensions for social-9x16', () => {
