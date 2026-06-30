@@ -180,6 +180,38 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
 };
 
 /**
+ * Pick the landscape preset best suited to render a 9:16 social clip from a
+ * landscape source of the given resolution.
+ *
+ * Presets are keyed by landscape resolution but not all carry a social-9x16
+ * config, so we only consider those that do. An exact match wins; otherwise we
+ * take the preset whose height is nearest the source height, preferring the
+ * larger preset on a tie. This caps social output at the largest social-capable
+ * preset (1920x1080 → 1080x1920) and guarantees a defined social config, so a
+ * source like 640x360 (default-only) safely borrows 1280x720 instead of throwing.
+ */
+function findSocialPresetKey(resolution: string): string {
+    const socialKeys = Object.keys(RESOLUTION_PRESETS).filter(
+        k => RESOLUTION_PRESETS[k].caption['social-9x16'] && RESOLUTION_PRESETS[k].overlay['social-9x16']
+    );
+
+    if (socialKeys.includes(resolution)) {
+        return resolution;
+    }
+
+    const srcHeight = parseInt(resolution.split('x')[1], 10);
+    return socialKeys.reduce((best, key) => {
+        const keyHeight = parseInt(key.split('x')[1], 10);
+        const bestHeight = parseInt(best.split('x')[1], 10);
+        const dKey = Math.abs(keyHeight - srcHeight);
+        const dBest = Math.abs(bestHeight - srcHeight);
+        if (dKey < dBest) return key;
+        if (dKey === dBest && keyHeight > bestHeight) return key; // tie → larger preset
+        return best;
+    });
+}
+
+/**
  * Get preset configuration and dimensions for a given resolution and aspect ratio
  * Handles 9:16 aspect ratio by finding corresponding 16:9 preset
  * Uses sequential fallback (first available preset) if exact match not found
@@ -188,25 +220,14 @@ export function getPresetConfig(resolution: string, aspectRatio: AspectRatio): {
     config: ResolutionPreset;
     dimensions: { width: number; height: number };
 } {
-    // Handle 9:16 aspect ratio by finding corresponding 16:9 preset
+    // Handle 9:16 aspect ratio by finding the matching landscape preset (presets
+    // are landscape-keyed) and swapping its dimensions to portrait for the output.
     if (aspectRatio === 'social-9x16') {
-        const [width, height] = resolution.split('x').map(n => parseInt(n, 10));
-        const swappedResolution = `${height}x${width}`;
-        
-        // Try exact match first
-        if (RESOLUTION_PRESETS[swappedResolution]) {
-            return {
-                config: RESOLUTION_PRESETS[swappedResolution],
-                dimensions: { width: height, height: width } // Swapped for social
-            };
-        }
-        
-        // Fallback: use first available preset for social
-        const firstPresetKey = Object.keys(RESOLUTION_PRESETS)[0];
-        const [fallbackWidth, fallbackHeight] = firstPresetKey.split('x').map(n => parseInt(n, 10));
+        const presetKey = findSocialPresetKey(resolution);
+        const [presetWidth, presetHeight] = presetKey.split('x').map(n => parseInt(n, 10));
         return {
-            config: RESOLUTION_PRESETS[firstPresetKey],
-            dimensions: { width: fallbackHeight, height: fallbackWidth } // Swapped for social
+            config: RESOLUTION_PRESETS[presetKey],
+            dimensions: { width: presetHeight, height: presetWidth } // Swapped landscape→portrait
         };
     }
     
