@@ -8,7 +8,7 @@ import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 
 dotenv.config();
 
-const DEFAULT_VIDEO_QUALITY = "720";
+const DEFAULT_VIDEO_QUALITY = "1080";
 const YTDLP_BIN_PATH = process.env.YTDLP_BIN_PATH;
 
 export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {

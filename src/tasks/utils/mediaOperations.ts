@@ -68,6 +68,8 @@ type ResolutionPreset = {
 
 const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
     // 1280x720 (HD)
+    // NOTE: keep this first — getPresetConfig falls back to the first key for
+    // unknown input resolutions, and 720p font/padding values are the safest default.
     "1280x720": {
         caption: {
             'default': {
@@ -108,6 +110,47 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
             },
         },
     },
+    // 1920x1080 (Full HD) — values scaled 1.5x from the 1280x720 preset
+    "1920x1080": {
+        caption: {
+            'default': {
+                startFont: 48,
+                maxFont: 54,
+                bottomPadding: 210,
+                sidePadding: 45,
+                maxLines: 3
+            },
+            'social-9x16': {
+                startFont: 48,
+                maxFont: 60,
+                bottomPadding: 600,
+                sidePadding: 45,
+                maxLines: 6
+            },
+        },
+        overlay: {
+            'default': {
+                topPadding: 30,
+                leftPadding: 30,
+                baseFontSize: 42,
+                maxWidth: 675,
+                paddingH: 18,
+                paddingV: 12,
+                lineSpacing: 6,
+                accentWidth: 4,
+            },
+            'social-9x16': {
+                topPadding: 525,
+                leftPadding: 30,
+                baseFontSize: 30,
+                maxWidth: 675,
+                paddingH: 18,
+                paddingV: 12,
+                lineSpacing: 6,
+                accentWidth: 4,
+            },
+        },
+    },
     // 640x360 (nHD)
     "640x360": {
         caption: {
@@ -118,7 +161,7 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
                 sidePadding: 15,
                 maxLines: 3
             }
-            // NOTE: social-9x16 Defaults to 1080p's social-9x16 preset
+            // NOTE: social-9x16 falls back to the first preset's (1280x720) social-9x16 config
         },
         overlay: {
             'default': {
@@ -131,7 +174,7 @@ const RESOLUTION_PRESETS: Record<string, ResolutionPreset> = {
                 lineSpacing: 3,
                 accentWidth: 2,
             }
-            // NOTE: social-9x16 Defaults to 1080p's social-9x16 preset
+            // NOTE: social-9x16 falls back to the first preset's (1280x720) social-9x16 config
         },
     },
 };
