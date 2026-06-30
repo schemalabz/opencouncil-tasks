@@ -132,9 +132,31 @@ describe('getPresetConfig', () => {
 
   it('swaps dimensions for social-9x16', () => {
     const { dimensions } = getPresetConfig('1280x720', 'social-9x16');
-    // 1280x720 → look up swapped 720x1280 → returns { width: 720, height: 1280 }
+    // 720p landscape source → 720x1280 portrait canvas
     expect(dimensions.width).toBe(720);
     expect(dimensions.height).toBe(1280);
+  });
+
+  it('produces a 1080x1920 portrait canvas from a 1080p source', () => {
+    const { dimensions, config } = getPresetConfig('1920x1080', 'social-9x16');
+    expect(dimensions.width).toBe(1080);
+    expect(dimensions.height).toBe(1920);
+    // config comes from the matched 1080p preset, so it carries a social config
+    expect(config.caption['social-9x16']).toBeDefined();
+  });
+
+  it('caps social output at 1080p for larger-than-1080p sources', () => {
+    const { dimensions } = getPresetConfig('3840x2160', 'social-9x16');
+    expect(dimensions.width).toBe(1080);
+    expect(dimensions.height).toBe(1920);
+  });
+
+  it('borrows a social-capable preset for default-only resolutions (no throw)', () => {
+    // 640x360 has no social config; nearest social-capable preset is 1280x720
+    const { dimensions, config } = getPresetConfig('640x360', 'social-9x16');
+    expect(dimensions.width).toBe(720);
+    expect(dimensions.height).toBe(1280);
+    expect(config.caption['social-9x16']).toBeDefined();
   });
 });
 
