@@ -252,6 +252,26 @@ export async function getVideoResolution(videoPath: string): Promise<{width: num
 }
 
 /**
+ * Get a media file's duration in seconds using ffprobe.
+ * Works for both audio and video containers (reads the format-level duration).
+ * @param filePath Path to the media file
+ * @returns Promise<number> Duration in seconds
+ */
+export async function getMediaDurationSeconds(filePath: string): Promise<number> {
+    const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
+    const command = `${ffprobePath} -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`;
+
+    const { stdout } = await execAsync(command);
+    const duration = parseFloat(stdout.trim());
+
+    if (isNaN(duration) || duration <= 0) {
+        throw new Error(`Invalid media duration from ffprobe: "${stdout.trim()}" for ${filePath}`);
+    }
+
+    return duration;
+}
+
+/**
  * Generate FFmpeg filter for social-9x16 transformation
  * Converts any input aspect ratio to 9:16 output with configurable margins and zoom
  * Now size-agnostic - works with any input dimensions

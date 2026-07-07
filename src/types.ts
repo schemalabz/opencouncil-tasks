@@ -48,6 +48,12 @@ export interface TranscribeRequest extends TaskRequest {
     youtubeUrl: string;
     cityLanguage: CityLanguage;
     voiceprints?: Voiceprint[];
+    // Expected length of the recording in seconds (livestream wall-clock:
+    // actualEndTime - actualStartTime). When set, the pipeline verifies the
+    // downloaded media is at least this long; a clearly shorter file means the
+    // VOD was still processing and yt-dlp captured a partial recording, so the
+    // download is dropped and the task fails for the caller to retry later.
+    expectedDurationSeconds?: number;
 }
 
 export type TranscriptWithUtteranceDrifts = Transcript & {

@@ -2,6 +2,13 @@ import { describe, it, expect, vi } from "vitest";
 import { createPipeline, type PipelineDeps } from "./pipeline.js";
 import type { Transcript, TranscriptWithSpeakerIdentification, DiarizationSpeaker } from "../types.js";
 
+// The completeness check probes the downloaded file's duration via ffprobe; stub it
+// so tests drive "complete" vs "partial" without touching the filesystem.
+const { mockGetMediaDurationSeconds } = vi.hoisted(() => ({ mockGetMediaDurationSeconds: vi.fn() }));
+vi.mock("./utils/mediaOperations.js", () => ({
+    getMediaDurationSeconds: mockGetMediaDurationSeconds,
+}));
+
 const fakeDiarization = [{ start: 0, end: 10, speaker: "SPEAKER_00" }];
 const fakeSpeakers: DiarizationSpeaker[] = [{ speaker: "SPEAKER_00", match: null, confidence: {} }];
 const fakeTranscript: Transcript = {
@@ -166,6 +173,32 @@ describe("createPipeline", () => {
         await pipeline(baseRequest, vi.fn());
 
         expect(deps.createMuxAsset).toHaveBeenCalledWith("https://cdn.example.com/video.mp4");
+    });
+
+    it("completeness — rejects and skips downstream work when the download is a partial recording", async () => {
+        mockGetMediaDurationSeconds.mockResolvedValue(1000); // got 1000s of a ~7200s stream
+        const deps = createStubDeps();
+        const pipeline = createPipeline(deps);
+
+        await expect(
+            pipeline({ ...baseRequest, expectedDurationSeconds: 7200 }, vi.fn()),
+        ).rejects.toThrow("INCOMPLETE_RECORDING");
+
+        // Failed before any expensive downstream step
+        expect(deps.downloadYTV).toHaveBeenCalledOnce();
+        expect(deps.diarize).not.toHaveBeenCalled();
+        expect(deps.transcribe).not.toHaveBeenCalled();
+    });
+
+    it("completeness — proceeds when the downloaded duration is within tolerance", async () => {
+        mockGetMediaDurationSeconds.mockResolvedValue(7100); // ~7200s expected, well within tolerance
+        const deps = createStubDeps();
+        const pipeline = createPipeline(deps);
+
+        const result = await pipeline({ ...baseRequest, expectedDurationSeconds: 7200 }, vi.fn());
+
+        expect(result.transcript).toEqual(fakeDiarizedTranscript);
+        expect(deps.diarize).toHaveBeenCalledOnce();
     });
 
     it("data flow — split audio segments are uploaded and passed to transcribe", async () => {

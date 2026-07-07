@@ -10,10 +10,23 @@ import { uploadToSpaces } from "./uploadToSpaces.js";
 import { type UploadFilesArgs } from "./uploadToSpaces.js";
 import { createMuxAsset, deleteMuxAsset, type MuxResult } from "../lib/mux.js";
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
+import { getMediaDurationSeconds } from "./utils/mediaOperations.js";
+import fs from "fs";
 import _ from 'underscore';
 import dotenv from "dotenv";
 
 dotenv.config();
+
+/**
+ * Completeness thresholds for a downloaded recording vs its expected (livestream)
+ * duration. A file counts as an incomplete/partial download only when it is BOTH
+ * proportionally short (below COMPLETENESS_RATIO of expected) AND absolutely short
+ * (missing more than MIN_SHORTFALL_SECONDS). The absolute floor avoids false alarms
+ * on the normal small gap between a livestream's wall-clock length and its archived
+ * VOD (trimmed pre-roll, minor reconnect gaps).
+ */
+const COMPLETENESS_RATIO = 0.9;
+const MIN_SHORTFALL_SECONDS = 120;
 
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
@@ -35,6 +48,34 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
         };
 
         const { audioOnly, combined, sourceType } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+
+        // Verify the recording is complete before doing any expensive downstream work.
+        // Right after a YouTube livestream ends, the archived VOD may still be processing,
+        // so yt-dlp can capture a truncated recording that still passes the >0-bytes check.
+        // If we downloaded something clearly shorter than the livestream's wall-clock length,
+        // drop the partial files (so the next attempt re-downloads instead of reusing the
+        // cached partial) and fail — the caller retries once the VOD has finished processing.
+        if (request.expectedDurationSeconds && request.expectedDurationSeconds > 0) {
+            const expected = request.expectedDurationSeconds;
+            const actualDuration = await getMediaDurationSeconds(combined);
+            const shortfall = expected - actualDuration;
+
+            if (actualDuration < expected * COMPLETENESS_RATIO && shortfall > MIN_SHORTFALL_SECONDS) {
+                for (const file of [combined, audioOnly]) {
+                    try {
+                        if (fs.existsSync(file)) fs.unlinkSync(file);
+                    } catch (cleanupErr) {
+                        console.warn(`Failed to remove partial download ${file}:`, cleanupErr);
+                    }
+                }
+                throw new Error(
+                    `INCOMPLETE_RECORDING: downloaded ${Math.round(actualDuration)}s but expected ~${Math.round(expected)}s ` +
+                    `(VOD likely still processing); dropped partial files so the next attempt re-downloads`
+                );
+            }
+
+            console.log(`Recording completeness OK: ${Math.round(actualDuration)}s vs expected ~${Math.round(expected)}s`);
+        }
 
         // Only upload video if it's not already from our CDN
         const isCdnUrl = sourceType === 'CDN';
