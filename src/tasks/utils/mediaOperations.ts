@@ -6,7 +6,6 @@ import { promisify } from "util";
 import { uploadToSpaces } from "../uploadToSpaces.js";
 import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
 
-const execAsync = promisify(cp.exec);
 const execFileAsync = promisify(cp.execFile);
 
 // Create data directory if it doesn't exist
@@ -218,11 +217,16 @@ export async function getVideoResolution(videoPath: string): Promise<{width: num
         
         // Resolve ffprobe path: allow override via env, fallback to system ffprobe
         const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
-        
-        // Use ffprobe to get video stream dimensions
-        const command = `${ffprobePath} -v quiet -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${videoPath}"`;
-        
-        const { stdout, stderr } = await execAsync(command);
+
+        // execFile (no shell) so the video path is passed as an argv value and a path
+        // with shell metacharacters can't be interpreted by a shell.
+        const { stdout, stderr } = await execFileAsync(ffprobePath, [
+            '-v', 'quiet',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=width,height',
+            '-of', 'csv=p=0',
+            videoPath,
+        ]);
         
         if (stderr) {
             console.warn(`⚠️ ffprobe stderr: ${stderr}`);
