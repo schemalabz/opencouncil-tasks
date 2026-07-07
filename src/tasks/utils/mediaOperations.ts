@@ -7,6 +7,7 @@ import { uploadToSpaces } from "../uploadToSpaces.js";
 import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
 
 const execAsync = promisify(cp.exec);
+const execFileAsync = promisify(cp.execFile);
 
 // Create data directory if it doesn't exist
 const dataDir = process.env.DATA_DIR || "./data";
@@ -259,9 +260,15 @@ export async function getVideoResolution(videoPath: string): Promise<{width: num
  */
 export async function getMediaDurationSeconds(filePath: string): Promise<number> {
     const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
-    const command = `${ffprobePath} -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`;
 
-    const { stdout } = await execAsync(command);
+    // execFile (no shell) so a path containing shell metacharacters is treated as
+    // data, not expanded/executed.
+    const { stdout } = await execFileAsync(ffprobePath, [
+        '-v', 'quiet',
+        '-show_entries', 'format=duration',
+        '-of', 'csv=p=0',
+        filePath,
+    ]);
     const duration = parseFloat(stdout.trim());
 
     if (isNaN(duration) || duration <= 0) {
