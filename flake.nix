@@ -28,7 +28,9 @@
           buildInputs = [
             pkgs.nodejs
             pkgs.nodePackages.npm
-            pkgs.deno
+            # Deno from unstable: yt-dlp's EJS runtime needs Deno >= 2.3.0;
+            # nixpkgs-24.11 ships 2.1.4, which yt-dlp rejects as unsupported.
+            pkgs-unstable.deno
             pkgs.minio
             pkgs.minio-client
             pkgs.cachix
@@ -278,7 +280,7 @@ EOF
                     # Use system binaries (ffmpeg-static download was skipped in Nix build)
                     export FFMPEG_BIN_PATH="${pkgs.ffmpeg}/bin/ffmpeg"
                     export YTDLP_BIN_PATH="${pkgs.yt-dlp}/bin/yt-dlp"
-                    export PATH="${pkgs.ffmpeg}/bin:${pkgs.yt-dlp}/bin:${pkgs.deno}/bin:$PATH"
+                    export PATH="${pkgs.ffmpeg}/bin:${pkgs.yt-dlp}/bin:${pkgs-unstable.deno}/bin:$PATH"
 
                     cd "$APP_DIR"
                     exec ${pkgs.nodejs}/bin/node dist/server.js
