@@ -486,7 +486,9 @@ async function downloadWithYtDlp(
                 onProgress('yt-dlp', pct);
             }
         },
-        additionalOptions: ['--merge-output-format', 'mp4', '--js-runtimes', 'node'],
+        // yt-dlp auto-detects Deno (provisioned via the image/flake) to solve YouTube's
+        // JS challenge; no '--js-runtimes node' — node here is v20, below EJS's >= 22 floor.
+        additionalOptions: ['--merge-output-format', 'mp4'],
     };
 
     // Use env proxy if available

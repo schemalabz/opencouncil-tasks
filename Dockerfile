@@ -31,7 +31,7 @@ RUN apt-get update \
     && apt-get update \
     && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 \
       --no-install-recommends \
-    && apt-get install -y tini ffmpeg curl gosu \
+    && apt-get install -y tini ffmpeg curl gosu unzip \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r apify && useradd -rm -g apify -G audio,video apify
 
@@ -60,12 +60,30 @@ RUN mkdir -p /app/bin \
     && chmod +x /app/bin/yt-dlp \
     && chown apify:apify /app/bin/yt-dlp
 
+# Install Deno — yt-dlp's default JavaScript runtime for YouTube extraction (EJS).
+# yt-dlp needs a JS runtime to solve YouTube's player challenges; Node in this
+# image is v20, below yt-dlp's Node>=22 EJS requirement, so Deno provides it.
+# yt-dlp enables "deno" by default whenever it's found on PATH.
+RUN DENO_ARCH="$(uname -m)" \
+    && curl -fsSL "https://github.com/denoland/deno/releases/latest/download/deno-${DENO_ARCH}-unknown-linux-gnu.zip" -o /tmp/deno.zip \
+    && unzip -o /tmp/deno.zip -d /usr/local/bin \
+    && rm /tmp/deno.zip \
+    && chmod +x /usr/local/bin/deno \
+    && deno --version
+
+# Deno caches compiled modules under DENO_DIR. The app runs as "apify" via gosu
+# but HOME stays /root (not writable by apify), so point DENO_DIR at a dir the
+# apify user owns instead of relying on ~/.cache/deno.
+RUN mkdir -p /app/.deno \
+    && chown apify:apify /app/.deno
+
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 ENV YTDLP_BIN_PATH=/app/bin/yt-dlp
+ENV DENO_DIR=/app/.deno
 
 # Expose the port the app runs on
 EXPOSE ${PORT}

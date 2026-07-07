@@ -28,6 +28,9 @@
           buildInputs = [
             pkgs.nodejs
             pkgs.nodePackages.npm
+            # Deno from unstable: yt-dlp's EJS runtime needs Deno >= 2.3.0;
+            # nixpkgs-24.11 ships 2.1.4, which yt-dlp rejects as unsupported.
+            pkgs-unstable.deno
             pkgs.minio
             pkgs.minio-client
             pkgs.cachix
@@ -269,10 +272,15 @@ EOF
                     export DATA_DIR="$PR_DIR/data"
                     mkdir -p "$DATA_DIR"
 
+                    # Deno is yt-dlp's default JavaScript runtime for YouTube
+                    # extraction; DENO_DIR must be writable by the service user.
+                    export DENO_DIR="$PR_DIR/.deno"
+                    mkdir -p "$DENO_DIR"
+
                     # Use system binaries (ffmpeg-static download was skipped in Nix build)
                     export FFMPEG_BIN_PATH="${pkgs.ffmpeg}/bin/ffmpeg"
                     export YTDLP_BIN_PATH="${pkgs.yt-dlp}/bin/yt-dlp"
-                    export PATH="${pkgs.ffmpeg}/bin:${pkgs.yt-dlp}/bin:$PATH"
+                    export PATH="${pkgs.ffmpeg}/bin:${pkgs.yt-dlp}/bin:${pkgs-unstable.deno}/bin:$PATH"
 
                     cd "$APP_DIR"
                     exec ${pkgs.nodejs}/bin/node dist/server.js
