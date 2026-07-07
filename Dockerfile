@@ -64,7 +64,8 @@ RUN mkdir -p /app/bin \
 # yt-dlp needs a JS runtime to solve YouTube's player challenges; Node in this
 # image is v20, below yt-dlp's Node>=22 EJS requirement, so Deno provides it.
 # yt-dlp enables "deno" by default whenever it's found on PATH.
-RUN curl -fsSL https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip -o /tmp/deno.zip \
+RUN DENO_ARCH="$(uname -m)" \
+    && curl -fsSL "https://github.com/denoland/deno/releases/latest/download/deno-${DENO_ARCH}-unknown-linux-gnu.zip" -o /tmp/deno.zip \
     && unzip -o /tmp/deno.zip -d /usr/local/bin \
     && rm /tmp/deno.zip \
     && chmod +x /usr/local/bin/deno \
