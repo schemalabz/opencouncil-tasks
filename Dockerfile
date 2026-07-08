@@ -53,12 +53,14 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/VERSION ./VERSION
 
-# Download latest yt-dlp binary and make it user-owned
+# Download latest yt-dlp binary. Own the whole /app/bin DIRECTORY (not just the
+# file) by apify: yt-dlp's `--update-to` self-update writes a new binary into the
+# directory, which fails if the dir stays root-owned while the app runs as apify.
 RUN mkdir -p /app/bin \
     && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /app/bin/yt-dlp \
     && test -s /app/bin/yt-dlp || (echo "Failed to download yt-dlp" && exit 1) \
     && chmod +x /app/bin/yt-dlp \
-    && chown apify:apify /app/bin/yt-dlp
+    && chown -R apify:apify /app/bin
 
 # Install Deno — yt-dlp's default JavaScript runtime for YouTube extraction (EJS).
 # yt-dlp needs a JS runtime to solve YouTube's player challenges; Node in this

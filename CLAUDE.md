@@ -89,3 +89,8 @@ Both environments run via Docker Compose on `134.122.74.255`:
 | **Staging** | `/root/staging-opencouncil-tasks/` | `staging-opencouncil-tasks-app-1` | `/root/staging-opencouncil-tasks/logs/app.log` |
 
 Access via `ssh root@134.122.74.255`. Use the `/logs` skill for quick log access from your local machine.
+
+## Preview deployments
+
+Every PR against `main` auto-deploys a preview at `https://pr-<N>.tasks.opencouncil.gr`.
+See [docs/guides/preview-deployments.md](./docs/guides/preview-deployments.md).
