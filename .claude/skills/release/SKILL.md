@@ -111,9 +111,17 @@ echo "Next version: $NEXT_VERSION"
 
 ## Step 4: Check Task Versions
 
-For each versioned task in `src/server.ts`, check whether the release range includes changes that make results different for consumers (new/removed output fields, new enum values, input contract changes, fixes for prior failures). Compare the diff against `src/tasks/`, `src/types.ts`, and related files.
+For each versioned task in `src/server.ts`, answer two questions — from evidence, not inference:
 
-If a task's results changed but its version wasn't bumped, flag it to the user before generating release content. If a version was bumped, note the old→new version and summarize what changed — this goes into the release notes.
+**Why did each bump happen?** Find the commit that changed the `version:` line and use *its* stated reason. Don't infer the reason from the range's headline change — it's often unrelated.
+
+```bash
+git log $RANGE -L <start>,<end>:src/server.ts   # commit + message for a version: line
+```
+
+**Should a bump have happened but didn't?** Decide whether results differ for existing consumers — a type change alone isn't proof. Before calling anything breaking, verify runtime behavior: a field required in TypeScript but unvalidated at the route and defaulted when omitted is backward compatible, not breaking. New behavior gated behind an opt-in value existing callers won't send doesn't change existing results.
+
+Flag missing bumps before generating notes. Note old→new for real bumps.
 
 ## Step 5: Analyze and Generate
 
