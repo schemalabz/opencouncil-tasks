@@ -127,10 +127,12 @@ export async function runWithTaskTrace<R>(options: TaskTraceOptions, fn: () => P
     const hasMeeting = meeting !== 'unknown';
     const cityId = hasMeeting ? meeting.split('/')[0] : undefined;
 
+    // Environment (production/staging/local) is carried by Langfuse's native
+    // `environment` field, which the SDK stamps from LANGFUSE_TRACING_ENVIRONMENT —
+    // no env tag here (a NODE_ENV-derived one drifts from the native field).
     const tags = [
         `task:${taskType}`,
         `version:${version ?? 'unversioned'}`,
-        `env:${process.env.NODE_ENV || 'development'}`,
         ...(hasMeeting ? [`meeting:${meeting}`, `city:${cityId}`] : []),
     ];
 

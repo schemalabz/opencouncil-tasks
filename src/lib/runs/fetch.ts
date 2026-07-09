@@ -7,7 +7,7 @@ function tagValue(tags: string[], prefix: string): string | null {
     return tag ? tag.slice(prefix.length + 1) : null;
 }
 
-function toRunInfo(trace: { id: string; timestamp: string | Date; name?: string | null; tags?: string[] | null; latency?: number | null; totalCost?: number | null }): RunInfo {
+function toRunInfo(trace: { id: string; timestamp: string | Date; name?: string | null; tags?: string[] | null; environment?: string | null; latency?: number | null; totalCost?: number | null }): RunInfo {
     const tags = trace.tags ?? [];
     return {
         traceId: trace.id,
@@ -15,7 +15,7 @@ function toRunInfo(trace: { id: string; timestamp: string | Date; name?: string 
         name: trace.name ?? 'unknown',
         meeting: tagValue(tags, 'meeting'),
         version: tagValue(tags, 'version'),
-        env: tagValue(tags, 'env'),
+        env: trace.environment ?? null,
         promptsHash: tagValue(tags, 'prompts'),
         isError: tags.includes('status:error'),
         totalCost: trace.totalCost ?? null,

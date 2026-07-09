@@ -12,7 +12,10 @@ Add to `.env`:
 LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_PUBLIC_KEY=pk-lf-...
 LANGFUSE_BASEURL=https://cloud.langfuse.com   # or a self-hosted instance
+LANGFUSE_TRACING_ENVIRONMENT=production        # or staging / local — Langfuse's native environment selector
 ```
+
+`LANGFUSE_TRACING_ENVIRONMENT` sets Langfuse's native `environment` field on every trace, keeping production, staging, and local runs separable in the UI's environment selector (and in `runs list`). It is optional — unset, traces land in Langfuse's `default` environment. The deployed containers set it to `production` / `staging`.
 
 The server logs observability status at startup.
 
@@ -46,7 +49,6 @@ Traces are tagged for filtering in the UI and via the API:
 | `meeting:<cityId/meetingId>` | `meeting:orestiada/feb11_2026` | derived from the callback URL |
 | `city:<cityId>` | `city:orestiada` | |
 | `version:<n>` | `version:5` | the task version from `registerTask()` |
-| `env:<env>` | `env:production` | from `NODE_ENV` |
 | `prompts:<hash>` | `prompts:3fa9c2e81b04` | composite fingerprint of all system prompts used |
 | `status:error` | | only present on failed runs |
 
