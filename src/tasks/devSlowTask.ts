@@ -1,4 +1,3 @@
-// src/tasks/devSlowTask.ts
 import { Task } from './pipeline.js';
 import { abortableSleep, getTaskControl, throwIfCancelled } from '../lib/taskControl.js';
 import { HAIKU_MODEL, aiChat } from '../lib/ai.js';

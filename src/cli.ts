@@ -876,7 +876,13 @@ const tasksServerUrl = () => process.env.TASKS_SERVER_URL || `http://localhost:$
 async function tasksServerRequest(path: string, method: 'GET' | 'POST' = 'GET'): Promise<any> {
     const headers: Record<string, string> = {};
     if (process.env.TASKS_API_TOKEN) headers['Authorization'] = `Bearer ${process.env.TASKS_API_TOKEN}`;
-    const response = await fetch(`${tasksServerUrl()}${path}`, { method, headers });
+    let response: Response;
+    try {
+        response = await fetch(`${tasksServerUrl()}${path}`, { method, headers });
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`${method} ${tasksServerUrl()}${path} failed: ${msg}`);
+    }
     const body: any = await response.json().catch(() => ({}));
     if (!response.ok) {
         throw new Error(`${method} ${path} → ${response.status}: ${body.error || JSON.stringify(body)}`);

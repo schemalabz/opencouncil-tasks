@@ -58,7 +58,6 @@ app.use(authMiddleware);
 // PUBLIC ENDPOINTS (No Authentication Required)
 // ============================================================================
 
-// Health check endpoint with version information and service status
 app.get('/health', async (req: express.Request, res: express.Response<HealthResponse>) => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     const services: { [key: string]: any } = {};
@@ -94,6 +93,10 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
         services
     });
 });
+
+// ============================================================================
+// TASK CONTROL ENDPOINTS (Authentication Required)
+// ============================================================================
 
 // List all running and queued tasks with their current state
 app.get('/tasks', (req, res) => {
