@@ -804,14 +804,21 @@ async function downloadWithYtDlp(
         fs.mkdirSync(outputDir, { recursive: true });
     }
 
+    // Log a progress snapshot at most every 15s. yt-dlp fires this callback ~10×/s, and a raw
+    // per-tick write floods the (non-TTY) container/app logs — thousands of lines that rotate out
+    // our meaningful ones. A carriage-return progress bar only works in a TTY, so we snapshot instead.
+    let lastProgressLog = 0;
     const ytOptions: FormatOptions<'videoonly'> = {
         output: outputTemplate,
         format: `bestvideo[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]/best`,
         onProgress: (p: VideoProgress) => {
             if (onProgress && p.total > 0) {
                 const pct = (p.downloaded / p.total) * 100;
-                const bytesInfo = ` (${formatBytes(p.downloaded)} / ${formatBytes(p.total)})`;
-                process.stdout.write(bytesInfo);
+                const now = Date.now();
+                if (now - lastProgressLog >= 15_000) {
+                    lastProgressLog = now;
+                    console.log(`[yt-dlp] ${videoId}: ${pct.toFixed(0)}% (${formatBytes(p.downloaded)} / ${formatBytes(p.total)})`);
+                }
                 onProgress('yt-dlp', pct);
             }
         },
