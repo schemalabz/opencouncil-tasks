@@ -863,7 +863,16 @@ async function downloadWithYtDlp(
                     lastProgressLog = now;
                     console.log(`[yt-dlp] ${videoId}: ${pct.toFixed(0)}% (${formatBytes(p.downloaded)} / ${formatBytes(p.total)})`);
                 }
-                onProgress('yt-dlp', pct);
+                // onProgress may throw TaskCancelledError (universal cancellation
+                // checkpoint). Swallow it here: this callback runs inside a
+                // stdout 'data' event handler and a synchronous throw would be an
+                // uncaught exception. Cancellation takes effect at the next
+                // stage-boundary checkpoint after downloadAsync resolves.
+                try {
+                    onProgress('yt-dlp', pct);
+                } catch {
+                    // intentionally swallowed — see comment above
+                }
             }
         },
         // yt-dlp auto-detects Deno (provisioned via the image/flake) to solve YouTube's

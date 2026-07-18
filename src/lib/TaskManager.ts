@@ -1,10 +1,14 @@
 import express from 'express';
+import { randomUUID } from 'node:crypto';
 import { Task } from '../tasks/pipeline.js';
 import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
 import { LlmMode, TaskCancelledError, TaskControl, newTaskControl, runWithTaskControl } from './taskControl.js';
+
+// Per-process prefix so task IDs never collide across server restarts.
+const INSTANCE_ID = randomUUID().slice(0, 8);
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -125,6 +129,10 @@ export class TaskManager {
 
             await this.sendCallback(callbackUrl, initialUpdate);
 
+            if (control.cancel.signal.aborted) {
+                throw new TaskCancelledError(`Task ${taskId} cancelled`);
+            }
+
             const result = await runWithTaskControl(control, () => runWithTaskTrace(
                 { taskType, version, input, callbackUrl },
                 () => task(input, (stage, progressPercent) => {
@@ -196,7 +204,7 @@ export class TaskManager {
         taskType: string,
         version?: number
     ): { taskId: string; completion: Promise<void> } {
-        const taskId = `task_${++this.taskCounter}`;
+        const taskId = `task_${INSTANCE_ID}_${++this.taskCounter}`;
 
         if (this.runningTasks.size >= this.maxParallelTasks) {
             let onDone!: () => void;

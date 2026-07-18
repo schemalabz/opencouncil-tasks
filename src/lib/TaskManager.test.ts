@@ -31,7 +31,7 @@ describe('TaskManager cancellation', () => {
         stubCallbacks();
         const manager = new TaskManager(2);
         const { taskId, completion } = manager.runTaskWithCallback(slowTask, { steps: 1 }, 'http://cb', 'test');
-        expect(taskId).toMatch(/^task_\d+$/);
+        expect(taskId).toMatch(/^task_[0-9a-f]{8}_\d+$/);
         expect(manager.getTaskUpdates()[0].taskId).toBe(taskId);
         await completion;
     });
@@ -100,5 +100,37 @@ describe('TaskManager cancellation', () => {
         await completion;
         expect(callbacks.payloads.at(-1).status).toBe('error');
         expect(callbacks.payloads.at(-1).error).toBe('boom');
+    });
+
+    it('a task that only reports progress is cancelled at the onProgress checkpoint', async () => {
+        const callbacks = stubCallbacks();
+        const manager = new TaskManager(2);
+        const progressOnlyTask: Task<{}, string> = async (_args, onProgress) => {
+            for (let i = 0; i < 100; i++) {
+                onProgress(`step-${i}`, i);
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+            return 'done';
+        };
+        const { taskId, completion } = manager.runTaskWithCallback(progressOnlyTask, {}, 'http://cb', 'test');
+        await new Promise(resolve => setTimeout(resolve, 30));
+        manager.cancelTask(taskId);
+        await completion;
+        expect(callbacks.payloads.at(-1).status).toBe('cancelled');
+    });
+
+    it('two queued tasks both complete with success callbacks', async () => {
+        const callbacks = stubCallbacks();
+        const manager = new TaskManager(1); // capacity 1 → second task queues
+        const shortTask: Task<{}, string> = async (_args, onProgress) => {
+            onProgress('working', 50);
+            await new Promise(resolve => setTimeout(resolve, 20));
+            return 'done';
+        };
+        const first = manager.runTaskWithCallback(shortTask, {}, 'http://cb1', 'test');
+        const second = manager.runTaskWithCallback(shortTask, {}, 'http://cb2', 'test');
+        await Promise.all([first.completion, second.completion]);
+        const successes = callbacks.payloads.filter(p => p.status === 'success');
+        expect(successes).toHaveLength(2);
     });
 });
