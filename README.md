@@ -192,4 +192,8 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 - `SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 15) - Maximum concurrent transcription requests per process; account-wide overflow returns 429s, which are retried with backoff
 - `PYANNOTE_MAX_CONCURRENT_DIARIZATIONS` (default: 5) - Maximum concurrent diarization tasks
 - `YTDLP_PROXY` - Residential proxy for YouTube downloads ([pi-proxy](https://github.com/schemalabz/pi-proxy))
+- `LIVESTREAM_DOWNLOAD_MAX_WAIT_MS` (default: 5400000 = 90min) - How long a download task retries while a just-ended livestream VOD is still processing
+- `LIVESTREAM_DOWNLOAD_POLL_MS` (default: 180000 = 3min) - Interval between download retries and live_status samples
+- `LIVESTREAM_DOWNLOAD_COMPLETENESS_RATIO` (default: 0.98) - Downloaded/reported duration ratio above which a recording counts as complete
+- `LIVESTREAM_DOWNLOAD_MIN_SHORTFALL_SEC` (default: 120) - Absolute shortfall tolerance; downloads at most this many seconds short are accepted
 - `LOG_DIR` - Directory for log files

@@ -7,6 +7,27 @@ import { uploadToSpaces } from "../uploadToSpaces.js";
 import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
 
 const execAsync = promisify(cp.exec);
+const execFileAsync = promisify(cp.execFile);
+
+/**
+ * Get a media file's duration in seconds using ffprobe (format-level duration; works for
+ * both audio and video containers). Uses execFile (no shell) so a path containing shell
+ * metacharacters is treated as data, not expanded.
+ */
+export async function getMediaDurationSeconds(filePath: string): Promise<number> {
+    const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
+    const { stdout } = await execFileAsync(ffprobePath, [
+        '-v', 'quiet',
+        '-show_entries', 'format=duration',
+        '-of', 'csv=p=0',
+        filePath,
+    ]);
+    const duration = parseFloat(stdout.trim());
+    if (!Number.isFinite(duration) || duration <= 0) {
+        throw new Error(`Invalid media duration from ffprobe: "${stdout.trim()}" for ${filePath}`);
+    }
+    return duration;
+}
 
 // Create data directory if it doesn't exist
 const dataDir = process.env.DATA_DIR || "./data";

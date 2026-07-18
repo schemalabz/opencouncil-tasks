@@ -3,15 +3,23 @@ import dotenv from "dotenv";
 import path from "path";
 import fs from "fs";
 import cp from "child_process";
+import { promisify } from "util";
 import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
+import { getMediaDurationSeconds } from "./utils/mediaOperations.js";
 
 dotenv.config();
 
 const DEFAULT_VIDEO_QUALITY = "1080";
 const YTDLP_BIN_PATH = process.env.YTDLP_BIN_PATH;
 
-export const downloadYTV: Task<string, { audioOnly: string, combined: string, sourceType: string }> = async (youtubeUrl, onProgress) => {
+/**
+ * A single raw video download attempt (no retry, no audio processing). Wrapped by
+ * `downloadYTV` in `downloadUntilComplete`, which verifies completeness on the raw file —
+ * so the expensive loudnorm/extract passes only run once, after the download is confirmed
+ * complete.
+ */
+const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Promise<RawVideo> => {
     const outputDir = process.env.DATA_DIR || "./data";
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
@@ -20,8 +28,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
 
     const { videoId, videoUrl, sourceType } = getVideoIdAndUrl(youtubeUrl);
     console.log(`Processing ${sourceType}: ${youtubeUrl}`);
-    
-    const audioOutputPath = path.join(outputDir, `${videoId}.mp3`);
+
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
     let finalVideoPath = videoOutputPath;
 
@@ -40,7 +47,7 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
 
     // Only download if we don't have a valid existing file
     const needsDownload = !fs.existsSync(videoOutputPath);
-    
+
     if (needsDownload && sourceType === 'YouTube') {
         finalVideoPath = await downloadWithYtDlp(youtubeUrl, videoOutputPath, videoId, onProgress);
     } else if (needsDownload) {
@@ -54,11 +61,324 @@ export const downloadYTV: Task<string, { audioOnly: string, combined: string, so
     }
 
     console.log(`Video downloaded successfully: ${formatBytes(videoSize)}`);
-    await normalizeVideoAudio(finalVideoPath);
-    await extractSoundFromMP4(finalVideoPath, audioOutputPath);
-
-    return { audioOnly: audioOutputPath, combined: finalVideoPath, sourceType };
+    return { combined: finalVideoPath, sourceType };
 }
+
+type ProgressFn = (stage: string, progressPercent: number) => void;
+
+/** A downloaded raw video file, before audio normalization/extraction. */
+export interface RawVideo {
+    combined: string;
+    sourceType: string;
+}
+
+export interface DownloadedMedia {
+    audioOnly: string;
+    combined: string;
+    sourceType: string;
+}
+
+/** What the source reports about a video, fetched independently of any download. */
+export interface VideoInfo {
+    /** yt-dlp `live_status` (e.g. `post_live`, `was_live`). Logged for data-gathering, never gated on. */
+    liveStatus?: string;
+    /**
+     * The video's own reported duration, in seconds — the "M" that a downloaded file's
+     * measured duration is verified against to detect a partial download of a
+     * still-processing livestream VOD. Undefined when the source doesn't report one.
+     */
+    durationSec?: number;
+}
+
+export interface CompleteDownloadDeps {
+    /** One raw video download attempt (no audio processing). */
+    download: (url: string, onProgress: ProgressFn) => Promise<RawVideo>;
+    /** The video's reported duration and live status; `{}` when the source reports nothing. */
+    getInfo: (url: string) => Promise<VideoInfo>;
+    /** Measured duration of a downloaded media file (ffprobe), in seconds. */
+    probeDurationSeconds: (file: string) => Promise<number>;
+    /** Removes any cached media for the url so the next attempt re-downloads fresh. */
+    dropCachedMedia: (url: string) => void | Promise<void>;
+    /** Bytes currently on disk for the url's download — heartbeat/speed data, works in every downloader mode. */
+    downloadedBytes: (url: string) => number | Promise<number>;
+    sleep: (ms: number) => Promise<void>;
+    now: () => number;
+}
+
+export interface CompleteDownloadConfig {
+    maxWaitMs: number;
+    pollIntervalMs: number;
+    completenessRatio: number;
+    minShortfallSeconds: number;
+}
+
+/**
+ * A downloaded recording is complete when its measured duration is within tolerance of the
+ * video's own reported duration. Absent an expected duration (non-YouTube sources), there's
+ * nothing to verify, so accept it.
+ */
+function isComplete(actualSeconds: number, expectedSeconds: number | undefined, config: CompleteDownloadConfig): boolean {
+    if (expectedSeconds === undefined || expectedSeconds <= 0) return true;
+    return actualSeconds >= expectedSeconds * config.completenessRatio
+        || (expectedSeconds - actualSeconds) <= config.minShortfallSeconds;
+}
+
+/**
+ * Downloads a recording, retrying while it comes back incomplete. Right after a YouTube
+ * livestream ends its VOD is still processing, so a download can be truncated (or fail
+ * outright); we compare the downloaded duration against the video's own reported duration
+ * and retry — dropping the partial each time — until it's complete or we hit maxWait.
+ */
+export async function downloadUntilComplete(
+    url: string,
+    deps: CompleteDownloadDeps,
+    config: CompleteDownloadConfig,
+    onProgress: ProgressFn,
+): Promise<RawVideo> {
+    const start = deps.now();
+    const deadline = start + config.maxWaitMs;
+    const elapsedMin = () => ((deps.now() - start) / 60_000).toFixed(1);
+    let attempt = 0;
+    let lastReason = "";
+    let lastLiveStatus: string | undefined;
+    let lastKnownDurationSec: number | undefined;
+
+    // live_status is recorded for data-gathering only (how long post_live throttling lasts
+    // across real meetings — the input for deciding any future wait/optimization), never
+    // gated on: post_live is sticky and unpredictable. M is remembered across fetches so a
+    // metadata hiccup (observed live: YouTube's "sign in to confirm you're not a bot" wave)
+    // can't silently disable the completeness check — a stale M only over-reports, so the
+    // error direction is a harmless extra retry.
+    const noteLiveStatus = (info: VideoInfo) => {
+        if (info.durationSec !== undefined) lastKnownDurationSec = info.durationSec;
+        if (info.liveStatus && info.liveStatus !== lastLiveStatus) {
+            console.log(`[download-complete] ${url}: live_status=${info.liveStatus}` +
+                (lastLiveStatus ? ` (was ${lastLiveStatus}, transitioned by ${elapsedMin()}min)` : ''));
+            lastLiveStatus = info.liveStatus;
+        }
+    };
+
+    // A per-attempt timeline in the task-server log (journal) is the main forensic trail:
+    // it shows the convergence (D vs M) and timing even when no one is watching live.
+    console.log(`[download-complete] ${url}: waiting up to ${Math.round(config.maxWaitMs / 60_000)}min for a complete recording ` +
+        `(poll ${Math.round(config.pollIntervalMs / 1000)}s, ratio ${config.completenessRatio}, floor ${config.minShortfallSeconds}s)`);
+
+    while (true) {
+        attempt++;
+        // Fetched fresh each attempt: M over-reports while the VOD is still processing and
+        // shrinks toward the true length.
+        const info = await Promise.resolve(deps.getInfo(url)).catch((err): VideoInfo => {
+            console.warn(`[download-complete] ${url}: could not fetch video info (${(err as Error).message})` +
+                (lastKnownDurationSec === undefined ? ' — completeness check skipped this attempt' : ` — using last known duration ${Math.round(lastKnownDurationSec)}s`));
+            return {};
+        });
+        noteLiveStatus(info);
+        // One throttled download can span the entire post_live window in a single attempt,
+        // which would leave the flip time unobserved. Sample live_status at the poll cadence
+        // DURING the download on a plain timer — the DVR/fragmented downloader for a
+        // post_live VOD emits almost no progress callbacks (observed in the wild), so
+        // sampling must not depend on ticks. Also refreshes M mid-download. unref keeps
+        // the pending timer from holding the process open after the task finishes.
+        let sampleInFlight = false;
+        const sampler = setInterval(() => {
+            if (sampleInFlight) return;
+            sampleInFlight = true;
+            (async () => {
+                const bytes = await Promise.resolve(deps.downloadedBytes(url)).catch(() => 0);
+                const statusBefore = lastLiveStatus;
+                try {
+                    noteLiveStatus(await deps.getInfo(url));
+                    // A heartbeat when nothing changed makes "no flip" derivable from the log:
+                    // absence of a transition line only proves anything if the log also shows
+                    // the sampler was alive. Doubles as a byte curve (yt-dlp's own progress
+                    // totals are garbage for a still-processing VOD's fragmented download).
+                    if (lastLiveStatus === statusBefore) {
+                        console.log(`[download-complete] ${url}: still ${lastLiveStatus ?? 'downloading'} at ${elapsedMin()}min — ${formatBytes(bytes)} downloaded`);
+                    }
+                } catch (err) {
+                    console.warn(`[download-complete] ${url}: live_status check failed at ${elapsedMin()}min (${(err as Error).message}) — ${formatBytes(bytes)} downloaded`);
+                }
+            })().finally(() => { sampleInFlight = false; });
+        }, config.pollIntervalMs);
+        sampler.unref?.();
+        try {
+            const result = await deps.download(url, onProgress);
+            const expected = lastKnownDurationSec;
+            if (expected === undefined) {
+                // Nothing to verify against — don't probe at all: a valid recording whose
+                // container reports no duration must not fail the task (pre-retry behavior).
+                console.log(`[download-complete] ${url}: accepted on attempt ${attempt} after ${elapsedMin()}min (no reported duration to verify against)`);
+                return result;
+            }
+            const actual = await deps.probeDurationSeconds(result.combined);
+            if (isComplete(actual, expected, config)) {
+                console.log(`[download-complete] ${url}: complete on attempt ${attempt} after ${elapsedMin()}min ` +
+                    `(got ${Math.round(actual)}s of ~${Math.round(expected)}s)`);
+                return result;
+            }
+            lastReason = `incomplete recording: got ${Math.round(actual)}s of ~${Math.round(expected)}s` +
+                ` (${Math.round((actual / expected) * 100)}%)`;
+        } catch (err) {
+            // A still-processing VOD can make yt-dlp fail outright — treat it the same as an
+            // incomplete download: wait and retry rather than failing the whole task. But only
+            // a YouTube VOD has a processing window: CDN/direct failures and permanently-gone
+            // videos would just burn the full wait, so those fail fast with the original error.
+            if (getVideoIdAndUrl(url).sourceType !== 'YouTube' || isPermanentDownloadError(err)) throw err;
+            lastReason = `download failed (VOD may still be processing): ${(err as Error).message}`;
+        } finally {
+            clearInterval(sampler);
+        }
+
+        console.warn(`[download-complete] ${url}: attempt ${attempt} at ${elapsedMin()}min — ${lastReason}`);
+        // Drop any partial so the next attempt re-downloads instead of reusing it.
+        await deps.dropCachedMedia(url);
+
+        if (deps.now() + config.pollIntervalMs >= deadline) break;
+        // Progress reflects how far into the wait we are (surfaces in the TaskStatus stage/percent).
+        const waitProgress = Math.min(99, Math.round(((deps.now() - start) / config.maxWaitMs) * 100));
+        onProgress("waiting-for-vod", waitProgress);
+        await deps.sleep(config.pollIntervalMs);
+    }
+
+    throw new Error(
+        `Livestream VOD not downloadable within ${Math.round(config.maxWaitMs / 60_000)}min ` +
+        `(${attempt} attempts over ${elapsedMin()}min) — ${lastReason}. ` +
+        `The recording likely hadn't finished processing on YouTube.`,
+    );
+}
+
+const execFileAsync = promisify(cp.execFile);
+
+// Errors that no amount of waiting can fix — retrying would burn the whole maxWait.
+// Deliberately narrow: transient conditions (bot-check walls, network blips, 403s
+// during processing) must stay retryable.
+const PERMANENT_DOWNLOAD_ERROR = /video unavailable|private video|has been removed/i;
+
+function isPermanentDownloadError(err: unknown): boolean {
+    return PERMANENT_DOWNLOAD_ERROR.test((err as Error)?.message ?? '');
+}
+
+/** Parses the `--print "%(live_status)s|%(duration)s"` output line into a VideoInfo. */
+export function parseVideoInfoOutput(stdout: string): VideoInfo {
+    const [liveStatus, durationRaw] = (stdout.trim().split('\n').pop() ?? '').split('|');
+    const duration = Number(durationRaw);
+    return {
+        liveStatus: liveStatus && liveStatus !== 'NA' ? liveStatus : undefined,
+        durationSec: Number.isFinite(duration) && duration > 0 ? duration : undefined,
+    };
+}
+
+/**
+ * Fetches the video's reported live_status and duration via `yt-dlp --print` — a few bytes,
+ * vs a --write-info-json sidecar that runs to tens of MB for a multi-hour VOD (and
+ * --dump-single-json, which overflows the exec output buffer). Non-YouTube sources report
+ * nothing → `{}` → the first download is accepted without a completeness check.
+ */
+async function getInfo(url: string): Promise<VideoInfo> {
+    if (getVideoIdAndUrl(url).sourceType !== 'YouTube') return {};
+
+    // --no-playlist: a watch URL carrying &list= would otherwise print one line per playlist
+    // entry, and the fetch would enumerate the whole playlist on every attempt.
+    const args = ['--print', '%(live_status)s|%(duration)s', '--no-warnings', '--no-playlist'];
+    // Same proxy as the download itself: the metadata fetch is throttled/blocked on the
+    // datacenter IP just like the media fetch.
+    const proxy = process.env.YTDLP_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
+    if (proxy) {
+        args.push('--proxy', proxy);
+    }
+    args.push(url);
+
+    // Without a timeout a hung fetch (proxy blackhole) would stall the attempt loop forever
+    // and wedge the sampler's in-flight guard.
+    try {
+        const { stdout } = await execFileAsync(YTDLP_BIN_PATH || 'yt-dlp', args, { timeout: 60_000 });
+        return parseVideoInfoOutput(stdout);
+    } catch (err) {
+        // execFile errors embed the full argv; the proxy value may carry credentials and the
+        // message gets logged by the callers, so redact it (mutate, don't wrap — the original
+        // error object stays intact for anything that inspects it).
+        if (proxy && err instanceof Error) err.message = err.message.split(proxy).join('<proxy>');
+        throw err;
+    }
+}
+
+/**
+ * Removes ALL cached files for the video — the final mp4/mp3 AND yt-dlp's intermediates
+ * (`.part`, `.ytdl`, per-format `.fNNN.*`) — so the next attempt re-downloads fresh against
+ * the current manifest instead of resuming a stale/partial one (resume behaviour after a
+ * manifestless→manifest transition is not something we want to rely on).
+ */
+function dropCachedMedia(youtubeUrl: string): void {
+    const outputDir = process.env.DATA_DIR || "./data";
+    const { videoId } = getVideoIdAndUrl(youtubeUrl);
+    if (!fs.existsSync(outputDir)) return;
+    for (const name of fs.readdirSync(outputDir)) {
+        if (name === videoId || name.startsWith(`${videoId}.`)) {
+            const file = path.join(outputDir, name);
+            try { fs.unlinkSync(file); } catch (err) { console.warn(`Failed to remove ${file}:`, err); }
+        }
+    }
+}
+
+/** Total bytes on disk for the video's files (final mp4 plus yt-dlp intermediates). */
+function downloadedBytes(youtubeUrl: string): number {
+    const outputDir = process.env.DATA_DIR || "./data";
+    const { videoId } = getVideoIdAndUrl(youtubeUrl);
+    if (!fs.existsSync(outputDir)) return 0;
+    let total = 0;
+    for (const name of fs.readdirSync(outputDir)) {
+        if (name === videoId || name.startsWith(`${videoId}.`)) {
+            try { total += fs.statSync(path.join(outputDir, name)).size; } catch { /* file may vanish mid-scan */ }
+        }
+    }
+    return total;
+}
+
+function envNumber(name: string, fallback: number): number {
+    const raw = process.env[name];
+    if (!raw) return fallback;
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function completeDownloadConfig(): CompleteDownloadConfig {
+    return {
+        // A just-ended livestream's VOD usually finishes processing within ~15-30 min, but
+        // long/high-res streams can take longer; cap the wait and tune via env as needed.
+        maxWaitMs: envNumber('LIVESTREAM_DOWNLOAD_MAX_WAIT_MS', 90 * 60_000),
+        pollIntervalMs: envNumber('LIVESTREAM_DOWNLOAD_POLL_MS', 3 * 60_000),
+        completenessRatio: envNumber('LIVESTREAM_DOWNLOAD_COMPLETENESS_RATIO', 0.98),
+        minShortfallSeconds: envNumber('LIVESTREAM_DOWNLOAD_MIN_SHORTFALL_SEC', 120),
+    };
+}
+
+/**
+ * Downloads a YouTube (or CDN/direct) recording, retrying while it comes back incomplete —
+ * a just-ended livestream VOD is still processing and can download truncated. Audio
+ * normalization/extraction runs once, only after a download is confirmed complete. Same
+ * signature as a plain single download, so all callers (pipeline, CLI) are unchanged.
+ */
+export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
+    const { combined, sourceType } = await downloadUntilComplete(
+        youtubeUrl,
+        {
+            download: downloadVideoOnce,
+            getInfo,
+            probeDurationSeconds: getMediaDurationSeconds,
+            dropCachedMedia,
+            downloadedBytes,
+            sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+            now: () => Date.now(),
+        },
+        completeDownloadConfig(),
+        onProgress,
+    );
+
+    const audioOnly = path.join(path.dirname(combined), `${path.basename(combined, path.extname(combined))}.mp3`);
+    await normalizeVideoAudio(combined);
+    await extractSoundFromMP4(combined, audioOnly);
+    return { audioOnly, combined, sourceType };
+};
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
 
@@ -403,7 +723,15 @@ export function formatBytes(bytes: number): string {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+let lastYtDlpUpdateCheck = 0;
+
 async function updateYtDlp(): Promise<void> {
+    // The retry loop calls the downloader once per attempt; re-checking for a yt-dlp
+    // update on each of up to ~30 attempts adds a network round-trip (up to 60s) per
+    // retry for nothing. Once an hour is plenty.
+    if (Date.now() - lastYtDlpUpdateCheck < 60 * 60_000) return;
+    lastYtDlpUpdateCheck = Date.now();
+
     const binaryPath = YTDLP_BIN_PATH || 'yt-dlp';
     console.log('Checking for yt-dlp updates...');
 
@@ -424,6 +752,7 @@ async function updateYtDlp(): Promise<void> {
         });
 
         updateProcess.on('close', (code) => {
+            clearTimeout(killTimer);
             if (code === 0) {
                 // Check if actually updated or already up-to-date
                 if (stdout.includes('Updating to') || stdout.includes('Updated yt-dlp')) {
@@ -444,7 +773,7 @@ async function updateYtDlp(): Promise<void> {
         });
 
         // Timeout after 60 seconds (nightly binary download can be slow)
-        setTimeout(() => {
+        const killTimer = setTimeout(() => {
             updateProcess.kill();
             console.warn('yt-dlp update check timed out');
             resolve();
@@ -488,7 +817,9 @@ async function downloadWithYtDlp(
         },
         // yt-dlp auto-detects Deno (provisioned via the image/flake) to solve YouTube's
         // JS challenge; no '--js-runtimes node' — node here is v20, below EJS's >= 22 floor.
-        additionalOptions: ['--merge-output-format', 'mp4'],
+        // --no-playlist: a watch URL carrying &list= would otherwise download every playlist
+        // entry into this video's output template (same guard as getInfo).
+        additionalOptions: ['--merge-output-format', 'mp4', '--no-playlist'],
     };
 
     // Use env proxy if available
