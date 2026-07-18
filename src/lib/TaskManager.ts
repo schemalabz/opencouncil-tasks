@@ -172,7 +172,9 @@ export class TaskManager {
             };
             await this.sendCallback(callbackUrl, finalUpdate);
         } catch (error: any) {
-            const cancelled = error instanceof TaskCancelledError;
+            // A cancel that lands mid-SDK-call surfaces as APIUserAbortError (or
+            // other wrappers) — the aborted signal is the authoritative marker.
+            const cancelled = error instanceof TaskCancelledError || control.cancel.signal.aborted;
             const errorUpdate: TaskUpdate<any> & { createdAt: Date, lastUpdatedAt: Date, taskType: string, taskId: string } = {
                 status: cancelled ? "cancelled" : "error",
                 stage: cancelled ? "cancelled" : "finished",

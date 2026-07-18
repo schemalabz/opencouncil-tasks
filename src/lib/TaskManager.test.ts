@@ -133,4 +133,20 @@ describe('TaskManager cancellation', () => {
         const successes = callbacks.payloads.filter(p => p.status === 'success');
         expect(successes).toHaveLength(2);
     });
+
+    it('classifies a cancel that surfaces as a wrapped SDK error as cancelled', async () => {
+        const callbacks = stubCallbacks();
+        const manager = new TaskManager(2);
+        const sdkLikeTask: Task<{}, string> = async () => {
+            const signal = getTaskControl()!.cancel.signal;
+            await abortableSleep(5_000, signal);
+            // Simulates the SDK's APIUserAbortError: a plain Error, not TaskCancelledError
+            throw new Error('Request was aborted.');
+        };
+        const { taskId, completion } = manager.runTaskWithCallback(sdkLikeTask, {}, 'http://cb', 'test');
+        await new Promise(resolve => setTimeout(resolve, 20));
+        manager.cancelTask(taskId);
+        await completion;
+        expect(callbacks.payloads.at(-1).status).toBe('cancelled');
+    });
 });

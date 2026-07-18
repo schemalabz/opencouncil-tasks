@@ -49,7 +49,6 @@ export function formatUsage(usage: Anthropic.Messages.Usage): string {
 
 export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
 
-
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
 export async function logToFile(message: string, data?: any) {
     const timestamp = new Date().toISOString();
@@ -310,9 +309,9 @@ export function continuationPrompt(partial: string): string {
 export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     let generation: GenerationHandle | undefined;
+    const control = getTaskControl();
     try {
         console.log(`Sending message to claude${batchFirst ? ' (batch-first)' : ''}...`);
-        const control = getTaskControl();
         throwIfCancelled();
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
@@ -424,7 +423,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 // After promotion, the batch fallback would re-enter the queue the
                 // operator just escaped (and the aborted promote signal would bounce
                 // it straight back out) — so only fall back while in batch mode.
-                if (classifyTransientError(e) && llmMode === 'batch') {
+                if (classifyTransientError(e) && control?.llmMode !== 'streaming') {
                     console.log(`Streaming failed after retries, falling back to batch mode...`);
                     response = await executeBatch(requestParams, requestOptions);
                     usedBatch = true;
@@ -533,8 +532,15 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             batchMode: usedBatch
         };
     } catch (e) {
-        generation?.error(e instanceof Error ? e.message : String(e));
-        console.error(`Error in aiChat: ${e}`);
+        // A cancel that aborts the SDK mid-call surfaces as APIUserAbortError,
+        // not TaskCancelledError — convert it so Langfuse traces read "cancelled"
+        // and the error chain stays meaningful downstream.
+        let err = e;
+        if (control?.cancel.signal.aborted && !(e instanceof TaskCancelledError)) {
+            err = new TaskCancelledError(`Task cancelled during LLM call`);
+        }
+        generation?.error(err instanceof Error ? err.message : String(err));
+        console.error(`Error in aiChat: ${err}`);
         // Log full error details for stream terminations to aid reproduction
         // (see https://github.com/anthropics/anthropic-sdk-typescript/issues/774)
         if (e instanceof Error && (e as any).cause) {
@@ -550,7 +556,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             cause: e instanceof Error ? (e as any).cause : undefined,
             stack: e instanceof Error ? e.stack : undefined,
         });
-        throw formatApiError(e);
+        throw formatApiError(err);
     }
 }
 

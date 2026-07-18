@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, executeBatch } from './ai.js';
+import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // ===========================================================================
 // cutToLineBoundary — truncated partials stitch at line boundaries so the
@@ -176,10 +177,6 @@ describe('addUsage', () => {
         expect(leftAssoc.output_tokens).toBe(rightAssoc.output_tokens);
     });
 });
-
-import { vi } from 'vitest';
-import { BatchPromotedError, executeBatch } from './ai.js';
-import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // ===========================================================================
 // executeBatch — cancellation and promotion against a fake Anthropic client
