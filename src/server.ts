@@ -19,6 +19,7 @@ import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
+import { devSlowTask } from './tasks/devSlowTask.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
@@ -189,6 +190,14 @@ app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs',
   version: 1,
 }));
+
+if (process.env.NODE_ENV !== 'production') {
+    app.post('/dev/slowTask', taskManager.registerTask(devSlowTask, {
+        summary: 'Dev-only slow task for testing cancellation and batch promotion',
+        description: 'Sleeps cooperatively for iterations×sleepMs, optionally makes one tiny batch-first LLM call. Not registered in production.',
+        tags: ['dev'],
+    }));
+}
 
 // Resolve task paths from Express routes, then load API Documentation
 taskManager.resolvePathsFromApp(app);
