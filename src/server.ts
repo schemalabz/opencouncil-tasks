@@ -94,20 +94,32 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
     });
 });
 
+// List all running and queued tasks with their current state
 app.get('/tasks', (req, res) => {
-    const running = taskManager.getTaskUpdates().map(t => ({
-        taskType: t.taskType,
-        status: t.status,
-        stage: t.stage,
-        progressPercent: t.progressPercent,
-        duration: Math.floor((Date.now() - t.createdAt.getTime()) / 1000),
-        callbackUrl: t.callbackUrl,
-    }));
     res.json({
-        running,
-        queued: taskManager.getQueuedTasksCount(),
+        running: taskManager.getTaskUpdates(),
+        queued: taskManager.getQueuedTaskSummaries(),
         maxParallelTasks: taskManager.getMaxParallelTasks(),
     });
+});
+
+// Cancel a running or queued task (cooperative: running tasks finish at the next checkpoint)
+app.post('/tasks/:taskId/cancel', (req, res) => {
+    const outcome = taskManager.cancelTask(req.params.taskId);
+    if (!outcome) {
+        res.status(404).json({ error: `No running or queued task ${req.params.taskId}` });
+        return;
+    }
+    res.json({ taskId: req.params.taskId, status: outcome });
+});
+
+// Switch a running task's LLM calls from the Batch API to streaming
+app.post('/tasks/:taskId/promote', (req, res) => {
+    if (!taskManager.promoteTask(req.params.taskId)) {
+        res.status(404).json({ error: `No running task ${req.params.taskId}` });
+        return;
+    }
+    res.json({ taskId: req.params.taskId, llmMode: 'streaming' });
 });
 
 // ============================================================================
