@@ -3,7 +3,7 @@
  */
 
 export interface TaskUpdate<T> {
-    status: "processing" | "success" | "error";
+    status: "processing" | "success" | "error" | "cancelled";
     stage: string;
     progressPercent: number;
     result?: T;

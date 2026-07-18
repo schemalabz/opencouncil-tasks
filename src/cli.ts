@@ -731,7 +731,7 @@ program
             };
 
             console.log('Running observability check (one Haiku call through TaskManager)...');
-            await taskManager.runTaskWithCallback(checkTask, {}, callbackUrl, 'observability-check');
+            await taskManager.runTaskWithCallback(checkTask, {}, callbackUrl, 'observability-check').completion;
             await taskManager.finish();
 
             console.log('\n✅ Check task completed. Verify the trace in Langfuse:');
