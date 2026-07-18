@@ -188,6 +188,7 @@ export function generateSwaggerPaths(): Record<string, any> {
                                     type: 'object',
                                     properties: {
                                         message: { type: 'string', example: 'Task started' },
+                                        taskId: { type: 'string', example: 'task_1a2b3c4d_1' },
                                         queueSize: { type: 'number' },
                                         runningTasks: { type: 'number' },
                                         maxParallelTasks: { type: 'number' }
