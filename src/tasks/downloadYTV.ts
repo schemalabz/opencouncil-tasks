@@ -26,7 +26,7 @@ const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Pr
         console.log(`Created output directory: ${outputDir}`);
     }
 
-    const { videoId, videoUrl, sourceType } = getVideoIdAndUrl(youtubeUrl);
+    const { videoId, videoUrl, sourceType, usesYtDlp } = getVideoIdAndUrl(youtubeUrl);
     console.log(`Processing ${sourceType}: ${youtubeUrl}`);
 
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
@@ -48,7 +48,7 @@ const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Pr
     // Only download if we don't have a valid existing file
     const needsDownload = !fs.existsSync(videoOutputPath);
 
-    if (needsDownload && sourceType === 'YouTube') {
+    if (needsDownload && usesYtDlp) {
         finalVideoPath = await downloadWithYtDlp(youtubeUrl, videoOutputPath, videoId, onProgress);
     } else if (needsDownload) {
         await downloadUrl(videoUrl, videoOutputPath);
@@ -114,8 +114,8 @@ export interface CompleteDownloadConfig {
 
 /**
  * A downloaded recording is complete when its measured duration is within tolerance of the
- * video's own reported duration. Absent an expected duration (non-YouTube sources), there's
- * nothing to verify, so accept it.
+ * video's own reported duration. Absent an expected duration (sources that don't report
+ * one), there's nothing to verify, so accept it.
  */
 function isComplete(actualSeconds: number, expectedSeconds: number | undefined, config: CompleteDownloadConfig): boolean {
     if (expectedSeconds === undefined || expectedSeconds <= 0) return true;
@@ -221,9 +221,10 @@ export async function downloadUntilComplete(
         } catch (err) {
             // A still-processing VOD can make yt-dlp fail outright — treat it the same as an
             // incomplete download: wait and retry rather than failing the whole task. But only
-            // a YouTube VOD has a processing window: CDN/direct failures and permanently-gone
-            // videos would just burn the full wait, so those fail fast with the original error.
-            if (getVideoIdAndUrl(url).sourceType !== 'YouTube' || isPermanentDownloadError(err)) throw err;
+            // a yt-dlp source (YouTube/Facebook VOD) has a post-live processing window:
+            // CDN/direct failures and permanently-gone videos would just burn the full wait,
+            // so those fail fast with the original error.
+            if (!getVideoIdAndUrl(url).usesYtDlp || isPermanentDownloadError(err)) throw err;
             lastReason = `download failed (VOD may still be processing): ${(err as Error).message}`;
         } finally {
             clearInterval(sampler);
@@ -243,7 +244,7 @@ export async function downloadUntilComplete(
     throw new Error(
         `Livestream VOD not downloadable within ${Math.round(config.maxWaitMs / 60_000)}min ` +
         `(${attempt} attempts over ${elapsedMin()}min) — ${lastReason}. ` +
-        `The recording likely hadn't finished processing on YouTube.`,
+        `The recording likely hadn't finished processing at the source.`,
     );
 }
 
@@ -251,8 +252,12 @@ const execFileAsync = promisify(cp.execFile);
 
 // Errors that no amount of waiting can fix — retrying would burn the whole maxWait.
 // Deliberately narrow: transient conditions (bot-check walls, network blips, 403s
-// during processing) must stay retryable.
-const PERMANENT_DOWNLOAD_ERROR = /video unavailable|private video|has been removed/i;
+// during processing) must stay retryable. Facebook's "The video is not available,
+// Facebook said: ..." wrapper is deliberately NOT matched: yt-dlp emits it for ANY
+// interstitial page, including the transient one served while a post-live VOD is
+// still processing. The login wall (raise_login_required default message) is safe
+// to match — it only fires on a real login form in the page, never on bot-checks.
+const PERMANENT_DOWNLOAD_ERROR = /video unavailable|private video|has been removed|only available for registered users/i;
 
 function isPermanentDownloadError(err: unknown): boolean {
     return PERMANENT_DOWNLOAD_ERROR.test((err as Error)?.message ?? '');
@@ -271,11 +276,13 @@ export function parseVideoInfoOutput(stdout: string): VideoInfo {
 /**
  * Fetches the video's reported live_status and duration via `yt-dlp --print` — a few bytes,
  * vs a --write-info-json sidecar that runs to tens of MB for a multi-hour VOD (and
- * --dump-single-json, which overflows the exec output buffer). Non-YouTube sources report
- * nothing → `{}` → the first download is accepted without a completeness check.
+ * --dump-single-json, which overflows the exec output buffer). Sources not handled by yt-dlp
+ * report nothing → `{}` → the first download is accepted without a completeness check.
+ * Facebook reports `duration`; `live_status` may print `NA`, which `parseVideoInfoOutput`
+ * already maps to `undefined`.
  */
 async function getInfo(url: string): Promise<VideoInfo> {
-    if (getVideoIdAndUrl(url).sourceType !== 'YouTube') return {};
+    if (!getVideoIdAndUrl(url).usesYtDlp) return {};
 
     // --no-playlist: a watch URL carrying &list= would otherwise print one line per playlist
     // entry, and the fetch would enumerate the whole playlist on every attempt.
@@ -353,7 +360,7 @@ function completeDownloadConfig(): CompleteDownloadConfig {
 }
 
 /**
- * Downloads a YouTube (or CDN/direct) recording, retrying while it comes back incomplete —
+ * Downloads a YouTube/Facebook (or CDN/direct) recording, retrying while it comes back incomplete —
  * a just-ended livestream VOD is still processing and can download truncated. Audio
  * normalization/extraction runs once, only after a download is confirmed complete. Same
  * signature as a plain single download, so all callers (pipeline, CLI) are unchanged.
@@ -382,11 +389,38 @@ export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onP
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
 
+const facebookHost = (mediaUrl: string): string | undefined => {
+    try {
+        const host = new URL(mediaUrl).hostname;
+        return host === 'fb.watch' || host === 'facebook.com' || host === 'fb.com'
+            || host.endsWith('.facebook.com') || host.endsWith('.fb.com') ? host : undefined;
+    } catch {
+        return undefined;
+    }
+};
+
+const extractFacebookVideoId = (url: URL, host: string): string | undefined => {
+    if (host === 'fb.watch') {
+        const seg = url.pathname.split('/').filter(Boolean)[0];
+        // Validate the share code — an unexpected path segment would produce a bad filename.
+        return seg && /^[\w-]+$/.test(seg) ? seg : undefined;
+    }
+    // watch/?v=<id> and video.php?v=<id>
+    const v = url.searchParams.get('v');
+    if (v && /^\d+$/.test(v)) return v;
+    // /share/v/<code>, /share/r/<code> — opaque share codes (yt-dlp follows Facebook's
+    // redirect to the canonical video URL), stable enough to serve as cache keys
+    const share = url.pathname.match(/\/share\/[vr]\/([\w-]+)/);
+    if (share) return share[1];
+    // /<page>/videos/<id>, /<page>/videos/<title-slug>/<id>/, /reel/<id>
+    return url.pathname.match(/\/(?:videos|reel)\/(?:[^/]+\/)?(\d+)(?=\/|$)/)?.[1];
+};
+
 export const getVideoIdAndUrl = (mediaUrl: string) => {
     if (mediaUrl.includes("youtube.com") || mediaUrl.includes("youtu.be")) {
         // Extract video ID from various YouTube URL formats
         let videoId: string | undefined;
-        
+
         if (mediaUrl.includes("youtube.com/watch")) {
             const urlParams = new URL(mediaUrl).searchParams;
             videoId = urlParams.get('v') || undefined;
@@ -395,22 +429,32 @@ export const getVideoIdAndUrl = (mediaUrl: string) => {
         } else if (mediaUrl.includes("youtube.com/embed/")) {
             videoId = mediaUrl.split("youtube.com/embed/")[1]?.split(/[?&#/]/)[0];
         }
-        
+
         if (!videoId || videoId.length === 0) {
             throw new Error(`Could not extract video ID from YouTube URL: ${mediaUrl}`);
         }
-        
-        return { videoId, videoUrl: mediaUrl, sourceType: 'YouTube' };
+
+        return { videoId, videoUrl: mediaUrl, sourceType: 'YouTube', usesYtDlp: true };
+    }
+
+    const fbHost = facebookHost(mediaUrl);
+    if (fbHost) {
+        const fbId = extractFacebookVideoId(new URL(mediaUrl), fbHost);
+        if (!fbId) {
+            throw new Error(`Could not extract video ID from Facebook URL: ${mediaUrl}`);
+        }
+        // fb- prefix namespaces the data-dir cache; dropCachedMedia/downloadedBytes prefix-match on videoId.
+        return { videoId: `fb-${fbId}`, videoUrl: mediaUrl, sourceType: 'Facebook', usesYtDlp: true };
     }
 
     // Check if it's from our CDN
     const cdnBaseUrl = process.env.CDN_BASE_URL;
     if (cdnBaseUrl && mediaUrl.startsWith(cdnBaseUrl)) {
         const fileName = path.basename(mediaUrl, path.extname(mediaUrl));
-        return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'CDN' };
+        return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'CDN', usesYtDlp: false };
     }
 
-    return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL' };
+    return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL', usesYtDlp: false };
 }
 type LoudnormStats = {
     input_i: string;

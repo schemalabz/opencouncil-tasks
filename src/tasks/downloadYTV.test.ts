@@ -24,6 +24,7 @@ describe('getVideoIdAndUrl', () => {
     const result = getVideoIdAndUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
     expect(result.videoId).toBe('dQw4w9WgXcQ');
     expect(result.sourceType).toBe('YouTube');
+    expect(result.usesYtDlp).toBe(true);
   });
 
   it('extracts ID from youtu.be/ short links', () => {
@@ -54,6 +55,67 @@ describe('getVideoIdAndUrl', () => {
     expect(result.sourceType).toBe('Direct URL');
     expect(result.videoId).toBeTruthy();
     expect(result.videoUrl).toBe('https://example.com/video.mp4');
+    expect(result.usesYtDlp).toBe(false);
+  });
+
+  it('extracts video ID from a Facebook page video URL', () => {
+    const result = getVideoIdAndUrl('https://www.facebook.com/100064500710523/videos/985543467438673');
+    expect(result).toEqual({
+      videoId: 'fb-985543467438673',
+      videoUrl: 'https://www.facebook.com/100064500710523/videos/985543467438673',
+      sourceType: 'Facebook',
+      usesYtDlp: true,
+    });
+  });
+
+  it('extracts video ID from a Facebook page video URL with a title slug and trailing slash', () => {
+    const result = getVideoIdAndUrl('https://m.facebook.com/somepage/videos/meeting-24-06/985543467438673/');
+    expect(result.videoId).toBe('fb-985543467438673');
+    expect(result.sourceType).toBe('Facebook');
+  });
+
+  it('extracts video ID from facebook.com/watch/?v= URLs', () => {
+    const result = getVideoIdAndUrl('https://www.facebook.com/watch/?v=985543467438673');
+    expect(result.videoId).toBe('fb-985543467438673');
+    expect(result.sourceType).toBe('Facebook');
+  });
+
+  it('uses the share code of a facebook.com/share/v/ URL as the video ID', () => {
+    // The code is opaque (not the numeric video id); yt-dlp resolves it by following
+    // Facebook's redirect to the canonical video URL. It is stable, so it works as a cache key.
+    const result = getVideoIdAndUrl('https://www.facebook.com/share/v/1JGm6KHxyJ/');
+    expect(result.videoId).toBe('fb-1JGm6KHxyJ');
+    expect(result.sourceType).toBe('Facebook');
+  });
+
+  it('uses the short code of an fb.watch URL as the video ID', () => {
+    const result = getVideoIdAndUrl('https://fb.watch/aBcD3fGh1/');
+    expect(result.videoId).toBe('fb-aBcD3fGh1');
+    expect(result.sourceType).toBe('Facebook');
+  });
+
+  it('throws on a Facebook URL that is not a recognizable video (plain fetch would download page HTML)', () => {
+    expect(() => getVideoIdAndUrl('https://www.facebook.com/somepage')).toThrow(
+      /Could not extract video ID from Facebook URL/
+    );
+  });
+
+  it('routes mbasic.facebook.com to the Facebook branch (not silent plain-fetch fallthrough)', () => {
+    const result = getVideoIdAndUrl('https://mbasic.facebook.com/100064500710523/videos/985543467438673');
+    expect(result.videoId).toBe('fb-985543467438673');
+    expect(result.sourceType).toBe('Facebook');
+  });
+
+  it('throws loudly on l.facebook.com link-shim URLs (no silent plain-fetch fallthrough)', () => {
+    expect(() =>
+      getVideoIdAndUrl('https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.com')
+    ).toThrow(/Could not extract video ID from Facebook URL/);
+  });
+
+  it('throws on a Facebook video URL where the numeric ID has non-numeric characters (anchoring fix)', () => {
+    expect(() =>
+      getVideoIdAndUrl('https://www.facebook.com/somepage/videos/123abc')
+    ).toThrow(/Could not extract video ID from Facebook URL/);
   });
 });
 
@@ -454,6 +516,41 @@ describe('downloadUntilComplete', () => {
       vi.useRealTimers();
       warnSpy.mockRestore();
     }
+  });
+
+  it('fails fast on a Facebook login wall instead of burning the full wait (waiting cannot fix it)', async () => {
+    // Exact message shape from yt-dlp: the facebook extractor calls raise_login_required()
+    // on "You must log in to continue" pages, whose default message is below.
+    const download = vi.fn().mockRejectedValue(new Error(
+      'yt-dlp download failed: ERROR: [facebook] 985543467438673: This video is only available for registered users. Use --cookies for the authentication.'));
+    const deps = makeDeps({ download });
+
+    const err = await downloadUntilComplete(
+      'https://www.facebook.com/somepage/videos/985543467438673', deps, CONFIG, () => {})
+      .catch((e) => e as Error) as Error;
+
+    expect(err.message).toContain('registered users');
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(deps.sleep).not.toHaveBeenCalled();
+  });
+
+  it('retries a Facebook download failure (post-live VOD may still be processing), then succeeds', async () => {
+    // yt-dlp wraps ANY Facebook interstitial as 'The video is not available, Facebook
+    // said: "..."' — including the transient page served while a post-live VOD is
+    // processing — so that wrapper must stay retryable, not permanent.
+    const download = vi.fn()
+      .mockRejectedValueOnce(new Error(
+        'yt-dlp download failed: ERROR: [facebook] 985543467438673: The video is not available, Facebook said: "This content isn\'t available right now"'))
+      .mockRejectedValueOnce(new Error('yt-dlp download failed: ERROR: [facebook] Cannot parse data'))
+      .mockResolvedValueOnce(RAW);
+    const deps = makeDeps({ download });
+
+    const result = await downloadUntilComplete(
+      'https://www.facebook.com/somepage/videos/985543467438673', deps, CONFIG, () => {});
+
+    expect(result).toEqual(RAW);
+    expect(download).toHaveBeenCalledTimes(3);
+    expect(deps.sleep).toHaveBeenCalledTimes(2);
   });
 
   it('logs live_status transitions across attempts (data-gathering, not gating)', async () => {
