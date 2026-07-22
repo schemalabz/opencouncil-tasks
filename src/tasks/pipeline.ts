@@ -15,6 +15,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/**
+ * onProgress doubles as the cancellation checkpoint: TaskManager may throw
+ * TaskCancelledError from it. Never call it synchronously from inside an
+ * EventEmitter/stream handler — a throw there is an uncaught exception.
+ * Wrap forwarded callbacks in try/catch (see downloadYTV's yt-dlp progress).
+ */
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
 export type PipelineDeps = {

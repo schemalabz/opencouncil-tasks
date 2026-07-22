@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { promises as fs } from 'fs';
 import { observeGeneration, GenerationHandle } from './observability.js';
+import { TaskCancelledError, abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 
 dotenv.config();
 
@@ -47,8 +48,6 @@ export function formatUsage(usage: Anthropic.Messages.Usage): string {
 }
 
 export const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
-
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 const logFilePath = path.join(process.env.LOG_DIR || process.cwd(), 'ai.log');
 export async function logToFile(message: string, data?: any) {
@@ -161,7 +160,8 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
                     const now = new Date();
                     const sleepTime = resetTime.getTime() - now.getTime() + 1000;
                     console.log(`Rate limit hit, sleeping until ${resetTime.toISOString()} (${sleepTime}ms)`);
-                    await sleep(sleepTime);
+                    await abortableSleep(sleepTime, getTaskControl()?.cancel.signal);
+                    throwIfCancelled();
                     continue;
                 }
             }
@@ -171,7 +171,8 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
                 transientRetries++;
                 const backoffMs = transientRetries * BACKOFF_BASE_MS[errorKind];
                 console.log(`Transient ${errorKind} error (attempt ${transientRetries}/${MAX_TRANSIENT_RETRIES}), retrying in ${backoffMs}ms...`);
-                await sleep(backoffMs);
+                await abortableSleep(backoffMs, getTaskControl()?.cancel.signal);
+                throwIfCancelled();
                 continue;
             }
             throw e;
@@ -180,9 +181,27 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 const BATCH_POLL_INTERVAL_MS = 60_000; // 60s between polls
+const BATCH_CANCEL_POLL_INTERVAL_MS = 5_000; // faster polls while a cancel drains
 
-async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming, requestOptions: Anthropic.RequestOptions): Promise<Anthropic.Messages.Message> {
-    const batch = await anthropic.messages.batches.create({
+/** Thrown when a batch request was cancelled for promotion; the caller re-issues via streaming. */
+export class BatchPromotedError extends Error {
+    constructor() {
+        super('Batch request cancelled for promotion to streaming');
+        this.name = 'BatchPromotedError';
+    }
+}
+
+export async function executeBatch(
+    requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming,
+    requestOptions: Anthropic.RequestOptions,
+    client: Anthropic = anthropic,
+): Promise<Anthropic.Messages.Message> {
+    const control = getTaskControl();
+    const cancelSignal = control?.cancel.signal;
+    const promoteSignal = control?.promote.signal;
+    const wakeSignal = cancelSignal && promoteSignal ? AbortSignal.any([cancelSignal, promoteSignal]) : undefined;
+
+    const batch = await client.messages.batches.create({
         requests: [{
             custom_id: 'request-1',
             params: requestParams,
@@ -192,14 +211,22 @@ async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParam
     console.log(`Batch created: ${batch.id}, polling for result...`);
 
     while (true) {
-        await sleep(BATCH_POLL_INTERVAL_MS);
+        await abortableSleep(BATCH_POLL_INTERVAL_MS, wakeSignal);
 
-        const status = await anthropic.messages.batches.retrieve(batch.id);
+        if (cancelSignal?.aborted) {
+            await cancelBatchQuietly(client, batch.id);
+            throw new TaskCancelledError(`Batch ${batch.id} cancelled with its task`);
+        }
+        if (promoteSignal?.aborted) {
+            return await resolvePromotedBatch(client, batch.id, cancelSignal);
+        }
+
+        const status = await client.messages.batches.retrieve(batch.id);
         const elapsed = Math.round((Date.now() - new Date(status.created_at).getTime()) / 1000);
         console.log(`Batch ${batch.id}: ${status.processing_status} (${elapsed}s elapsed, ${status.request_counts.processing} processing, ${status.request_counts.succeeded} succeeded)`);
 
         if (status.processing_status === 'ended') {
-            const results = await anthropic.messages.batches.results(batch.id);
+            const results = await client.messages.batches.results(batch.id);
             for await (const result of results) {
                 if (result.custom_id === 'request-1') {
                     if (result.result.type === 'succeeded') {
@@ -217,6 +244,45 @@ async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParam
             throw new Error('Batch completed but no result found for request-1');
         }
     }
+}
+
+async function cancelBatchQuietly(client: Anthropic, batchId: string): Promise<void> {
+    try {
+        await client.messages.batches.cancel(batchId);
+    } catch (e) {
+        console.warn(`Failed to cancel batch ${batchId}: ${e instanceof Error ? e.message : e}`);
+    }
+}
+
+/**
+ * Promotion: cancel the batch, wait for it to end, then resolve the race —
+ * a request that finished before the cancel landed is already paid for
+ * (batch rates), so use its result; otherwise tell the caller to re-issue
+ * via streaming.
+ */
+async function resolvePromotedBatch(
+    client: Anthropic,
+    batchId: string,
+    cancelSignal: AbortSignal | undefined,
+): Promise<Anthropic.Messages.Message> {
+    console.log(`Batch ${batchId}: promotion requested, cancelling batch...`);
+    await cancelBatchQuietly(client, batchId);
+
+    while (true) {
+        const status = await client.messages.batches.retrieve(batchId);
+        if (status.processing_status === 'ended') break;
+        await abortableSleep(BATCH_CANCEL_POLL_INTERVAL_MS, cancelSignal);
+        if (cancelSignal?.aborted) throw new TaskCancelledError(`Batch ${batchId} cancelled with its task`);
+    }
+
+    const results = await client.messages.batches.results(batchId);
+    for await (const result of results) {
+        if (result.custom_id === 'request-1' && result.result.type === 'succeeded') {
+            console.log(`Batch ${batchId}: request completed before cancel landed — using the paid result`);
+            return result.result.message;
+        }
+    }
+    throw new BatchPromotedError();
 }
 
 /**
@@ -243,8 +309,10 @@ export function continuationPrompt(partial: string): string {
 export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     let generation: GenerationHandle | undefined;
+    const control = getTaskControl();
     try {
         console.log(`Sending message to claude${batchFirst ? ' (batch-first)' : ''}...`);
+        throwIfCancelled();
         let messages: Anthropic.Messages.MessageParam[] = [];
         if (documentBase64) {
             messages.push({
@@ -315,21 +383,36 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             metadata: { batchFirst, cacheSystemPrompt, maxTokens, hasTools: Boolean(tools), hasDocument: Boolean(documentBase64) },
         });
 
-        // Prepare request options with beta headers if needed
-        const requestOptions: Anthropic.RequestOptions = outputFormat ? {
-            headers: {
-                'anthropic-beta': 'structured-outputs-2025-11-13'
-            }
-        } : {};
+        // Prepare request options with beta headers if needed, plus cancel signal
+        const requestOptions: Anthropic.RequestOptions = {
+            ...(outputFormat ? { headers: { 'anthropic-beta': 'structured-outputs-2025-11-13' } } : {}),
+            ...(control ? { signal: control.cancel.signal } : {}),
+        };
 
         // Stream with retry, fall back to Batches API if all retries exhausted.
         // Streaming is fast (seconds) but fragile on long requests. The Batches API
         // is slower (minutes of queue time) but immune to connection drops.
         // batchFirst: skip streaming entirely, go direct to Batches API (300K output limit).
+        // A promoted task (llmMode 'streaming') skips the Batch API for the rest of its run.
+        const llmMode = control?.llmMode ?? 'batch';
+        const useBatch = batchFirst && llmMode === 'batch';
         let response: Anthropic.Messages.Message;
-        let usedBatch = batchFirst;
-        if (batchFirst) {
-            response = await executeBatch(requestParams, requestOptions);
+        let usedBatch = useBatch;
+        if (useBatch) {
+            try {
+                response = await executeBatch(requestParams, requestOptions);
+            } catch (e) {
+                if (e instanceof BatchPromotedError) {
+                    console.log(`Batch promoted: re-issuing request via streaming...`);
+                    response = await withRetry(async () => {
+                        const stream = anthropic.messages.stream(requestParams, requestOptions);
+                        return stream.finalMessage();
+                    });
+                    usedBatch = false;
+                } else {
+                    throw e;
+                }
+            }
         } else {
             try {
                 response = await withRetry(async () => {
@@ -337,7 +420,10 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                     return stream.finalMessage();
                 });
             } catch (e) {
-                if (classifyTransientError(e)) {
+                // After promotion, the batch fallback would re-enter the queue the
+                // operator just escaped (and the aborted promote signal would bounce
+                // it straight back out) — so only fall back while in batch mode.
+                if (classifyTransientError(e) && control?.llmMode !== 'streaming') {
                     console.log(`Streaming failed after retries, falling back to batch mode...`);
                     response = await executeBatch(requestParams, requestOptions);
                     usedBatch = true;
@@ -407,7 +493,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 result: response2.result,
                 maxTokens,
                 resolvedModel,
-                batchMode: batchFirst
+                batchMode: usedBatch
             }
         }
 
@@ -443,11 +529,18 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             maxTokens,
             response: response,
             resolvedModel,
-            batchMode: batchFirst
+            batchMode: usedBatch
         };
     } catch (e) {
-        generation?.error(e instanceof Error ? e.message : String(e));
-        console.error(`Error in aiChat: ${e}`);
+        // A cancel that aborts the SDK mid-call surfaces as APIUserAbortError,
+        // not TaskCancelledError — convert it so Langfuse traces read "cancelled"
+        // and the error chain stays meaningful downstream.
+        let err = e;
+        if (control?.cancel.signal.aborted && !(e instanceof TaskCancelledError)) {
+            err = new TaskCancelledError(`Task cancelled during LLM call`);
+        }
+        generation?.error(err instanceof Error ? err.message : String(err));
+        console.error(`Error in aiChat: ${err}`);
         // Log full error details for stream terminations to aid reproduction
         // (see https://github.com/anthropics/anthropic-sdk-typescript/issues/774)
         if (e instanceof Error && (e as any).cause) {
@@ -463,7 +556,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             cause: e instanceof Error ? (e as any).cause : undefined,
             stack: e instanceof Error ? e.stack : undefined,
         });
-        throw formatApiError(e);
+        throw formatApiError(err);
     }
 }
 

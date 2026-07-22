@@ -4,6 +4,7 @@ import { CityLanguage, Transcript } from "../types.js";
 import { scribeTranscriber, MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
 import { createScopedLogger } from "./utils/scopedLogger.js";
 import { formatTime } from "../utils.js";
+import { throwIfCancelled } from "../lib/taskControl.js";
 
 dotenv.config();
 
@@ -85,6 +86,7 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, l
 
     const results: (Transcript & { start: number })[] = [];
     for (let i = 0; i < settled.length; i++) {
+        throwIfCancelled();
         const result = settled[i];
         results.push(result.status === "fulfilled" ? result.value : await transcribeSegment(segments[i], i));
     }
