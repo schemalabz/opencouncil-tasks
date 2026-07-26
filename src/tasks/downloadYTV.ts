@@ -76,6 +76,7 @@ export interface DownloadedMedia {
     audioOnly: string;
     combined: string;
     sourceType: string;
+    audioNormalized: boolean;
 }
 
 /** What the source reports about a video, fetched independently of any download. */
@@ -382,9 +383,9 @@ export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onP
     );
 
     const audioOnly = path.join(path.dirname(combined), `${path.basename(combined, path.extname(combined))}.mp3`);
-    await normalizeVideoAudio(combined);
+    const audioNormalized = await normalizeVideoAudio(combined);
     await extractSoundFromMP4(combined, audioOnly);
-    return { audioOnly, combined, sourceType };
+    return { audioOnly, combined, sourceType, audioNormalized };
 };
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
@@ -529,7 +530,7 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
     });
 }
 
-async function normalizeVideoAudio(filePath: string): Promise<void> {
+async function normalizeVideoAudio(filePath: string): Promise<boolean> {
     const { I, TP, LRA } = LOUDNORM_TARGET;
     const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
     const filename = path.basename(filePath);
@@ -554,7 +555,7 @@ async function normalizeVideoAudio(filePath: string): Promise<void> {
 
     if (!needsLoudnormCorrection(stats)) {
         console.log(`[loudnorm] ${filename}: within ${LOUDNORM_TOLERANCE_LU} LU of the ${I} LUFS target, skipping normalization`);
-        return;
+        return false;
     }
 
     // Pass 2: apply normalization with linear mode
@@ -572,6 +573,7 @@ async function normalizeVideoAudio(filePath: string): Promise<void> {
     // Replace original with normalized version
     fs.renameSync(tempPath, filePath);
     console.log(`[loudnorm] ${filename}: normalize=${pass2Duration}s, total=${((Date.now() - pass1Start) / 1000).toFixed(1)}s`);
+    return true;
 }
 
 const FREQUENCY_FILTER = true;
