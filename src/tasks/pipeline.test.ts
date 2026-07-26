@@ -103,7 +103,8 @@ describe("createPipeline", () => {
         expect(spacePaths).not.toContain("council-meeting-videos");
     });
 
-    it("Spaces URL + normalized audio — overwrites the original object, Mux uses the same URL", async () => {
+    it("Spaces URL + normalized audio — overwrites the original object, Mux uses the overwrite's returned URL", async () => {
+        const OVERWRITTEN = "https://spaces.example.com/uploads/combined.mp4?after=normalize";
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
@@ -111,14 +112,17 @@ describe("createPipeline", () => {
                 sourceType: "Spaces",
                 audioNormalized: true,
             })),
+            overwriteSpacesObject: vi.fn(async () => OVERWRITTEN),
         });
         const pipeline = createPipeline(deps);
 
         const result = await pipeline(baseRequest, vi.fn());
 
         expect(deps.overwriteSpacesObject).toHaveBeenCalledWith(baseRequest.youtubeUrl, "/tmp/combined.mp4");
-        expect(deps.createMuxAsset).toHaveBeenCalledWith(baseRequest.youtubeUrl);
-        expect(result.videoUrl).toBe(baseRequest.youtubeUrl);
+        // Mux and the stored videoUrl must use the value RETURNED by overwriteSpacesObject,
+        // not the input request URL — a distinct sentinel locks that data-flow.
+        expect(deps.createMuxAsset).toHaveBeenCalledWith(OVERWRITTEN);
+        expect(result.videoUrl).toBe(OVERWRITTEN);
         const spacePaths = vi.mocked(deps.uploadToSpaces).mock.calls.map((c) => c[0].spacesPath);
         expect(spacePaths).not.toContain("council-meeting-videos");
     });

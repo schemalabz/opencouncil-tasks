@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { Task } from './pipeline.js';
 import mime from 'mime/lite';
 import { isUsingMinIO } from '../utils.js';
+import { spacesKeyForUrl, spacesUrlForKey } from './utils/spacesUrl.js';
 dotenv.config();
 
 export interface UploadFilesArgs {
@@ -47,33 +48,12 @@ export async function putPublicFile(client: aws.S3, bucket: string, key: string,
 }
 
 /**
- * Extract the bucket object key from a public file URL — the inverse of the
- * `${SPACES_PUBLIC_URL}/${key}` form that uploadToSpaces builds. When the URL starts with
- * SPACES_PUBLIC_URL, the key is whatever follows it; this is correct even when
- * SPACES_PUBLIC_URL carries a path prefix (e.g. the dev proxy `<ngrok>/dev/files/<bucket>`).
- * Otherwise we fall back to the URL path (production Spaces origin, where the bucket is the
- * host and the path is exactly the key).
- */
-export function parseSpacesObjectKey(fileUrl: string): string {
-    const withoutQuery = fileUrl.split("?")[0];
-    const base = process.env.SPACES_PUBLIC_URL?.replace(/\/+$/, "");
-    const raw = base && withoutQuery.startsWith(base)
-        ? withoutQuery.slice(base.length)
-        : new URL(withoutQuery).pathname;
-    const key = decodeURIComponent(raw.replace(/^\/+/, ""));
-    if (!key) {
-        throw new Error(`Cannot derive an object key from URL: ${fileUrl}`);
-    }
-    return key;
-}
-
-/**
  * Overwrite an existing Spaces object in place with a local file, keeping the same URL.
- * Unlike uploadToSpaces, this writes to the exact key parsed from `originalUrl` (no
+ * Unlike uploadToSpaces, this writes to the exact key derived from `originalUrl` (no
  * version suffix, no spacesPath prefix) and always overwrites. Returns `originalUrl`.
  */
 export async function overwriteSpacesObject(originalUrl: string, localFile: string): Promise<string> {
-    const key = parseSpacesObjectKey(originalUrl);
+    const key = spacesKeyForUrl(originalUrl);
     const bucketName = process.env.DO_SPACES_BUCKET;
     if (!bucketName) {
         throw new Error("DO_SPACES_BUCKET environment variable is not set");
@@ -109,7 +89,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
     for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         const fileName = path.basename(file, path.extname(file)) + `_v${VERSION}` + path.extname(file);
-        const finalUrl = `${process.env.SPACES_PUBLIC_URL}/${spacesPath}/${fileName}`;
+        const finalUrl = spacesUrlForKey(`${spacesPath}/${fileName}`);
         console.log(`Checking if file ${fileName} already exists in the bucket`);
 
         // Check if the file already exists in the bucket

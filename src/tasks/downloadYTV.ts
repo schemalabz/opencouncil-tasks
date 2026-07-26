@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 import { getMediaDurationSeconds } from "./utils/mediaOperations.js";
+import { isSpacesUrl } from "./utils/spacesUrl.js";
 
 dotenv.config();
 
@@ -449,8 +450,7 @@ export const getVideoIdAndUrl = (mediaUrl: string) => {
     }
 
     // Check if it's already on our own Spaces storage (front-end upload)
-    const spacesPublicUrl = process.env.SPACES_PUBLIC_URL;
-    if (spacesPublicUrl && mediaUrl.startsWith(spacesPublicUrl)) {
+    if (isSpacesUrl(mediaUrl)) {
         const fileName = path.basename(mediaUrl, path.extname(mediaUrl));
         return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'Spaces', usesYtDlp: false };
     }
