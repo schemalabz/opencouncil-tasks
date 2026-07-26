@@ -16,7 +16,7 @@ services:
       - DO_SPACES_KEY=minioadmin
       - DO_SPACES_SECRET=minioadmin
       - DO_SPACES_BUCKET=opencouncil-dev
-      - CDN_BASE_URL=http://localhost:${PORT}/dev/files/opencouncil-dev
+      - SPACES_PUBLIC_URL=http://localhost:${PORT}/dev/files/opencouncil-dev
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

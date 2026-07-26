@@ -48,15 +48,15 @@ export async function putPublicFile(client: aws.S3, bucket: string, key: string,
 
 /**
  * Extract the bucket object key from a public file URL — the inverse of the
- * `${CDN_BASE_URL}/${key}` form that uploadToSpaces builds. When the URL starts with
- * CDN_BASE_URL, the key is whatever follows it; this is correct even when CDN_BASE_URL
- * carries a path prefix (e.g. the dev proxy `<ngrok>/dev/files/<bucket>`). Otherwise we
- * fall back to the URL path (production Spaces origin, where the bucket is the host and
- * the path is exactly the key).
+ * `${SPACES_PUBLIC_URL}/${key}` form that uploadToSpaces builds. When the URL starts with
+ * SPACES_PUBLIC_URL, the key is whatever follows it; this is correct even when
+ * SPACES_PUBLIC_URL carries a path prefix (e.g. the dev proxy `<ngrok>/dev/files/<bucket>`).
+ * Otherwise we fall back to the URL path (production Spaces origin, where the bucket is the
+ * host and the path is exactly the key).
  */
 export function parseSpacesObjectKey(fileUrl: string): string {
     const withoutQuery = fileUrl.split("?")[0];
-    const base = process.env.CDN_BASE_URL?.replace(/\/+$/, "");
+    const base = process.env.SPACES_PUBLIC_URL?.replace(/\/+$/, "");
     const raw = base && withoutQuery.startsWith(base)
         ? withoutQuery.slice(base.length)
         : new URL(withoutQuery).pathname;
@@ -109,7 +109,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
     for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
         const fileName = path.basename(file, path.extname(file)) + `_v${VERSION}` + path.extname(file);
-        const finalUrl = `${process.env.CDN_BASE_URL}/${spacesPath}/${fileName}`;
+        const finalUrl = `${process.env.SPACES_PUBLIC_URL}/${spacesPath}/${fileName}`;
         console.log(`Checking if file ${fileName} already exists in the bucket`);
 
         // Check if the file already exists in the bucket

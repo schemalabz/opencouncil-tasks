@@ -118,5 +118,5 @@ DO_SPACES_ENDPOINT="http://localhost:$MINIO_PORT" \
 DO_SPACES_KEY="minioadmin" \
 DO_SPACES_SECRET="minioadmin" \
 DO_SPACES_BUCKET="$MINIO_BUCKET" \
-CDN_BASE_URL="http://localhost:$APP_PORT/dev/files/$MINIO_BUCKET" \
+SPACES_PUBLIC_URL="http://localhost:$APP_PORT/dev/files/$MINIO_BUCKET" \
     start_app

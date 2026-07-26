@@ -121,7 +121,7 @@ sequenceDiagram
 - Env vars
   - DATA_DIR (default ./data)
   - DO_SPACES_ENDPOINT, DO_SPACES_KEY, DO_SPACES_SECRET, DO_SPACES_BUCKET
-  - CDN_BASE_URL for dev file serving
+  - SPACES_PUBLIC_URL for dev file serving
   - FFPROBE_PATH optional override (container sets /usr/bin/ffprobe)
   - PORT
 - Render parameters (request)

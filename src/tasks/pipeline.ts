@@ -37,11 +37,11 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
 
         const { audioOnly, combined, sourceType, audioNormalized } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
-        // Only upload video if it's not already from our CDN. When it IS from our CDN but
-        // loudnorm changed the audio, overwrite the original object in place so Mux (and the
-        // stored videoUrl) serve the normalized audio; otherwise use the original URL as-is.
-        const isCdnUrl = sourceType === 'CDN';
-        const combinedVideoUploadPromise = isCdnUrl
+        // Only upload video if it's not already on our own Spaces storage. When it IS on our
+        // Spaces but loudnorm changed the audio, overwrite the original object in place so Mux
+        // (and the stored videoUrl) serve the normalized audio; otherwise use the URL as-is.
+        const isSpacesUrl = sourceType === 'Spaces';
+        const combinedVideoUploadPromise = isSpacesUrl
             ? (audioNormalized
                 ? deps.overwriteSpacesObject(request.youtubeUrl, combined).then((url) => [url])
                 : Promise.resolve([request.youtubeUrl]))
@@ -97,13 +97,13 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
 
             console.log("Applied diarization");
 
-            const combinedVideoUrls = await combinedVideoUploadPromise; // wait for video upload or get CDN URL
+            const combinedVideoUrls = await combinedVideoUploadPromise; // wait for video upload or get Spaces URL
             if (combinedVideoUrls.length !== 1) {
                 throw new Error("Expected a single video URL");
             }
             let videoUrl = combinedVideoUrls[0];
 
-            console.log(isCdnUrl ? "Using existing CDN video URL" : "Uploaded combined video");
+            console.log(isSpacesUrl ? "Using existing Spaces video URL" : "Uploaded combined video");
             onProgress("finished", 100); //lfgggg
 
             console.log("All done");

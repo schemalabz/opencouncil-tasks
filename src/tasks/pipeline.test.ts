@@ -79,12 +79,12 @@ describe("createPipeline", () => {
         expect(deps.uploadToSpaces).toHaveBeenCalledTimes(3);
     });
 
-    it("CDN URL skip — uploadToSpaces is NOT called for video", async () => {
+    it("Spaces URL skip — uploadToSpaces is NOT called for video", async () => {
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
-                sourceType: "CDN",
+                sourceType: "Spaces",
                 audioNormalized: false,
             })),
         });
@@ -103,12 +103,12 @@ describe("createPipeline", () => {
         expect(spacePaths).not.toContain("council-meeting-videos");
     });
 
-    it("CDN + normalized audio — overwrites the original object, Mux uses the same URL", async () => {
+    it("Spaces URL + normalized audio — overwrites the original object, Mux uses the same URL", async () => {
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
-                sourceType: "CDN",
+                sourceType: "Spaces",
                 audioNormalized: true,
             })),
         });
@@ -123,12 +123,12 @@ describe("createPipeline", () => {
         expect(spacePaths).not.toContain("council-meeting-videos");
     });
 
-    it("CDN + audio already normalized — no overwrite, Mux uses the original URL", async () => {
+    it("Spaces URL + audio already normalized — no overwrite, Mux uses the original URL", async () => {
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
-                sourceType: "CDN",
+                sourceType: "Spaces",
                 audioNormalized: false,
             })),
         });

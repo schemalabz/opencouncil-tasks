@@ -171,7 +171,7 @@ echo ""
 cd "$PROJECT_DIR"
 
 if [[ "$USE_REAL_SPACES" == "true" ]]; then
-    # Let DO_SPACES_* and CDN_BASE_URL come from .env
+    # Let DO_SPACES_* and SPACES_PUBLIC_URL come from .env
     PUBLIC_URL="$NGROK_URL" \
     CLI_PORT="$CLI_PORT" \
     DATA_DIR="$SMOKE_DATA_DIR" \
@@ -184,6 +184,6 @@ else
     DO_SPACES_KEY="minioadmin" \
     DO_SPACES_SECRET="minioadmin" \
     DO_SPACES_BUCKET="$MINIO_BUCKET" \
-    CDN_BASE_URL="$NGROK_URL/dev/files/$MINIO_BUCKET" \
+    SPACES_PUBLIC_URL="$NGROK_URL/dev/files/$MINIO_BUCKET" \
         npm run smoke -- "$@"
 fi

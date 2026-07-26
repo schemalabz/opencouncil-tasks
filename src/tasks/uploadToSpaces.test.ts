@@ -66,9 +66,9 @@ describe("parseSpacesObjectKey", () => {
         ).toThrow();
     });
 
-    it("strips a path-prefixed CDN_BASE_URL (e.g. the dev proxy) to get the real key", () => {
-        const prev = process.env.CDN_BASE_URL;
-        process.env.CDN_BASE_URL = "https://abc123.ngrok.app/dev/files/opencouncil-dev";
+    it("strips a path-prefixed SPACES_PUBLIC_URL (e.g. the dev proxy) to get the real key", () => {
+        const prev = process.env.SPACES_PUBLIC_URL;
+        process.env.SPACES_PUBLIC_URL = "https://abc123.ngrok.app/dev/files/opencouncil-dev";
         try {
             expect(
                 parseSpacesObjectKey(
@@ -76,7 +76,7 @@ describe("parseSpacesObjectKey", () => {
                 ),
             ).toBe("uploads/vrilissia.mp4");
         } finally {
-            process.env.CDN_BASE_URL = prev;
+            process.env.SPACES_PUBLIC_URL = prev;
         }
     });
 });

@@ -448,11 +448,11 @@ export const getVideoIdAndUrl = (mediaUrl: string) => {
         return { videoId: `fb-${fbId}`, videoUrl: mediaUrl, sourceType: 'Facebook', usesYtDlp: true };
     }
 
-    // Check if it's from our CDN
-    const cdnBaseUrl = process.env.CDN_BASE_URL;
-    if (cdnBaseUrl && mediaUrl.startsWith(cdnBaseUrl)) {
+    // Check if it's already on our own Spaces storage (front-end upload)
+    const spacesPublicUrl = process.env.SPACES_PUBLIC_URL;
+    if (spacesPublicUrl && mediaUrl.startsWith(spacesPublicUrl)) {
         const fileName = path.basename(mediaUrl, path.extname(mediaUrl));
-        return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'CDN', usesYtDlp: false };
+        return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'Spaces', usesYtDlp: false };
     }
 
     return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL', usesYtDlp: false };

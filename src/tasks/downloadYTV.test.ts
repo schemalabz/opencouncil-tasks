@@ -351,14 +351,14 @@ describe('downloadUntilComplete', () => {
 
   it('accepts the first download when there is no reported duration (non-YouTube source)', async () => {
     const deps = makeDeps({
-      download: vi.fn().mockResolvedValue({ combined: 'v.mp4', sourceType: 'CDN' }),
+      download: vi.fn().mockResolvedValue({ combined: 'v.mp4', sourceType: 'Spaces' }),
       getInfo: vi.fn().mockResolvedValue({}), // non-YouTube: nothing to verify against
       probeDurationSeconds: vi.fn().mockResolvedValue(123),
     });
 
     const result = await downloadUntilComplete('https://cdn.example.com/v.mp4', deps, CONFIG, () => {});
 
-    expect(result.sourceType).toBe('CDN');
+    expect(result.sourceType).toBe('Spaces');
     expect(deps.download).toHaveBeenCalledTimes(1);
     expect(deps.sleep).not.toHaveBeenCalled();
     // With no M there is nothing to verify, so the file must not be probed at all —
