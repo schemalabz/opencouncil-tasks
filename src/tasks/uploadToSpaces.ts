@@ -16,9 +16,8 @@ export interface UploadFilesArgs {
 const FORCE_REUPLOAD = false;
 const VERSION = "1";
 
-export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, spacesPath }, onProgress) => {
-    
-    const spacesEndpoint = new S3({
+export function createSpacesClient(): aws.S3 {
+    return new S3({
         endpoint: process.env.DO_SPACES_ENDPOINT,
         accessKeyId: process.env.DO_SPACES_KEY,
         secretAccessKey: process.env.DO_SPACES_SECRET,
@@ -26,9 +25,30 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
         // Only add MinIO-specific config when needed
         ...(isUsingMinIO() && {
             s3ForcePathStyle: true,
-            signatureVersion: 'v4'
-        })
+            signatureVersion: "v4",
+        }),
     });
+}
+
+export async function putPublicFile(client: aws.S3, bucket: string, key: string, localFile: string): Promise<void> {
+    const contentType = mime.getType(localFile);
+    if (!contentType) {
+        throw new Error(`Content type for file ${localFile} not found`);
+    }
+    await client
+        .upload({
+            Bucket: bucket,
+            Key: key,
+            Body: fs.createReadStream(localFile),
+            ContentType: contentType,
+            ACL: "public-read",
+        })
+        .promise();
+}
+
+export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, spacesPath }, onProgress) => {
+
+    const spacesEndpoint = createSpacesClient();
 
     const bucketName = process.env.DO_SPACES_BUCKET;
 
@@ -80,21 +100,8 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
                 throw error;
             }
         }
-        const contentType = mime.getType(file);
-        if (!contentType) {
-            throw new Error(`Content type for file ${file} not found`);
-        }
-
-        const params = {
-            Bucket: bucketName,
-            Key: `${spacesPath}/${fileName}`,
-            Body: fs.createReadStream(file),
-            ContentType: contentType,
-            ACL: 'public-read',
-        };
-
         try {
-            const result = await spacesEndpoint.upload(params).promise();
+            await putPublicFile(spacesEndpoint, bucketName, `${spacesPath}/${fileName}`, file);
             uploadedUrls.push(finalUrl);
             console.log(`Uploaded file ${fileName} to ${finalUrl}`);
             onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
@@ -108,16 +115,7 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
 };
 
 export const checkSpacesConnection = async (): Promise<void> => {
-    const spacesEndpoint = new S3({
-        endpoint: process.env.DO_SPACES_ENDPOINT,
-        accessKeyId: process.env.DO_SPACES_KEY,
-        secretAccessKey: process.env.DO_SPACES_SECRET,
-        region: "fra1",
-        ...(isUsingMinIO() && {
-            s3ForcePathStyle: true,
-            signatureVersion: 'v4'
-        })
-    });
+    const spacesEndpoint = createSpacesClient();
 
     const bucketName = process.env.DO_SPACES_BUCKET;
     if (!bucketName) {
@@ -128,16 +126,7 @@ export const checkSpacesConnection = async (): Promise<void> => {
 };
 
 export const deleteFromSpacesByPrefix = async (prefix: string): Promise<void> => {
-    const spacesEndpoint = new S3({
-        endpoint: process.env.DO_SPACES_ENDPOINT,
-        accessKeyId: process.env.DO_SPACES_KEY,
-        secretAccessKey: process.env.DO_SPACES_SECRET,
-        region: "fra1",
-        ...(isUsingMinIO() && {
-            s3ForcePathStyle: true,
-            signatureVersion: 'v4'
-        })
-    });
+    const spacesEndpoint = createSpacesClient();
 
     const bucketName = process.env.DO_SPACES_BUCKET;
     if (!bucketName) {
