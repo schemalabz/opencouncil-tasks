@@ -6,7 +6,7 @@ import { splitAudioDiarization } from "./splitAudioDiarization.js";
 import { type SplitAudioArgs, type AudioSegment } from "./splitAudioDiarization.js";
 import { transcribe } from "./transcribe.js";
 import { type TranscribeArgs } from "./transcribe.js";
-import { uploadToSpaces } from "./uploadToSpaces.js";
+import { uploadToSpaces, overwriteSpacesObject } from "./uploadToSpaces.js";
 import { type UploadFilesArgs } from "./uploadToSpaces.js";
 import { createMuxAsset, deleteMuxAsset, type MuxResult } from "../lib/mux.js";
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
@@ -18,7 +18,7 @@ dotenv.config();
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
 export type PipelineDeps = {
-    downloadYTV: Task<string, { audioOnly: string; combined: string; sourceType: string }>;
+    downloadYTV: Task<string, { audioOnly: string; combined: string; sourceType: string; audioNormalized: boolean }>;
     uploadToSpaces: Task<UploadFilesArgs, string[]>;
     diarize: Task<Omit<DiarizeRequest, "callbackUrl">, DiarizeResult>;
     splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]>;
@@ -26,6 +26,7 @@ export type PipelineDeps = {
     applyDiarization: Task<{ diarization: Diarization; speakers: DiarizationSpeaker[]; transcript: Transcript }, TranscriptWithSpeakerIdentification>;
     createMuxAsset: (videoUrl: string) => Promise<MuxResult>;
     deleteMuxAsset: (assetId: string) => Promise<void>;
+    overwriteSpacesObject: (originalUrl: string, localFile: string) => Promise<string>;
 };
 
 export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeResult> {
@@ -34,12 +35,16 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
             return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
         };
 
-        const { audioOnly, combined, sourceType } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+        const { audioOnly, combined, sourceType, audioNormalized } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
-        // Only upload video if it's not already from our CDN
+        // Only upload video if it's not already from our CDN. When it IS from our CDN but
+        // loudnorm changed the audio, overwrite the original object in place so Mux (and the
+        // stored videoUrl) serve the normalized audio; otherwise use the original URL as-is.
         const isCdnUrl = sourceType === 'CDN';
         const combinedVideoUploadPromise = isCdnUrl
-            ? Promise.resolve([request.youtubeUrl]) // Use the original CDN URL
+            ? (audioNormalized
+                ? deps.overwriteSpacesObject(request.youtubeUrl, combined).then((url) => [url])
+                : Promise.resolve([request.youtubeUrl]))
             : deps.uploadToSpaces({
                 files: [combined],
                 spacesPath: "council-meeting-videos"
@@ -136,4 +141,5 @@ export const pipeline = createPipeline({
     applyDiarization,
     createMuxAsset,
     deleteMuxAsset,
+    overwriteSpacesObject,
 });

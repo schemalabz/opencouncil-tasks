@@ -23,6 +23,7 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
             audioOnly: "/tmp/audio.wav",
             combined: "/tmp/combined.mp4",
             sourceType: "YouTube",
+            audioNormalized: false,
         })),
         uploadToSpaces: vi.fn(async ({ files, spacesPath }) => {
             if (spacesPath === "audio") return (files as string[]).map((_f: string, i: number) => `https://cdn.example.com/audio-${i}.wav`);
@@ -41,6 +42,7 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
         applyDiarization: vi.fn(async () => fakeDiarizedTranscript),
         createMuxAsset: vi.fn(async () => ({ playbackId: "mux-playback-id-123", assetId: "mux-asset-id-456" })),
         deleteMuxAsset: vi.fn(async () => {}),
+        overwriteSpacesObject: vi.fn(async (originalUrl: string) => originalUrl),
         ...overrides,
     };
 }
@@ -83,6 +85,7 @@ describe("createPipeline", () => {
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
                 sourceType: "CDN",
+                audioNormalized: false,
             })),
         });
         const pipeline = createPipeline(deps);
@@ -98,6 +101,44 @@ describe("createPipeline", () => {
         const calls = vi.mocked(deps.uploadToSpaces).mock.calls;
         const spacePaths = calls.map((c) => c[0].spacesPath);
         expect(spacePaths).not.toContain("council-meeting-videos");
+    });
+
+    it("CDN + normalized audio — overwrites the original object, Mux uses the same URL", async () => {
+        const deps = createStubDeps({
+            downloadYTV: vi.fn(async () => ({
+                audioOnly: "/tmp/audio.wav",
+                combined: "/tmp/combined.mp4",
+                sourceType: "CDN",
+                audioNormalized: true,
+            })),
+        });
+        const pipeline = createPipeline(deps);
+
+        const result = await pipeline(baseRequest, vi.fn());
+
+        expect(deps.overwriteSpacesObject).toHaveBeenCalledWith(baseRequest.youtubeUrl, "/tmp/combined.mp4");
+        expect(deps.createMuxAsset).toHaveBeenCalledWith(baseRequest.youtubeUrl);
+        expect(result.videoUrl).toBe(baseRequest.youtubeUrl);
+        const spacePaths = vi.mocked(deps.uploadToSpaces).mock.calls.map((c) => c[0].spacesPath);
+        expect(spacePaths).not.toContain("council-meeting-videos");
+    });
+
+    it("CDN + audio already normalized — no overwrite, Mux uses the original URL", async () => {
+        const deps = createStubDeps({
+            downloadYTV: vi.fn(async () => ({
+                audioOnly: "/tmp/audio.wav",
+                combined: "/tmp/combined.mp4",
+                sourceType: "CDN",
+                audioNormalized: false,
+            })),
+        });
+        const pipeline = createPipeline(deps);
+
+        const result = await pipeline(baseRequest, vi.fn());
+
+        expect(deps.overwriteSpacesObject).not.toHaveBeenCalled();
+        expect(deps.createMuxAsset).toHaveBeenCalledWith(baseRequest.youtubeUrl);
+        expect(result.videoUrl).toBe(baseRequest.youtubeUrl);
     });
 
     it("progress stages — onProgress called with expected stage names", async () => {
