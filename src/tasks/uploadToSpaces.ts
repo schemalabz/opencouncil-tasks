@@ -46,6 +46,45 @@ export async function putPublicFile(client: aws.S3, bucket: string, key: string,
         .promise();
 }
 
+/**
+ * Extract the bucket object key from a public file URL — the inverse of the
+ * `${CDN_BASE_URL}/${key}` form that uploadToSpaces builds. When the URL starts with
+ * CDN_BASE_URL, the key is whatever follows it; this is correct even when CDN_BASE_URL
+ * carries a path prefix (e.g. the dev proxy `<ngrok>/dev/files/<bucket>`). Otherwise we
+ * fall back to the URL path (production Spaces origin, where the bucket is the host and
+ * the path is exactly the key).
+ */
+export function parseSpacesObjectKey(fileUrl: string): string {
+    const withoutQuery = fileUrl.split("?")[0];
+    const base = process.env.CDN_BASE_URL?.replace(/\/+$/, "");
+    const raw = base && withoutQuery.startsWith(base)
+        ? withoutQuery.slice(base.length)
+        : new URL(withoutQuery).pathname;
+    const key = decodeURIComponent(raw.replace(/^\/+/, ""));
+    if (!key) {
+        throw new Error(`Cannot derive an object key from URL: ${fileUrl}`);
+    }
+    return key;
+}
+
+/**
+ * Overwrite an existing Spaces object in place with a local file, keeping the same URL.
+ * Unlike uploadToSpaces, this writes to the exact key parsed from `originalUrl` (no
+ * version suffix, no spacesPath prefix) and always overwrites. Returns `originalUrl`.
+ */
+export async function overwriteSpacesObject(originalUrl: string, localFile: string): Promise<string> {
+    const key = parseSpacesObjectKey(originalUrl);
+    const bucketName = process.env.DO_SPACES_BUCKET;
+    if (!bucketName) {
+        throw new Error("DO_SPACES_BUCKET environment variable is not set");
+    }
+
+    await putPublicFile(createSpacesClient(), bucketName, key, localFile);
+
+    console.log(`Overwrote Spaces object ${key} from ${path.basename(localFile)}`);
+    return originalUrl;
+}
+
 export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, spacesPath }, onProgress) => {
 
     const spacesEndpoint = createSpacesClient();

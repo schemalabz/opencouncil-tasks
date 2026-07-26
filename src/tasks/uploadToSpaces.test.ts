@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import type aws from "aws-sdk";
 import fs from "fs";
 import { Readable } from "stream";
-import { putPublicFile } from "./uploadToSpaces.js";
+import { putPublicFile, parseSpacesObjectKey } from "./uploadToSpaces.js";
 
 describe("putPublicFile", () => {
     afterEach(() => vi.restoreAllMocks());
@@ -24,5 +24,59 @@ describe("putPublicFile", () => {
                 ContentType: "video/mp4",
             }),
         );
+    });
+});
+
+describe("parseSpacesObjectKey", () => {
+    it("origin URL → key without leading slash", () => {
+        expect(
+            parseSpacesObjectKey(
+                "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/vrilissia_jul22_2_2026_recording.mp4",
+            ),
+        ).toBe("uploads/vrilissia_jul22_2_2026_recording.mp4");
+    });
+
+    it("strips a query string (e.g. presigned params)", () => {
+        expect(
+            parseSpacesObjectKey(
+                "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/a.mp4?X-Amz-Signature=xyz",
+            ),
+        ).toBe("uploads/a.mp4");
+    });
+
+    it("cdn edge host resolves to the same key", () => {
+        expect(
+            parseSpacesObjectKey(
+                "https://townhalls-gr.fra1.cdn.digitaloceanspaces.com/uploads/a.mp4",
+            ),
+        ).toBe("uploads/a.mp4");
+    });
+
+    it("percent-decodes the path", () => {
+        expect(
+            parseSpacesObjectKey(
+                "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/my%20file.mp4",
+            ),
+        ).toBe("uploads/my file.mp4");
+    });
+
+    it("throws when the URL has no object key", () => {
+        expect(() =>
+            parseSpacesObjectKey("https://townhalls-gr.fra1.digitaloceanspaces.com/"),
+        ).toThrow();
+    });
+
+    it("strips a path-prefixed CDN_BASE_URL (e.g. the dev proxy) to get the real key", () => {
+        const prev = process.env.CDN_BASE_URL;
+        process.env.CDN_BASE_URL = "https://abc123.ngrok.app/dev/files/opencouncil-dev";
+        try {
+            expect(
+                parseSpacesObjectKey(
+                    "https://abc123.ngrok.app/dev/files/opencouncil-dev/uploads/vrilissia.mp4",
+                ),
+            ).toBe("uploads/vrilissia.mp4");
+        } finally {
+            process.env.CDN_BASE_URL = prev;
+        }
     });
 });
