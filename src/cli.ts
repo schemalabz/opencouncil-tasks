@@ -731,7 +731,7 @@ program
             };
 
             console.log('Running observability check (one Haiku call through TaskManager)...');
-            await taskManager.runTaskWithCallback(checkTask, {}, callbackUrl, 'observability-check');
+            await taskManager.runTaskWithCallback(checkTask, {}, callbackUrl, 'observability-check').completion;
             await taskManager.finish();
 
             console.log('\n✅ Check task completed. Verify the trace in Langfuse:');
@@ -861,6 +861,84 @@ runsCommand
             console.log(`HTML: ${htmlPath} — open in a browser to review.`);
         } catch (error) {
             console.error('Error comparing runs:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+const tasksCommand = program
+    .command('tasks')
+    .description('Inspect and control tasks on a running tasks server (TASKS_SERVER_URL, TASKS_API_TOKEN)');
+
+const tasksServerUrl = () => process.env.TASKS_SERVER_URL || `http://localhost:${process.env.PORT || 3000}`;
+
+async function tasksServerRequest(path: string, method: 'GET' | 'POST' = 'GET'): Promise<any> {
+    const headers: Record<string, string> = {};
+    if (process.env.TASKS_API_TOKEN) headers['Authorization'] = `Bearer ${process.env.TASKS_API_TOKEN}`;
+    let response: Response;
+    try {
+        response = await fetch(`${tasksServerUrl()}${path}`, { method, headers });
+    } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        throw new Error(`${method} ${tasksServerUrl()}${path} failed: ${msg}`);
+    }
+    const body: any = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(`${method} ${path} → ${response.status}: ${body.error || JSON.stringify(body)}`);
+    }
+    return body;
+}
+
+tasksCommand
+    .command('list')
+    .description('List running and queued tasks')
+    .action(async () => {
+        try {
+            const { running, queued, maxParallelTasks } = await tasksServerRequest('/tasks');
+            if (running.length === 0 && queued.length === 0) {
+                console.log('No running or queued tasks.');
+            }
+            for (const t of running) {
+                const runningFor = Math.round((Date.now() - new Date(t.createdAt).getTime()) / 1000);
+                console.log(`${t.taskId}  ${t.taskType}  ${t.stage} ${t.progressPercent.toFixed(0)}%  llm:${t.llmMode}  running ${runningFor}s`);
+            }
+            for (const t of queued) {
+                console.log(`${t.taskId}  ${t.taskType}  queued`);
+            }
+            console.log(`\n${running.length} running / ${queued.length} queued (max parallel: ${maxParallelTasks})`);
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+tasksCommand
+    .command('cancel <taskId>')
+    .description('Cancel a running or queued task (cooperative)')
+    .action(async (taskId: string) => {
+        try {
+            const result = await tasksServerRequest(`/tasks/${taskId}/cancel`, 'POST');
+            console.log(`${result.taskId}: ${result.status}`);
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+tasksCommand
+    .command('promote <taskId>')
+    .description("Switch a running task's LLM calls from the Batch API to streaming")
+    .action(async (taskId: string) => {
+        try {
+            const result = await tasksServerRequest(`/tasks/${taskId}/promote`, 'POST');
+            console.log(`${result.taskId}: llmMode=${result.llmMode}`);
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
             process.exitCode = 1;
         } finally {
             server.close();
