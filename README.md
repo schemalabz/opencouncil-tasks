@@ -67,7 +67,7 @@ What this gives you:
 - Local S3 via MinIO: console `http://localhost:9001`, API `http://localhost:9000`
 - Dev routes:
   - POST `/dev/test-upload` → tests the real upload pipeline
-  - GET `/dev/files/:bucket/*` → serves files from MinIO (via `SPACES_PUBLIC_URL`)
+  - GET `/dev/files/:bucket/*` → serves files from MinIO (public URLs point here in dev)
 - Mock Mux playback IDs when MinIO is detected
 
 Notes:
@@ -167,7 +167,6 @@ The service uses environment variables for configuration. Not all variables are 
 - `DO_SPACES_SECRET` - Digital Ocean Spaces secret key
 - `DO_SPACES_ENDPOINT` - Digital Ocean Spaces endpoint
 - `DO_SPACES_BUCKET` - Digital Ocean Spaces bucket name
-- `SPACES_PUBLIC_URL` - Public base URL of the Spaces bucket (origin), used to build/parse object URLs
 
 ### External Services
 - `ANTHROPIC_API_KEY` - Required for summarization and content generation

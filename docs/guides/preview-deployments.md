@@ -220,7 +220,6 @@ DO_SPACES_KEY=your-spaces-key
 DO_SPACES_SECRET=your-spaces-secret
 DO_SPACES_ENDPOINT=https://ams3.digitaloceanspaces.com
 DO_SPACES_BUCKET=your-bucket-name
-SPACES_PUBLIC_URL=https://your-spaces-public-url.com
 
 # =============================================================================
 # External Services

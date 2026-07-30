@@ -1,7 +1,8 @@
-import { describe, it, expect } from "vitest";
-import { isSpacesUrl, spacesKeyForUrl, spacesUrlForKey } from "./spacesUrl.js";
+import { describe, it, expect, afterEach } from "vitest";
+import { isSpacesUrl, spacesKeyForUrl, spacesPublicBase, spacesUrlForKey } from "./spacesUrl.js";
 
-// Every case injects `base` explicitly, so behavior does not depend on process.env.
+// Except for the spacesPublicBase block, every case injects `base` explicitly, so behavior
+// does not depend on process.env.
 
 const ORIGIN = "https://townhalls-gr.fra1.digitaloceanspaces.com";
 const DEV_PROXY = "https://abc123.ngrok.app/dev/files/opencouncil-dev";
@@ -46,21 +47,20 @@ describe("spacesKeyForUrl", () => {
         expect(spacesKeyForUrl(`${ORIGIN}/uploads/my%20file.mp4`, ORIGIN)).toBe("uploads/my file.mp4");
     });
 
-    it("falls back to the URL path when base is not configured", () => {
-        expect(spacesKeyForUrl(`${ORIGIN}/uploads/a.mp4`, undefined)).toBe("uploads/a.mp4");
+    it("throws when base is not configured", () => {
+        expect(() => spacesKeyForUrl(`${ORIGIN}/uploads/a.mp4`, undefined)).toThrow(/refusing/);
     });
 
-    it("falls back to the URL path when base is not a prefix of the URL", () => {
-        // A mismatched-env footgun: the configured base differs from the URL's host.
-        expect(spacesKeyForUrl(`${ORIGIN}/uploads/a.mp4`, "https://other.example.com")).toBe("uploads/a.mp4");
+    it("throws for a foreign URL rather than guessing a key in our bucket", () => {
+        // Guessing "uploads/a.mp4" here would let a URL we do not own address one of our
+        // objects — and overwriteSpacesObject writes to whatever key it is handed.
+        expect(() => spacesKeyForUrl("https://someone-else.com/uploads/a.mp4", ORIGIN)).toThrow(/refusing/);
     });
 
-    it("does NOT slice a string-prefix sibling bucket (path boundary)", () => {
+    it("throws for a string-prefix sibling bucket (path boundary)", () => {
         const base = "https://x.app/dev/files/bucket";
-        // Buggy string-slice would yield "2/uploads/a.mp4"; boundary-aware falls back to the path.
-        expect(spacesKeyForUrl("https://x.app/dev/files/bucket2/uploads/a.mp4", base)).toBe(
-            "dev/files/bucket2/uploads/a.mp4",
-        );
+        // A buggy string-slice would yield the key "2/uploads/a.mp4" in the wrong bucket.
+        expect(() => spacesKeyForUrl("https://x.app/dev/files/bucket2/uploads/a.mp4", base)).toThrow(/refusing/);
     });
 
     it("throws when the URL resolves to an empty key", () => {
@@ -68,9 +68,40 @@ describe("spacesKeyForUrl", () => {
     });
 });
 
+describe("spacesPublicBase", () => {
+    const saved = { ...process.env };
+    afterEach(() => {
+        process.env = { ...saved };
+    });
+
+    it("derives the virtual-hosted origin from bucket + endpoint", () => {
+        process.env.DO_SPACES_BUCKET = "townhalls-gr";
+        process.env.DO_SPACES_ENDPOINT = "https://fra1.digitaloceanspaces.com";
+        expect(spacesPublicBase()).toBe(ORIGIN);
+    });
+
+    it("derives the dev proxy base from PUBLIC_URL when the endpoint is MinIO", () => {
+        // MinIO is not publicly reachable, so objects are addressed through this app.
+        process.env.DO_SPACES_BUCKET = "opencouncil-dev";
+        process.env.DO_SPACES_ENDPOINT = "http://localhost:9100";
+        process.env.PUBLIC_URL = "https://abc123.ngrok.app";
+        expect(spacesPublicBase()).toBe(DEV_PROXY);
+    });
+
+    it("is undefined when the bucket or endpoint is not configured", () => {
+        delete process.env.DO_SPACES_BUCKET;
+        process.env.DO_SPACES_ENDPOINT = "https://fra1.digitaloceanspaces.com";
+        expect(spacesPublicBase()).toBeUndefined();
+    });
+});
+
 describe("spacesUrlForKey", () => {
     it("builds `${base}/${key}`", () => {
         expect(spacesUrlForKey("uploads/a.mp4", ORIGIN)).toBe(`${ORIGIN}/uploads/a.mp4`);
+    });
+
+    it("throws rather than emitting an `undefined/...` URL when unconfigured", () => {
+        expect(() => spacesUrlForKey("uploads/a.mp4", undefined)).toThrow(/DO_SPACES_BUCKET/);
     });
 
     it("round-trips with spacesKeyForUrl (build then parse returns the key)", () => {
