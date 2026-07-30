@@ -85,7 +85,7 @@ async function searchForSilences(diarization: Diarization, start: number, end: n
 // Spaces object keys are derived from this basename, and uploadToSpaces skips
 // the upload when the key already exists. Embedding the time range makes the
 // name unique to the segment's actual boundaries: a re-run with different
-// segmentation (e.g. a changed maxDuration) gets fresh keys and fresh CDN URLs
+// segmentation (e.g. a changed maxDuration) gets fresh keys and fresh URLs
 // instead of silently transcribing stale audio from a previous run.
 export function segmentFileName(baseName: string, start: number, end: number): string {
     return `${baseName}_${Math.round(start)}-${Math.round(end)}.mp3`;

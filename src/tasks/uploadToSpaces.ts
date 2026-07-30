@@ -14,7 +14,6 @@ export interface UploadFilesArgs {
     spacesPath: string;
 }
 
-const FORCE_REUPLOAD = false;
 const VERSION = "1";
 
 export function createSpacesClient(): aws.S3 {
@@ -72,19 +71,11 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
     const bucketName = process.env.DO_SPACES_BUCKET;
 
     if (!bucketName) {
-        throw new Error('SPACES_BUCKET environment variable is not set');
+        throw new Error('DO_SPACES_BUCKET environment variable is not set');
     }
 
     const filesToUpload = Array.isArray(files) ? files : [files];
     const uploadedUrls: string[] = [];
-
-
-    await spacesEndpoint.putObject({
-        Bucket: bucketName,
-        Key: `${spacesPath}/`,
-        Body: '',
-        ACL: 'public-read'
-    }).promise();
 
     for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
@@ -92,26 +83,18 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
         const finalUrl = spacesUrlForKey(`${spacesPath}/${fileName}`);
         console.log(`Checking if file ${fileName} already exists in the bucket`);
 
-        // Check if the file already exists in the bucket
+        // Keys are content-addressed enough (basename + version + segment range) that an
+        // existing object is the same file, so reuse it instead of re-uploading.
         try {
             await spacesEndpoint.headObject({
                 Bucket: bucketName,
                 Key: `${spacesPath}/${fileName}`
             }).promise();
 
-            if (FORCE_REUPLOAD) {
-                console.log(`File ${fileName} exists. Deleting for force reupload.`);
-                await spacesEndpoint.deleteObject({
-                    Bucket: bucketName,
-                    Key: `${spacesPath}/${fileName}`
-                }).promise();
-            } else {
-                // If the file exists and FORCE_REUPLOAD is false, add the URL to the list and skip uploading
-                console.log(`File ${fileName} already exists. Skipping upload.`);
-                uploadedUrls.push(finalUrl);
-                onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
-                continue;
-            }
+            console.log(`File ${fileName} already exists. Skipping upload.`);
+            uploadedUrls.push(finalUrl);
+            onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
+            continue;
         } catch (error: any) {
             // If the file doesn't exist, we'll proceed with the upload
             if (error.code !== 'NotFound') {

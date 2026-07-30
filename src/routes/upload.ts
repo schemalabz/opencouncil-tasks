@@ -42,17 +42,17 @@ router.post('/', upload.single('video'), async (req: express.Request, res: expre
         console.log(`Received video upload: ${videoId} (${(fileSize / 1024 / 1024).toFixed(1)} MB)`);
 
         // Upload to DO Spaces
-        const [cdnUrl] = await uploadToSpaces({
+        const [url] = await uploadToSpaces({
             files: [filePath],
             spacesPath: 'council-meeting-videos',
         }, (stage, progress) => {
             console.log(`Upload ${videoId}: ${stage} ${progress}%`);
         });
 
-        console.log(`Video ${videoId} uploaded to Spaces: ${cdnUrl}`);
+        console.log(`Video ${videoId} uploaded to Spaces: ${url}`);
 
         res.json({
-            cdnUrl,
+            url,
             videoId,
             size: fileSize,
         });

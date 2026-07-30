@@ -224,7 +224,7 @@ export async function downloadUntilComplete(
             // A still-processing VOD can make yt-dlp fail outright — treat it the same as an
             // incomplete download: wait and retry rather than failing the whole task. But only
             // a yt-dlp source (YouTube/Facebook VOD) has a post-live processing window:
-            // CDN/direct failures and permanently-gone videos would just burn the full wait,
+            // Spaces/direct failures and permanently-gone videos would just burn the full wait,
             // so those fail fast with the original error.
             if (!getVideoIdAndUrl(url).usesYtDlp || isPermanentDownloadError(err)) throw err;
             lastReason = `download failed (VOD may still be processing): ${(err as Error).message}`;
@@ -362,7 +362,7 @@ function completeDownloadConfig(): CompleteDownloadConfig {
 }
 
 /**
- * Downloads a YouTube/Facebook (or CDN/direct) recording, retrying while it comes back incomplete —
+ * Downloads a YouTube/Facebook (or Spaces/direct) recording, retrying while it comes back incomplete —
  * a just-ended livestream VOD is still processing and can download truncated. Audio
  * normalization/extraction runs once, only after a download is confirmed complete. Same
  * signature as a plain single download, so all callers (pipeline, CLI) are unchanged.

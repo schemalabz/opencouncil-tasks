@@ -50,7 +50,7 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, l
         const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl, label: segmentLabel(index), language });
 
         // Audio longer than any segment can be means the file doesn't belong
-        // to this run's segmentation (stale upload or CDN cache). Its
+        // to this run's segmentation (a stale object left by a previous run). Its
         // timestamps would land in other segments' ranges — publishing that
         // would silently corrupt the record, so fail loudly instead.
         // A single segment is exempt: callers like the CLI's transcribe-single
