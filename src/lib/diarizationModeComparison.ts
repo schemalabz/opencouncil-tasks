@@ -23,7 +23,51 @@ export interface UtteranceDiff {
     exclusive: number | null;
 }
 
+/** A human-reviewed speaker turn (from opencouncil's corrected transcript). */
+export interface HumanTurn {
+    start: number;
+    end: number;
+    tag: string;             // speakerTagId — stable identity within the meeting
+    label?: string | null;
+    personId?: string | null;
+}
+
+export interface AdjudicatedExample {
+    start: number;
+    end: number;
+    text: string;
+    regular: number | null;
+    exclusive: number | null;
+}
+
+/**
+ * Scoring of both variants against human-reviewed speaker turns. Variant speaker
+ * numbers are majority-mapped to human tags, then every assigned utterance is
+ * scored by the human turn at its midpoint.
+ */
+export interface Adjudication {
+    scored: { regular: number; exclusive: number };
+    agree: { regular: number; exclusive: number };
+    agreementPercent: { regular: number; exclusive: number };
+    // Restricted to utterances where the variants disagree (incl. null-vs-assigned)
+    disagreements: {
+        onlyRegularRight: number;
+        onlyExclusiveRight: number;
+        bothRight: number;
+        neitherRight: number;
+        noHumanSegment: number;
+    };
+    examples: {
+        onlyRegularRight: AdjudicatedExample[];
+        onlyExclusiveRight: AdjudicatedExample[];
+    };
+}
+
 export interface DiarizationModeComparison {
+    meta?: {
+        meeting?: string;              // cityId/meetingId
+        audioDurationSeconds?: number;
+    };
     regular: VariantMetrics;
     exclusive: VariantMetrics;
     diff: {
@@ -31,6 +75,9 @@ export interface DiarizationModeComparison {
         rescuedByExclusive: number; // skipped in regular, assigned in exclusive
         lostByExclusive: number;    // assigned in regular, skipped in exclusive
     };
+    adjudication?: Adjudication;
+    // Embedded so a report file is self-sufficient for rendering visualizations
+    timelines?: { regular: Diarization; exclusive: Diarization };
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -107,7 +154,96 @@ function analyzeVariant(
     };
 }
 
-export function compareDiarizationModes(transcript: Transcript, diarizeResult: DiarizeResult): DiarizationModeComparison {
+function humanTagAt(turns: HumanTurn[], time: number): string | null {
+    const containing = turns.find((s) => s.start <= time && s.end >= time);
+    if (containing) return containing.tag;
+    // fall back to the nearest turn within 2s, tolerating boundary rounding
+    let best: string | null = null;
+    let bestDist = 2;
+    for (const s of turns) {
+        const dist = time < s.start ? s.start - time : time > s.end ? time - s.end : 0;
+        if (dist < bestDist) { best = s.tag; bestDist = dist; }
+    }
+    return best;
+}
+
+function adjudicate(
+    utterances: Utterance[],
+    regular: ({ speaker: number } | null)[],
+    exclusive: ({ speaker: number } | null)[],
+    humanTurns: HumanTurn[],
+): Adjudication {
+    const humanTags = utterances.map((u) => humanTagAt(humanTurns, (u.start + u.end) / 2));
+
+    // Majority-map a variant's speaker numbers to human tags
+    const buildMap = (assignments: ({ speaker: number } | null)[]): Record<number, string> => {
+        const votes: Record<number, Record<string, number>> = {};
+        utterances.forEach((_, i) => {
+            const spk = assignments[i]?.speaker;
+            const tag = humanTags[i];
+            if (spk === undefined || tag === null) return;
+            votes[spk] ??= {};
+            votes[spk][tag] = (votes[spk][tag] || 0) + 1;
+        });
+        const map: Record<number, string> = {};
+        for (const [spk, tagVotes] of Object.entries(votes)) {
+            map[Number(spk)] = Object.entries(tagVotes).sort((a, b) => b[1] - a[1])[0][0];
+        }
+        return map;
+    };
+
+    const mapR = buildMap(regular);
+    const mapE = buildMap(exclusive);
+
+    const score = (assignments: ({ speaker: number } | null)[], map: Record<number, string>) => {
+        let scored = 0, agree = 0;
+        utterances.forEach((_, i) => {
+            const spk = assignments[i]?.speaker;
+            const tag = humanTags[i];
+            if (spk === undefined || tag === null) return;
+            scored++;
+            if (map[spk] === tag) agree++;
+        });
+        return { scored, agree };
+    };
+
+    const r = score(regular, mapR);
+    const e = score(exclusive, mapE);
+
+    const disagreements = { onlyRegularRight: 0, onlyExclusiveRight: 0, bothRight: 0, neitherRight: 0, noHumanSegment: 0 };
+    const examples: Adjudication['examples'] = { onlyRegularRight: [], onlyExclusiveRight: [] };
+    utterances.forEach((u, i) => {
+        const rs = regular[i]?.speaker ?? null;
+        const es = exclusive[i]?.speaker ?? null;
+        if (rs === es) return;
+        const tag = humanTags[i];
+        if (tag === null) { disagreements.noHumanSegment++; return; }
+        const rOK = rs !== null && mapR[rs] === tag;
+        const eOK = es !== null && mapE[es] === tag;
+        const example: AdjudicatedExample = { start: u.start, end: u.end, text: u.text, regular: rs, exclusive: es };
+        if (rOK && eOK) disagreements.bothRight++;
+        else if (rOK) { disagreements.onlyRegularRight++; if (examples.onlyRegularRight.length < 10) examples.onlyRegularRight.push(example); }
+        else if (eOK) { disagreements.onlyExclusiveRight++; if (examples.onlyExclusiveRight.length < 10) examples.onlyExclusiveRight.push(example); }
+        else disagreements.neitherRight++;
+    });
+
+    return {
+        scored: { regular: r.scored, exclusive: e.scored },
+        agree: { regular: r.agree, exclusive: e.agree },
+        agreementPercent: {
+            regular: r.scored ? round2((r.agree / r.scored) * 100) : 0,
+            exclusive: e.scored ? round2((e.agree / e.scored) * 100) : 0,
+        },
+        disagreements,
+        examples,
+    };
+}
+
+export function compareDiarizationModes(
+    transcript: Transcript,
+    diarizeResult: DiarizeResult,
+    options?: { humanTurns?: HumanTurn[]; meeting?: string },
+): DiarizationModeComparison {
     if (!diarizeResult.exclusiveDiarization) {
         throw new Error('DiarizeResult has no exclusiveDiarization — re-run diarization with exclusive support (issue #15)');
     }
@@ -132,8 +268,16 @@ export function compareDiarizationModes(transcript: Transcript, diarizeResult: D
     });
 
     return {
+        meta: {
+            meeting: options?.meeting,
+            audioDurationSeconds: transcript.metadata.audio_duration,
+        },
         regular: regular.metrics,
         exclusive: exclusive.metrics,
         diff: { speakerChanged, rescuedByExclusive, lostByExclusive },
+        adjudication: options?.humanTurns?.length
+            ? adjudicate(utterances, regular.assignments, exclusive.assignments, options.humanTurns)
+            : undefined,
+        timelines: { regular: diarizeResult.diarization, exclusive: diarizeResult.exclusiveDiarization },
     };
 }

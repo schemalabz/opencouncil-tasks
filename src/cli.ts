@@ -21,7 +21,7 @@ import { compareRuns } from './lib/runs/compare.js';
 import { renderComparisonHtml } from './lib/runs/html.js';
 import path from 'path';
 import { applyDiarization } from './tasks/applyDiarization.js';
-import { compareDiarizationModes } from './lib/diarizationModeComparison.js';
+import { compareDiarizationModes, HumanTurn } from './lib/diarizationModeComparison.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
@@ -263,10 +263,29 @@ program
     .requiredOption('-D, --diarization-file <file>', 'DiarizeResult JSON containing both diarization and exclusiveDiarization')
     .requiredOption('-T, --transcript-file <file>', 'Transcript JSON (raw, pre-diarization)')
     .requiredOption('-O, --output-file <file>', 'Output file for the comparison report JSON')
-    .action(async (options: { diarizationFile: string; transcriptFile: string; outputFile: string }) => {
+    .option('-m, --meeting <cityId/meetingId>', 'Adjudicate both variants against the human-reviewed speaker turns of this opencouncil meeting')
+    .action(async (options: { diarizationFile: string; transcriptFile: string; outputFile: string; meeting?: string }) => {
         const diarizeResult: DiarizeResult = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
         const transcript = JSON.parse(fs.readFileSync(options.transcriptFile, 'utf8'));
-        const report = compareDiarizationModes(transcript, diarizeResult);
+
+        let humanTurns: HumanTurn[] | undefined;
+        if (options.meeting) {
+            const [cityId, meetingId] = options.meeting.split('/');
+            if (!cityId || !meetingId) throw new Error(`--meeting must be <cityId/meetingId>, got: ${options.meeting}`);
+            const res = await fetch(`https://opencouncil.gr/api/cities/${encodeURIComponent(cityId)}/meetings/${encodeURIComponent(meetingId)}`, { headers: { Accept: 'application/json' } });
+            if (!res.ok) throw new Error(`Failed to fetch meeting ${options.meeting}: HTTP ${res.status}`);
+            const meeting = await res.json() as { transcript: { startTimestamp: number; endTimestamp: number; speakerTagId: string; speakerTag?: { label?: string; personId?: string | null } }[] };
+            humanTurns = meeting.transcript.map((s) => ({
+                start: s.startTimestamp,
+                end: s.endTimestamp,
+                tag: s.speakerTagId,
+                label: s.speakerTag?.label,
+                personId: s.speakerTag?.personId ?? null,
+            }));
+            console.log(`Fetched ${humanTurns.length} human-reviewed speaker turns for ${options.meeting}`);
+        }
+
+        const report = compareDiarizationModes(transcript, diarizeResult, { humanTurns, meeting: options.meeting });
         fs.writeFileSync(options.outputFile, JSON.stringify(report, null, 2));
 
         const fmt = (v: typeof report.regular) =>
@@ -277,6 +296,13 @@ program
         console.log(`exclusive: ${fmt(report.exclusive)}`);
         console.log(`diff: ${report.diff.speakerChanged.length} utterances changed speaker, ` +
             `${report.diff.rescuedByExclusive} rescued by exclusive, ${report.diff.lostByExclusive} lost by exclusive`);
+        if (report.adjudication) {
+            const a = report.adjudication;
+            console.log(`adjudication vs human turns: regular ${a.agreementPercent.regular}% (${a.agree.regular}/${a.scored.regular}), ` +
+                `exclusive ${a.agreementPercent.exclusive}% (${a.agree.exclusive}/${a.scored.exclusive}); ` +
+                `disagreements: exclusive right ${a.disagreements.onlyExclusiveRight}, regular right ${a.disagreements.onlyRegularRight}, ` +
+                `neither ${a.disagreements.neitherRight}`);
+        }
         console.log(`Report saved to ${options.outputFile}`);
         server.close();
     });

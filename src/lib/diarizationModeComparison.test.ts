@@ -67,6 +67,32 @@ describe('compareDiarizationModes', () => {
         expect(report.diff.lostByExclusive).toBe(0);
     });
 
+    it('adjudicates variants against human speaker turns', () => {
+        // Human ground truth matches the exclusive segmentation: A speaks until 9, B after
+        const humanTurns = [
+            { start: 0, end: 9, tag: 'tagA' },
+            { start: 9, end: 12, tag: 'tagB' },
+        ];
+        const report = compareDiarizationModes(transcript, diarizeResult, { humanTurns, meeting: 'test/meeting' });
+
+        expect(report.meta?.meeting).toBe('test/meeting');
+        const adj = report.adjudication!;
+        // regular: u1->spk1 (tagA ok), u2->spk1 (human says tagB) => 1/2
+        // exclusive: u1->spk1 (tagA), u2->spk2 (tagB) => 2/2; u3 has no human turn
+        expect(adj.scored).toEqual({ regular: 2, exclusive: 2 });
+        expect(adj.agreementPercent).toEqual({ regular: 50, exclusive: 100 });
+        expect(adj.disagreements).toEqual({
+            onlyRegularRight: 0,
+            onlyExclusiveRight: 1,
+            bothRight: 0,
+            neitherRight: 0,
+            noHumanSegment: 0,
+        });
+        expect(adj.examples.onlyExclusiveRight).toEqual([
+            { start: 9.2, end: 9.8, text: 'b', regular: 1, exclusive: 2 },
+        ]);
+    });
+
     it('throws when exclusiveDiarization is missing', () => {
         expect(() => compareDiarizationModes(transcript, { ...diarizeResult, exclusiveDiarization: undefined }))
             .toThrow(/exclusiveDiarization/);
