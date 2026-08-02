@@ -276,11 +276,20 @@ program
             const res = await fetch(`https://opencouncil.gr/api/cities/${encodeURIComponent(cityId)}/meetings/${encodeURIComponent(meetingId)}`, { headers: { Accept: 'application/json' } });
             if (!res.ok) throw new Error(`Failed to fetch meeting ${options.meeting}: HTTP ${res.status}`);
             const meeting = await res.json() as { transcript: { startTimestamp: number; endTimestamp: number; speakerTagId: string; speakerTag?: { label?: string; personId?: string | null } }[] };
+
+            // Resolve personIds to names so adjudication details read as people, not tags
+            const personName = new Map<string, string>();
+            const peopleRes = await fetch(`https://opencouncil.gr/api/cities/${encodeURIComponent(cityId)}/people`, { headers: { Accept: 'application/json' } });
+            if (peopleRes.ok) {
+                const people = await peopleRes.json() as { id: string; name?: string; name_short?: string }[];
+                for (const p of people) personName.set(p.id, p.name_short || p.name || p.id);
+            }
+
             humanTurns = meeting.transcript.map((s) => ({
                 start: s.startTimestamp,
                 end: s.endTimestamp,
                 tag: s.speakerTagId,
-                label: s.speakerTag?.label,
+                label: (s.speakerTag?.personId && personName.get(s.speakerTag.personId)) || s.speakerTag?.label,
                 personId: s.speakerTag?.personId ?? null,
             }));
             console.log(`Fetched ${humanTurns.length} human-reviewed speaker turns for ${options.meeting}`);

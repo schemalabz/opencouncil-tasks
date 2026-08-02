@@ -192,16 +192,31 @@ function meetingSection(report: DiarizationModeComparison): string {
     }
 
     let examples = '';
-    if (a && (a.examples.onlyExclusiveRight.length || a.examples.onlyRegularRight.length)) {
-        const row = (e: { start: number; text: string }, winner: 'exclusive' | 'regular') =>
-            `<tr><td class="t-num">${fmtTime(e.start)}</td><td>${esc(e.text.length > 90 ? e.text.slice(0, 90) + '…' : e.text)}</td>` +
-            `<td><span class="win win-${winner}">${winner} ✓</span></td></tr>`;
+    if (a && a.details.length) {
+        const VERDICT = {
+            'fixed': { cls: 'v-fixed', label: '✓ fixed by exclusive' },
+            'broken': { cls: 'v-broken', label: '✗ broken by exclusive' },
+            'both-wrong': { cls: 'v-neither', label: '— both wrong' },
+        } as const;
+        const cell = (says: string | null, correct: boolean) =>
+            says === null ? '<td class="says-skip">— skipped</td>' : `<td class="${correct ? 'says-right' : 'says-wrong'}">${esc(says)}</td>`;
+        const row = (d: (typeof a.details)[number]) =>
+            `<tr><td class="t-num">${fmtTime(d.start)}</td><td class="utt">${esc(d.text.length > 110 ? d.text.slice(0, 110) + '…' : d.text)}</td>` +
+            cell(d.regularSays, d.regularSays === d.humanSays) +
+            cell(d.exclusiveSays, d.exclusiveSays === d.humanSays) +
+            `<td>${esc(d.humanSays)}</td>` +
+            `<td><span class="verdict ${VERDICT[d.verdict].cls}">${VERDICT[d.verdict].label}</span></td></tr>`;
+        // Every disputed utterance, worst-confusion first: fixes, then regressions, then both-wrong
+        const order = { 'fixed': 0, 'broken': 1, 'both-wrong': 2 } as const;
+        const sorted = [...a.details].sort((x, y) => order[x.verdict] - order[y.verdict] || x.start - y.start);
+        const shown = sorted.slice(0, 20);
         examples = `
-        <details><summary>Adjudicated disagreement examples</summary>
-        <table><thead><tr><th>time</th><th>utterance</th><th>matched human turn</th></tr></thead><tbody>
-        ${a.examples.onlyExclusiveRight.slice(0, 5).map((e) => row(e, 'exclusive')).join('')}
-        ${a.examples.onlyRegularRight.slice(0, 5).map((e) => row(e, 'regular')).join('')}
-        </tbody></table></details>`;
+        <h4>Who each version blamed — utterances where the two timelines disagree</h4>
+        <p class="note">"Reviewer says" comes from the human-corrected transcript on opencouncil.
+        ${a.details.length > shown.length ? `Showing ${shown.length} of ${a.details.length}; the rest are in the report JSON.` : ''}</p>
+        <div class="table-scroll"><table><thead><tr><th>time</th><th>utterance</th><th>regular says</th><th>exclusive says</th><th>reviewer says</th><th>verdict</th></tr></thead><tbody>
+        ${shown.map(row).join('')}
+        </tbody></table></div>`;
     }
 
     const metricsTable = `
@@ -320,9 +335,16 @@ table { border-collapse: collapse; font-size: 13px; margin-top: 8px; width: 100%
 th { text-align: left; color: var(--text-secondary); font-weight: 600; }
 th, td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
 .t-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.win { font-size: 12px; font-weight: 600; white-space: nowrap; }
-.win-exclusive { color: var(--good-text); }
-.win-regular { color: var(--text-secondary); }
+.verdict { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.v-fixed { color: var(--good-text); }
+.v-broken { color: #d03b3b; }
+.v-neither { color: var(--muted); }
+.says-right { color: var(--text-primary); }
+.says-wrong { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--muted); }
+.says-skip { color: var(--muted); font-style: italic; }
+.utt { min-width: 220px; }
+.note { font-size: 12px; color: var(--muted); margin: 0 0 4px; }
+.table-scroll { overflow-x: auto; }
 details { margin-top: 12px; }
 summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
 .tooltip { position: fixed; pointer-events: none; background: var(--text-primary); color: var(--page);

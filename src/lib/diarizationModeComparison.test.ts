@@ -70,8 +70,8 @@ describe('compareDiarizationModes', () => {
     it('adjudicates variants against human speaker turns', () => {
         // Human ground truth matches the exclusive segmentation: A speaks until 9, B after
         const humanTurns = [
-            { start: 0, end: 9, tag: 'tagA' },
-            { start: 9, end: 12, tag: 'tagB' },
+            { start: 0, end: 9, tag: 'tagA', label: 'Alice' },
+            { start: 9, end: 12, tag: 'tagB', label: 'Bob' },
         ];
         const report = compareDiarizationModes(transcript, diarizeResult, { humanTurns, meeting: 'test/meeting' });
 
@@ -88,8 +88,9 @@ describe('compareDiarizationModes', () => {
             neitherRight: 0,
             noHumanSegment: 0,
         });
-        expect(adj.examples.onlyExclusiveRight).toEqual([
-            { start: 9.2, end: 9.8, text: 'b', regular: 1, exclusive: 2 },
+        // regular's speaker 1 majority-maps to Alice; exclusive's speaker 2 maps to Bob
+        expect(adj.details).toEqual([
+            { start: 9.2, end: 9.8, text: 'b', regularSays: 'Alice', exclusiveSays: 'Bob', humanSays: 'Bob', verdict: 'fixed' },
         ]);
     });
 

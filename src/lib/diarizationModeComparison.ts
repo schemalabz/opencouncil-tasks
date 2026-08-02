@@ -32,12 +32,18 @@ export interface HumanTurn {
     personId?: string | null;
 }
 
-export interface AdjudicatedExample {
+/**
+ * One utterance where the two variants attributed a different speaker, expressed
+ * in human terms: what each variant's pick maps to, versus what the reviewers say.
+ */
+export interface AdjudicatedDisagreement {
     start: number;
     end: number;
     text: string;
-    regular: number | null;
-    exclusive: number | null;
+    regularSays: string | null;   // display name of regular's pick (null = utterance skipped)
+    exclusiveSays: string | null;
+    humanSays: string;
+    verdict: 'fixed' | 'broken' | 'both-wrong'; // fixed = exclusive matches the reviewer, regular doesn't
 }
 
 /**
@@ -57,10 +63,7 @@ export interface Adjudication {
         neitherRight: number;
         noHumanSegment: number;
     };
-    examples: {
-        onlyRegularRight: AdjudicatedExample[];
-        onlyExclusiveRight: AdjudicatedExample[];
-    };
+    details: AdjudicatedDisagreement[];
 }
 
 export interface DiarizationModeComparison {
@@ -210,8 +213,16 @@ function adjudicate(
     const r = score(regular, mapR);
     const e = score(exclusive, mapE);
 
+    // Display names for human tags: prefer the turn's label (the CLI resolves
+    // personIds to real names there), fall back to the raw tag
+    const tagDisplay = new Map<string, string>();
+    for (const turn of humanTurns) {
+        if (!tagDisplay.has(turn.tag)) tagDisplay.set(turn.tag, turn.label || turn.tag);
+    }
+    const display = (tag: string | null) => (tag === null ? null : tagDisplay.get(tag) ?? tag);
+
     const disagreements = { onlyRegularRight: 0, onlyExclusiveRight: 0, bothRight: 0, neitherRight: 0, noHumanSegment: 0 };
-    const examples: Adjudication['examples'] = { onlyRegularRight: [], onlyExclusiveRight: [] };
+    const details: AdjudicatedDisagreement[] = [];
     utterances.forEach((u, i) => {
         const rs = regular[i]?.speaker ?? null;
         const es = exclusive[i]?.speaker ?? null;
@@ -220,11 +231,19 @@ function adjudicate(
         if (tag === null) { disagreements.noHumanSegment++; return; }
         const rOK = rs !== null && mapR[rs] === tag;
         const eOK = es !== null && mapE[es] === tag;
-        const example: AdjudicatedExample = { start: u.start, end: u.end, text: u.text, regular: rs, exclusive: es };
-        if (rOK && eOK) disagreements.bothRight++;
-        else if (rOK) { disagreements.onlyRegularRight++; if (examples.onlyRegularRight.length < 10) examples.onlyRegularRight.push(example); }
-        else if (eOK) { disagreements.onlyExclusiveRight++; if (examples.onlyExclusiveRight.length < 10) examples.onlyExclusiveRight.push(example); }
+        if (rOK && eOK) { disagreements.bothRight++; return; }
+        if (rOK) disagreements.onlyRegularRight++;
+        else if (eOK) disagreements.onlyExclusiveRight++;
         else disagreements.neitherRight++;
+        details.push({
+            start: u.start,
+            end: u.end,
+            text: u.text,
+            regularSays: display(rs === null ? null : mapR[rs] ?? null),
+            exclusiveSays: display(es === null ? null : mapE[es] ?? null),
+            humanSays: display(tag)!,
+            verdict: eOK ? 'fixed' : rOK ? 'broken' : 'both-wrong',
+        });
     });
 
     return {
@@ -235,7 +254,7 @@ function adjudicate(
             exclusive: e.scored ? round2((e.agree / e.scored) * 100) : 0,
         },
         disagreements,
-        examples,
+        details,
     };
 }
 
