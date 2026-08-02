@@ -22,6 +22,7 @@ import { renderComparisonHtml } from './lib/runs/html.js';
 import path from 'path';
 import { applyDiarization } from './tasks/applyDiarization.js';
 import { compareDiarizationModes, HumanTurn } from './lib/diarizationModeComparison.js';
+import { renderDiarizationModeReportHtml } from './lib/diarizationModeReport.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
@@ -304,6 +305,17 @@ program
                 `neither ${a.disagreements.neitherRight}`);
         }
         console.log(`Report saved to ${options.outputFile}`);
+        server.close();
+    });
+
+program
+    .command('render-diarization-comparison <reportFiles...>')
+    .description('Render one or more compare-diarization-modes reports as a self-contained HTML page')
+    .requiredOption('-O, --output-file <file>', 'Output HTML file')
+    .action(async (reportFiles: string[], options: { outputFile: string }) => {
+        const reports = reportFiles.map((f) => JSON.parse(fs.readFileSync(f, 'utf8')));
+        fs.writeFileSync(options.outputFile, renderDiarizationModeReportHtml(reports));
+        console.log(`Rendered ${reports.length} report(s) to ${options.outputFile}`);
         server.close();
     });
 
