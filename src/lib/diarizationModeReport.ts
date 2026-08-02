@@ -347,6 +347,11 @@ th, td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--grid); vertical
 .table-scroll { overflow-x: auto; }
 details { margin-top: 12px; }
 summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
+.method { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 20px; margin: -8px 0 18px; }
+.method ol { font-size: 13px; color: var(--text-secondary); padding-left: 20px; margin: 10px 0 6px; }
+.method li { margin: 6px 0; }
+.method strong { color: var(--text-primary); }
 .tooltip { position: fixed; pointer-events: none; background: var(--text-primary); color: var(--page);
     font-size: 12px; padding: 4px 8px; border-radius: 5px; z-index: 10; display: none; white-space: nowrap; }
 footer { color: var(--muted); font-size: 12px; margin: 24px 0 8px; }
@@ -358,6 +363,28 @@ code { font-size: 12px; }
 <p class="sub">Each meeting was diarized once; the API returned both the regular and the overlap-free
 (exclusive) timeline from the same inference. Both were aligned against a fresh transcript with the
 production alignment logic, then scored against the meeting's human-reviewed speaker turns.</p>
+
+<details class="method"><summary>Methodology — how "right" and "wrong" are decided</summary>
+<ol>
+<li><strong>Paired diarization.</strong> One Pyannote call per meeting returns both timelines from the same
+inference, so the comparison has no run-to-run variance. No voiceprints were used — every diarized
+speaker is an anonymous cluster like <code>SPEAKER_03</code>.</li>
+<li><strong>Fresh transcript, real alignment.</strong> The audio was re-transcribed with Scribe (word
+timestamps, no speakers) and aligned against each timeline with the production
+<code>DiarizationManager</code>. Result per variant: every utterance → an anonymous speaker.</li>
+<li><strong>Answer key.</strong> The public OpenCouncil API serves each meeting's transcript as it exists on
+the site — human-reviewed, with correctors having fixed text and speaker assignments. Those corrected
+speaker turns are the ground truth; the people API resolves names.</li>
+<li><strong>Anchoring.</strong> Each variant's anonymous speakers are identified by majority vote: if most
+utterances a variant assigned to <code>SPEAKER_03</code> fall inside reviewed turns of person X,
+that cluster <em>is</em> X. Applied independently and identically to both variants.</li>
+<li><strong>Scoring.</strong> An utterance counts as right when its variant's anchored identity matches the
+reviewer's turn at its midpoint. Utterances outside any reviewed turn are excluded.</li>
+</ol>
+<p class="note">Caveats: ground truth is as good as the human review; a badly mixed cluster would break
+anchoring but would surface as low agreement; the reviewed transcripts originated from
+regular-timeline pipeline runs, which if anything biases scoring against exclusive.</p>
+</details>
 
 <div class="chart-card">
 <div class="tiles">
