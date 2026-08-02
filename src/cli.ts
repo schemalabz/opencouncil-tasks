@@ -21,6 +21,7 @@ import { compareRuns } from './lib/runs/compare.js';
 import { renderComparisonHtml } from './lib/runs/html.js';
 import path from 'path';
 import { applyDiarization } from './tasks/applyDiarization.js';
+import { compareDiarizationModes } from './lib/diarizationModeComparison.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
@@ -246,6 +247,30 @@ program
         });
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Diarization applied to transcript saved to', options.outputFile);
+        server.close();
+    });
+
+program
+    .command('compare-diarization-modes')
+    .description('Compare regular vs exclusive diarization timelines against a transcript (issue #15)')
+    .requiredOption('-D, --diarization-file <file>', 'DiarizeResult JSON containing both diarization and exclusiveDiarization')
+    .requiredOption('-T, --transcript-file <file>', 'Transcript JSON (raw, pre-diarization)')
+    .requiredOption('-O, --output-file <file>', 'Output file for the comparison report JSON')
+    .action(async (options: { diarizationFile: string; transcriptFile: string; outputFile: string }) => {
+        const diarizeResult: DiarizeResult = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
+        const transcript = JSON.parse(fs.readFileSync(options.transcriptFile, 'utf8'));
+        const report = compareDiarizationModes(transcript, diarizeResult);
+        fs.writeFileSync(options.outputFile, JSON.stringify(report, null, 2));
+
+        const fmt = (v: typeof report.regular) =>
+            `${v.utterances.assigned}/${v.utterances.total} assigned (${v.utterances.skippedPercent}% skipped), ` +
+            `${v.ambiguous} ambiguous, drift total ${v.drift.total} (${v.drift.nonZero} nonzero), ` +
+            `${v.speakers.count} speakers, overlap ${v.timeline.overlapSeconds}s of ${v.timeline.speechSeconds}s speech`;
+        console.log(`\nregular:   ${fmt(report.regular)}`);
+        console.log(`exclusive: ${fmt(report.exclusive)}`);
+        console.log(`diff: ${report.diff.speakerChanged.length} utterances changed speaker, ` +
+            `${report.diff.rescuedByExclusive} rescued by exclusive, ${report.diff.lostByExclusive} lost by exclusive`);
+        console.log(`Report saved to ${options.outputFile}`);
         server.close();
     });
 
