@@ -150,8 +150,9 @@ program
     .description('Transcribe an audio file')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
     .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
+    .option('-D, --diarization-file <file>', 'Reuse an existing DiarizeResult JSON (skips upload and diarization)')
     .option('-l, --language <language>', 'Content language of the audio (el|fr|sr)', parseLanguageOption, 'el')
-    .action(async (file: string, options: { outputFile: string; voiceprints?: string; language: CityLanguage }) => {
+    .action(async (file: string, options: { outputFile: string; voiceprints?: string; diarizationFile?: string; language: CityLanguage }) => {
         const createProgressHandler = (stage: string) => {
             return (subStage: string, perc: number) => {
                 process.stdout.write(`\r${stage}:${subStage} ${perc.toFixed(2)}%`);
@@ -159,11 +160,17 @@ program
         };
         const voiceprints = options.voiceprints ? JSON.parse(fs.readFileSync(options.voiceprints, 'utf-8')) : undefined;
 
-        const uploadedFileUrl = await uploadToSpaces({ files: [file], spacesPath: "audio" }, createProgressHandler("uploading-file"));
-        console.log("Uploaded file to DigitalOcean Spaces");
+        let diarization: DiarizeResult['diarization'];
+        if (options.diarizationFile) {
+            ({ diarization } = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf-8')) as DiarizeResult);
+            console.log(`Reusing diarization from ${options.diarizationFile}`);
+        } else {
+            const uploadedFileUrl = await uploadToSpaces({ files: [file], spacesPath: "audio" }, createProgressHandler("uploading-file"));
+            console.log("Uploaded file to DigitalOcean Spaces");
 
-        const { diarization } = await diarize({ audioUrl: uploadedFileUrl[0], voiceprints }, createProgressHandler("diarizing"));
-        console.log("Diarized audio");
+            ({ diarization } = await diarize({ audioUrl: uploadedFileUrl[0], voiceprints }, createProgressHandler("diarizing")));
+            console.log("Diarized audio");
+        }
 
         const audioSegments = await splitAudioDiarization({ file, maxDuration: MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS, diarization }, createProgressHandler("segmenting-audio"));
         console.log("Split audio into segments");
