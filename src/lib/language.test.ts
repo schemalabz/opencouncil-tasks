@@ -15,6 +15,14 @@ describe("getLanguageConfig", () => {
         expect(fr.defaultAdministrativeBodyName).toBe("Conseil Municipal");
     });
 
+    it("returns the Serbian config for 'sr'", () => {
+        const sr = getLanguageConfig("sr");
+        expect(sr.scribeCode).toBe("srp");
+        expect(sr.promptName).toBe("Serbian");
+        expect(sr.outputDirective).not.toBe("");
+        expect(sr.defaultAdministrativeBodyName).toBe("Скупштина града");
+    });
+
     it("defaults to Greek when the language is undefined (older clients)", () => {
         expect(getLanguageConfig(undefined)).toBe(LANGUAGES[DEFAULT_LANGUAGE]);
         expect(getLanguageConfig(undefined).scribeCode).toBe("ell");

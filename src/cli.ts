@@ -33,10 +33,10 @@ import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
 const program = new Command();
 const app = getExpressAppWithCallbacks();
 
-// Commander coercion for the --language option: reject anything but el/fr so a
-// typo errors out instead of silently falling back to Greek.
+// Commander coercion for the --language option: reject anything but el/fr/sr
+// so a typo errors out instead of silently falling back to Greek.
 function parseLanguageOption(value: string): CityLanguage {
-    if (value !== 'el' && value !== 'fr') throw new InvalidArgumentError("expected 'el' or 'fr'");
+    if (value !== 'el' && value !== 'fr' && value !== 'sr') throw new InvalidArgumentError("expected 'el', 'fr' or 'sr'");
     return value;
 }
 
@@ -88,7 +88,7 @@ program
     .command('pipeline <youtubeUrl>')
     .description('Run the full pipeline on a YouTube video')
     .requiredOption('-O, --output-file <file>', 'Output file for the pipeline')
-    .option('-l, --language <language>', 'Content language of the meeting (el|fr)', parseLanguageOption, 'el')
+    .option('-l, --language <language>', 'Content language of the meeting (el|fr|sr)', parseLanguageOption, 'el')
     .action(async (youtubeUrl: string, options: { outputFile: string; language: CityLanguage }) => {
         console.log('Running pipeline, output to', options.outputFile);
         const result = await pipeline(
@@ -132,7 +132,7 @@ program
     .command('transcribe-single <url>')
     .description('Transcribe an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
-    .option('-l, --language <language>', 'Content language of the audio (el|fr)', parseLanguageOption, 'el')
+    .option('-l, --language <language>', 'Content language of the audio (el|fr|sr)', parseLanguageOption, 'el')
     .action(async (url: string, options: { outputFile: string; language: CityLanguage }) => {
         const result = await transcribe({ segments: [{ url, start: 0 }], language: options.language }, (stage: string, progressPercent: number) => {
             process.stdout.write(`\rTranscribing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
@@ -149,7 +149,7 @@ program
     .description('Transcribe an audio file')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
     .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
-    .option('-l, --language <language>', 'Content language of the audio (el|fr)', parseLanguageOption, 'el')
+    .option('-l, --language <language>', 'Content language of the audio (el|fr|sr)', parseLanguageOption, 'el')
     .action(async (file: string, options: { outputFile: string; voiceprints?: string; language: CityLanguage }) => {
         const createProgressHandler = (stage: string) => {
             return (subStage: string, perc: number) => {
@@ -456,7 +456,7 @@ program
     .description('Run a full pipeline smoke test and validate the result')
     .option('-O, --output-file <file>', 'Save full result to a JSON file')
     .option('--skip-preflight', 'Skip the callback server reachability check')
-    .option('-l, --language <language>', 'Content language of the meeting (el|fr)', parseLanguageOption, 'el')
+    .option('-l, --language <language>', 'Content language of the meeting (el|fr|sr)', parseLanguageOption, 'el')
     .action(async (youtubeUrl: string | undefined, options: { outputFile?: string; skipPreflight?: boolean; language: CityLanguage }) => {
         const url = youtubeUrl || process.env.SMOKE_TEST_VIDEO_URL || DEFAULT_SMOKE_TEST_VIDEO;
         console.log(`Running smoke test with: ${url}\n`);

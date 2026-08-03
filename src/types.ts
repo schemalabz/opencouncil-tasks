@@ -38,7 +38,7 @@ export type MediaType = "audio" | "video";
  * of all LLM-generated output. Independent of the UI locale a user views the
  * site in. Sent by the frontend on task requests alongside cityName.
  */
-export type CityLanguage = 'el' | 'fr';
+export type CityLanguage = 'el' | 'fr' | 'sr';
 
 /*
  * Task: Transcribe
