@@ -73,7 +73,26 @@ WHAT NOT TO TOUCH:
 - Do not delete short interjections or crosstalk fragments from other speakers («oui oui», «vous l'avez noté ?») — they are real speech; leave them where they are.
 - If you are not confident a word is a transcription error, leave it unchanged. An unfixed error is recoverable; a wrong "fix" corrupts the official record.`;
 
+const SR_FIX_TRANSCRIPT_NOTES = `WHAT TO FIX (in priority order):
+
+1. NAMES — the most common error. The speech-to-text often misspells names phonetically. Before anything else, check every person, party, and place name against the roster and agenda provided. If a name in the text is phonetically close to a roster/agenda name, use the roster/agenda spelling. If it matches nothing, keep it as transcribed.
+
+2. PHONETIC MISSPELLINGS — Serbian spelling is phonemic, so most errors are near-homophone letter confusions: «ч»/«ћ» («кућа», not «куча»; «општина», not «опшћина»), «џ»/«ђ» («ђубре», not «џубре»), dropped or added «х» («хиљада», not «иљада»), and wrongly split or merged words. Use sentence meaning to pick the right word.
+
+3. HOUSE STYLE for numbers and dates — the official record uses digits: «тридесет пета седница»→«35. седница», «пети децембар две хиљаде двадесет пете»→«05.12.2025.» for full dates, «члан седамдесет пет»→«члан 75». Money and percentages also as digits («2,5 милиона евра», «15%»).
+
+4. Serbian punctuation and orthography: quotation marks „…“, a period after ordinals written as digits («35. седница»), capitalize proper nouns normally. Keep the script (Cyrillic or Latin) exactly as the transcript already uses it — never transliterate between scripts.
+
+WHAT NOT TO TOUCH:
+
+- Never change the meaning, add content, or summarize. You fix transcription, not the speaker.
+- Do not fix factual errors, grammar the speaker actually produced, or colloquial word choices. Spoken Serbian in the record stays spoken Serbian, correctly spelled.
+- Do not delete short interjections or crosstalk fragments from other speakers («да, да», «јесте ли то записали?») — they are real speech; leave them where they are.
+- If you are not confident a word is a transcription error, leave it unchanged. An unfixed error is recoverable; a wrong "fix" corrupts the official record.`;
+
 const FR_OUTPUT_DIRECTIVE = `**LANGUE DE SORTIE — RÉDIGE EN FRANÇAIS.** Tout le texte que tu génères (noms et descriptions des sujets, résumés, contributions, tout texte libre) DOIT être rédigé en français, même si les instructions ci-dessus sont en grec. Suis les conventions françaises : utilise « M./Mme » devant les noms de famille (jamais « κ./κα. »), les guillemets français « … » et la ponctuation française. Ne produis aucun texte en grec.`;
+
+const SR_OUTPUT_DIRECTIVE = `**ЈЕЗИК ИЗЛАЗА — ПИШИ НА СРПСКОМ.** Сав текст који генеришеш (називи и описи тема, резимеи, доприноси говорника, сваки слободан текст) МОРА бити написан на српском језику, ћириличким писмом, чак и када су упутства изнад на грчком. Прати српске конвенције: користи „г./гђа“ испред презимена (никада „κ./κα.“), српске наводнике („…“) и српску интерпункцију. Немој писати ниједан текст на грчком.`;
 
 export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
     el: {
@@ -91,6 +110,17 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         defaultAdministrativeBodyName: 'Conseil Municipal',
         summaryErrorText: 'Erreur lors de la génération du résumé.',
         fixTranscriptNotes: FR_FIX_TRANSCRIPT_NOTES,
+    },
+    // Generated output uses Cyrillic — the official script for Serbian
+    // government records. The transcript itself keeps whatever script the ASR
+    // produced (see SR_FIX_TRANSCRIPT_NOTES).
+    sr: {
+        scribeCode: 'srp',
+        promptName: 'Serbian',
+        outputDirective: SR_OUTPUT_DIRECTIVE,
+        defaultAdministrativeBodyName: 'Скупштина града',
+        summaryErrorText: 'Грешка при генерисању резимеа.',
+        fixTranscriptNotes: SR_FIX_TRANSCRIPT_NOTES,
     },
 };
 
