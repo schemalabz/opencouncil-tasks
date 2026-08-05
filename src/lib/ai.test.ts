@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, structuredOutputParams } from './ai.js';
 
 // ===========================================================================
 // cutToLineBoundary — truncated partials stitch at line boundaries so the
@@ -174,5 +174,31 @@ describe('addUsage', () => {
 
         expect(leftAssoc.input_tokens).toBe(rightAssoc.input_tokens);
         expect(leftAssoc.output_tokens).toBe(rightAssoc.output_tokens);
+    });
+});
+
+// ===========================================================================
+// structuredOutputParams — structured outputs are requested through the GA
+// `output_config.format` parameter, not the deprecated top-level
+// `output_format` plus its beta header
+// ===========================================================================
+
+describe('structuredOutputParams', () => {
+
+    const format: Anthropic.Beta.Messages.BetaJSONOutputFormat = {
+        type: 'json_schema',
+        schema: { type: 'object', properties: { name: { type: 'string' } } },
+    };
+
+    it('nests the schema under output_config.format', () => {
+        expect(structuredOutputParams(format)).toEqual({ output_config: { format } });
+    });
+
+    it('does not emit the deprecated top-level output_format', () => {
+        expect(structuredOutputParams(format)).not.toHaveProperty('output_format');
+    });
+
+    it('adds nothing when no format is requested', () => {
+        expect(structuredOutputParams(undefined)).toEqual({});
     });
 });
