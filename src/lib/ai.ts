@@ -82,7 +82,7 @@ type AiChatOptions = {
     parseJson?: boolean;
     maxTokens?: number;
     tools?: Anthropic.Messages.Tool[];
-    outputFormat?: Anthropic.Beta.Messages.MessageCreateParams['output_format'];
+    outputFormat?: Anthropic.Beta.Messages.BetaJSONOutputFormat;
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
     batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
     label?: string;  // Observability: generation name shown in Langfuse (defaults to "aiChat")
@@ -181,13 +181,13 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 
 const BATCH_POLL_INTERVAL_MS = 60_000; // 60s between polls
 
-async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming, requestOptions: Anthropic.RequestOptions): Promise<Anthropic.Messages.Message> {
+async function executeBatch(requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming): Promise<Anthropic.Messages.Message> {
     const batch = await anthropic.messages.batches.create({
         requests: [{
             custom_id: 'request-1',
             params: requestParams,
         }],
-    }, requestOptions);
+    });
 
     console.log(`Batch created: ${batch.id}, polling for result...`);
 
@@ -238,6 +238,21 @@ export function cutToLineBoundary(partial: string): string {
 export function continuationPrompt(partial: string): string {
     const tail = partial.slice(-200);
     return `Your previous response was cut off by the output token limit. It currently ends with:\n${tail}\n\nContinue EXACTLY from where it stopped: output only the remaining content, completing the line you were in the middle of if it was cut mid-line. Do not repeat anything already written, do not add any preamble or commentary, and do not restart any numbering or structure from the beginning.`;
+}
+
+/**
+ * Structured outputs went GA: the canonical request parameter is
+ * `output_config.format`, and no beta header is needed. The older top-level
+ * `output_format` plus the `structured-outputs-2025-11-13` header still works
+ * but is deprecated, so it will break whenever that path is dropped.
+ *
+ * `output_config` is not declared on the SDK's stable request type yet (the
+ * installed 0.71.2 only types it under the beta namespace, and even there
+ * without a `format` field), so this is spread into the params object to reach
+ * the wire untyped. Inline it once the SDK is bumped far enough to type it.
+ */
+export function structuredOutputParams(outputFormat?: Anthropic.Beta.Messages.BetaJSONOutputFormat) {
+    return outputFormat ? { output_config: { format: outputFormat } } : {};
 }
 
 export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
@@ -298,9 +313,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             // Opus 4.7 rejects the temperature parameter; older models still accept it.
             ...(resolvedModel.startsWith("claude-opus-4-7") ? {} : { temperature: 0 }),
             ...(tools && { tools }),
-            ...(outputFormat && {
-                output_format: outputFormat
-            })
+            ...structuredOutputParams(outputFormat)
         };
 
         generation = observeGeneration({
@@ -315,13 +328,6 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             metadata: { batchFirst, cacheSystemPrompt, maxTokens, hasTools: Boolean(tools), hasDocument: Boolean(documentBase64) },
         });
 
-        // Prepare request options with beta headers if needed
-        const requestOptions: Anthropic.RequestOptions = outputFormat ? {
-            headers: {
-                'anthropic-beta': 'structured-outputs-2025-11-13'
-            }
-        } : {};
-
         // Stream with retry, fall back to Batches API if all retries exhausted.
         // Streaming is fast (seconds) but fragile on long requests. The Batches API
         // is slower (minutes of queue time) but immune to connection drops.
@@ -329,17 +335,17 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         let response: Anthropic.Messages.Message;
         let usedBatch = batchFirst;
         if (batchFirst) {
-            response = await executeBatch(requestParams, requestOptions);
+            response = await executeBatch(requestParams);
         } else {
             try {
                 response = await withRetry(async () => {
-                    const stream = anthropic.messages.stream(requestParams, requestOptions);
+                    const stream = anthropic.messages.stream(requestParams);
                     return stream.finalMessage();
                 });
             } catch (e) {
                 if (classifyTransientError(e)) {
                     console.log(`Streaming failed after retries, falling back to batch mode...`);
-                    response = await executeBatch(requestParams, requestOptions);
+                    response = await executeBatch(requestParams);
                     usedBatch = true;
                 } else {
                     throw e;
