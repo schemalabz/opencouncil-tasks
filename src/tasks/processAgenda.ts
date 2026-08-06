@@ -2,6 +2,7 @@ import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
+import { fetchDocumentAsPdfBase64 } from "../lib/documentConversion.js";
 import { CityLanguage, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
 export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX';
@@ -28,15 +29,11 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         throw new Error("Agenda is required");
     }
 
-    if (!request.agendaUrl.endsWith(".pdf")) {
-        throw new Error("Agenda must be a PDF file");
-    }
-
     console.log('');
-    console.log('📄 PHASE 1: PDF Download');
-    const base64 = await downloadFileToBase64(request.agendaUrl);
+    console.log('📄 PHASE 1: Document Download');
+    const { base64, sourceFormat } = await fetchDocumentAsPdfBase64(request.agendaUrl);
     const pdfSizeKB = Math.round(base64.length * 3 / 4 / 1024);
-    console.log(`   Downloaded ${pdfSizeKB}KB`);
+    console.log(`   Ready for extraction: ${pdfSizeKB}KB PDF (from ${sourceFormat.toUpperCase()})`);
 
     console.log('');
     console.log('📝 PHASE 2: Extraction');
@@ -148,15 +145,6 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     return { subjects, warnings };
 };
 
-const downloadFileToBase64 = async (url: string) => {
-    console.log(`Downloading file from ${url}...`);
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    console.log(`Downloaded file to base64: ${base64.length} bytes`);
-    return base64;
-}
-
 export const extractedSubjectToApiSubject = async (
     subject: ExtractedSubject,
     cityName: string,
@@ -201,7 +189,7 @@ export function fillMissingAgendaIndices(subjects: Array<{ agendaItemIndex: numb
     return [{
         code: 'MISSING_AGENDA_ITEM_INDEX',
         severity: 'warning',
-        message: `${nullCount} subject(s) had no agenda item number in the PDF — assigned sequential indices`,
+        message: `${nullCount} subject(s) had no agenda item number in the agenda document — assigned sequential indices`,
     }];
 }
 
