@@ -7,7 +7,7 @@ Backend task processing service for the [OpenCouncil](https://github.com/schemal
 The server supports the following processing tasks:
 
 ### Content Processing
-- [`processAgenda`](src/tasks/processAgenda.ts) - Extracts and structures agenda information from documents (PDF or `.docx`, which is converted to PDF first)
+- [`processAgenda`](src/tasks/processAgenda.ts) - Extracts and structures agenda information from documents (PDF, or `.docx` converted to HTML first)
 - [`fixTranscript`](src/tasks/fixTranscript.ts) - Cleans and corrects transcription output for improved accuracy
 - [`summarize`](src/tasks/summarize.ts) - Generates comprehensive content summaries with subject extraction
 

@@ -1,10 +1,9 @@
 import mammoth from "mammoth";
-import puppeteer from "puppeteer";
 
 /**
  * Agenda documents arrive as whatever the municipality published. Claude's
- * document block only accepts PDFs, so anything else has to be converted
- * before it reaches the model.
+ * document block only accepts PDFs, so a .docx has to become something the
+ * model can read before extraction.
  */
 export type DocumentFormat = 'pdf' | 'docx' | 'doc' | 'unknown';
 
@@ -39,81 +38,42 @@ export const detectDocumentFormat = (bytes: Buffer): DocumentFormat => {
 };
 
 /**
- * Wraps mammoth's bare HTML in a printable document. The styling exists so the
- * model sees the same structure a reader would: table borders make cells
- * distinguishable, and the font stack has to cover Greek.
+ * mammoth inlines embedded images as base64 data URIs, which would be tens of
+ * thousands of useless tokens in the prompt. Agenda images are letterheads and
+ * signatures, so drop them and keep the markup.
  */
-export const buildPrintableHtml = (bodyHtml: string): string => `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<style>
-  body {
-    font-family: "DejaVu Sans", "Liberation Sans", "Noto Sans", Arial, sans-serif;
-    font-size: 11pt;
-    line-height: 1.4;
-    color: #000;
-  }
-  h1 { font-size: 16pt; }
-  h2 { font-size: 14pt; }
-  h3 { font-size: 12pt; }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    margin: 8pt 0;
-  }
-  th, td {
-    border: 1px solid #666;
-    padding: 4pt 6pt;
-    vertical-align: top;
-    text-align: left;
-  }
-  img { max-width: 100%; }
-  p { margin: 6pt 0; }
-</style>
-</head>
-<body>
-${bodyHtml}
-</body>
-</html>`;
+export const stripImages = (html: string): string => html.replace(/<img\b[^>]*>/gi, '');
 
 /**
- * Converts a .docx to PDF by rendering mammoth's HTML in headless Chrome.
- * Chrome is already a dependency of this service (puppeteer, for YouTube
- * scraping), which keeps this from pulling in a full office suite.
+ * Converts a .docx to HTML. Headings, lists, and tables survive as markup, so
+ * the model sees the document's structure — the same structure a rendered PDF
+ * would have shown it, without the render.
  */
-export const convertDocxToPdf = async (docx: Buffer): Promise<Buffer> => {
-    const { value: bodyHtml, messages } = await mammoth.convertToHtml({ buffer: docx });
+export const convertDocxToHtml = async (docx: Buffer): Promise<string> => {
+    const { value, messages } = await mammoth.convertToHtml({ buffer: docx });
 
     const warnings = messages.filter(m => m.type === 'warning');
     if (warnings.length > 0) {
         console.log(`   ⚠️  ${warnings.length} docx conversion warning(s), e.g. "${warnings[0].message}"`);
     }
 
-    if (bodyHtml.trim() === '') {
-        throw new Error("DOCX conversion produced an empty document — the file may be corrupt or contain only images without text");
+    const html = stripImages(value).trim();
+    if (html === '') {
+        throw new Error("DOCX conversion produced an empty document — the file may be corrupt or contain only scanned images");
     }
 
-    const browser = await puppeteer.launch({ headless: true });
-    try {
-        const page = await browser.newPage();
-        await page.setContent(buildPrintableHtml(bodyHtml), { waitUntil: 'load' });
-        const pdf = await page.pdf({
-            format: 'A4',
-            printBackground: true,
-            margin: { top: '15mm', bottom: '15mm', left: '15mm', right: '15mm' },
-        });
-        return Buffer.from(pdf);
-    } finally {
-        await browser.close();
-    }
+    return html;
 };
 
 /**
- * Downloads an agenda document and returns it as base64-encoded PDF,
- * converting from .docx when needed.
+ * An agenda ready for extraction: a PDF goes to Claude as a document block,
+ * a converted .docx as markup in the prompt.
  */
-export const fetchDocumentAsPdfBase64 = async (url: string): Promise<{ base64: string; sourceFormat: DocumentFormat }> => {
+export type AgendaDocument =
+    | { kind: 'pdf'; base64: string }
+    | { kind: 'html'; html: string };
+
+export const fetchAgendaDocument = async (url: string): Promise<AgendaDocument> => {
     console.log(`   Downloading ${url}`);
     const response = await fetch(url);
     if (!response.ok) {
@@ -121,21 +81,20 @@ export const fetchDocumentAsPdfBase64 = async (url: string): Promise<{ base64: s
     }
 
     const bytes = Buffer.from(await response.arrayBuffer());
-    const sourceFormat = detectDocumentFormat(bytes);
-    console.log(`   Downloaded ${Math.round(bytes.length / 1024)}KB (detected format: ${sourceFormat})`);
+    const format = detectDocumentFormat(bytes);
+    console.log(`   Downloaded ${Math.round(bytes.length / 1024)}KB (detected format: ${format})`);
 
-    if (sourceFormat === 'pdf') {
-        return { base64: bytes.toString('base64'), sourceFormat };
+    if (format === 'pdf') {
+        return { kind: 'pdf', base64: bytes.toString('base64') };
     }
 
-    if (sourceFormat === 'docx') {
-        console.log(`   Converting DOCX to PDF...`);
-        const pdf = await convertDocxToPdf(bytes);
-        console.log(`   Converted to ${Math.round(pdf.length / 1024)}KB PDF`);
-        return { base64: pdf.toString('base64'), sourceFormat };
+    if (format === 'docx') {
+        const html = await convertDocxToHtml(bytes);
+        console.log(`   Converted DOCX to ${Math.round(html.length / 1024)}KB of HTML`);
+        return { kind: 'html', html };
     }
 
-    if (sourceFormat === 'doc') {
+    if (format === 'doc') {
         throw new Error(`Unsupported document format at ${url}: legacy Word (.doc). Please provide a PDF or .docx file.`);
     }
 

@@ -188,10 +188,6 @@ EOF
               "d /etc/caddy/conf.d 0755 caddy caddy -"
             ];
 
-            # Chromium renders .docx agendas to PDF; without fonts installed it
-            # would print tofu boxes instead of Greek text.
-            fonts.packages = [ pkgs.dejavu_fonts pkgs.liberation_ttf pkgs.noto-fonts ];
-
             # Nix settings (may already be set by opencouncil-preview, mkIf guards handle this)
             nix.settings.experimental-features = [ "nix-command" "flakes" ];
             nix.settings.trusted-users = [ "root" cfg.user ];
@@ -292,12 +288,6 @@ EOF
                     export FFMPEG_BIN_PATH="${pkgs.ffmpeg}/bin/ffmpeg"
                     export YTDLP_BIN_PATH="${pkgs-unstable.yt-dlp}/bin/yt-dlp"
                     export PATH="${pkgs.ffmpeg}/bin:${pkgs-unstable.yt-dlp}/bin:${pkgs-unstable.deno}/bin:$PATH"
-
-                    # Puppeteer's own Chromium download is skipped in the Nix
-                    # build (--ignore-scripts), so point it at the system one.
-                    # Used for YouTube scraping and for rendering .docx agendas
-                    # to PDF in processAgenda.
-                    export PUPPETEER_EXECUTABLE_PATH="${pkgs.chromium}/bin/chromium"
 
                     cd "$APP_DIR"
                     exec ${pkgs.nodejs}/bin/node dist/server.js
