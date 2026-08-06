@@ -12,6 +12,20 @@ const ZIP_MAGIC = Buffer.from([0x50, 0x4b, 0x03, 0x04]);       // "PK\x03\x04"
 const OLE2_MAGIC = Buffer.from([0xd0, 0xcf, 0x11, 0xe0]);      // legacy .doc/.xls
 
 /**
+ * Real agendas are a few hundred KB. The ceiling is set by what the extraction
+ * call can actually carry: Anthropic rejects requests over 32MB, so a larger
+ * PDF would fail mid-call with a far less obvious error than this one.
+ */
+export const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
+
+/**
+ * Converted markup goes into the prompt, so its size is token spend. 500K
+ * characters is far more than any council agenda and still well inside the
+ * context window — passing it means something is wrong with the document.
+ */
+export const MAX_CONVERTED_HTML_CHARS = 500_000;
+
+/**
  * Identifies a document by its bytes rather than by URL extension: agenda URLs
  * are often signed or extension-less, and a wrong extension is common enough
  * that the content is the only trustworthy signal.
@@ -45,6 +59,24 @@ export const detectDocumentFormat = (bytes: Buffer): DocumentFormat => {
 export const stripImages = (html: string): string => html.replace(/<img\b[^>]*>/gi, '');
 
 /**
+ * Rejects conversions that can't produce a usable extraction. Oversized markup
+ * fails rather than being truncated: this task promises every subject on the
+ * agenda, and silently dropping the tail of the document would break that
+ * promise without anyone noticing.
+ */
+export const checkConvertedHtml = (html: string): string => {
+    if (html === '') {
+        throw new Error("DOCX conversion produced an empty document — the file may be corrupt or contain only scanned images");
+    }
+
+    if (html.length > MAX_CONVERTED_HTML_CHARS) {
+        throw new Error(`DOCX conversion produced ${Math.round(html.length / 1024)}KB of markup, over the ${MAX_CONVERTED_HTML_CHARS / 1024}KB limit — this does not look like a council agenda`);
+    }
+
+    return html;
+};
+
+/**
  * Converts a .docx to HTML. Headings, lists, and tables survive as markup, so
  * the model sees the document's structure — the same structure a rendered PDF
  * would have shown it, without the render.
@@ -57,12 +89,46 @@ export const convertDocxToHtml = async (docx: Buffer): Promise<string> => {
         console.log(`   ⚠️  ${warnings.length} docx conversion warning(s), e.g. "${warnings[0].message}"`);
     }
 
-    const html = stripImages(value).trim();
-    if (html === '') {
-        throw new Error("DOCX conversion produced an empty document — the file may be corrupt or contain only scanned images");
+    return checkConvertedHtml(stripImages(value).trim());
+};
+
+/**
+ * Downloads with a hard byte ceiling, aborting mid-stream rather than
+ * buffering an entire oversized response first.
+ */
+const downloadBounded = async (url: string, maxBytes: number): Promise<Buffer> => {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to download document from ${url}: ${response.status} ${response.statusText}`);
     }
 
-    return html;
+    const declaredLength = Number(response.headers.get('content-length'));
+    if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+        await response.body?.cancel();
+        throw new Error(`Document at ${url} is too large: declares ${declaredLength} bytes, over the ${maxBytes / 1024 / 1024}MB limit`);
+    }
+
+    if (!response.body) {
+        throw new Error(`Failed to download document from ${url}: empty response body`);
+    }
+
+    // content-length is advisory (absent on chunked responses, and a server may
+    // simply lie), so the ceiling is enforced against the bytes as they arrive.
+    const reader = response.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.length;
+        if (total > maxBytes) {
+            await reader.cancel();
+            throw new Error(`Document at ${url} is too large: exceeds the ${maxBytes / 1024 / 1024}MB limit`);
+        }
+        chunks.push(value);
+    }
+
+    return Buffer.concat(chunks);
 };
 
 /**
@@ -75,12 +141,7 @@ export type AgendaDocument =
 
 export const fetchAgendaDocument = async (url: string): Promise<AgendaDocument> => {
     console.log(`   Downloading ${url}`);
-    const response = await fetch(url);
-    if (!response.ok) {
-        throw new Error(`Failed to download document from ${url}: ${response.status} ${response.statusText}`);
-    }
-
-    const bytes = Buffer.from(await response.arrayBuffer());
+    const bytes = await downloadBounded(url, MAX_DOCUMENT_BYTES);
     const format = detectDocumentFormat(bytes);
     console.log(`   Downloaded ${Math.round(bytes.length / 1024)}KB (detected format: ${format})`);
 
@@ -90,7 +151,7 @@ export const fetchAgendaDocument = async (url: string): Promise<AgendaDocument> 
 
     if (format === 'docx') {
         const html = await convertDocxToHtml(bytes);
-        console.log(`   Converted DOCX to ${Math.round(html.length / 1024)}KB of HTML`);
+        console.log(`   Converted DOCX to ${html.length} characters of HTML`);
         return { kind: 'html', html };
     }
 
