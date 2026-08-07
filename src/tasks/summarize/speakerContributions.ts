@@ -436,15 +436,11 @@ ${fullDiscussion}
             batchMode: result.batchMode
         };
     } catch (error) {
-        console.error("Error generating speaker contributions:", error);
-        // Return fallback contributions for all speakers
-        return {
-            contributions: Object.keys(utterancesBySpeaker).map(key => ({
-                speakerId: key.startsWith('name:') ? null : key,
-                speakerName: speakerKeyToName.get(key) || (key.startsWith('name:') ? key.slice(5) : null),
-                text: getLanguageConfig(cityLanguage).summaryErrorText
-            })),
-            ...NO_USAGE_STATS
-        };
+        // Rethrow so the caller's batch-shrink retry can run. Returning fallback
+        // text here made that retry unreachable, so one transient API failure or
+        // one max_tokens truncation became permanent error text for the whole
+        // batch. The caller writes the identical fallback once retries are spent.
+        console.error(`   ✗ Contribution generation failed for "${subject.name}" (${Object.keys(utterancesBySpeaker).length} speakers): ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
     }
 }
