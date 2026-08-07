@@ -50,18 +50,15 @@ export async function enrichSubjectData(
     // Step 1: Geocode location if provided
     let location: Subject['location'] = null;
     if (input.locationText) {
-        try {
-            const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName, config.country);
-            if (locationLatLng) {
-                location = {
-                    text: input.locationText,
-                    type: "point" as const,
-                    coordinates: [[locationLatLng.lat, locationLatLng.lng]]
-                };
-            }
-        } catch (error) {
-            console.error("Error geocoding location:", error);
-            // Continue with null location on error
+        // geocodeLocation never throws — it logs and returns null — so this
+        // needs no try/catch. A null here just means the subject has no pin.
+        const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName, config.country);
+        if (locationLatLng) {
+            location = {
+                text: input.locationText,
+                type: "point" as const,
+                coordinates: [[locationLatLng.lat, locationLatLng.lng]]
+            };
         }
     }
 

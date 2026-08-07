@@ -3,27 +3,32 @@ import axios from "axios";
 
 vi.mock("axios");
 
-import { geocodeLocation, DEFAULT_COUNTRY } from "./geocode.js";
+import { geocodeLocation } from "./geocode.js";
 
 const mockedGet = vi.mocked(axios.get);
 
-function okResponse() {
+/** Google's shape for a resolved address. `types` drives the country guard. */
+function okResponse(types: string[] = ["route"], lat = 37.9838, lng = 23.7275) {
     return {
         data: {
             status: "OK",
-            results: [{ geometry: { location: { lat: 37.9838, lng: 23.7275 } } }],
+            results: [{ types, geometry: { location: { lat, lng } } }],
         },
     };
 }
 
 /** The params object handed to the Google Geocoding API on the last call. */
 function lastParams() {
+    expect(mockedGet).toHaveBeenCalledOnce();
     return mockedGet.mock.calls.at(-1)?.[1]?.params as Record<string, string>;
 }
 
 describe("geocodeLocation", () => {
     beforeEach(() => {
-        vi.clearAllMocks();
+        // resetAllMocks, not clearAllMocks: the latter keeps implementations, so
+        // a test added below would inherit the previous one's mocked outcome.
+        vi.resetAllMocks();
+        vi.spyOn(console, "warn").mockImplementation(() => { });
         vi.spyOn(console, "error").mockImplementation(() => { });
     });
 
@@ -43,7 +48,6 @@ describe("geocodeLocation", () => {
 
         await geocodeLocation("Πλατεία Συντάγματος, Αθήνα");
 
-        expect(DEFAULT_COUNTRY).toBe("GR");
         expect(lastParams().components).toBe("country:GR");
     });
 
@@ -56,10 +60,28 @@ describe("geocodeLocation", () => {
         });
     });
 
-    it("returns null when the country filter excludes every result", async () => {
+    it("discards a country-level result — the address is not in that country", async () => {
+        // What Google actually returns for an out-of-country address under a
+        // components filter: OK, with the country itself at its centroid.
+        mockedGet.mockResolvedValue(okResponse(["country", "political"], 39.074, 21.824));
+
+        await expect(geocodeLocation("Rue de la République, Lyon", "GR")).resolves.toBeNull();
+    });
+
+    it("keeps a locality-level result — villages legitimately resolve to one", async () => {
+        mockedGet.mockResolvedValue(okResponse(["locality", "political"]));
+
+        await expect(geocodeLocation("Ζεμενό, Κόρινθος", "GR")).resolves.toEqual({
+            lat: 37.9838,
+            lng: 23.7275,
+        });
+    });
+
+    it("returns null on ZERO_RESULTS", async () => {
         mockedGet.mockResolvedValue({ data: { status: "ZERO_RESULTS", results: [] } });
 
         await expect(geocodeLocation("Knez Mihailova, Beograd", "RS")).resolves.toBeNull();
+        expect(lastParams().components).toBe("country:RS");
     });
 
     it("returns null when the request throws", async () => {
