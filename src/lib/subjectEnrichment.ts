@@ -1,4 +1,4 @@
-import { CityLanguage, Subject, SubjectContext, SpeakerContribution } from '../types.js';
+import { CityLanguage, CountryCode, Subject, SubjectContext, SpeakerContribution } from '../types.js';
 import { geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
 import { getLanguageConfig } from './language.js';
@@ -27,6 +27,8 @@ export interface EnrichmentInput {
 export interface EnrichmentConfig {
     cityName: string;
     cityLanguage?: CityLanguage;
+    /** ISO 3166-1 alpha-2 country of the city; geocoding is restricted to it. */
+    country?: CountryCode;
     administrativeBodyName?: string;
     date: string;
 }
@@ -49,7 +51,7 @@ export async function enrichSubjectData(
     let location: Subject['location'] = null;
     if (input.locationText) {
         try {
-            const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName);
+            const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName, config.country);
             if (locationLatLng) {
                 location = {
                     text: input.locationText,

@@ -41,6 +41,15 @@ export type MediaType = "audio" | "video";
 export type CityLanguage = 'el' | 'fr' | 'sr';
 
 /*
+ * ISO 3166-1 alpha-2 country code of the city (e.g. 'GR', 'FR', 'RS'). Used to
+ * restrict geocoding of subject locations to the right country. Deliberately
+ * separate from CityLanguage — a language spans several countries ('fr' covers
+ * France, Belgium and Switzerland; 'sr' covers Serbia, Bosnia and Montenegro),
+ * so it cannot stand in for one. Optional on requests; defaults to Greece.
+ */
+export type CountryCode = string;
+
+/*
  * Task: Transcribe
  */
 
@@ -129,6 +138,7 @@ export interface ProcessAgendaRequest extends TaskRequest {
     topicLabels: TopicLabelInfo[];
     cityName: string;
     cityLanguage: CityLanguage;
+    country?: CountryCode;
     date: string;
 }
 
@@ -266,6 +276,7 @@ export interface RequestOnTranscript extends TaskRequest {
     topicLabels: TopicLabelInfo[];
     cityName: string;
     cityLanguage: CityLanguage;
+    country?: CountryCode;
     administrativeBodyName: string;  // e.g., "Δημοτικό Συμβούλιο"
     partiesWithPeople: {
         name: string;
