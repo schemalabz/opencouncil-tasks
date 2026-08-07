@@ -141,7 +141,7 @@ app.post('/transcribe', (
 app.post('/summarize', taskManager.registerTask(summarize, {
     summary: 'Summarize transcript content',
     description: 'Generate a summary of transcript content with subject extraction',
-    version: 4,
+    version: 5,
   }));
 
 app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
@@ -158,7 +158,7 @@ app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
   summary: 'Process meeting agenda',
   description: 'Extracts and structures agenda information from documents',
-  version: 2,
+  version: 3,
 }));
 
 app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {

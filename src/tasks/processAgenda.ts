@@ -2,7 +2,7 @@ import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
-import { CityLanguage, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
+import { CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
 export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX';
 import { formatTopicLabels } from "../lib/promptUtils.js";
@@ -111,6 +111,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
             { ...s, speakerContributions: [] },
             request.cityName,
             request.cityLanguage,
+            request.country,
             request.date
         ).then(r => {
             onProgress("enrichment", (i + 1) / extracted.length);
@@ -161,6 +162,7 @@ export const extractedSubjectToApiSubject = async (
     subject: ExtractedSubject,
     cityName: string,
     cityLanguage: CityLanguage,
+    country: CountryCode | undefined,
     date: string
 ) => {
     const id = generateSubjectUUID(subject, 36);
@@ -181,6 +183,7 @@ export const extractedSubjectToApiSubject = async (
     return enrichSubjectData(input, id, {
         cityName,
         cityLanguage,
+        country,
         date
     });
 }
@@ -222,7 +225,7 @@ export type ExtractedSubject = {
 }
 
 export const getSystemPrompt = (cityLanguage: CityLanguage) => {
-    return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων στην Ελλάδα. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένας πίνακας (array) με objects με το ακόλουθο structure:
+    return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένας πίνακας (array) με objects με το ακόλουθο structure:
 
 {
     name: string; // Ένας σύντομος τίτλος για το θέμα (2-6 λέξεις)
@@ -232,7 +235,10 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
                           // ✓ Σωστά: "Το θέμα αφορά...", "Θα εξεταστεί...", "Προς έγκριση η..."
                           // ✗ Λάθος: "Συζητούνται...", "Εγκρίνεται...", "Παρουσιάζεται..."
     agendaItemIndex: number | null; // Ο αριθμός που συνοδεύει το θέμα στο έγγραφο της ημερήσιας διάταξης, αν υπάρχει
-    locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος. Αν το θέμα δεν έχει τοποθεσία, ή αφορά ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου), τότε null
+    locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος.
+                          // Γράψε ΜΟΝΟ το τοπωνύμιο· ΜΗΝ προσθέτεις πόλη, περιοχή ή χώρα — μπαίνουν αυτόματα αργότερα.
+                          // ΕΞΑΙΡΕΣΗ ΓΛΩΣΣΑΣ (ισχύει ΜΟΝΟ για το locationText, όχι για τα υπόλοιπα πεδία): κράτα το τοπωνύμιο στη γλώσσα και το αλφάβητο που χρησιμοποιεί το έγγραφο — ΜΗΝ μεταφράζεις και ΜΗΝ μεταγράφεις μεταξύ αλφαβήτων.
+                          // Αν το θέμα δεν έχει τοποθεσία, ή αφορά ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου), τότε null
     introducedByPersonId: string | null; // Το id του εισηγητή του θέματος, αν αναφέρετε σαφώς στη διάταξη
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
     topicImportance: 'doNotNotify' | 'normal' | 'high'; // Η σημασία του θέματος για ειδοποιήσεις

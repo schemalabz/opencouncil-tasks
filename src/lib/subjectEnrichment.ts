@@ -1,4 +1,4 @@
-import { CityLanguage, Subject, SubjectContext, SpeakerContribution } from '../types.js';
+import { CityLanguage, CountryCode, Subject, SubjectContext, SpeakerContribution } from '../types.js';
 import { geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
 import { getLanguageConfig } from './language.js';
@@ -27,6 +27,8 @@ export interface EnrichmentInput {
 export interface EnrichmentConfig {
     cityName: string;
     cityLanguage?: CityLanguage;
+    /** ISO 3166-1 alpha-2 country of the city; geocoding is restricted to it. */
+    country?: CountryCode;
     administrativeBodyName?: string;
     date: string;
 }
@@ -48,18 +50,15 @@ export async function enrichSubjectData(
     // Step 1: Geocode location if provided
     let location: Subject['location'] = null;
     if (input.locationText) {
-        try {
-            const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName);
-            if (locationLatLng) {
-                location = {
-                    text: input.locationText,
-                    type: "point" as const,
-                    coordinates: [[locationLatLng.lat, locationLatLng.lng]]
-                };
-            }
-        } catch (error) {
-            console.error("Error geocoding location:", error);
-            // Continue with null location on error
+        // geocodeLocation never throws — it logs and returns null — so this
+        // needs no try/catch. A null here just means the subject has no pin.
+        const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName, config.country);
+        if (locationLatLng) {
+            location = {
+                text: input.locationText,
+                type: "point" as const,
+                coordinates: [[locationLatLng.lat, locationLatLng.lng]]
+            };
         }
     }
 
