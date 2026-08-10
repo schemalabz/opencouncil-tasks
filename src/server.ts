@@ -19,6 +19,7 @@ import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
+import { devSlowTask } from './tasks/devSlowTask.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
@@ -57,7 +58,6 @@ app.use(authMiddleware);
 // PUBLIC ENDPOINTS (No Authentication Required)
 // ============================================================================
 
-// Health check endpoint with version information and service status
 app.get('/health', async (req: express.Request, res: express.Response<HealthResponse>) => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     const services: { [key: string]: any } = {};
@@ -94,20 +94,36 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
     });
 });
 
+// ============================================================================
+// TASK CONTROL ENDPOINTS (Authentication Required)
+// ============================================================================
+
+// List all running and queued tasks with their current state
 app.get('/tasks', (req, res) => {
-    const running = taskManager.getTaskUpdates().map(t => ({
-        taskType: t.taskType,
-        status: t.status,
-        stage: t.stage,
-        progressPercent: t.progressPercent,
-        duration: Math.floor((Date.now() - t.createdAt.getTime()) / 1000),
-        callbackUrl: t.callbackUrl,
-    }));
     res.json({
-        running,
-        queued: taskManager.getQueuedTasksCount(),
+        running: taskManager.getTaskUpdates(),
+        queued: taskManager.getQueuedTaskSummaries(),
         maxParallelTasks: taskManager.getMaxParallelTasks(),
     });
+});
+
+// Cancel a running or queued task (cooperative: running tasks finish at the next checkpoint)
+app.post('/tasks/:taskId/cancel', (req, res) => {
+    const outcome = taskManager.cancelTask(req.params.taskId);
+    if (!outcome) {
+        res.status(404).json({ error: `No running or queued task ${req.params.taskId}` });
+        return;
+    }
+    res.json({ taskId: req.params.taskId, status: outcome });
+});
+
+// Switch a running task's LLM calls from the Batch API to streaming
+app.post('/tasks/:taskId/promote', (req, res) => {
+    if (!taskManager.promoteTask(req.params.taskId)) {
+        res.status(404).json({ error: `No running task ${req.params.taskId}` });
+        return;
+    }
+    res.json({ taskId: req.params.taskId, llmMode: 'streaming' });
 });
 
 // ============================================================================
@@ -177,6 +193,14 @@ app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs',
   version: 1,
 }));
+
+if (process.env.NODE_ENV !== 'production') {
+    app.post('/dev/slowTask', taskManager.registerTask(devSlowTask, {
+        summary: 'Dev-only slow task for testing cancellation and batch promotion',
+        description: 'Sleeps cooperatively for iterations×sleepMs, optionally makes one tiny batch-first LLM call. Not registered in production.',
+        tags: ['dev'],
+    }));
+}
 
 // Resolve task paths from Express routes, then load API Documentation
 taskManager.resolvePathsFromApp(app);

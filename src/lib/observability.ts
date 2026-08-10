@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import { extractMeetingId } from '../utils.js';
+import { TaskCancelledError, getTaskControl } from './taskControl.js';
 
 dotenv.config();
 
@@ -160,11 +161,22 @@ export async function runWithTaskTrace<R>(options: TaskTraceOptions, fn: () => P
         });
         return result;
     } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        // A cancelled task surfaces as TaskCancelledError — or, if the cancel
+        // landed mid-SDK-call, a wrapped abort, so the aborted signal is the
+        // authoritative marker (same discriminator as TaskManager). Tag it
+        // distinctly so cancellations are filterable and don't read as
+        // genuine failures in runs list / error dashboards.
+        const cancelled = error instanceof TaskCancelledError || Boolean(getTaskControl()?.cancel.signal.aborted);
         trace.update({
-            output: { error: error instanceof Error ? error.message : String(error) },
-            tags: [...tags, 'status:error', ...compositePromptTag(context.promptHashes)],
+            output: { error: message },
+            tags: [...tags, cancelled ? 'status:cancelled' : 'status:error', ...compositePromptTag(context.promptHashes)],
         });
-        trace.event({ name: 'task-error', level: 'ERROR', statusMessage: error instanceof Error ? error.message : String(error) });
+        trace.event({
+            name: cancelled ? 'task-cancelled' : 'task-error',
+            level: cancelled ? 'WARNING' : 'ERROR',
+            statusMessage: message,
+        });
         throw error;
     } finally {
         await langfuse.flushAsync().catch((e) => console.error('Langfuse flush failed:', e));
