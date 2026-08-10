@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection,
+  getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection, isSilentAudio,
   downloadUntilComplete, parseVideoInfoOutput,
   type CompleteDownloadDeps, type CompleteDownloadConfig, type RawVideo,
 } from './downloadYTV.js';
@@ -219,8 +219,36 @@ describe('needsLoudnormCorrection', () => {
     expect(needsLoudnormCorrection(stats('-11.20', '-3.00'))).toBe(true);
   });
 
-  it('corrects when measurements are not parseable numbers', () => {
-    expect(needsLoudnormCorrection(stats('-inf', '-inf'))).toBe(true);
+  // Silent audio measures -inf, which ffmpeg's pass 2 rejects outright
+  // (`measured_I` must be in [-99, 0]) — normalizing it is never the answer.
+  it('does not correct when the measurement is not a parseable number', () => {
+    expect(needsLoudnormCorrection(stats('-inf', '-inf'))).toBe(false);
+  });
+});
+
+describe('isSilentAudio', () => {
+  const stats = (input_i: string) => ({
+    input_i,
+    input_tp: '-1.50',
+    input_lra: '11.00',
+    input_thresh: '-25.00',
+  });
+
+  // Both production occurrences (chania 10/08, chalandri 29/07) measured -inf
+  it('treats digital silence as silent', () => {
+    expect(isSilentAudio(stats('-inf'))).toBe(true);
+  });
+
+  it('treats a measurable but sub-floor level as silent', () => {
+    expect(isSilentAudio(stats('-72.53'))).toBe(true);
+  });
+
+  it('accepts badly under-recorded but usable audio', () => {
+    expect(isSilentAudio(stats('-45.00'))).toBe(false);
+  });
+
+  it('accepts normal audio', () => {
+    expect(isSilentAudio(stats('-27.10'))).toBe(false);
   });
 });
 
