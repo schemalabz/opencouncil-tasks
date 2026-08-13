@@ -1,0 +1,2956 @@
+{
+  "version": 3,
+  "description": "Golden fixture for decision reading (issue #617): run the reader over every document and compare against `expected`. Grouped per city → per administrative body; `otherDocuments` holds a city's documents that belong to no tracked body. `verified: true` labels are document truth confirmed by manual review; `verified: false` labels are trusted but unreviewed. Documents with kind `other` are not deliberative session decisions and must read as meetingDate null. Body notes describe publishing behaviour on Diavgeia. Coverage: all 11 supported Greek municipalities are represented; bodies a city has that the fixture deliberately does not cover are listed under bodiesNotCovered with the reason. Demo cities outside the Diavgeia realm (nis, rennes, vouli) are out of scope.",
+  "cities": [
+    {
+      "cityId": "argithea",
+      "orgUid": "6041",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100086220"
+          ],
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number.",
+          "documents": [
+            {
+              "ada": "91ΙΜΩΨ3-ΤΑ6",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/91ΙΜΩΨ3-ΤΑ6",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-18",
+                "decisionNumber": "120/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ9ΟΣΩΨ3-Π6Λ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ9ΟΣΩΨ3-Π6Λ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "100/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "68ΛΠΩΨ3-Γ1Ρ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/68ΛΠΩΨ3-Γ1Ρ",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "6ΖΧΧΩΨ3-Ξ3Τ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΖΧΧΩΨ3-Ξ3Τ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "99/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ6ΘΡΩΨ3-ΡΞΜ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6ΘΡΩΨ3-ΡΞΜ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-18",
+                "decisionNumber": "121/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΠΩΝΩΨ3-ΞΥΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΠΩΝΩΨ3-ΞΥΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "134/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΞΧΝΩΨ3-ΠΛ8",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΞΧΝΩΨ3-ΠΛ8",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-15",
+                "decisionNumber": "114/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ66ΜΩΨ3-ΞΜΔ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ66ΜΩΨ3-ΞΜΔ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-15",
+                "decisionNumber": "106/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΥΧΓΩΨ3-9ΛΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥΧΓΩΨ3-9ΛΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-15",
+                "decisionNumber": "107/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Σ4ΣΩΨ3-7Υ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Σ4ΣΩΨ3-7Υ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-15",
+                "decisionNumber": "105/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "938ΠΩΨ3-ΤΑ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/938ΠΩΨ3-ΤΑ7",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-15",
+                "decisionNumber": "112/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "918ΕΩΨ3-ΦΓΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/918ΕΩΨ3-ΦΓΩ",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "mayoral decision (ΑΠΟΦΑΣΗ 152/2026 ΔΗΜΑΡΧΟΥ ΑΡΓΙΘΕΑΣ, direct award) published under the committee unit; the number belongs to the mayor's own sequence, and there is no session to match"
+            },
+            {
+              "ada": "Ρ09ΤΩΨ3-ΘΤΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ09ΤΩΨ3-ΘΤΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "98/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "83024"
+          ],
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. The protocol number is often absent from the document itself.",
+          "documents": [
+            {
+              "ada": "ΨΕΨΠΩΨ3-Π9Α",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΕΨΠΩΨ3-Π9Α",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-24",
+                "decisionNumber": "46/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΝΜΡΩΨ3-ΑΦ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΝΜΡΩΨ3-ΑΦ7",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "mayoral decision (ΑΠΟΦΑΣΗ 138/2026 ΔΗΜΑΡΧΟΥ ΑΡΓΙΘΕΑΣ) published under the council unit; the number belongs to the mayor's own sequence, and there is no session to match"
+            },
+            {
+              "ada": "62ΜΛΩΨ3-6ΝΒ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/62ΜΛΩΨ3-6ΝΒ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "40/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "90ΚΟΩΨ3-ΦΡΧ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/90ΚΟΩΨ3-ΦΡΧ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-24",
+                "decisionNumber": "49/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΤ9ΒΩΨ3-ΚΧ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΤ9ΒΩΨ3-ΚΧ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "44/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "91ΛΩΩΨ3-Η6Ο",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/91ΛΩΩΨ3-Η6Ο",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "42/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΜΗΩΩΨ3-342",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΜΗΩΩΨ3-342",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "43/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Λ2ΟΩΨ3-ΨΚ5",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Λ2ΟΩΨ3-ΨΚ5",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "38/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΚΡΗΩΨ3-ΙΑΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΚΡΗΩΨ3-ΙΑΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-25",
+                "decisionNumber": "45/2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cityId": "argos",
+      "orgUid": "6042",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100087485"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΨΓ87ΩΨΔ-6Μ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓ87ΩΨΔ-6Μ7",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "339/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΓΠΓΩΨΔ-ΤΣ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓΠΓΩΨΔ-ΤΣ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "314/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΡΡΣΩΨΔ-ΡΤ0",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΡΡΣΩΨΔ-ΡΤ0",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "354/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΞΡ5ΩΨΔ-Ζ97",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΞΡ5ΩΨΔ-Ζ97",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "355/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΩ3ΩΩΨΔ-Τ69",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΩ3ΩΩΨΔ-Τ69",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "331/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6Χ95ΩΨΔ-ΨΓΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6Χ95ΩΨΔ-ΨΓΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "353/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΦΧΚΩΨΔ-7ΙΙ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΦΧΚΩΨΔ-7ΙΙ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "322/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΡΟΖΩΨΔ-ΑΑΕ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΡΟΖΩΨΔ-ΑΑΕ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "360/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΣΟΗΩΨΔ-ΧΘΙ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΣΟΗΩΨΔ-ΧΘΙ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "359/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΑΕΥΩΨΔ-ΗΑΔ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΑΕΥΩΨΔ-ΗΑΔ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "337/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ204ΩΨΔ-Γ9Ψ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ204ΩΨΔ-Γ9Ψ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "330/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΥΟΞΩΨΔ-ΦΒΘ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥΟΞΩΨΔ-ΦΒΘ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "370/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "83271"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "9ΡΞΔΩΨΔ-ΜΩ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΡΞΔΩΨΔ-ΜΩ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-12-23",
+                "decisionNumber": "398/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ2Δ0ΩΨΔ-ΙΕΦ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ2Δ0ΩΨΔ-ΙΕΦ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-03",
+                "decisionNumber": "114/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΕΜΠΞΩΨΔ-ΕΔΔ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΜΠΞΩΨΔ-ΕΔΔ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "137/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ1Ψ3ΩΨΔ-ΗΨΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ1Ψ3ΩΨΔ-ΗΨΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "134/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΣ3ΩΩΨΔ-ΙΣΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΣ3ΩΩΨΔ-ΙΣΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-22",
+                "decisionNumber": "122/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΑΠΔΩΨΔ-ΣΛΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΑΠΔΩΨΔ-ΣΛΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-12",
+                "decisionNumber": "99/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΕΜ9ΩΩΨΔ-7ΡΘ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΜ9ΩΩΨΔ-7ΡΘ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "143/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6Μ80ΩΨΔ-04Σ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6Μ80ΩΨΔ-04Σ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-22",
+                "decisionNumber": "109/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΠΧΦΩΨΔ-Λ0Π",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΠΧΦΩΨΔ-Λ0Π",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "138/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Γ9ΟΩΨΔ-Κ5Γ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Γ9ΟΩΨΔ-Κ5Γ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "160/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΠΝΔΩΨΔ-26Ω",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΠΝΔΩΨΔ-26Ω",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-03",
+                "decisionNumber": "115/2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cityId": "athens",
+      "orgUid": "6013",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100085478"
+          ],
+          "notes": "Decision numbers are labelled ΠΡΑΞΗ in the documents, not Απόφαση. Diavgeia's protocolNumber field is prose that contains the number.",
+          "documents": [
+            {
+              "ada": "Ψ58ΘΩ6Μ-ΡΡΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ58ΘΩ6Μ-ΡΡΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-27",
+                "decisionNumber": "1487/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΓ7ΣΩ6Μ-Ω6Π",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓ7ΣΩ6Μ-Ω6Π",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "1443"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΚΠΠΩ6Μ-ΕΦΧ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΚΠΠΩ6Μ-ΕΦΧ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "1468/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΩΙ0Ω6Μ-ΟΥΚ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΩΙ0Ω6Μ-ΟΥΚ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "1440/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΣΗ7Ω6Μ-7ΩΓ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΣΗ7Ω6Μ-7ΩΓ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-03",
+                "decisionNumber": "1513/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ5Χ3Ω6Μ-ΙΤΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ5Χ3Ω6Μ-ΙΤΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-27",
+                "decisionNumber": "1475/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "639ΝΩ6Μ-ΓΓΔ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/639ΝΩ6Μ-ΓΓΔ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-27",
+                "decisionNumber": "1501/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΑΟ3Ω6Μ-ΜΟΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΑΟ3Ω6Μ-ΜΟΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "1442/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΠΙΑΩ6Μ-ΙΨ8",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΠΙΑΩ6Μ-ΙΨ8",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-03",
+                "decisionNumber": "1507/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΛΗΥΩ6Μ-8ΒΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΛΗΥΩ6Μ-8ΒΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-27",
+                "decisionNumber": "1490/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ84ΡΩ6Μ-ΛΗ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ84ΡΩ6Μ-ΛΗ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-03",
+                "decisionNumber": "1509/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΣΥΞΩ6Μ-ΕΗΕ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΣΥΞΩ6Μ-ΕΗΕ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-27",
+                "decisionNumber": "1473/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "78341"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number. The document often states no protocol number at all.",
+          "documents": [
+            {
+              "ada": "ΡΣ8ΧΩ6Μ-ΤΟΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΣ8ΧΩ6Μ-ΤΟΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-03-23",
+                "decisionNumber": "195"
+              },
+              "verified": true
+            },
+            {
+              "ada": "637ΥΩ6Μ-Ζ36",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/637ΥΩ6Μ-Ζ36",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-18",
+                "decisionNumber": "338"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ750Ω6Μ-4ΦΣ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ750Ω6Μ-4ΦΣ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-18",
+                "decisionNumber": "257"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΗΩΣΩ6Μ-4ΩΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΗΩΣΩ6Μ-4ΩΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "414"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΕΟΕΩ6Μ-ΒΣ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΕΟΕΩ6Μ-ΒΣ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "506"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΠΧΤΩ6Μ-ΟΤΚ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΠΧΤΩ6Μ-ΟΤΚ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "429"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Δ8ΓΩ6Μ-Ε1Σ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Δ8ΓΩ6Μ-Ε1Σ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-03-09",
+                "decisionNumber": "151"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ0Α7Ω6Μ-Δ05",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ0Α7Ω6Μ-Δ05",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "427"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΝ52Ω6Μ-Ω2Ι",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΝ52Ω6Μ-Ω2Ι",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "389"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ7ΤΘΩ6Μ-ΨΧ1",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ7ΤΘΩ6Μ-ΨΧ1",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-18",
+                "decisionNumber": "322"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΚΤ0Ω6Μ-ΜΗΙ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΚΤ0Ω6Μ-ΜΗΙ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-03-09",
+                "decisionNumber": "159"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΧΨΣΩ6Μ-5Τ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΧΨΣΩ6Μ-5Τ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "405"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ],
+      "bodiesNotCovered": [
+        {
+          "name": "Δημοτικές Κοινότητες (1η–7η)",
+          "reason": "all seven communities publish under one shared unit (84655); excluded 2026-08-14 pending the body-extraction capability"
+        },
+        {
+          "name": "ΔΑΕΜ",
+          "reason": "municipal company, not a deliberative body of the municipality"
+        }
+      ]
+    },
+    {
+      "cityId": "chalandri",
+      "orgUid": "6314",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100084212"
+          ],
+          "notes": "Diavgeia's protocolNumber field usually carries the decision number, with occasional true filing protocols.",
+          "documents": [
+            {
+              "ada": "9ΔΔΦΩΗΔ-ΕΡ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΔΔΦΩΗΔ-ΕΡ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-16",
+                "decisionNumber": "626/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "68Ξ8ΩΗΔ-3ΜΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/68Ξ8ΩΗΔ-3ΜΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-16",
+                "decisionNumber": "622/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "97Ζ4ΩΗΔ-Γ5Ω",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/97Ζ4ΩΗΔ-Γ5Ω",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "92ΦΣΩΗΔ-Ζ7Ν",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/92ΦΣΩΗΔ-Ζ7Ν",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-16",
+                "decisionNumber": "625/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "62ΖΑΩΗΔ-Κ06",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/62ΖΑΩΗΔ-Κ06",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-30",
+                "decisionNumber": "680/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Μ7ΖΩΗΔ-ΦΟ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Μ7ΖΩΗΔ-ΦΟ7",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "ΨΘΑΚΩΗΔ-92Β",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΘΑΚΩΗΔ-92Β",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "645/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ2ΟΒΩΗΔ-ΦΝΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ2ΟΒΩΗΔ-ΦΝΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-16",
+                "decisionNumber": "611/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΗΛ8ΩΗΔ-Ω6Ι",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΗΛ8ΩΗΔ-Ω6Ι",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-30",
+                "decisionNumber": "688/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "911ΖΩΗΔ-ΘΩ1",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/911ΖΩΗΔ-ΘΩ1",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "640/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΩΖΝΩΗΔ-ΒΟΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΩΖΝΩΗΔ-ΒΟΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "636/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΣΧΑΩΗΔ-Λ6Β",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΣΧΑΩΗΔ-Λ6Β",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "639/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "79311"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "96Β4ΩΗΔ-0ΑΕ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/96Β4ΩΗΔ-0ΑΕ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-02-11",
+                "decisionNumber": "28/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΩΕΝΩΗΔ-ΝΤ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΩΕΝΩΗΔ-ΝΤ7",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-02-11",
+                "decisionNumber": "30/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΦΧ5ΩΗΔ-ΙΣ4",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΧ5ΩΗΔ-ΙΣ4",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-02-25",
+                "decisionNumber": "41/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Ι6ΞΩΗΔ-59Σ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Ι6ΞΩΗΔ-59Σ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-02-25",
+                "decisionNumber": "43/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΚΗΡΩΗΔ-ΨΥ8",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΚΗΡΩΗΔ-ΨΥ8",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "109/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "91ΩΩΩΗΔ-ΕΙ8",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/91ΩΩΩΗΔ-ΕΙ8",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "92/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ6ΧΓΩΗΔ-ΝΔ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6ΧΓΩΗΔ-ΝΔ7",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-26",
+                "decisionNumber": "8/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΦΗ0ΩΗΔ-ΒΥΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΦΗ0ΩΗΔ-ΒΥΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-26",
+                "decisionNumber": "2/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΚΘΘΩΗΔ-ΤΦ1",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΚΘΘΩΗΔ-ΤΦ1",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "106/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΓΩΩΩΗΔ-ΛΧΜ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓΩΩΩΗΔ-ΛΧΜ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "153/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΧΧ4ΩΗΔ-4Μ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΧΧ4ΩΗΔ-4Μ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-26",
+                "decisionNumber": "3/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "95ΧΗΩΗΔ-ΔΓΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/95ΧΗΩΗΔ-ΔΓΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-26",
+                "decisionNumber": "14/2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cityId": "chania",
+      "orgUid": "6318",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100086019"
+          ],
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number.",
+          "documents": [
+            {
+              "ada": "6ΞΨΕΩΗ5-ΩΒΘ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΞΨΕΩΗ5-ΩΒΘ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-05-05",
+                "decisionNumber": "436/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "970ΞΩΗ5-ΨΙΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/970ΞΩΗ5-ΨΙΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-07-28",
+                "decisionNumber": "766/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΗ3ΧΩΗ5-715",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΗ3ΧΩΗ5-715",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-07-21",
+                "decisionNumber": "742/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΕ9ΜΩΗ5-ΤΑΒ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΕ9ΜΩΗ5-ΤΑΒ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-20",
+                "decisionNumber": "1002/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΕΜΘΩΗ5-01Ξ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΕΜΘΩΗ5-01Ξ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-02-02",
+                "decisionNumber": "50/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "97ΔΜΩΗ5-ΨΒΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/97ΔΜΩΗ5-ΨΒΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-27",
+                "decisionNumber": "1032/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΗ19ΩΗ5-ΙΡΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΗ19ΩΗ5-ΙΡΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-08-05",
+                "decisionNumber": "793/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Ο2ΟΩΗ5-ΙΦΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Ο2ΟΩΗ5-ΙΦΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-03-04",
+                "decisionNumber": "166/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΧΜΖΩΗ5-ΠΕ6",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΧΜΖΩΗ5-ΠΕ6",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-27",
+                "decisionNumber": "298/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΚΚ5ΩΗ5-ΚΛΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΚΚ5ΩΗ5-ΚΛΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-03-26",
+                "decisionNumber": "270/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΠΒΩΩΗ5-ΖΞΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΠΒΩΩΗ5-ΖΞΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-04-07",
+                "decisionNumber": "342/2025"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Φ8ΝΩΗ5-Λ16",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Φ8ΝΩΗ5-Λ16",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-08-05",
+                "decisionNumber": "787/2025"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "83115"
+          ],
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number.",
+          "documents": [
+            {
+              "ada": "Ψ5ΜΟΩΗ5-Ν03",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ5ΜΟΩΗ5-Ν03",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-01-15",
+                "decisionNumber": "9"
+              },
+              "verified": true
+            },
+            {
+              "ada": "63Λ9ΩΗ5-Λ8Ε",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/63Λ9ΩΗ5-Λ8Ε",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-11-26",
+                "decisionNumber": "468"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΩΝΣΩΗ5-ΞΒΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΩΝΣΩΗ5-ΞΒΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-20",
+                "decisionNumber": "190"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΜΘΨΩΗ5-Ι4Δ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΜΘΨΩΗ5-Ι4Δ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-15",
+                "decisionNumber": "241"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΛΑ0ΩΗ5-4ΚΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΛΑ0ΩΗ5-4ΚΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-02-19",
+                "decisionNumber": "39"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΨ99ΩΗ5-Γ86",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΨ99ΩΗ5-Γ86",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-12-10",
+                "decisionNumber": "491"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΚΖΠΩΗ5-Τ3Μ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΚΖΠΩΗ5-Τ3Μ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-15",
+                "decisionNumber": "405"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΣΞ4ΩΗ5-Δ0Χ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΣΞ4ΩΗ5-Δ0Χ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-06-25",
+                "decisionNumber": "238"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΖΧΔΩΗ5-Γ4Ζ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΖΧΔΩΗ5-Γ4Ζ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-12-23",
+                "decisionNumber": "509"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6Υ32ΩΗ5-ΝΩΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6Υ32ΩΗ5-ΝΩΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-02-19",
+                "decisionNumber": "48"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΟΖΖΩΗ5-6ΛΤ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΟΖΖΩΗ5-6ΛΤ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-06-25",
+                "decisionNumber": "245"
+              },
+              "verified": true
+            },
+            {
+              "ada": "93Ξ5ΩΗ5-Μ9Β",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/93Ξ5ΩΗ5-Μ9Β",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-15",
+                "decisionNumber": "262"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cityId": "orestiada",
+      "orgUid": "6225",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100086151"
+          ],
+          "notes": "Dedicated unit. Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΡΒΤΔΩΞΒ-455",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΒΤΔΩΞΒ-455",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-28",
+                "decisionNumber": "301/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΧΘ6ΩΞΒ-ΔΘΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΧΘ6ΩΞΒ-ΔΘΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "312/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Α66ΩΞΒ-Θ3Δ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Α66ΩΞΒ-Θ3Δ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "311/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "99ΚΜΩΞΒ-ΗΝΤ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/99ΚΜΩΞΒ-ΗΝΤ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "307/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΕΒΟΤΩΞΒ-Φ9Ξ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΒΟΤΩΞΒ-Φ9Ξ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "306/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΨ9ΖΩΞΒ-ΧΦΚ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΨ9ΖΩΞΒ-ΧΦΚ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "310/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΡΔ6ΩΞΒ-ΘΣΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΡΔ6ΩΞΒ-ΘΣΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "309/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "90ΓΒΩΞΒ-Σ05",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/90ΓΒΩΞΒ-Σ05",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "308/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΔΓΞΩΞΒ-Μ15",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΔΓΞΩΞΒ-Μ15",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "305/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Ι6ΚΩΞΒ-Β31",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Ι6ΚΩΞΒ-Β31",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "304/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΛΧΒΩΞΒ-ΞΟ5",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΛΧΒΩΞΒ-ΞΟ5",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "303/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΒ85ΩΞΒ-ΒΓΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΒ85ΩΞΒ-ΒΓΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "302/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "79399"
+          ],
+          "notes": "Publishes under the shared minutes-office unit («ΓΡΑΦΕΙΟ ΠΡΑΚΤΙΚΩΝ ΔΣ & ΕΠΙΤΡΟΠΩΝ»), which also carries mayoral and other acts. Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΨΥΚΟΩΞΒ-ΕΤΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥΚΟΩΞΒ-ΕΤΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-18",
+                "decisionNumber": "125/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ9ΟΝΩΞΒ-9ΝΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ9ΟΝΩΞΒ-9ΝΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "189/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ2ΠΔΩΞΒ-ΦΨΓ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ2ΠΔΩΞΒ-ΦΨΓ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-21",
+                "decisionNumber": "16/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "94ΠΘΩΞΒ-ΘΦΒ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/94ΠΘΩΞΒ-ΘΦΒ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "184/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΘΖΣΩΞΒ-ΤΩ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΘΖΣΩΞΒ-ΤΩ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-18",
+                "decisionNumber": "107/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΜΨ2ΩΞΒ-ΦΗ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΜΨ2ΩΞΒ-ΦΗ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-28",
+                "decisionNumber": "92/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ78ΦΩΞΒ-843",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ78ΦΩΞΒ-843",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "178/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΧ6ΛΩΞΒ-Ν1Ο",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΧ6ΛΩΞΒ-Ν1Ο",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-28",
+                "decisionNumber": "88/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Ι6ΜΩΞΒ-20Ψ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Ι6ΜΩΞΒ-20Ψ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-28",
+                "decisionNumber": "91/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ7ΖΛΩΞΒ-2ΞΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ7ΖΛΩΞΒ-2ΞΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-28",
+                "decisionNumber": "95/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΩΛΡΩΞΒ-ΝΛΙ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΩΛΡΩΞΒ-ΝΛΙ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-28",
+                "decisionNumber": "93/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΖΨΑΩΞΒ-ΨΞΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΖΨΑΩΞΒ-ΨΞΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "180/2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ],
+      "otherDocuments": [
+        {
+          "ada": "9ΞΨ9ΩΞΒ-Ν89",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/9ΞΨ9ΩΞΒ-Ν89",
+          "kind": "other",
+          "expected": {
+            "meetingDate": null,
+            "decisionNumber": null
+          },
+          "verified": true,
+          "notes": "oath summons (ΚΛΗΣΗ ΓΙΑ ΟΡΚΩΜΟΣΙΑ), not a decision"
+        },
+        {
+          "ada": "94Π2ΩΞΒ-ΙΘ8",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/94Π2ΩΞΒ-ΙΘ8",
+          "kind": "other",
+          "expected": {
+            "meetingDate": null,
+            "decisionNumber": null
+          },
+          "verified": true,
+          "notes": "mayoral declaratory act (ΔΙΑΠΙΣΤΩΤΙΚΗ ΠΡΑΞΗ), not a decision"
+        }
+      ]
+    },
+    {
+      "cityId": "samothraki",
+      "orgUid": "6267",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [],
+          "notes": "No unit exists for the deliberative organs — see the council's note. Diavgeia's protocolNumber field is a filing protocol.",
+          "documents": [
+            {
+              "ada": "Ρ0ΒΛΩ1Λ-ΑΛ4",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ0ΒΛΩ1Λ-ΑΛ4",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-24",
+                "decisionNumber": "107"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ4ΞΒΩ1Λ-837",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ4ΞΒΩ1Λ-837",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-28",
+                "decisionNumber": "108"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΕΓΞΩ1Λ-ΥΥΠ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΕΓΞΩ1Λ-ΥΥΠ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "100"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΥΠΦΩ1Λ-ΞΤ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΥΠΦΩ1Λ-ΞΤ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "99"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Υ23Ω1Λ-Ζ2Ρ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Υ23Ω1Λ-Ζ2Ρ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-28",
+                "decisionNumber": "110"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΞΘΟΩ1Λ-ΞΚΡ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΞΘΟΩ1Λ-ΞΚΡ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "103"
+              },
+              "verified": true
+            },
+            {
+              "ada": "651ΤΩ1Λ-Ζ7Μ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/651ΤΩ1Λ-Ζ7Μ",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "9Ρ5ΒΩ1Λ-ΖΓΡ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Ρ5ΒΩ1Λ-ΖΓΡ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "101"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΥΘ2Ω1Λ-ΕΔ0",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΥΘ2Ω1Λ-ΕΔ0",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "105"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΥ14Ω1Λ-94Ε",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥ14Ω1Λ-94Ε",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-28",
+                "decisionNumber": "111"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Ζ4ΨΩ1Λ-Π2Λ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Ζ4ΨΩ1Λ-Π2Λ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "106"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [],
+          "notes": "No unit exists for the deliberative organs. Each decision carries the unit of the department that drafted the item (a council decision about the municipal museum carries the social-policy department's unit). Unit filters cannot identify the body; fetch org-wide and read the document. Diavgeia's protocolNumber field is a filing protocol.",
+          "documents": [
+            {
+              "ada": "9ΦΕΗΩ1Λ-4Μ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΕΗΩ1Λ-4Μ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "102"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ98ΘΩ1Λ-ΖΛΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ98ΘΩ1Λ-ΖΛΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "89"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΝΨΤΩ1Λ-ΘΗΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΝΨΤΩ1Λ-ΘΗΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "97"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΜΕΛΩ1Λ-ΑΣΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΜΕΛΩ1Λ-ΑΣΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-06",
+                "decisionNumber": "81"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΝΦΥΩ1Λ-ΣΘΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΝΦΥΩ1Λ-ΣΘΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "74"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ478Ω1Λ-ΦΗ0",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ478Ω1Λ-ΦΗ0",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "ΕΛΜΩΩ1Λ-ΙΣΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΛΜΩΩ1Λ-ΙΣΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "71"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΙΒΞΩ1Λ-ΞΞΦ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΙΒΞΩ1Λ-ΞΞΦ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-06",
+                "decisionNumber": "47"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΕΚ58Ω1Λ-Ε70",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΚ58Ω1Λ-Ε70",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "68"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ε70ΡΩ1Λ-3ΨΦ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ε70ΡΩ1Λ-3ΨΦ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "98"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΒΥΘΩ1Λ-Β92",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΒΥΘΩ1Λ-Β92",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-21",
+                "decisionNumber": "100"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΛΨ0Ω1Λ-ΓΡΤ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΛΨ0Ω1Λ-ΓΡΤ",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "ΨΑΛΞΩ1Λ-Β6Β",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΑΛΞΩ1Λ-Β6Β",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-06",
+                "decisionNumber": "84"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cityId": "sparta",
+      "orgUid": "6286",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100033602"
+          ],
+          "notes": "Shares its unit with the council — see the council's note. Subject prefix Α.Δ.Ε.",
+          "documents": [
+            {
+              "ada": "Ψ9ΜΥΩ1Ν-ΑΤΚ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ9ΜΥΩ1Ν-ΑΤΚ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "300/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "99Ξ2Ω1Ν-ΥΦΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/99Ξ2Ω1Ν-ΥΦΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "304/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ6Τ9Ω1Ν-19Μ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6Τ9Ω1Ν-19Μ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "301/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΞ1ΞΩ1Ν-ΙΡΠ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΞ1ΞΩ1Ν-ΙΡΠ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "303/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΟ9ΑΩ1Ν-3ΗΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΟ9ΑΩ1Ν-3ΗΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "302/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΩ0ΗΩ1Ν-ΒΚΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΩ0ΗΩ1Ν-ΒΚΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "299/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΤΘΨΩ1Ν-ΤΤΟ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΤΘΨΩ1Ν-ΤΤΟ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-11",
+                "decisionNumber": "298/11-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΒΓΒΩ1Ν-ΧΝ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΒΓΒΩ1Ν-ΧΝ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "297/04-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΓΨΧΩ1Ν-Ρ08",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓΨΧΩ1Ν-Ρ08",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "296/04-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "65ΙΠΩ1Ν-521",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/65ΙΠΩ1Ν-521",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "295/04-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΧΤΤΩ1Ν-ΙΜ5",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΧΤΤΩ1Ν-ΙΜ5",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "294/04-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ20ΗΩ1Ν-ΓΒΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ20ΗΩ1Ν-ΓΒΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-04",
+                "decisionNumber": "293/04-08-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΔΥΒΩ1Ν-ΨΨΣ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΔΥΒΩ1Ν-ΨΨΣ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-30",
+                "decisionNumber": "237/30-06-2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "100033602"
+          ],
+          "notes": "ΔΣ and ΔΕ publish in one shared unit («ΑΥΤ. ΤΜΗΜΑ ΥΠΟΣΤΗΡΙΞΗΣ ΑΙΡΕΤΩΝ ΚΑΙ ΣΥΛΛΟΓΙΚΩΝ ΟΡΓΑΝΩΝ»), together with mayoral acts. The subject prefix identifies the body: Α.Δ.Σ. for the council, Α.Δ.Ε. for the committee. Diavgeia's protocolNumber field usually carries the decision number, with occasional true filing protocols.",
+          "documents": [
+            {
+              "ada": "ΡΓ0ΗΩ1Ν-Μ74",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΓ0ΗΩ1Ν-Μ74",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-06",
+                "decisionNumber": "35/06-05-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΧΜ1Ω1Ν-ΕΑΣ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΧΜ1Ω1Ν-ΕΑΣ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-17",
+                "decisionNumber": "65/17-07-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΟΛΖΩ1Ν-ΘΞΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΟΛΖΩ1Ν-ΘΞΑ",
+              "kind": "other",
+              "expected": {
+                "meetingDate": null,
+                "decisionNumber": null
+              },
+              "verified": true,
+              "notes": "not a deliberative session decision"
+            },
+            {
+              "ada": "ΨΑΑ0Ω1Ν-Α67",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΑΑ0Ω1Ν-Α67",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-17",
+                "decisionNumber": "63/17-07-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΟΖΖΩ1Ν-7Χ1",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΟΖΖΩ1Ν-7Χ1",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-17",
+                "decisionNumber": "68/17-07-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΑΚΓΩ1Ν-ΥΩΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΑΚΓΩ1Ν-ΥΩΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-17",
+                "decisionNumber": "59/17-07-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΣΘΑΩ1Ν-ΔΦΡ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΣΘΑΩ1Ν-ΔΦΡ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-17",
+                "decisionNumber": "62/17-07-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΝ5ΔΩ1Ν-ΧΞ7",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΝ5ΔΩ1Ν-ΧΞ7",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-06",
+                "decisionNumber": "29/06-05-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ72ΑΩ1Ν-Τ4Λ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ72ΑΩ1Ν-Τ4Λ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-17",
+                "decisionNumber": "67/17-07-2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ7ΞΔΩ1Ν-ΚΔΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ7ΞΔΩ1Ν-ΚΔΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-13",
+                "decisionNumber": "40/13-05-2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ],
+      "otherDocuments": [
+        {
+          "ada": "ΨΥΕΥΩ1Ν-ΕΕΦ",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥΕΥΩ1Ν-ΕΕΦ",
+          "kind": "other",
+          "expected": {
+            "meetingDate": null,
+            "decisionNumber": null
+          },
+          "verified": true,
+          "notes": "mayoral or service act published in the shared collective-organs unit"
+        },
+        {
+          "ada": "ΡΒΝΠΩ1Ν-ΓΕΓ",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΒΝΠΩ1Ν-ΓΕΓ",
+          "kind": "other",
+          "expected": {
+            "meetingDate": null,
+            "decisionNumber": null
+          },
+          "verified": true,
+          "notes": "mayoral or service act published alongside body decisions"
+        },
+        {
+          "ada": "9ΒΙΓΩ1Ν-ΘΕΚ",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/9ΒΙΓΩ1Ν-ΘΕΚ",
+          "kind": "other",
+          "expected": {
+            "meetingDate": null,
+            "decisionNumber": null
+          },
+          "verified": true,
+          "notes": "mayoral or service act published alongside body decisions"
+        },
+        {
+          "ada": "Ψ963Ω1Ν-ΦΔΛ",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ963Ω1Ν-ΦΔΛ",
+          "kind": "decision",
+          "expected": {
+            "meetingDate": "2026-08-03",
+            "decisionNumber": "8/03-08-2026"
+          },
+          "verified": true,
+          "notes": "session decision of a deliberative body that opencouncil does not track"
+        }
+      ]
+    },
+    {
+      "cityId": "vrilissia",
+      "orgUid": "6061",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100085541"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΨΧ06Ω9Ρ-9Υ5",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΧ06Ω9Ρ-9Υ5",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-29",
+                "decisionNumber": "202/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΤΘ9Ω9Ρ-ΥΔΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΤΘ9Ω9Ρ-ΥΔΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "195/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΩΩ9Ω9Ρ-42Ξ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΩΩ9Ω9Ρ-42Ξ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-22",
+                "decisionNumber": "219/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "95ΣΔΩ9Ρ-ΥΘΣ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/95ΣΔΩ9Ρ-ΥΘΣ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "230/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΩΖΩΩ9Ρ-2Κ4",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΩΖΩΩ9Ρ-2Κ4",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "189/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΕΧΗΖΩ9Ρ-ΕΨΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΧΗΖΩ9Ρ-ΕΨΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-20",
+                "decisionNumber": "147/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΣΦΔΩ9Ρ-Ψ7Δ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΣΦΔΩ9Ρ-Ψ7Δ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "234/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΗ9ΥΩ9Ρ-Δ8Ω",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΗ9ΥΩ9Ρ-Δ8Ω",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "118/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΒΒΨΩ9Ρ-ΜΨΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΒΒΨΩ9Ρ-ΜΨΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-03",
+                "decisionNumber": "166/2026"
+              },
+              "verified": true,
+              "notes": "Diavgeia's field says 165/2026; the document itself says 166/2026 (verified) — the field's formatting is inconsistent in this body"
+            },
+            {
+              "ada": "6Δ3ΖΩ9Ρ-5Η1",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6Δ3ΖΩ9Ρ-5Η1",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "120/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Λ66Ω9Ρ-ΜΨΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Λ66Ω9Ρ-ΜΨΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-20",
+                "decisionNumber": "150/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ314Ω9Ρ-30Η",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ314Ω9Ρ-30Η",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-22",
+                "decisionNumber": "221/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "80700"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΡΙΥΖΩ9Ρ-28Ε",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΙΥΖΩ9Ρ-28Ε",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "44/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "92ΞΡΩ9Ρ-1Τ3",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/92ΞΡΩ9Ρ-1Τ3",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "42/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΨΝ6Ω9Ρ-ΙΛ6",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΨΝ6Ω9Ρ-ΙΛ6",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "64/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΨΝΝΩ9Ρ-ΒΝΘ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΨΝΝΩ9Ρ-ΒΝΘ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-27",
+                "decisionNumber": "54/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΞΙΨΩ9Ρ-ΟΜΕ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΞΙΨΩ9Ρ-ΟΜΕ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-27",
+                "decisionNumber": "55/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΖΧΡΩ9Ρ-ΧΩΓ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΖΧΡΩ9Ρ-ΧΩΓ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-24",
+                "decisionNumber": "61/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ5ΒΨΩ9Ρ-75Ο",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ5ΒΨΩ9Ρ-75Ο",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-02-04",
+                "decisionNumber": "19/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6Υ7ΨΩ9Ρ-ΧΛΛ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6Υ7ΨΩ9Ρ-ΧΛΛ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-21",
+                "decisionNumber": "11/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "96Η6Ω9Ρ-Ρ0Η",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/96Η6Ω9Ρ-Ρ0Η",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-22",
+                "decisionNumber": "87/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ7ΚΔΩ9Ρ-ΩΝΣ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ7ΚΔΩ9Ρ-ΩΝΣ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-29",
+                "decisionNumber": "37/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΥΙΒΩ9Ρ-1ΝΒ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΥΙΒΩ9Ρ-1ΝΒ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-21",
+                "decisionNumber": "10/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΜΞ6Ω9Ρ-5ΜΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΜΞ6Ω9Ρ-5ΜΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-03",
+                "decisionNumber": "57/2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "cityId": "xylokastro",
+      "orgUid": "6222",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [
+            "100085589"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΨΧΨ8ΩΞΠ-Π1Κ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΧΨ8ΩΞΠ-Π1Κ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "257/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΟΨΦΩΞΠ-Ψ0Ψ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΟΨΦΩΞΠ-Ψ0Ψ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "259/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΩΛΑΩΞΠ-ΨΗΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΩΛΑΩΞΠ-ΨΗΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "262/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Υ6ΘΩΞΠ-Δ0Λ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Υ6ΘΩΞΠ-Δ0Λ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "261/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΨΡΙΩΞΠ-1ΗΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΨΡΙΩΞΠ-1ΗΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "5/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΩΞΔΩΞΠ-Β2Δ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΩΞΔΩΞΠ-Β2Δ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "263/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "93ΝΞΩΞΠ-ΜΞ2",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/93ΝΞΩΞΠ-ΜΞ2",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "260/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΤΔΩΩΞΠ-ΡΨΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΤΔΩΩΞΠ-ΡΨΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-10",
+                "decisionNumber": "258/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΔΓΩΩΞΠ-ΥΟΦ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΔΓΩΩΞΠ-ΥΟΦ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-03",
+                "decisionNumber": "164/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ23ΤΩΞΠ-ΜΡΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ23ΤΩΞΠ-ΜΡΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "246/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ6ΒΜΩΞΠ-70Ν",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6ΒΜΩΞΠ-70Ν",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "4/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ4ΑΤΩΞΠ-Ρ1Π",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ4ΑΤΩΞΠ-Ρ1Π",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "251/2026"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [
+            "87737"
+          ],
+          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "documents": [
+            {
+              "ada": "ΡΨΜΒΩΞΠ-Α9Τ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΨΜΒΩΞΠ-Α9Τ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "101/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΛΑΖΩΞΠ-ΒΜΦ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΛΑΖΩΞΠ-ΒΜΦ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "92/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "63ΡΤΩΞΠ-ΗΧΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/63ΡΤΩΞΠ-ΗΧΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "95/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΒΝΖΩΞΠ-ΓΦ4",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΒΝΖΩΞΠ-ΓΦ4",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-03",
+                "decisionNumber": "102/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ53ΣΩΞΠ-573",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ53ΣΩΞΠ-573",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "94/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΙΙΣΩΞΠ-5ΝΠ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΙΙΣΩΞΠ-5ΝΠ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "100/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΓΘΩΩΞΠ-ΜΚ9",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΓΘΩΩΞΠ-ΜΚ9",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "99/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΥ7ΔΩΞΠ-619",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥ7ΔΩΞΠ-619",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "98/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "96ΖΞΩΞΠ-ΚΜΨ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/96ΖΞΩΞΠ-ΚΜΨ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "97/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΞΘ9ΩΞΠ-29Π",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΞΘ9ΩΞΠ-29Π",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "96/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ20ΣΩΞΠ-ΝΧΜ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ20ΣΩΞΠ-ΝΧΜ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "91/2026"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΨΑΘΩΞΠ-ΓΡΝ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΨΑΘΩΞΠ-ΓΡΝ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-29",
+                "decisionNumber": "76/2026"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ],
+      "bodiesNotCovered": [
+        {
+          "name": "Ζήρεια Α.Ε.",
+          "reason": "municipal company, not a deliberative body of the municipality"
+        }
+      ]
+    },
+    {
+      "cityId": "zografou",
+      "bodies": [
+        {
+          "name": "Δημοτική Επιτροπή",
+          "unitIds": [],
+          "documents": [
+            {
+              "ada": "ΨΛΝ2ΩΡΦ-ΛΧΙ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΛΝ2ΩΡΦ-ΛΧΙ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-14",
+                "decisionNumber": "438"
+              },
+              "verified": true
+            },
+            {
+              "ada": "613ΨΩΡΦ-ΑΧ0",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/613ΨΩΡΦ-ΑΧ0",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-11-25",
+                "decisionNumber": "524"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΦΥΑΩΡΦ-0ΞΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΥΑΩΡΦ-0ΞΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-23",
+                "decisionNumber": "287"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΞ96ΩΡΦ-ΖΣ4",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΞ96ΩΡΦ-ΖΣ4",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-30",
+                "decisionNumber": "289"
+              },
+              "verified": true
+            },
+            {
+              "ada": "92Π8ΩΡΦ-ΨΞΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/92Π8ΩΡΦ-ΨΞΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-30",
+                "decisionNumber": "291"
+              },
+              "verified": true
+            },
+            {
+              "ada": "97ΥΒΩΡΦ-Θ6Λ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/97ΥΒΩΡΦ-Θ6Λ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-12-09",
+                "decisionNumber": "573"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΤ73ΩΡΦ-ΞΟΛ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΤ73ΩΡΦ-ΞΟΛ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-16",
+                "decisionNumber": "261"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ1ΕΣΩΡΦ-ΧΡΑ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ1ΕΣΩΡΦ-ΧΡΑ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-23",
+                "decisionNumber": "281"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ8ΒΦΩΡΦ-ΙΙΘ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ8ΒΦΩΡΦ-ΙΙΘ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-01",
+                "decisionNumber": "128"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6Δ0ΛΩΡΦ-Η4Φ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6Δ0ΛΩΡΦ-Η4Φ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-11-25",
+                "decisionNumber": "529"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9Τ9ΚΩΡΦ-ΕΡΞ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9Τ9ΚΩΡΦ-ΕΡΞ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-26",
+                "decisionNumber": "222"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6Η7ΛΩΡΦ-4Δ4",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6%CE%977%CE%9B%CE%A9%CE%A1%CE%A6-4%CE%944",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-11-25",
+                "decisionNumber": "502"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "Δημοτικό Συμβούλιο",
+          "unitIds": [],
+          "notes": "Diavgeia's protocolNumber field carries the decision number. The document often states no protocol number at all.",
+          "documents": [
+            {
+              "ada": "9ΔΙ9ΩΡΦ-1ΩΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΔΙ9ΩΡΦ-1ΩΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-22",
+                "decisionNumber": "190"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΗΒΓΩΡΦ-ΟΔΤ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΗΒΓΩΡΦ-ΟΔΤ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-22",
+                "decisionNumber": "196"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΕΦΖΤΩΡΦ-7ΥΩ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΦΖΤΩΡΦ-7ΥΩ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "142"
+              },
+              "verified": true
+            },
+            {
+              "ada": "6ΑΥ2ΩΡΦ-ΨΤΤ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/6ΑΥ2ΩΡΦ-ΨΤΤ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-29",
+                "decisionNumber": "10"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΤ36ΩΡΦ-ΖΣΖ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΤ36ΩΡΦ-ΖΣΖ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-29",
+                "decisionNumber": "9"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΗΒΨΩΡΦ-5ΙΕ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΗΒΨΩΡΦ-5ΙΕ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-10-22",
+                "decisionNumber": "191"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ74ΜΩΡΦ-ΝΙΦ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ74ΜΩΡΦ-ΝΙΦ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-05-21",
+                "decisionNumber": "85"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ2ΛΖΩΡΦ-Η5Σ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ2ΛΖΩΡΦ-Η5Σ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-01-29",
+                "decisionNumber": "6"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΛΙΗΩΡΦ-Ξ6Φ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΛΙΗΩΡΦ-Ξ6Φ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "131"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9ΙΙ7ΩΡΦ-Γ49",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΙΙ7ΩΡΦ-Γ49",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-23",
+                "decisionNumber": "136"
+              },
+              "verified": true
+            },
+            {
+              "ada": "9836ΩΡΦ-6ΞΒ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9836ΩΡΦ-6ΞΒ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-11-13",
+                "decisionNumber": "203"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ρ4ΙΚΩΡΦ-6Φ0",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ4ΙΚΩΡΦ-6Φ0",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-04-24",
+                "decisionNumber": "59"
+              },
+              "verified": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
