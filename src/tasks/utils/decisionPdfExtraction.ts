@@ -42,7 +42,7 @@ export async function downloadPdfToBase64(source: string): Promise<string> {
  * Extract a range of pages from a PDF buffer and return as base64.
  * Pages are 0-indexed: extractPages(buf, 0, 5) → first 5 pages.
  */
-async function extractPdfPages(pdfBuffer: Buffer, startPage: number, endPage: number): Promise<string> {
+export async function extractPdfPages(pdfBuffer: Buffer, startPage: number, endPage: number): Promise<string> {
     const srcDoc = await PDFDocument.load(pdfBuffer);
     const totalPages = srcDoc.getPageCount();
     const actualEnd = Math.min(endPage, totalPages);
@@ -64,13 +64,13 @@ async function extractPdfPages(pdfBuffer: Buffer, startPage: number, endPage: nu
 
 const CACHE_DIR = '/tmp/opencouncil-decisions-cache';
 
-function getCachePath(pdfUrl: string): string {
+function getCachePath(pdfUrl: string, prefix: string): string {
     const hash = crypto.createHash('sha256').update(pdfUrl).digest('hex').slice(0, 16);
-    return path.join(CACHE_DIR, `decision-${hash}.json`);
+    return path.join(CACHE_DIR, `${prefix}${hash}.json`);
 }
 
-export function readCache<T>(pdfUrl: string): T | null {
-    const cachePath = getCachePath(pdfUrl);
+export function readCache<T>(pdfUrl: string, prefix = 'decision-'): T | null {
+    const cachePath = getCachePath(pdfUrl, prefix);
     try {
         const data = fs.readFileSync(cachePath, 'utf-8');
         console.log(`Cache hit for ${pdfUrl}`);
@@ -80,10 +80,10 @@ export function readCache<T>(pdfUrl: string): T | null {
     }
 }
 
-export function writeCache<T>(pdfUrl: string, data: T): void {
+export function writeCache<T>(pdfUrl: string, data: T, prefix = 'decision-'): void {
     try {
         fs.mkdirSync(CACHE_DIR, { recursive: true });
-        fs.writeFileSync(getCachePath(pdfUrl), JSON.stringify(data, null, 2));
+        fs.writeFileSync(getCachePath(pdfUrl, prefix), JSON.stringify(data, null, 2));
     } catch (err) {
         console.warn('Failed to write extraction cache:', err);
     }

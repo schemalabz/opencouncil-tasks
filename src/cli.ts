@@ -10,6 +10,7 @@ import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
+import { readDecisionDocument } from './tasks/utils/readDecisionDocument.js';
 import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
 import { aiChat, formatUsage, HAIKU_MODEL } from './lib/ai.js';
@@ -865,6 +866,20 @@ runsCommand
         } finally {
             server.close();
         }
+    });
+
+program
+    .command('read-decision <source>')
+    .description('Read the session date, session number and decision number a document states about itself. Source: ADA, PDF URL, or local file path')
+    .option('--skip-cache', 'ignore the cached reading and call the model again')
+    .action(async (source: string, options: { skipCache?: boolean }) => {
+        const isPathOrUrl = source.startsWith('http://') || source.startsWith('https://')
+            || source.startsWith('/') || source.startsWith('./') || source.startsWith('../');
+        const pdfUrl = isPathOrUrl ? source : adaToPdfUrl(source);
+        const { result, usage, fromCache } = await readDecisionDocument(pdfUrl, { skipCache: options.skipCache });
+        console.log(JSON.stringify(result, null, 2));
+        console.log(fromCache ? '(cached — no API call)' : `Tokens: ${formatUsage(usage)}`);
+        server.close();
     });
 
 program.parse(process.argv);
