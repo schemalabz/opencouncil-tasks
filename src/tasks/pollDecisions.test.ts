@@ -239,19 +239,15 @@ describe("pollDecisions - resolver matching", () => {
     });
 });
 
-describe("pollDecisions - resolver reassignments", () => {
-    it("resolver can reassign a linked decision to a different subject", async () => {
-        const D1 = makeDecision({
-            ada: "ADA-D1",
-            subject: "Παράταση προθεσμίας του έργου ανάπλασης",
-        });
-
-        mockSearchAll.mockReturnValue(asyncIter([D1]));
+describe("pollDecisions - reassignments removed", () => {
+    it("never moves confirmed links: reassignments are always empty", async () => {
+        const D1 = makeDecision({ ada: "ADA-D1", subject: "Έγκριση προϋπολογισμού 2025" });
+        const D2 = makeDecision({ ada: "ADA-D2", subject: "Τροποποίηση κανονισμού λειτουργίας" });
+        mockSearchAll.mockReturnValue(asyncIter([D1, D2]));
 
         mockAiChat.mockResolvedValueOnce({
             result: {
-                matches: [{ subjectId: "subB", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
-                reassignments: [{ ada: "ADA-D1", fromSubjectId: "subA", toSubjectId: "subB", reasoning: "Subject B is the correct match for this decision" }],
+                matches: [{ subjectId: "subB", ada: "ADA-D2", confidence: "high", reasoning: "Title matches" }],
                 unmatched: [],
             },
             usage: noUsage,
@@ -262,64 +258,21 @@ describe("pollDecisions - resolver reassignments", () => {
                 subjects: [
                     {
                         subjectId: "subA",
-                        name: "Ψήφισμα κατά της βίας",
+                        name: "Έγκριση προϋπολογισμού 2025",
                         agendaItemIndex: 1,
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 2 },
+                    { subjectId: "subB", name: "Τροποποίηση κανονισμού λειτουργίας", agendaItemIndex: 2 },
                 ],
             }),
             noopProgress,
         );
 
-        expect(result.reassignments).toHaveLength(1);
-        expect(result.reassignments[0]).toEqual({
-            ada: "ADA-D1",
-            fromSubjectId: "subA",
-            toSubjectId: "subB",
-            reason: "Subject B is the correct match for this decision",
-        });
-
-        const matchB = result.matches.find(m => m.subjectId === "subB");
-        expect(matchB).toBeDefined();
-        expect(matchB!.ada).toBe("ADA-D1");
-    });
-
-    it("reassignment reason comes from resolver reasoning", async () => {
-        const D1 = makeDecision({
-            ada: "ADA-D1",
-            subject: "Παράταση προθεσμίας του έργου ανάπλασης",
-        });
-
-        mockSearchAll.mockReturnValue(asyncIter([D1]));
-
-        const expectedReason = "Subject A is unrelated; subject B matches the extension project";
-        mockAiChat.mockResolvedValueOnce({
-            result: {
-                matches: [{ subjectId: "subB", ada: "ADA-D1", confidence: "medium", reasoning: "Partial match" }],
-                reassignments: [{ ada: "ADA-D1", fromSubjectId: "subA", toSubjectId: "subB", reasoning: expectedReason }],
-                unmatched: [],
-            },
-            usage: noUsage,
-        });
-
-        const result = await pollDecisions(
-            makeRequest({
-                subjects: [
-                    {
-                        subjectId: "subA",
-                        name: "Ψήφισμα κατά της βίας",
-                        agendaItemIndex: 1,
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
-                    },
-                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 2 },
-                ],
-            }),
-            noopProgress,
-        );
-
-        expect(result.reassignments).toHaveLength(1);
-        expect(result.reassignments[0].reason).toBe(expectedReason);
+        // The linked subject keeps its decision; the pipeline proposes nothing else for it.
+        expect(result.reassignments).toEqual([]);
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].subjectId).toBe("subB");
+        expect(result.matches[0].ada).toBe("ADA-D2");
     });
 });
 
@@ -363,18 +316,8 @@ describe("pollDecisions - resolver edge cases", () => {
         expect(mockAiChat).not.toHaveBeenCalled();
     });
 
-    it("works with no decisions fetched", async () => {
+    it("works with no decisions fetched (resolver skipped)", async () => {
         mockSearchAll.mockReturnValue(asyncIter([]));
-
-        // Resolver called but no candidates, returns all unmatched
-        mockAiChat.mockResolvedValueOnce({
-            result: {
-                matches: [],
-                reassignments: [],
-                unmatched: [{ subjectId: "subA", reasoning: "No decisions available" }],
-            },
-            usage: noUsage,
-        });
 
         const result = await pollDecisions(
             makeRequest({
@@ -385,10 +328,12 @@ describe("pollDecisions - resolver edge cases", () => {
             noopProgress,
         );
 
-        expect(mockAiChat).toHaveBeenCalledTimes(1);
+        // No candidates — the resolver call is skipped entirely.
+        expect(mockAiChat).not.toHaveBeenCalled();
         expect(result.matches).toHaveLength(0);
         expect(result.unmatchedSubjects).toHaveLength(1);
         expect(result.unmatchedSubjects[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects[0].reason).toContain("No decisions available");
     });
 });
 

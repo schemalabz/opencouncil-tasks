@@ -26,6 +26,8 @@ export interface CandidateDecision {
     pdfUrl: string;
     similarity: number;
     isGapCandidate: boolean;
+    /** The document itself declares this meeting's session date (phase 0 reading). */
+    declaresSession: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -101,8 +103,10 @@ export function buildCandidatePool(options: {
     decisions: Decision[];
     topN: number;
     gapCandidateAdas: Set<string>;
+    /** ADAs whose documents declare this meeting's session date (phase 0). */
+    declaredAdas?: Set<string>;
 }): Map<string, CandidateDecision[]> {
-    const { matrix, decisions, topN, gapCandidateAdas } = options;
+    const { matrix, decisions, topN, gapCandidateAdas, declaredAdas } = options;
 
     // Build a lookup map for decisions by ADA
     const decisionByAda = new Map<string, Decision>(decisions.map(d => [d.ada, d]));
@@ -126,6 +130,7 @@ export function buildCandidatePool(options: {
                 pdfUrl: decisionPdfUrl(decision),
                 similarity: entry.similarity,
                 isGapCandidate: false,
+                declaresSession: declaredAdas?.has(decision.ada) ?? false,
             });
         }
 
@@ -146,6 +151,7 @@ export function buildCandidatePool(options: {
                 pdfUrl: decisionPdfUrl(decision),
                 similarity,
                 isGapCandidate: true,
+                declaresSession: declaredAdas?.has(decision.ada) ?? false,
             });
         }
 
@@ -169,7 +175,6 @@ export interface LinkedDecision {
 
 export interface ResolverOutput {
     matches: Array<{ subjectId: string; ada: string; confidence: 'high' | 'medium' | 'low'; reasoning: string }>;
-    reassignments: Array<{ ada: string; fromSubjectId: string; toSubjectId: string; reasoning: string }>;
     unmatched: Array<{ subjectId: string; reasoning: string }>;
 }
 
@@ -182,12 +187,6 @@ export interface ProcessedResolverResult {
         protocolNumber: string;
         publishDate: string;
         matchConfidence: number;
-    }>;
-    reassignments: Array<{
-        ada: string;
-        fromSubjectId: string;
-        toSubjectId: string;
-        reason: string;
     }>;
     unmatchedSubjects: Array<{
         subjectId: string;
@@ -235,9 +234,10 @@ export function buildResolverPrompt(options: BuildResolverPromptOptions): string
         const candidates = candidatePool.get(subject.subjectId) ?? [];
         for (const candidate of candidates) {
             const gapFlag = candidate.isGapCandidate ? ' [gap candidate]' : '';
+            const declaredFlag = candidate.declaresSession ? ' [declares this session]' : '';
             lines.push(
                 `    ADA: ${candidate.ada} | protocol: ${candidate.protocolNumber} | title: ${candidate.title}` +
-                ` | similarity: ${candidate.similarity.toFixed(2)} | published: ${candidate.publishDate}${gapFlag}`
+                ` | similarity: ${candidate.similarity.toFixed(2)} | published: ${candidate.publishDate}${gapFlag}${declaredFlag}`
             );
         }
     }
@@ -345,18 +345,11 @@ export function processResolverOutput(options: {
         });
     }
 
-    const reassignments: ProcessedResolverResult['reassignments'] = resolverOutput.reassignments.map(r => ({
-        ada: r.ada,
-        fromSubjectId: r.fromSubjectId,
-        toSubjectId: r.toSubjectId,
-        reason: r.reasoning,
-    }));
-
     const unmatchedSubjects: ProcessedResolverResult['unmatchedSubjects'] = resolverOutput.unmatched.map(u => ({
         subjectId: u.subjectId,
         name: '', // caller fills in
         reason: u.reasoning,
     }));
 
-    return { matches, reassignments, unmatchedSubjects, warnings };
+    return { matches, unmatchedSubjects, warnings };
 }
