@@ -141,7 +141,8 @@ app.post('/transcribe', (
 app.post('/summarize', taskManager.registerTask(summarize, {
     summary: 'Summarize transcript content',
     description: 'Generate a summary of transcript content with subject extraction',
-    version: 5,
+    // v6: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
+    version: 6,
   }));
 
 app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
@@ -158,7 +159,8 @@ app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
   summary: 'Process meeting agenda',
   description: 'Extracts and structures agenda information from documents',
-  version: 3,
+  // v4: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
+  version: 4,
 }));
 
 app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {

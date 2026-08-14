@@ -180,7 +180,10 @@ export interface DiscussionRange {
 export interface Location {
     type: "point" | "lineString" | "polygon";
     text: string; // e.g. an area, an address, a road name
-    coordinates: number[][]; // a sequence of coordinates. just one coordinate for a point, more for a line or polygon
+    // A sequence of GeoJSON positions — just one for a point, more for a line or polygon.
+    // Each position is [longitude, latitude], per RFC 7946; consumers pass these
+    // to ST_GeomFromGeoJSON, which reads them in that order.
+    coordinates: number[][];
 }
 
 export interface Subject {
