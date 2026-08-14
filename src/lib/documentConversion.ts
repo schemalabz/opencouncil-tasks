@@ -142,14 +142,26 @@ export const checkDocxExpansion = (docx: Buffer): void => {
 export const stripImages = (html: string): string => html.replace(/<img\b[^>]*>/gi, '');
 
 /**
+ * Text left once tags and non-breaking spaces are removed. What matters is
+ * whether the model has anything to read: a scanned agenda converts to markup
+ * wrapping a single image, which survives image stripping as an empty shell
+ * like `<p></p>` — not an empty string, but nothing to extract from either.
+ */
+const readableText = (html: string): string => html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&(?:nbsp|#160|#xa0);/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/**
  * Rejects conversions that can't produce a usable extraction. Oversized markup
  * fails rather than being truncated: this task promises every subject on the
  * agenda, and silently dropping the tail of the document would break that
  * promise without anyone noticing.
  */
 export const checkConvertedHtml = (html: string): string => {
-    if (html === '') {
-        throw new Error("DOCX conversion produced an empty document — the file may be corrupt or contain only scanned images");
+    if (readableText(html) === '') {
+        throw new Error("DOCX conversion produced no readable text — the file may be corrupt, or an agenda scanned to images, which this task cannot read");
     }
 
     if (html.length > MAX_CONVERTED_HTML_CHARS) {
