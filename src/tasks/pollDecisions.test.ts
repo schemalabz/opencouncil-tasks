@@ -46,9 +46,11 @@ vi.mock("./utils/readDecisionDocument.js", () => ({
 
 import { aiChat } from "../lib/ai.js";
 import { extractDecisionsFromPdfs } from "./utils/extractionPipeline.js";
+import { readDecisionDocument } from "./utils/readDecisionDocument.js";
 import { pollDecisions } from "./pollDecisions.js";
 
 const mockAiChat = vi.mocked(aiChat);
+const mockReadDecision = vi.mocked(readDecisionDocument);
 const mockExtractDecisions = vi.mocked(extractDecisionsFromPdfs);
 const noopProgress = vi.fn();
 const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
@@ -689,5 +691,73 @@ describe("pollDecisions - subjectInfo warnings", () => {
 
         // Three warnings emitted — one per mismatch
         expect(result.extractions?.warnings.filter(w => w.includes("subjectInfo mismatch"))).toHaveLength(3);
+    });
+});
+
+describe("pollDecisions - knownDecisions handshake", () => {
+    it("echoes a known decision without re-reading it", async () => {
+        const D1 = makeDecision({ ada: "ADA-K", subject: "Έγκριση προϋπολογισμού 2025" });
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 1 }],
+                knownDecisions: [{ ada: "ADA-K", meetingDate: "2025-01-10", readStatus: "ok" }],
+            }),
+            noopProgress,
+        );
+
+        // Never pay twice: the stored reading is echoed, no model call
+        expect(mockReadDecision).not.toHaveBeenCalled();
+        expect(result.decisions).toHaveLength(1);
+        expect(result.decisions![0]).toMatchObject({
+            ada: "ADA-K",
+            fromKnown: true,
+            readStatus: "ok",
+            meetingDate: "2025-01-10",
+        });
+    });
+
+    it("retries a known decision marked unread", async () => {
+        const D1 = makeDecision({ ada: "ADA-K", subject: "Έγκριση προϋπολογισμού 2025" });
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 1 }],
+                knownDecisions: [{ ada: "ADA-K", meetingDate: null, readStatus: "unread" }],
+            }),
+            noopProgress,
+        );
+
+        // 'unread' is the one retried status
+        expect(mockReadDecision).toHaveBeenCalledTimes(1);
+        expect(result.decisions![0]).toMatchObject({ ada: "ADA-K", fromKnown: false, readStatus: "no_meeting_date" });
+    });
+
+    it("a known decision declaring this meeting joins the partition as a fact", async () => {
+        const D1 = makeDecision({ ada: "ADA-K", subject: "Έγκριση προϋπολογισμού 2025" });
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-K", confidence: "high", reasoning: "Title matches" }],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 1 }],
+                knownDecisions: [{ ada: "ADA-K", meetingDate: "2025-01-10", readStatus: "ok" }],
+            }),
+            noopProgress,
+        );
+
+        expect(mockReadDecision).not.toHaveBeenCalled();
+        expect(result.matches).toHaveLength(1);
+        expect(result.decisions![0].subjectId).toBe("subA");
+        expect(result.decisions![0].confidence).toBe(0.9);
     });
 });
