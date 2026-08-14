@@ -508,6 +508,10 @@ export interface PollDecisionsRequest extends TaskRequest {
             needsExtraction?: boolean;
         };
     }>;
+    /** Fetch window derived by the app from publication-lag history. Absent = legacy 45-day window. */
+    window?: { fromDate: string; toDate: string };
+    /** Reading-cache handshake, window-scoped. Presence + readStatus decide whether to read again. */
+    knownDecisions?: Array<{ ada: string; meetingDate: string | null; readStatus: string }>;
 }
 
 export interface PollDecisionsResult {

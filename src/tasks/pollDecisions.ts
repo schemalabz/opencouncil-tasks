@@ -9,6 +9,8 @@ import { computeSimilarityMatrix, buildCandidatePool, buildResolverPrompt, proce
 import type { ResolverOutput } from './utils/resolverMatchDecisions.js';
 import { detectProtocolPattern, findGaps, reconstructProtocolNumber } from './utils/protocolGapFill.js';
 import { createScopedLogger } from './utils/scopedLogger.js';
+import { readDecisionDocument } from './utils/readDecisionDocument.js';
+import { partitionReadDecisions, type ReadDecision } from './utils/decisionPartition.js';
 
 const client = new Diavgeia();
 
@@ -208,13 +210,14 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     onProgress("fetching decisions", 5);
 
-    // Calculate date range: meeting date to 45 days after (decisions may be published later)
+    // Date range: from the request's derived window when present, else the
+    // legacy 45 days after the meeting date.
     const meetingDate = new Date(request.meetingDate);
     if (isNaN(meetingDate.getTime())) {
         throw new Error(`Invalid meeting date: ${request.meetingDate}`);
     }
-    const fromDate = meetingDate.toISOString().split('T')[0];
-    const toDate = new Date(meetingDate.getTime() + 45 * 24 * 60 * 60 * 1000)
+    const fromDate = request.window?.fromDate ?? meetingDate.toISOString().split('T')[0];
+    const toDate = request.window?.toDate ?? new Date(meetingDate.getTime() + 45 * 24 * 60 * 60 * 1000)
         .toISOString().split('T')[0];
 
     // Fetch decisions from Diavgeia — one request per unit ID, deduplicated by ADA
@@ -237,6 +240,47 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     }
 
     log(`Fetched ${decisions.length} decisions from Diavgeia (${unitIds.length} unit query/queries)`);
+
+    // --- Phase 0: read every candidate's own statement of its session ---
+    onProgress("reading decisions", 10);
+    const known = new Map((request.knownDecisions ?? []).map(k => [k.ada, k]));
+    const READ_CONCURRENCY = 4;
+    const reads: ReadDecision[] = [];
+    let readCursor = 0;
+    const readWorker = async () => {
+        while (readCursor < decisions.length) {
+            const d = decisions[readCursor++];
+            const k = known.get(d.ada);
+            if (k && k.readStatus !== 'unread') {
+                // Already read on a previous poll — never pay twice. Only
+                // 'unread' is retried; 'unreadable'/'no_meeting_date' recovery
+                // is a prompt-version bump plus manual re-run.
+                reads.push({
+                    decision: d,
+                    reading: k.meetingDate ? { meetingDate: k.meetingDate, decisionNumber: null } : null,
+                    readStatus: k.readStatus,
+                    fromKnown: true,
+                });
+                continue;
+            }
+            try {
+                const { result } = await readDecisionDocument(decisionPdfUrl(d));
+                reads.push({
+                    decision: d,
+                    reading: result,
+                    readStatus: result.meetingDate ? 'ok' : 'no_meeting_date',
+                    fromKnown: false,
+                });
+            } catch (e) {
+                log(`  read failed for ${d.ada}: ${e instanceof Error ? e.message : e}`);
+                reads.push({ decision: d, reading: null, readStatus: 'unreadable', fromKnown: false });
+            }
+        }
+    };
+    await Promise.all(Array.from({ length: READ_CONCURRENCY }, readWorker));
+
+    const partition = partitionReadDecisions(reads, request.meetingDate);
+    log(`=== PHASE 0: READ === ${reads.length} candidates: ${partition.inMeeting.length} declare this meeting, ${partition.elsewhere.length} another, ${partition.fallback.length} unreadable/unread (fallback pool)`);
 
     // Partition subjects
     const subjectLookup = new Map(request.subjects.map(s => [s.subjectId, s]));

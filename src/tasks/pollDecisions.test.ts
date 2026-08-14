@@ -33,6 +33,17 @@ vi.mock("./utils/extractionPipeline.js", () => ({
     })),
 }));
 
+// Mock the phase-0 reader (reading is tested separately). no_meeting_date
+// routes every candidate to the fallback pool, so matching behaves exactly
+// as it did pre-partitioning — which is what these tests assert.
+vi.mock("./utils/readDecisionDocument.js", () => ({
+    readDecisionDocument: vi.fn(async () => ({
+        result: { meetingDate: null, decisionNumber: null },
+        usage: NO_USAGE_MOCK,
+        fromCache: false,
+    })),
+}));
+
 import { aiChat } from "../lib/ai.js";
 import { extractDecisionsFromPdfs } from "./utils/extractionPipeline.js";
 import { pollDecisions } from "./pollDecisions.js";
