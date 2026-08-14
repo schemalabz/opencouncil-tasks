@@ -115,9 +115,11 @@ export const declaredUncompressedSize = (zip: Buffer): number => {
 };
 
 /**
- * Guards the conversion against decompression bombs. mammoth expands the whole
- * archive in-process before returning anything, so the check has to happen on
- * the archive, not on the output.
+ * Guards the conversion against decompression bombs. An inflated
+ * word/document.xml is expanded in-process before any HTML comes back for the
+ * output check to look at, so the bound has to be on the archive rather than
+ * on the result. Entries mammoth never reads are decompressed lazily and may
+ * cost nothing, but they are summed here too — it is the cheaper assumption.
  *
  * The declared sizes come from the zip's own headers, which a hostile file
  * could understate. Catching that would mean decompressing with a running
