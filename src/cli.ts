@@ -11,7 +11,8 @@ import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
-import { partitionReadDecisions, type ReadDecision } from './tasks/utils/decisionPartition.js';
+import { partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
+import { sameDecisionNumber } from './tasks/utils/decisionNumberCompare.js';
 import { decisionPdfUrl } from './tasks/utils/resolverMatchDecisions.js';
 import { Diavgeia } from '@schemalabs/diavgeia-cli';
 import type { Decision as DiavgeiaDecision } from '@schemalabs/diavgeia-cli';
@@ -1014,6 +1015,8 @@ program
             kind: 'decision' | 'other';
             /** Expected meetingDate; null = no label yet (unadjudicated). */
             expected: string | null;
+            /** Expected decision number as printed; null = no label. */
+            expectedNumber: string | null;
             provenance: string;
         };
 
@@ -1030,6 +1033,7 @@ program
                 body,
                 kind: (d.kind as 'decision' | 'other') ?? 'decision',
                 expected: ((d.expected as Record<string, unknown> | undefined)?.meetingDate as string | null) ?? null,
+                expectedNumber: ((d.expected as Record<string, unknown> | undefined)?.decisionNumber as string | null) ?? null,
                 provenance: d.verified ? 'verified' : 'unverified',
             });
             rows = (parsed.cities as Array<Record<string, unknown>>).flatMap((c) => [
@@ -1050,6 +1054,7 @@ program
                 body: ab.name,
                 kind: 'decision',
                 expected: d.expectedMeetingDate,
+                expectedNumber: null,
                 provenance: 'from-link',
             }));
             title = `${parsed.city} / ${ab.name}`;
@@ -1060,7 +1065,13 @@ program
         if (limit) rows = rows.slice(0, limit);
         const concurrency = Math.max(1, parseInt(options.concurrency, 10) || 4);
 
-        type EvalResult = Row & { read: DecisionReading | null; outcome: string; fromCache: boolean };
+        type EvalResult = Row & {
+            read: DecisionReading | null;
+            outcome: string;
+            numberOutcome: string;
+            bodyOutcome: string;
+            fromCache: boolean;
+        };
         const results: EvalResult[] = [];
         let totalUsage = { ...NO_USAGE };
 
@@ -1088,7 +1099,21 @@ program
                         : md === r.expected
                           ? 'agree'
                           : 'disagree';
-                results.push({ ...r, read, outcome, fromCache });
+                const numberOutcome = r.kind !== 'decision' || !r.expectedNumber
+                    ? 'number-unlabelled'
+                    : !read?.decisionNumber
+                      ? 'number-missing'
+                      : sameDecisionNumber(read.decisionNumber, r.expectedNumber)
+                        ? 'number-agree'
+                        : 'number-disagree';
+                const bodyOutcome = r.kind !== 'decision' || r.body === '—'
+                    ? 'body-unlabelled'
+                    : !read?.body
+                      ? 'body-missing'
+                      : sameBody(read.body, r.body)
+                        ? 'body-agree'
+                        : 'body-disagree';
+                results.push({ ...r, read, outcome, numberOutcome, bodyOutcome, fromCache });
                 if (results.length % 25 === 0) {
                     console.log(`  ${results.length}/${rows.length}`);
                 }
@@ -1117,6 +1142,12 @@ program
         console.log(`  disagrees:         ${disagree}  ${pct(disagree, labelled.length)}`);
         console.log(`  unadjudicated:     ${count(results, 'unadjudicated')}`);
         console.log(`  negatives:         ${count(results, 'true-negative')} correct, ${count(results, 'false-positive')} false-positive`);
+        const numLabelled = results.filter((r) => r.numberOutcome !== 'number-unlabelled');
+        const numAgree = results.filter((r) => r.numberOutcome === 'number-agree').length;
+        console.log(`  decision number:   ${numAgree}/${numLabelled.length} agree  ${pct(numAgree, numLabelled.length)} (${results.filter((r) => r.numberOutcome === 'number-disagree').length} disagree, ${results.filter((r) => r.numberOutcome === 'number-missing').length} missing)`);
+        const bodyLabelled = results.filter((r) => r.bodyOutcome !== 'body-unlabelled');
+        const bodyAgree = results.filter((r) => r.bodyOutcome === 'body-agree').length;
+        console.log(`  body:              ${bodyAgree}/${bodyLabelled.length} agree  ${pct(bodyAgree, bodyLabelled.length)} (${results.filter((r) => r.bodyOutcome === 'body-disagree').length} disagree, ${results.filter((r) => r.bodyOutcome === 'body-missing').length} missing)`);
         console.log(`  from cache:        ${results.filter((r) => r.fromCache).length}`);
         console.log(`  model usage:       ${formatUsage(totalUsage)}`);
 
@@ -1133,6 +1164,12 @@ program
             for (const r of disagreements.slice(0, 20)) {
                 console.log(`  ${r.ada}  document says ${r.read?.meetingDate}, label says ${r.expected}  (${r.city} / ${r.body})`);
             }
+        }
+        for (const r of results.filter((x) => x.numberOutcome === 'number-disagree').slice(0, 15)) {
+            console.log(`  NUMBER: ${r.ada}  read ${r.read?.decisionNumber} vs label ${r.expectedNumber}  (${r.city} / ${r.body})`);
+        }
+        for (const r of results.filter((x) => x.bodyOutcome === 'body-disagree').slice(0, 15)) {
+            console.log(`  BODY: ${r.ada}  read "${r.read?.body}" vs "${r.body}"  (${r.city})`);
         }
         const falsePositives = results.filter((r) => r.outcome === 'false-positive');
         for (const r of falsePositives) {
