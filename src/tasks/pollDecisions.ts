@@ -437,6 +437,7 @@ ${gapCandidateLines}`;
                     protocolNumber: gc.protocolNumber,
                     publishDate: msToISODate(gc.decision.publishTimestamp),
                     matchConfidence: m.confidence === 'high' ? 0.75 : 0.6,
+                    reasoning: m.reasoning ?? null,
                 });
                 const unmIdx = unmatchedSubjects.findIndex(u => u.subjectId === m.subjectId);
                 if (unmIdx >= 0) unmatchedSubjects.splice(unmIdx, 1);
@@ -772,7 +773,28 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         log(journey);
     }
 
+    // Every decision read in the window — the app's DecisionCandidate feed.
+    const matchByAda = new Map(matches.map(m => [m.ada, m] as const));
+    const decisionsOut: NonNullable<PollDecisionsResult['decisions']> = reads.map(r => {
+        const match = matchByAda.get(r.decision.ada);
+        return {
+            ada: r.decision.ada,
+            title: r.decision.subject ?? null,
+            pdfUrl: decisionPdfUrl(r.decision),
+            protocolNumber: r.decision.protocolNumber ?? null,
+            publishDate: r.decision.publishTimestamp ? msToISODate(r.decision.publishTimestamp) : null,
+            meetingDate: r.reading?.meetingDate ?? null,
+            decisionNumber: r.reading?.decisionNumber ?? null,
+            readStatus: r.readStatus,
+            fromKnown: r.fromKnown,
+            subjectId: match?.subjectId ?? null,
+            confidence: match?.matchConfidence ?? null,
+            reasoning: match?.reasoning ?? null,
+        };
+    });
+
     return {
+        decisions: decisionsOut,
         matches,
         reassignments,
         unmatchedSubjects,

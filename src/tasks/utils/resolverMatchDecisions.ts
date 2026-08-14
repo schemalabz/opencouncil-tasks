@@ -187,6 +187,7 @@ export interface ProcessedResolverResult {
         protocolNumber: string;
         publishDate: string;
         matchConfidence: number;
+        reasoning: string | null;
     }>;
     unmatchedSubjects: Array<{
         subjectId: string;
@@ -342,6 +343,7 @@ export function processResolverOutput(options: {
             protocolNumber: candidate.protocolNumber,
             publishDate: candidate.publishDate,
             matchConfidence: CONFIDENCE_SCORE[match.confidence],
+            reasoning: match.reasoning ?? null,
         });
     }
 
