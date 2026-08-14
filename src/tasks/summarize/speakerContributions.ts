@@ -372,6 +372,10 @@ ${fullDiscussion}
         const result = await aiChat<{ speakerContributions: SpeakerContribution[] }>({
             model: "claude-opus-4-6",
             batchFirst: true,
+            // Well above real need, so a runaway generation is cut off early instead
+            // of burning the 64K default. Across 1,081 successful calls the largest
+            // used 6,997 output tokens (p50 291, p99 5,043); 8K truncates none of them.
+            maxTokens: 8000,
             label: `contributions:${subject.name.slice(0, 40)}`,
             systemPrompt,
             userPrompt,
@@ -436,15 +440,11 @@ ${fullDiscussion}
             batchMode: result.batchMode
         };
     } catch (error) {
-        console.error("Error generating speaker contributions:", error);
-        // Return fallback contributions for all speakers
-        return {
-            contributions: Object.keys(utterancesBySpeaker).map(key => ({
-                speakerId: key.startsWith('name:') ? null : key,
-                speakerName: speakerKeyToName.get(key) || (key.startsWith('name:') ? key.slice(5) : null),
-                text: getLanguageConfig(cityLanguage).summaryErrorText
-            })),
-            ...NO_USAGE_STATS
-        };
+        // Rethrow so the caller's batch-shrink retry can run. Returning fallback
+        // text here made that retry unreachable, so one transient API failure or
+        // one max_tokens truncation became permanent error text for the whole
+        // batch. The caller writes the identical fallback once retries are spent.
+        console.error(`   ✗ Contribution generation failed for "${subject.name}" (${Object.keys(utterancesBySpeaker).length} speakers): ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
     }
 }

@@ -470,14 +470,30 @@ const LOUDNORM_TARGET = { I: -14, TP: -1.5, LRA: 11 };
 // Files we already normalized measure at the target, so reprocessing a cached
 // video skips the expensive pass entirely.
 const LOUDNORM_TOLERANCE_LU = 1;
+// Integrated loudness at or below this counts as no usable audio. Real recordings
+// sit far above it even when badly under-recorded; the two observed failures were
+// aborted streams measuring -inf (digital silence) with peaks around -72 dBTP.
+const SILENCE_FLOOR_LUFS = -60;
 const AUDIO_BITRATE = '128k';
+
+/**
+ * Whether the source carries no usable audio. Normalization cannot rescue it:
+ * ffmpeg rejects a `measured_I` outside [-99, 0], and clamping -inf to the floor
+ * would apply ~85 dB of gain to the noise floor. Nor is there anything to
+ * transcribe — so this is a task failure, not a pass to skip.
+ */
+export function isSilentAudio(stats: LoudnormStats): boolean {
+    const integrated = parseFloat(stats.input_i);
+    // ffmpeg emits "-inf" on digital silence
+    return !Number.isFinite(integrated) || integrated <= SILENCE_FLOOR_LUFS;
+}
 
 export function needsLoudnormCorrection(stats: LoudnormStats): boolean {
     const deltaI = Math.abs(LOUDNORM_TARGET.I - parseFloat(stats.input_i));
-    // Non-finite measurements (ffmpeg emits "-inf" on silent audio) fall
-    // through to normalization, preserving the old always-normalize behavior
+    // Callers reject silence via isSilentAudio first; false keeps this correct
+    // standalone, since a non-finite measurement is precisely what pass 2 rejects.
     if (!Number.isFinite(deltaI)) {
-        return true;
+        return false;
     }
     // Only loudness deviation triggers normalization. True peak deliberately
     // does NOT: the AAC re-encode in pass 2 overshoots the true-peak limiter
@@ -553,6 +569,13 @@ async function normalizeVideoAudio(filePath: string): Promise<boolean> {
     const deltaI = (I - parseFloat(stats.input_i)).toFixed(1);
     console.log(`[loudnorm] ${filename}: I=${stats.input_i} LUFS (target ${I}, Δ${parseFloat(deltaI) >= 0 ? '+' : ''}${deltaI}) | TP=${stats.input_tp} dBTP (ceiling ${TP}) | LRA=${stats.input_lra} (target ${LRA}) | thresh=${stats.input_thresh} | measure=${pass1Duration}s`);
 
+    if (isSilentAudio(stats)) {
+        throw new Error(
+            `Source audio is silent (integrated loudness ${stats.input_i} LUFS, at or below the ${SILENCE_FLOOR_LUFS} LUFS floor) — ` +
+            `the recording has no audio to transcribe`
+        );
+    }
+
     if (!needsLoudnormCorrection(stats)) {
         console.log(`[loudnorm] ${filename}: within ${LOUDNORM_TOLERANCE_LU} LU of the ${I} LUFS target, skipping normalization`);
         return false;
@@ -561,13 +584,19 @@ async function normalizeVideoAudio(filePath: string): Promise<boolean> {
     // Pass 2: apply normalization with linear mode
     const tempPath = filePath + '.normalized.mp4';
     const pass2Start = Date.now();
-    await runFfmpeg([
-        '-i', filePath,
-        '-c:v', 'copy',
-        '-af', `${loudnormFilter}:measured_I=${stats.input_i}:measured_TP=${stats.input_tp}:measured_LRA=${stats.input_lra}:measured_thresh=${stats.input_thresh}:linear=true`,
-        '-c:a', 'aac', '-b:a', AUDIO_BITRATE,
-        '-y', tempPath,
-    ]);
+    try {
+        await runFfmpeg([
+            '-i', filePath,
+            '-c:v', 'copy',
+            '-af', `${loudnormFilter}:measured_I=${stats.input_i}:measured_TP=${stats.input_tp}:measured_LRA=${stats.input_lra}:measured_thresh=${stats.input_thresh}:linear=true`,
+            '-c:a', 'aac', '-b:a', AUDIO_BITRATE,
+            '-y', tempPath,
+        ]);
+    } catch (err) {
+        // A half-written temp file would otherwise linger in the media cache
+        fs.rmSync(tempPath, { force: true });
+        throw err;
+    }
     const pass2Duration = ((Date.now() - pass2Start) / 1000).toFixed(1);
 
     // Replace original with normalized version
