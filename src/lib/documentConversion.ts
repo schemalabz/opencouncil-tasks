@@ -13,10 +13,18 @@ const OLE2_MAGIC = Buffer.from([0xd0, 0xcf, 0x11, 0xe0]);      // legacy .doc/.x
 
 /**
  * Real agendas are a few hundred KB. The ceiling is set by what the extraction
- * call can actually carry: Anthropic rejects requests over 32MB, so a larger
- * PDF would fail mid-call with a far less obvious error than this one.
+ * call can actually carry: a PDF rides in the request base64-encoded, which
+ * costs a third more bytes, and Anthropic rejects requests over 32MB. 20MB
+ * encodes to ~26.7MB, leaving room for the prompt and the rest of the payload.
  */
-export const MAX_DOCUMENT_BYTES = 25 * 1024 * 1024;
+export const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
+
+/**
+ * A .docx is a zip, so its download size says nothing about what it expands to
+ * — a small archive can decompress into gigabytes. Council agendas are text and
+ * a few images; 100MB of uncompressed entries is already far past plausible.
+ */
+export const MAX_DOCX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024;
 
 /**
  * Converted markup goes into the prompt, so its size is token spend. 500K
@@ -51,6 +59,79 @@ export const detectDocumentFormat = (bytes: Buffer): DocumentFormat => {
     return 'unknown';
 };
 
+const EOCD_SIGNATURE = 0x06054b50;                  // "PK\x05\x06" — end of central directory
+const CENTRAL_HEADER_SIGNATURE = 0x02014b50;        // "PK\x01\x02" — central directory file header
+const CENTRAL_HEADER_FIXED_SIZE = 46;
+const ZIP64_SIZE_SENTINEL = 0xffffffff;             // real size lives in the zip64 extra field
+
+/**
+ * Sums the uncompressed sizes a zip declares for its entries, reading only the
+ * central directory — no decompression. This is what lets an archive be
+ * rejected before mammoth expands it.
+ *
+ * A zip64 sentinel returns Infinity: the real size is in an extra field, but
+ * any entry claiming ≥4GB is past every limit we care about anyway.
+ *
+ * Throws when the central directory can't be read. Every .docx has one, and
+ * refusing to convert a file whose structure we can't account for is the
+ * safe direction.
+ */
+export const declaredUncompressedSize = (zip: Buffer): number => {
+    // The EOCD record sits at the end, after a variable-length comment.
+    const scanFloor = Math.max(0, zip.length - 22 - 0xffff);
+    let eocd = -1;
+    for (let i = zip.length - 22; i >= scanFloor; i--) {
+        if (zip.readUInt32LE(i) === EOCD_SIGNATURE) {
+            eocd = i;
+            break;
+        }
+    }
+    if (eocd < 0) {
+        throw new Error("Malformed .docx: no zip end-of-central-directory record");
+    }
+
+    const entryCount = zip.readUInt16LE(eocd + 10);
+    let offset = zip.readUInt32LE(eocd + 16);
+    let total = 0;
+
+    for (let i = 0; i < entryCount; i++) {
+        if (offset + CENTRAL_HEADER_FIXED_SIZE > zip.length || zip.readUInt32LE(offset) !== CENTRAL_HEADER_SIGNATURE) {
+            throw new Error("Malformed .docx: truncated or corrupt zip central directory");
+        }
+
+        const uncompressed = zip.readUInt32LE(offset + 24);
+        if (uncompressed === ZIP64_SIZE_SENTINEL) {
+            return Infinity;
+        }
+        total += uncompressed;
+
+        const nameLength = zip.readUInt16LE(offset + 28);
+        const extraLength = zip.readUInt16LE(offset + 30);
+        const commentLength = zip.readUInt16LE(offset + 32);
+        offset += CENTRAL_HEADER_FIXED_SIZE + nameLength + extraLength + commentLength;
+    }
+
+    return total;
+};
+
+/**
+ * Guards the conversion against decompression bombs. mammoth expands the whole
+ * archive in-process before returning anything, so the check has to happen on
+ * the archive, not on the output.
+ *
+ * The declared sizes come from the zip's own headers, which a hostile file
+ * could understate. Catching that would mean decompressing with a running
+ * ceiling, which mammoth gives no way to do — so this bounds the ordinary
+ * bomb, and the download cap bounds everything upstream of it.
+ */
+export const checkDocxExpansion = (docx: Buffer): void => {
+    const declared = declaredUncompressedSize(docx);
+    if (declared > MAX_DOCX_UNCOMPRESSED_BYTES) {
+        const size = declared === Infinity ? '4GB+' : `${Math.round(declared / 1024 / 1024)}MB`;
+        throw new Error(`DOCX expands to ${size}, over the ${MAX_DOCX_UNCOMPRESSED_BYTES / 1024 / 1024}MB limit — this does not look like a council agenda`);
+    }
+};
+
 /**
  * mammoth inlines embedded images as base64 data URIs, which would be tens of
  * thousands of useless tokens in the prompt. Agenda images are letterheads and
@@ -82,6 +163,8 @@ export const checkConvertedHtml = (html: string): string => {
  * would have shown it, without the render.
  */
 export const convertDocxToHtml = async (docx: Buffer): Promise<string> => {
+    checkDocxExpansion(docx);
+
     const { value, messages } = await mammoth.convertToHtml({ buffer: docx });
 
     const warnings = messages.filter(m => m.type === 'warning');
