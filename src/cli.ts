@@ -8,9 +8,13 @@ import { uploadToSpaces, deleteFromSpacesByPrefix, checkSpacesConnection } from 
 import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
-import { pollDecisions } from './tasks/pollDecisions.js';
+import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
+import { partitionReadDecisions, type ReadDecision } from './tasks/utils/decisionPartition.js';
+import { decisionPdfUrl } from './tasks/utils/resolverMatchDecisions.js';
+import { Diavgeia } from '@schemalabs/diavgeia-cli';
+import type { Decision as DiavgeiaDecision } from '@schemalabs/diavgeia-cli';
 import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
 import { aiChat, formatUsage, HAIKU_MODEL, addUsage, NO_USAGE } from './lib/ai.js';
@@ -866,6 +870,132 @@ runsCommand
         } finally {
             server.close();
         }
+    });
+
+program
+    .command('evaluate-decision-matching <file>')
+    .description('Score the matching core against existing links (export-matching-eval.ts output): hide links, re-match, count recovered ADAs')
+    .option('-l, --limit <n>', 'only evaluate the first N meetings (cost control — each meeting is a live resolver call)')
+    .option('-O, --output-file <file>', 'write per-subject results as JSON')
+    .action(async (file: string, options: { limit?: string; outputFile?: string }) => {
+        const input = JSON.parse(fs.readFileSync(file, 'utf-8')) as {
+            city: string;
+            administrativeBody: { id: string; name: string };
+            diavgeiaUid: string;
+            diavgeiaUnitIds: string[];
+            meetings: Array<{
+                meetingId: string;
+                meetingDate: string;
+                subjects: Array<{
+                    subjectId: string; name: string;
+                    agendaItemIndex: number | null; nonAgendaReason: string | null;
+                    truthAda: string | null;
+                }>;
+            }>;
+        };
+
+        const limit = options.limit ? parseInt(options.limit, 10) : undefined;
+        const meetings = limit ? input.meetings.slice(0, limit) : input.meetings;
+        const diavgeia = new Diavgeia();
+        const WINDOW_DAYS = 30;
+
+        type SubjectResult = {
+            meetingId: string; subjectId: string; name: string;
+            truthAda: string | null; proposedAda: string | null;
+            outcome: 'recovered' | 'wrong' | 'missed' | 'extra';
+        };
+        const results: SubjectResult[] = [];
+        let totalUsage = { ...NO_USAGE };
+
+        for (const [i, meeting] of meetings.entries()) {
+            console.log(`\n[${i + 1}/${meetings.length}] ${meeting.meetingDate} (${meeting.subjects.length} subjects)`);
+
+            // Same fetch as the pipeline: window candidates per unit, deduped.
+            const toDate = new Date(new Date(`${meeting.meetingDate}T00:00:00Z`).getTime() + WINDOW_DAYS * 86400_000)
+                .toISOString().split('T')[0];
+            const unitIds = input.diavgeiaUnitIds.length ? input.diavgeiaUnitIds : [undefined];
+            const seen = new Set<string>();
+            const decisions: DiavgeiaDecision[] = [];
+            for (const unitId of unitIds) {
+                for await (const d of diavgeia.searchAll({
+                    org: input.diavgeiaUid,
+                    from_issue_date: meeting.meetingDate,
+                    to_issue_date: toDate,
+                    unit: unitId,
+                    status: 'PUBLISHED',
+                })) {
+                    if (!seen.has(d.ada)) { seen.add(d.ada); decisions.push(d); }
+                }
+            }
+
+            // Phase 0: read (cached across runs) and partition.
+            const reads: ReadDecision[] = [];
+            let cursor = 0;
+            const worker = async () => {
+                while (cursor < decisions.length) {
+                    const d = decisions[cursor++];
+                    try {
+                        const { result, usage } = await readDecisionDocument(decisionPdfUrl(d));
+                        totalUsage = addUsage(totalUsage, usage);
+                        reads.push({ decision: d, reading: result, readStatus: result.meetingDate ? 'ok' : 'no_meeting_date', fromKnown: false });
+                    } catch {
+                        reads.push({ decision: d, reading: null, readStatus: 'unreadable', fromKnown: false });
+                    }
+                }
+            };
+            await Promise.all(Array.from({ length: 4 }, worker));
+            const partition = partitionReadDecisions(reads, meeting.meetingDate);
+            console.log(`  window: ${decisions.length} decisions — ${partition.inMeeting.length} declare this meeting, ${partition.fallback.length} fallback`);
+
+            // The real matching core, with links hidden.
+            const outcome = await resolveMeetingDecisions({
+                subjects: meeting.subjects.map(s => ({
+                    subjectId: s.subjectId,
+                    name: s.name,
+                    agendaItemIndex: s.agendaItemIndex,
+                    nonAgendaReason: s.nonAgendaReason,
+                })),
+                inMeeting: partition.inMeeting.map(r => r.decision),
+                fallback: partition.fallback.map(r => r.decision),
+                diavgeiaUid: input.diavgeiaUid,
+                log: () => {},
+            });
+            totalUsage = addUsage(totalUsage, outcome.usage);
+
+            const proposedBySubject = new Map(outcome.matches.map(m => [m.subjectId, m.ada]));
+            for (const s of meeting.subjects) {
+                const proposed = proposedBySubject.get(s.subjectId) ?? null;
+                const outcomeKind: SubjectResult['outcome'] = s.truthAda
+                    ? (proposed === s.truthAda ? 'recovered' : proposed ? 'wrong' : 'missed')
+                    : (proposed ? 'extra' : 'recovered');
+                if (!s.truthAda && !proposed) continue; // nothing to say
+                results.push({ meetingId: meeting.meetingId, subjectId: s.subjectId, name: s.name, truthAda: s.truthAda, proposedAda: proposed, outcome: outcomeKind });
+            }
+            const mRes = results.filter(r => r.meetingId === meeting.meetingId);
+            console.log(`  recovered ${mRes.filter(r => r.outcome === 'recovered' && r.truthAda).length}/${mRes.filter(r => r.truthAda).length}, wrong ${mRes.filter(r => r.outcome === 'wrong').length}, missed ${mRes.filter(r => r.outcome === 'missed').length}, extra ${mRes.filter(r => r.outcome === 'extra').length}`);
+        }
+
+        const withTruth = results.filter(r => r.truthAda);
+        const recovered = withTruth.filter(r => r.outcome === 'recovered').length;
+        const wrong = withTruth.filter(r => r.outcome === 'wrong').length;
+        const missed = withTruth.filter(r => r.outcome === 'missed').length;
+        const extra = results.filter(r => r.outcome === 'extra').length;
+        const proposals = recovered + wrong + extra;
+        const pct = (n: number, d: number) => (d ? `${((n / d) * 100).toFixed(1)}%` : '—');
+
+        console.log(`\n${input.city} / ${input.administrativeBody.name} — ${meetings.length} meetings`);
+        console.log(`  linked subjects: ${withTruth.length}`);
+        console.log(`  recall:    ${recovered}/${withTruth.length}  ${pct(recovered, withTruth.length)}`);
+        console.log(`  precision: ${recovered}/${proposals}  ${pct(recovered, proposals)}`);
+        console.log(`  wrong: ${wrong}, missed: ${missed}, extra proposals on unlinked subjects: ${extra}`);
+        console.log(`  model usage: ${formatUsage(totalUsage)}`);
+
+        if (options.outputFile) {
+            fs.writeFileSync(options.outputFile, JSON.stringify({ ...input.administrativeBody, results }, null, 2));
+            console.log(`\nPer-subject results -> ${options.outputFile}`);
+        }
+
+        server.close();
     });
 
 program
