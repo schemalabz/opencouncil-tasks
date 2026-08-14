@@ -508,6 +508,8 @@ export interface PollDecisionsRequest extends TaskRequest {
             needsExtraction?: boolean;
         };
     }>;
+    /** The polled meeting's administrative-body name, for the (body, date) partition. Absent = date-only partitioning. */
+    administrativeBodyName?: string | null;
     /** Fetch window derived by the app from publication-lag history. Absent = legacy 45-day window. */
     window?: { fromDate: string; toDate: string };
     /** Reading-cache handshake, window-scoped. Presence + readStatus decide whether to read again. */
@@ -528,6 +530,8 @@ export interface PollDecisionsResult {
         publishDate: string | null;
         meetingDate: string | null;
         decisionNumber: string | null;
+        /** The deliberative body as the document states it. */
+        body: string | null;
         readStatus: string;
         /** True when the reading was echoed from knownDecisions, not freshly read — reading fields carry no new information. */
         fromKnown: boolean;

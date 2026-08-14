@@ -518,7 +518,9 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 // is a prompt-version bump plus manual re-run.
                 reads.push({
                     decision: d,
-                    reading: k.meetingDate ? { meetingDate: k.meetingDate, decisionNumber: null } : null,
+                    reading: k.meetingDate
+                        ? { meetingDate: k.meetingDate, decisionNumber: null, body: null, notADecision: false }
+                        : null,
                     readStatus: k.readStatus,
                     fromKnown: true,
                 });
@@ -529,7 +531,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 reads.push({
                     decision: d,
                     reading: result,
-                    readStatus: result.meetingDate ? 'ok' : 'no_meeting_date',
+                    readStatus: result.notADecision ? 'not_a_decision' : result.meetingDate ? 'ok' : 'no_meeting_date',
                     fromKnown: false,
                 });
             } catch (e) {
@@ -540,8 +542,8 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     };
     await Promise.all(Array.from({ length: READ_CONCURRENCY }, readWorker));
 
-    const partition = partitionReadDecisions(reads, request.meetingDate);
-    log(`=== PHASE 0: READ === ${reads.length} candidates: ${partition.inMeeting.length} declare this meeting, ${partition.elsewhere.length} another, ${partition.fallback.length} unreadable/unread (fallback pool)`);
+    const partition = partitionReadDecisions(reads, request.meetingDate, request.administrativeBodyName);
+    log(`=== PHASE 0: READ === ${reads.length} candidates: ${partition.inMeeting.length} declare this session, ${partition.elsewhere.length} another, ${partition.fallback.length} unreadable/unread (fallback pool), ${partition.nonDecisions.length} not decisions`);
 
     // Partition subjects
     const subjectLookup = new Map(request.subjects.map(s => [s.subjectId, s]));
@@ -785,6 +787,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             publishDate: r.decision.publishTimestamp ? msToISODate(r.decision.publishTimestamp) : null,
             meetingDate: r.reading?.meetingDate ?? null,
             decisionNumber: r.reading?.decisionNumber ?? null,
+            body: r.reading?.body ?? null,
             readStatus: r.readStatus,
             fromKnown: r.fromKnown,
             subjectId: match?.subjectId ?? null,

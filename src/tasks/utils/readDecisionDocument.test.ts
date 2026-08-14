@@ -3,16 +3,20 @@ import { normalizeReading } from './readDecisionDocument.js';
 
 describe('normalizeReading', () => {
     it('passes a well-formed reading through', () => {
-        expect(normalizeReading({ meetingDate: '2026-06-02', decisionNumber: '425/2026' })).toEqual({
+        expect(normalizeReading({ meetingDate: '2026-06-02', decisionNumber: '425/2026', body: 'ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ' })).toEqual({
             meetingDate: '2026-06-02',
             decisionNumber: '425/2026',
+            body: 'ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ',
+            notADecision: false,
         });
     });
 
     it('trims whitespace and turns blanks into nulls', () => {
-        expect(normalizeReading({ meetingDate: '  2026-06-02 ', decisionNumber: '' })).toEqual({
+        expect(normalizeReading({ meetingDate: '  2026-06-02 ', decisionNumber: '', body: ' ' })).toEqual({
             meetingDate: '2026-06-02',
             decisionNumber: null,
+            body: null,
+            notADecision: false,
         });
     });
 
@@ -33,6 +37,12 @@ describe('normalizeReading', () => {
     });
 
     it('tolerates missing keys entirely', () => {
-        expect(normalizeReading({})).toEqual({ meetingDate: null, decisionNumber: null });
+        expect(normalizeReading({})).toEqual({ meetingDate: null, decisionNumber: null, body: null, notADecision: false });
+    });
+
+    it('a not-a-decision classification nulls every field', () => {
+        expect(normalizeReading({ meetingDate: '2026-06-02', decisionNumber: '5', body: 'X', notADecision: true })).toEqual({
+            meetingDate: null, decisionNumber: null, body: null, notADecision: true,
+        });
     });
 });
