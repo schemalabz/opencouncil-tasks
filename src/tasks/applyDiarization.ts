@@ -13,39 +13,28 @@ import { DiarizationManager } from "../lib/DiarizationManager.js";
 export const applyDiarization: Task<{ diarization: Diarization, speakers: DiarizationSpeaker[], transcript: Transcript }, TranscriptWithSpeakerIdentification> = async ({ diarization, speakers, transcript }, onProgress) => {
     const diarizationManager = new DiarizationManager(diarization, speakers);
 
-    let skippedUtterances: Utterance[] = [];
     console.log(`Last utterance ends at ${formatTime(transcript.transcription.utterances[transcript.transcription.utterances.length - 1].end)}`);
     console.log(`Last diarization ends at ${formatTime(diarization[diarization.length - 1].end)}`);
     const newUtterances: (Utterance & { drift: number })[] = transcript.transcription.utterances.map((utterance) => {
         const speaker = diarizationManager.findBestSpeakerForUtterance(utterance);
-
-        if (!speaker) {
-            console.log(`Warning: No speaker found for utterance "${utterance.text}" (${formatTime(utterance.start)}-${formatTime(utterance.end)}), SKIPPING`);
-            skippedUtterances.push(utterance);
-            return null;
-        }
 
         return {
             ...utterance,
             speaker: speaker.speaker,
             drift: speaker.drift
         };
-    }).filter((utterance): utterance is Utterance & { drift: number } => utterance !== null);
+    });
 
     const speakerUtteranceCount = newUtterances.reduce((acc, curr) => {
         acc[curr.speaker] = (acc[curr.speaker] || 0) + 1;
         return acc;
     }, {} as Record<number, number>);
 
-    console.log(`Listing ${skippedUtterances.length} skipped utterances:`);
-    for (const utterance of skippedUtterances) {
-        console.log(`\t${utterance.text} (${formatTime(utterance.start)}-${formatTime(utterance.end)})`);
-    }
-
+    const fallbackCount = diarizationManager.getNearestFallbackCount();
     console.log(`Applied diarization to transcript of ${transcript.transcription.utterances.length} utterances:`);
     console.log(`\t${newUtterances.length} utterances`);
     console.log(`\t${Object.keys(speakerUtteranceCount).length} speakers`);
-    console.log(`\t${skippedUtterances.length} (${((skippedUtterances.length / transcript.transcription.utterances.length) * 100).toFixed(2)}%) utterances skipped`);
+    console.log(`\t${fallbackCount} (${((fallbackCount / transcript.transcription.utterances.length) * 100).toFixed(2)}%) utterances assigned via nearest-segment fallback`);
     console.log(`\tDrift cost: ${diarizationManager.getDriftCost()} s^2`);
 
     return {

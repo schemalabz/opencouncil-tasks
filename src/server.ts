@@ -135,7 +135,10 @@ app.post('/transcribe', (
 }, taskManager.registerTask(pipeline, {
     summary: 'Transcribe audio/video content',
     description: 'Convert audio or video content to text using speech recognition',
-    version: 2,
+    // v3: speaker attribution uses pyannote's exclusive (non-overlapping) timeline,
+    // and utterances without a covering diarization segment are assigned to the
+    // nearest segment instead of being dropped
+    version: 3,
 }));
 
 app.post('/summarize', taskManager.registerTask(summarize, {

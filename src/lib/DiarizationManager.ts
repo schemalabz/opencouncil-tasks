@@ -4,14 +4,15 @@ export class DiarizationManager {
     private diarization: Diarization;
     private speakerMap: Map<string, number>;  // Maps diarization speaker IDs to numeric IDs
     private speakerIdentificationMap: Map<number, SpeakerIdentificationResult>;  // Maps numeric IDs to speaker info
-    private config: { maxDriftCost: number } = { maxDriftCost: Number.POSITIVE_INFINITY };
     private totalDrift: number;
+    private nearestFallbackCount: number;
 
     constructor(diarization: Diarization, speakers: DiarizationSpeaker[]) {
         this.diarization = diarization;
         this.speakerIdentificationMap = new Map();
         this.speakerMap = this.buildSpeakerMaps(speakers);
         this.totalDrift = 0;
+        this.nearestFallbackCount = 0;
     }
 
     /**
@@ -93,10 +94,27 @@ export class DiarizationManager {
         return this.findSpeakersWithDriftForUtterance(utterance);
     }
 
-    public findBestSpeakerForUtterance(utterance: Utterance): { speaker: number, drift: number } | null {
+    /**
+     * Finds the diarization segment closest to the interval, preferring the one
+     * with the largest temporal overlap, and falling back to the smallest gap
+     * when no segment overlaps at all. `min(ends) - max(starts)` is the overlap
+     * length when positive and the negated gap when the intervals are disjoint,
+     * so maximizing it handles both regimes with one score.
+     */
+    private findNearestSegment(start: number, end: number): { segment: Diarization[number], gap: number } {
+        const score = (d: Diarization[number]) => Math.min(d.end, end) - Math.max(d.start, start);
+        const nearest = this.diarization.reduce((best, current) => score(current) > score(best) ? current : best);
+        return { segment: nearest, gap: Math.max(0, -score(nearest)) };
+    }
+
+    public findBestSpeakerForUtterance(utterance: Utterance): { speaker: number, drift: number } {
+        if (this.diarization.length === 0) {
+            throw new Error("Cannot assign speakers: diarization is empty");
+        }
+
         // First check for simple case - utterance overlaps with exactly one diarization segment
         const overlappingDiarizations = this.diarization.filter((d) => {
-            return (d.start <= utterance.end && d.start >= utterance.start) || // starts in utterance 
+            return (d.start <= utterance.end && d.start >= utterance.start) || // starts in utterance
                 (d.end <= utterance.end && d.end >= utterance.start) || // ends in utterance
                 (d.start <= utterance.start && d.end >= utterance.end); // contains utterance
         });
@@ -112,7 +130,20 @@ export class DiarizationManager {
         const speakersWithDrift = this.findSpeakersWithDriftForUtterance(utterance);
 
         if (speakersWithDrift.length === 0) {
-            return null;
+            // No segment fully contains any word of the utterance — typically a
+            // short interjection whose word timestamps straddle segment
+            // boundaries, or speech pyannote missed. Assign the nearest segment
+            // instead of dropping the utterance: losing what was said (and who
+            // said it) from the record is strictly worse than a nearby guess,
+            // which the drift value keeps observable.
+            const { segment, gap } = this.findNearestSegment(utterance.start, utterance.end);
+            this.nearestFallbackCount++;
+            this.totalDrift += gap;
+            console.log(`Warning: No covering speaker for utterance "${utterance.text}" (${formatTime(utterance.start)}-${formatTime(utterance.end)}), assigning nearest segment (speaker ${segment.speaker}, ${gap.toFixed(2)}s away)`);
+            return {
+                speaker: this.speakerMap.get(segment.speaker)!,
+                drift: gap
+            };
         }
 
         if (speakersWithDrift.length === 1) {
@@ -123,10 +154,6 @@ export class DiarizationManager {
             current.drift < best.drift ? current : best
         );
 
-        if (best.drift > this.config.maxDriftCost) {
-            return null;
-        }
-
         this.totalDrift += best.drift;
 
         console.log(`Warning: Utterance "${utterance.text}" (${formatTime(utterance.start)}-${formatTime(utterance.end)}) has ${speakersWithDrift.length} speakers, picking the best one with cost ${best.drift}`);
@@ -136,6 +163,10 @@ export class DiarizationManager {
 
     public getDriftCost(): number {
         return this.totalDrift;
+    }
+
+    public getNearestFallbackCount(): number {
+        return this.nearestFallbackCount;
     }
 
     public getSpeakerInfo(): SpeakerIdentificationResult[] {

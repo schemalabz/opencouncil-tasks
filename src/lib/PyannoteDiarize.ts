@@ -17,8 +17,27 @@ export type IdentifyResponse = PyannoteResponse & {
         }[]; // list of identification segments, not used in the current implementation
         voiceprints: DiarizationSpeaker[];
         diarization: Diarization; // subset of identification
+        // Non-overlapping variant of `diarization`, present when the job was
+        // requested with exclusive: true
+        exclusiveDiarization?: Diarization;
     };
 };
+
+/**
+ * Prefers the exclusive (non-overlapping) timeline over the standard one.
+ *
+ * Exclusive diarization partitions time between speakers, so downstream
+ * utterance→speaker attribution never has to arbitrate between two segments
+ * claiming the same instant (which is what standard diarization produces
+ * whenever people talk over each other).
+ */
+export function pickDiarizationTimeline(output: Pick<IdentifyResponse['output'], 'diarization' | 'exclusiveDiarization'>): Diarization {
+    if (output.exclusiveDiarization && output.exclusiveDiarization.length > 0) {
+        return output.exclusiveDiarization;
+    }
+    console.warn('[Pyannote] exclusiveDiarization missing or empty in identify output, falling back to the overlapping timeline');
+    return output.diarization;
+}
 
 type IdentifyRequest = {
     audioUrl: string;
@@ -98,7 +117,7 @@ export default class PyannoteDiarizer {
         const identificationPromises = audioSegments.map(({ url, start }) => this.identifySingle(url, effectiveVoiceprints));
         const identifications = await Promise.all(identificationPromises);
         return this.combineDiarizations(identifications.map((identification, index) => ({
-            diarization: identification.output.diarization,
+            diarization: pickDiarizationTimeline(identification.output),
             voiceprints: identification.output.voiceprints,
             start: audioSegments[index].start
         })));
@@ -229,7 +248,10 @@ export default class PyannoteDiarizer {
             response = await axios.post(identifyUrl, {
                 url: audioUrl,
                 voiceprints: apiVoiceprints,
-                webhook: webhookUrl
+                webhook: webhookUrl,
+                // Also return the non-overlapping timeline (exclusiveDiarization),
+                // which pyannote recommends for reconciliation with STT output
+                exclusive: true
             }, this.axiosOptions);
         } catch (error) {
             console.error(`Error with request to ${identifyUrl}, passed url: ${audioUrl}`);
