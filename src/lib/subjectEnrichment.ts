@@ -57,7 +57,9 @@ export async function enrichSubjectData(
             location = {
                 text: input.locationText,
                 type: "point" as const,
-                coordinates: [[locationLatLng.lat, locationLatLng.lng]]
+                // GeoJSON order: [lng, lat]. The consumer feeds this straight
+                // into ST_GeomFromGeoJSON, which reads position[0] as longitude.
+                coordinates: [[locationLatLng.lng, locationLatLng.lat]]
             };
         }
     }
