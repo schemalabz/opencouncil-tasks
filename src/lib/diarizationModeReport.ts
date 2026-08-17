@@ -168,10 +168,10 @@ function meetingSection(report: DiarizationModeComparison): string {
             ` <span class="delta ${a.agreementPercent.exclusive >= a.agreementPercent.regular ? 'up' : 'down'}">` +
             `${a.agreementPercent.exclusive >= a.agreementPercent.regular ? '▲' : '▼'} ` +
             `${Math.abs(Math.round((a.agreementPercent.exclusive - a.agreementPercent.regular) * 10) / 10)} pp</span>`) : '',
-        a ? tile('Disagreements adjudicated', `${a.disagreements.onlyExclusiveRight} : ${a.disagreements.onlyRegularRight}`,
-            'exclusive right : regular right') : '',
-        tile('Overlapped speech (regular)', `${overlapShare}%`, `${Math.round(report.regular.timeline.overlapSeconds)}s of ${Math.round(report.regular.timeline.speechSeconds)}s`),
-        tile('Ambiguous utterances', `${report.regular.ambiguous} → ${report.exclusive.ambiguous}`, 'regular → exclusive'),
+        a ? tile('Disputed utterances — who was right', `${a.disagreements.onlyExclusiveRight} : ${a.disagreements.onlyRegularRight}`,
+            'exclusive right : regular right, per the human reviewers') : '',
+        tile('Speech with cross-talk (regular)', `${overlapShare}%`, `${Math.round(report.regular.timeline.overlapSeconds)}s of ${Math.round(report.regular.timeline.speechSeconds)}s`),
+        tile('Utterances needing a judgement call', `${report.regular.ambiguous} → ${report.exclusive.ambiguous}`, 'more than one candidate segment, regular → exclusive'),
         tile('Changed speaker', `${report.diff.speakerChanged.length}`, `of ${report.regular.utterances.total} utterances`),
         tile('Nearest-segment fallbacks', `${report.regular.fallbackAssigned} → ${report.exclusive.fallbackAssigned}`, 'utterances attributed by guess, regular → exclusive'),
     ].join('');
@@ -359,39 +359,45 @@ code { font-size: 12px; }
 @media (max-width: 640px) { .strip { grid-template-columns: 1fr; gap: 2px; } .strip-label { text-align: left; } }
 </style>
 <div class="viz-root"><main>
-<h1>Pyannote <code>exclusive: true</code> — paired evaluation</h1>
-<p class="sub">Each meeting was diarized once; the API returned both the regular and the overlap-free
-(exclusive) timeline from the same inference. Both were aligned against a fresh transcript with the
-production alignment logic, then scored against the meeting's human-reviewed speaker turns.</p>
+<h1>Who said what — regular vs exclusive diarization</h1>
+<p class="sub">Every utterance on OpenCouncil gets a "who said this" label by combining two systems:
+Pyannote hears <em>who</em> spoke <em>when</em>, and the transcription engine hears <em>what</em> was said.
+When councillors talk over each other, Pyannote's regular timeline reports two speakers at the same
+moment and our code has to guess between them. Pyannote's <code>exclusive</code> mode instead picks the
+one speaker being transcribed at every instant. This report measures, on four real meetings, which
+of the two timelines produces more correct "who said this" labels — graded against the
+human-corrected transcripts on OpenCouncil.</p>
 
-<details class="method"><summary>Methodology — how "right" and "wrong" are decided</summary>
+<details class="method"><summary>How this was measured — and how "right" and "wrong" are decided</summary>
 <ol>
-<li><strong>Paired diarization.</strong> One Pyannote call per meeting returns both timelines from the same
-inference, so the comparison has no run-to-run variance. No voiceprints were used — every diarized
-speaker is an anonymous cluster like <code>SPEAKER_03</code>.</li>
-<li><strong>Fresh transcript, real alignment.</strong> The audio was re-transcribed with Scribe (word
-timestamps, no speakers) and aligned against each timeline with the production
-<code>DiarizationManager</code>. Result per variant: every utterance → an anonymous speaker.</li>
-<li><strong>Answer key.</strong> The public OpenCouncil API serves each meeting's transcript as it exists on
-the site — human-reviewed, with correctors having fixed text and speaker assignments. Those corrected
-speaker turns are the ground truth; the people API resolves names.</li>
-<li><strong>Anchoring.</strong> Each variant's anonymous speakers are identified by majority vote: if most
-utterances a variant assigned to <code>SPEAKER_03</code> fall inside reviewed turns of person X,
-that cluster <em>is</em> X. Applied independently and identically to both variants.</li>
-<li><strong>Scoring.</strong> An utterance counts as right when its variant's anchored identity matches the
-reviewer's turn at its midpoint. Utterances outside any reviewed turn are excluded.</li>
+<li><strong>One diarization, two timelines.</strong> Pyannote returns both versions of the timeline from
+the same run, so any difference in the results comes purely from the timeline choice — not from
+randomness between runs. Pyannote doesn't know anyone's name: it only produces anonymous voices
+like <code>SPEAKER_03</code>.</li>
+<li><strong>Label every utterance, twice.</strong> Each meeting was freshly transcribed, and every
+utterance was given a speaker using our production attribution code — once with each timeline.</li>
+<li><strong>The answer key.</strong> These meetings were already human-reviewed on OpenCouncil:
+correctors fixed who said what. Those corrected speaker turns (fetched from the public API) are
+treated as the correct answers.</li>
+<li><strong>Matching anonymous voices to real people.</strong> To compare "<code>SPEAKER_03</code>" with
+"Ι. Πισιμίσης", we look at where SPEAKER_03's utterances land in the human-corrected transcript: if
+most of them fall inside turns the reviewers gave to one person, that voice <em>is</em> that person.
+The same rule is applied to both timelines, so neither side gets an advantage.</li>
+<li><strong>Grading.</strong> An utterance counts as right when the timeline's speaker (matched to a
+person as above) agrees with the human reviewer's turn at that moment. Utterances that fall outside
+any reviewed turn are left out of the grade.</li>
 </ol>
-<p class="note">Caveats: ground truth is as good as the human review; a badly mixed cluster would break
-anchoring but would surface as low agreement; the reviewed transcripts originated from
-regular-timeline pipeline runs, which if anything biases scoring against exclusive.</p>
+<p class="note">Honest caveats: the answer key is only as good as the human review; and the reviewed
+transcripts were originally produced with the <em>regular</em> timeline, so if the method is biased at
+all, it is biased against exclusive — which still wins.</p>
 </details>
 
 <div class="chart-card">
 <div class="tiles">
 ${tile('Agreement with human turns (weighted mean)', `${meanExclusive}%`, `regular: ${meanRegular}%`,
         ` <span class="delta ${meanExclusive >= meanRegular ? 'up' : 'down'}">${meanExclusive >= meanRegular ? '▲' : '▼'} ${Math.abs(Math.round((meanExclusive - meanRegular) * 10) / 10)} pp</span>`)}
-${tile('Disagreements adjudicated', `${exclusiveRight} : ${regularRight}`, 'exclusive right : regular right')}
-${tile('Overlapped speech in regular timelines', `${totalSpeech ? Math.round((totalOverlap / totalSpeech) * 100) : 0}%`, `${Math.round(totalOverlap / 60)} min across ${reports.length} meetings`)}
+${tile('Disputed utterances — who was right', `${exclusiveRight} : ${regularRight}`, 'exclusive right : regular right, per the human reviewers')}
+${tile('Speech with people talking over each other', `${totalSpeech ? Math.round((totalOverlap / totalSpeech) * 100) : 0}%`, `${Math.round(totalOverlap / 60)} min across ${reports.length} meetings — the situations exclusive mode resolves`)}
 ${tile('Utterances that change speaker', `${totalChanged}`, `of ${totalUtterances} total`)}
 </div>
 <h4>Agreement with human-reviewed speaker turns, by meeting</h4>
