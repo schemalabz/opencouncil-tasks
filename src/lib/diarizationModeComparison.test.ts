@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { compareDiarizationModes } from './diarizationModeComparison.js';
-import { DiarizeResult, Transcript, Utterance } from '../types.js';
+import { compareDiarizationModes, EvalDiarizeResult } from './diarizationModeComparison.js';
+import { Transcript, Utterance } from '../types.js';
 
 const utterance = (start: number, end: number, text: string): Utterance => ({
     text,
@@ -21,12 +21,13 @@ const transcript: Transcript = {
         full_transcript: 'a b c',
         // u1: single-segment fast path in both variants; u2: sits inside the A/B
         // overlap of the regular timeline (ambiguous, tie-broken by order) but
-        // cleanly inside B in the exclusive one; u3: outside any speech
+        // cleanly inside B in the exclusive one; u3: outside any speech, so it
+        // exercises the nearest-segment fallback (segment B, 8s gap, in both)
         utterances: [utterance(1, 4, 'a'), utterance(9.2, 9.8, 'b'), utterance(20, 21, 'c')],
     },
 };
 
-const diarizeResult: DiarizeResult = {
+const diarizeResult: EvalDiarizeResult = {
     diarization: [
         { start: 0, end: 10, speaker: 'SEG1:SPEAKER_00' },
         { start: 8, end: 12, speaker: 'SEG1:SPEAKER_01' },
@@ -45,20 +46,24 @@ describe('compareDiarizationModes', () => {
     it('computes per-variant metrics and per-utterance diff', () => {
         const report = compareDiarizationModes(transcript, diarizeResult);
 
-        expect(report.regular.utterances).toEqual({ total: 3, assigned: 2, skipped: 1, skippedPercent: 33.33 });
+        // The never-drop fallback assigns u3 to the nearest segment (B, 8s away)
+        expect(report.regular.utterances).toEqual({ total: 3, assigned: 3, skipped: 0, skippedPercent: 0 });
         expect(report.regular.ambiguous).toBe(1); // u2 overlaps both segments
+        expect(report.regular.fallbackAssigned).toBe(1); // u3
         expect(report.regular.timeline).toEqual({ segments: 2, speechSeconds: 12, overlapSeconds: 2 }); // overlap 8..10
         // Both segments fully contain u2's word, so drift ties at 0 and the tie
         // breaks to whichever speaker appears first in the timeline: speaker 1
-        expect(report.regular.speakers).toEqual({ count: 1, utterancesPerSpeaker: { 1: 2 } });
+        expect(report.regular.speakers).toEqual({ count: 2, utterancesPerSpeaker: { 1: 2, 2: 1 } });
 
-        expect(report.exclusive.utterances).toEqual({ total: 3, assigned: 2, skipped: 1, skippedPercent: 33.33 });
+        expect(report.exclusive.utterances).toEqual({ total: 3, assigned: 3, skipped: 0, skippedPercent: 0 });
         expect(report.exclusive.ambiguous).toBe(0);
+        expect(report.exclusive.fallbackAssigned).toBe(1); // u3
         expect(report.exclusive.timeline).toEqual({ segments: 2, speechSeconds: 12, overlapSeconds: 0 });
-        expect(report.exclusive.speakers).toEqual({ count: 2, utterancesPerSpeaker: { 1: 1, 2: 1 } });
+        expect(report.exclusive.speakers).toEqual({ count: 2, utterancesPerSpeaker: { 1: 1, 2: 2 } });
 
-        expect(report.regular.drift).toEqual({ total: 0, mean: 0, nonZero: 0 });
-        expect(report.exclusive.drift).toEqual({ total: 0, mean: 0, nonZero: 0 });
+        // u3's fallback gap (20 - 12 = 8s) is the only drift in either variant
+        expect(report.regular.drift).toEqual({ total: 8, mean: 2.67, nonZero: 1 });
+        expect(report.exclusive.drift).toEqual({ total: 8, mean: 2.67, nonZero: 1 });
 
         expect(report.diff.speakerChanged).toEqual([
             { start: 9.2, end: 9.8, text: 'b', regular: 1, exclusive: 2 },

@@ -173,7 +173,7 @@ function meetingSection(report: DiarizationModeComparison): string {
         tile('Overlapped speech (regular)', `${overlapShare}%`, `${Math.round(report.regular.timeline.overlapSeconds)}s of ${Math.round(report.regular.timeline.speechSeconds)}s`),
         tile('Ambiguous utterances', `${report.regular.ambiguous} → ${report.exclusive.ambiguous}`, 'regular → exclusive'),
         tile('Changed speaker', `${report.diff.speakerChanged.length}`, `of ${report.regular.utterances.total} utterances`),
-        tile('Rescued / lost by exclusive', `${report.diff.rescuedByExclusive} / ${report.diff.lostByExclusive}`, 'utterance assignments'),
+        tile('Nearest-segment fallbacks', `${report.regular.fallbackAssigned} → ${report.exclusive.fallbackAssigned}`, 'utterances attributed by guess, regular → exclusive'),
     ].join('');
 
     let strips = '';

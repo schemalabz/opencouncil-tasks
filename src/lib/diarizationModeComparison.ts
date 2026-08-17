@@ -1,5 +1,16 @@
 import { DiarizationManager } from './DiarizationManager.js';
-import { Diarization, DiarizationSpeaker, DiarizeResult, Transcript, Utterance } from '../types.js';
+import { Diarization, DiarizationSpeaker, Transcript, Utterance } from '../types.js';
+
+/**
+ * Diarization payload the evaluation consumes: the raw regular timeline plus the
+ * exclusive variant. Production's DiarizeResult intentionally carries only the
+ * picked timeline (see pickDiarizationTimeline), so eval data keeps its own shape.
+ */
+export interface EvalDiarizeResult {
+    diarization: Diarization;
+    exclusiveDiarization?: Diarization;
+    speakers: DiarizationSpeaker[];
+}
 
 export interface TimelineMetrics {
     segments: number;
@@ -11,6 +22,8 @@ export interface VariantMetrics {
     timeline: TimelineMetrics;
     utterances: { total: number; assigned: number; skipped: number; skippedPercent: number };
     ambiguous: number; // utterances overlapping more than one diarization segment
+    // Utterances attributed by the nearest-segment fallback (no covering segment)
+    fallbackAssigned: number;
     drift: { total: number; mean: number; nonZero: number };
     speakers: { count: number; utterancesPerSpeaker: Record<number, number> };
 }
@@ -144,6 +157,7 @@ function analyzeVariant(
                 skippedPercent: round2(((utterances.length - assigned.length) / utterances.length) * 100),
             },
             ambiguous: utterances.filter((u) => countOverlappingSegments(timeline, u) > 1).length,
+            fallbackAssigned: manager.getNearestFallbackCount(),
             drift: {
                 total: round2(totalDrift),
                 mean: assigned.length ? round2(totalDrift / assigned.length) : 0,
@@ -260,11 +274,11 @@ function adjudicate(
 
 export function compareDiarizationModes(
     transcript: Transcript,
-    diarizeResult: DiarizeResult,
+    diarizeResult: EvalDiarizeResult,
     options?: { humanTurns?: HumanTurn[]; meeting?: string },
 ): DiarizationModeComparison {
     if (!diarizeResult.exclusiveDiarization) {
-        throw new Error('DiarizeResult has no exclusiveDiarization — re-run diarization with exclusive support (issue #15)');
+        throw new Error('Diarization data has no exclusiveDiarization — re-run diarization capturing both timelines (issue #15)');
     }
 
     const utterances = transcript.transcription.utterances;

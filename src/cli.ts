@@ -21,7 +21,7 @@ import { compareRuns } from './lib/runs/compare.js';
 import { renderComparisonHtml } from './lib/runs/html.js';
 import path from 'path';
 import { applyDiarization } from './tasks/applyDiarization.js';
-import { compareDiarizationModes, HumanTurn } from './lib/diarizationModeComparison.js';
+import { compareDiarizationModes, EvalDiarizeResult, HumanTurn } from './lib/diarizationModeComparison.js';
 import { renderDiarizationModeReportHtml } from './lib/diarizationModeReport.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
@@ -261,12 +261,12 @@ program
 program
     .command('compare-diarization-modes')
     .description('Compare regular vs exclusive diarization timelines against a transcript (issue #15)')
-    .requiredOption('-D, --diarization-file <file>', 'DiarizeResult JSON containing both diarization and exclusiveDiarization')
+    .requiredOption('-D, --diarization-file <file>', 'Diarization JSON containing both diarization and exclusiveDiarization')
     .requiredOption('-T, --transcript-file <file>', 'Transcript JSON (raw, pre-diarization)')
     .requiredOption('-O, --output-file <file>', 'Output file for the comparison report JSON')
     .option('-m, --meeting <cityId/meetingId>', 'Adjudicate both variants against the human-reviewed speaker turns of this opencouncil meeting')
     .action(async (options: { diarizationFile: string; transcriptFile: string; outputFile: string; meeting?: string }) => {
-        const diarizeResult: DiarizeResult = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
+        const diarizeResult: EvalDiarizeResult = JSON.parse(fs.readFileSync(options.diarizationFile, 'utf8'));
         const transcript = JSON.parse(fs.readFileSync(options.transcriptFile, 'utf8'));
 
         let humanTurns: HumanTurn[] | undefined;
