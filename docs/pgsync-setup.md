@@ -201,9 +201,10 @@ docker compose exec redis redis-cli FLUSHALL
 #    Use longer timeout and smaller chunks if you have semantic_text fields
 docker compose run --rm -e ELASTICSEARCH_TIMEOUT=120 -e ELASTICSEARCH_CHUNK_SIZE=50 pgsync --bootstrap
 
-# 4. CRITICAL: Grant app access to _view (required after every bootstrap!)
-#    Replace 'your_app_user' with your app's database user
-psql "$PG_URL" -c "GRANT SELECT ON public._view TO your_app_user;"
+# 4. Verify the app kept access to _view (see the note below — a one-time
+#    default-privileges rule makes this automatic; only verify it here)
+psql "$PG_URL" -c "SELECT relacl FROM pg_class WHERE relname = '_view';"
+#    Expect your app user in the ACL, e.g. {pgsync=arwdDxt/pgsync,your_app_user=r/pgsync}
 
 # 5. Start the daemon for continuous sync
 docker compose up -d pgsync
@@ -212,7 +213,16 @@ docker compose up -d pgsync
 docker compose logs -f pgsync
 ```
 
-> ⚠️ **Don't skip step 4!** Bootstrap creates a `_view` materialized view that PGSync's triggers reference. Your app's database user needs SELECT permission on it, otherwise you'll get `permission denied for materialized view _view` errors when modifying data.
+> ⚠️ **Why step 4 exists.** Bootstrap drops and recreates the `_view` materialized view that PGSync's triggers read. Grants belong to the object, not the name — so the recreation used to discard the app user's SELECT grant, and every app write to a monitored table then failed with `permission denied for materialized view _view` **from the moment bootstrap started** until someone re-granted. Re-granting "after bootstrap" (the old step 4) still left that outage window open for the whole bootstrap.
+>
+> The fix is a one-time default-privileges rule. Every object the `pgsync` role creates — including each bootstrap's new `_view` — then carries the grant from birth:
+>
+> ```sql
+> -- run once per database, as the pgsync role
+> ALTER DEFAULT PRIVILEGES FOR ROLE pgsync IN SCHEMA public GRANT SELECT ON TABLES TO your_app_user;
+> ```
+>
+> Run this when setting up a new environment. Step 4 above only verifies it is in effect.
 
 **Note:** If bootstrap times out but documents are being indexed, just re-run the bootstrap command - it resumes from the Redis checkpoint.
 
