@@ -125,16 +125,38 @@ function timelineTrackSvg(
  * with the zoomed window boxed. The full speaker layout is unreadable at this
  * scale — density is the only honest signal, and it situates the zoom below.
  */
-function crossTalkDensityStrip(timeline: Diarization, fullEnd: number, zoom: { start: number; end: number }): string {
+function crossTalkDensityStrip(timeline: Diarization, fullEnd: number, zoom: { start: number; end: number }, idx: number): string {
     const W = 1000, H = 14;
     const x = (t: number) => (t / fullEnd) * W;
     const marks = overlapRanges(timeline).map((r) =>
         `<rect class="overlap" x="${x(r.start).toFixed(2)}" y="2" width="${Math.max(x(r.end) - x(r.start), 0.8).toFixed(2)}" height="${H - 4}" ` +
         `data-tip="people talking over each other · ${fmtTime(r.start)}–${fmtTime(r.end)}"></rect>`).join('');
-    const zoomBox = `<rect class="zoom-box" x="${x(zoom.start).toFixed(2)}" y="0.5" width="${(x(zoom.end) - x(zoom.start)).toFixed(2)}" height="${H - 1}" ` +
-        `data-tip="zoomed below: ${fmtTime(zoom.start)}–${fmtTime(zoom.end)}"></rect>`;
+    const zoomBox = `<rect class="zoom-box" id="zb-${idx}" x="${x(zoom.start).toFixed(2)}" y="0.5" width="${(x(zoom.end) - x(zoom.start)).toFixed(2)}" height="${H - 1}"></rect>`;
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px;display:block">` +
         `<rect class="density-track" x="0" y="${H / 2 - 1}" width="${W}" height="2"></rect>${marks}${zoomBox}</svg>`;
+}
+
+/** Compact per-meeting payload for the client-side window inspector. */
+function embedTimelineData(
+    timelines: { regular: Diarization; exclusive: Diarization },
+    colorOf: Map<string, number>,
+    fullEnd: number,
+    init: number,
+    idx: number,
+): string {
+    const spkIndex = new Map<string, number>();
+    const spk: { l: string; c: string }[] = [];
+    const indexOf = (speaker: string) => {
+        if (!spkIndex.has(speaker)) {
+            const slot = colorOf.get(speaker) ?? -1;
+            spkIndex.set(speaker, spk.length);
+            spk.push({ l: speakerShortLabel(speaker), c: slot >= 0 ? `spk-${slot}` : 'spk-other' });
+        }
+        return spkIndex.get(speaker)!;
+    };
+    const pack = (tl: Diarization) => tl.map((s) => [Math.round(s.start * 100) / 100, Math.round(s.end * 100) / 100, indexOf(s.speaker)]);
+    const payload = { fullEnd: Math.round(fullEnd), win: 180, init: Math.round(init), spk, reg: pack(timelines.regular), exc: pack(timelines.exclusive) };
+    return `<script type="application/json" id="tl-${idx}">${JSON.stringify(payload).replace(/</g, '\\u003c')}</script>`;
 }
 
 function timelineLegend(colorOf: Map<string, number>): string {
@@ -201,7 +223,7 @@ function agreementDumbbells(reports: DiarizationModeComparison[]): string {
     </div>`;
 }
 
-function meetingSection(report: DiarizationModeComparison): string {
+function meetingSection(report: DiarizationModeComparison, idx: number): string {
     const name = report.meta?.meeting ?? 'meeting';
     const dur = report.meta?.audioDurationSeconds ?? 0;
     const a = report.adjudication;
@@ -228,15 +250,23 @@ function meetingSection(report: DiarizationModeComparison): string {
         const zoom = busiestOverlapWindow(report.timelines.regular, 180);
         const mid = (zoom.start + zoom.end) / 2;
         strips = `
-        <h4>Where the cross-talk is — whole meeting (0:00–${fmtTime(fullEnd)}), boxed part zoomed below</h4>
-        ${crossTalkDensityStrip(report.timelines.regular, fullEnd, zoom)}
-        <h4>The busiest three minutes, on both timelines (${fmtTime(zoom.start)}–${fmtTime(zoom.end)})</h4>
+        <h4>Where the cross-talk is — whole meeting (0:00–${fmtTime(fullEnd)}) · click anywhere on the map to inspect that moment</h4>
+        <div class="density-wrap" data-i="${idx}">${crossTalkDensityStrip(report.timelines.regular, fullEnd, zoom, idx)}</div>
+        <div class="win-head">
+            <h4>Three-minute window, on both timelines · <span class="win-label" id="wl-${idx}">${fmtTime(zoom.start)}–${fmtTime(zoom.end)} (busiest cross-talk)</span></h4>
+            <span class="win-controls">
+                <button class="win-btn" data-nav="prev" data-i="${idx}" title="previous window">‹</button>
+                <button class="win-btn" data-nav="busiest" data-i="${idx}">busiest</button>
+                <button class="win-btn" data-nav="next" data-i="${idx}" title="next window">›</button>
+            </span>
+        </div>
         <p class="note">Regular stacks simultaneous speakers in lanes — every stacked moment is a coin toss for
         attribution. Exclusive resolves the same audio into clean turns.</p>
         ${timelineLegend(colorOf)}
-        <div class="strip"><div class="strip-label">regular</div>${timelineTrackSvg(report.timelines.regular, colorOf, zoom, { lanes: true, showOverlap: true })}</div>
-        <div class="strip"><div class="strip-label">exclusive</div>${timelineTrackSvg(report.timelines.exclusive, colorOf, zoom, { lanes: true, showOverlap: true })}</div>
-        <div class="strip"><div class="strip-label"></div><div class="time-axis"><span>${fmtTime(zoom.start)}</span><span>${fmtTime(mid)}</span><span>${fmtTime(zoom.end)}</span></div></div>`;
+        <div class="strip"><div class="strip-label">regular</div><div class="strip-svg" id="reg-${idx}">${timelineTrackSvg(report.timelines.regular, colorOf, zoom, { lanes: true, showOverlap: true })}</div></div>
+        <div class="strip"><div class="strip-label">exclusive</div><div class="strip-svg" id="exc-${idx}">${timelineTrackSvg(report.timelines.exclusive, colorOf, zoom, { lanes: true, showOverlap: true })}</div></div>
+        <div class="strip"><div class="strip-label"></div><div class="time-axis" id="axis-${idx}"><span>${fmtTime(zoom.start)}</span><span>${fmtTime(mid)}</span><span>${fmtTime(zoom.end)}</span></div></div>
+        ${embedTimelineData(report.timelines, colorOf, fullEnd, zoom.start, idx)}`;
     }
 
     let examples = '';
@@ -273,7 +303,7 @@ function meetingSection(report: DiarizationModeComparison): string {
     }
 
     const metricsTable = `
-    <details><summary>All metrics</summary>
+    <details open><summary>All metrics</summary>
     <table><thead><tr><th>metric</th><th>regular</th><th>exclusive</th></tr></thead><tbody>
     <tr><td>assigned utterances</td><td class="t-num">${report.regular.utterances.assigned}/${report.regular.utterances.total}</td><td class="t-num">${report.exclusive.utterances.assigned}/${report.exclusive.utterances.total}</td></tr>
     <tr><td>skipped</td><td class="t-num">${report.regular.utterances.skippedPercent}%</td><td class="t-num">${report.exclusive.utterances.skippedPercent}%</td></tr>
@@ -401,7 +431,18 @@ section, .chart-card { background: var(--surface-1); border: 1px solid var(--bor
 .zoom-box { fill: none; stroke: var(--text-primary); stroke-width: 1.2; }
 .time-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted);
     font-variant-numeric: tabular-nums; }
-table { border-collapse: collapse; font-size: 13px; margin-top: 8px; width: 100%; }
+.density-wrap { cursor: pointer; }
+.win-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.win-label { font-variant-numeric: tabular-nums; }
+.win-controls { display: inline-flex; gap: 6px; }
+.win-btn { background: none; border: 1px solid var(--border); color: var(--text-secondary);
+    border-radius: 6px; padding: 2px 10px; cursor: pointer; font: inherit; font-size: 13px; line-height: 1.3; }
+.win-btn:hover { border-color: var(--text-secondary); color: var(--text-primary); }
+.win-btn:focus-visible { outline: 2px solid var(--s0); outline-offset: 1px; }
+/* Explicit inheritance: without a doctype (quirks mode) tables reset text styles
+   to UA defaults, turning cells black on the dark surface */
+table { border-collapse: collapse; font-size: 13px; margin-top: 8px; width: 100%;
+    color: var(--text-primary); font-family: inherit; }
 th { text-align: left; color: var(--text-secondary); font-weight: 600; }
 th, td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
 .t-num { font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -491,6 +532,90 @@ opencouncil-tasks branch <code>feat/exclusive-diarization-eval</code> · issue #
         var x = Math.min(e.clientX + 12, window.innerWidth - tt.offsetWidth - 8);
         var y = Math.min(e.clientY + 14, window.innerHeight - tt.offsetHeight - 8);
         tt.style.left = x + 'px'; tt.style.top = y + 'px';
+    });
+})();
+
+// Window inspector: click the cross-talk map (or use the controls) to redraw
+// both timelines for any three-minute stretch of the meeting.
+(function () {
+    var W = 1000, LANE = 16, GAP = 2;
+    var data = {};
+    document.querySelectorAll('script[type="application/json"][id^="tl-"]').forEach(function (s) {
+        var d = JSON.parse(s.textContent);
+        d.pos = d.init;
+        data[s.id.slice(3)] = d;
+    });
+
+    function fmt(t) {
+        var m = Math.floor(t / 60), s = Math.floor(t % 60);
+        return m + ':' + (s < 10 ? '0' : '') + s;
+    }
+
+    function track(segs, spk, t0, t1) {
+        var vis = segs.filter(function (s) { return s[1] > t0 && s[0] < t1; })
+            .sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+        var ends = [], placed = vis.map(function (s) {
+            var lane = ends.findIndex(function (e) { return e <= s[0]; });
+            if (lane < 0) { lane = ends.length; ends.push(0); }
+            ends[lane] = s[1];
+            return { lane: lane, s: s };
+        });
+        var lanes = Math.max(1, ends.length);
+        var x = function (t) { return (t - t0) / (t1 - t0) * W; };
+        var rects = placed.map(function (p) {
+            var x0 = Math.max(0, x(p.s[0])), x1 = Math.min(W, x(p.s[1])), w = Math.max(x1 - x0, 0.6);
+            var k = spk[p.s[2]];
+            return '<rect class="seg ' + k.c + '" x="' + x0.toFixed(2) + '" y="' + p.lane * (LANE + GAP) +
+                '" width="' + w.toFixed(2) + '" height="' + LANE + '" rx="2" data-tip="' + k.l + ' · ' + fmt(p.s[0]) + '–' + fmt(p.s[1]) + '"></rect>';
+        }).join('');
+        var ev = [];
+        vis.forEach(function (s) { ev.push([Math.max(s[0], t0), 1], [Math.min(s[1], t1), -1]); });
+        ev.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+        var act = 0, open = null, bands = '';
+        var trackH = lanes * LANE + (lanes - 1) * GAP, y = trackH + 3;
+        ev.forEach(function (e) {
+            act += e[1];
+            if (act >= 2 && open === null) open = e[0];
+            if (act < 2 && open !== null) {
+                bands += '<rect class="overlap" x="' + x(open).toFixed(2) + '" y="' + y +
+                    '" width="' + Math.max(x(e[0]) - x(open), 0.6).toFixed(2) + '" height="6"></rect>';
+                open = null;
+            }
+        });
+        var H = trackH + 9;
+        return '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%;height:' + H + 'px;display:block">' + rects + bands + '</svg>';
+    }
+
+    function show(i, t0) {
+        var d = data[i];
+        if (!d) return;
+        t0 = Math.max(0, Math.min(t0, d.fullEnd - d.win));
+        d.pos = t0;
+        var t1 = t0 + d.win;
+        document.getElementById('reg-' + i).innerHTML = track(d.reg, d.spk, t0, t1);
+        document.getElementById('exc-' + i).innerHTML = track(d.exc, d.spk, t0, t1);
+        document.getElementById('wl-' + i).textContent = fmt(t0) + '–' + fmt(t1) + (t0 === d.init ? ' (busiest cross-talk)' : '');
+        document.getElementById('axis-' + i).innerHTML = '<span>' + fmt(t0) + '</span><span>' + fmt((t0 + t1) / 2) + '</span><span>' + fmt(t1) + '</span>';
+        var zb = document.getElementById('zb-' + i);
+        zb.setAttribute('x', (t0 / d.fullEnd * W).toFixed(2));
+        zb.setAttribute('width', (d.win / d.fullEnd * W).toFixed(2));
+    }
+
+    document.querySelectorAll('.density-wrap').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            var i = el.getAttribute('data-i'), d = data[i];
+            if (!d) return;
+            var r = el.getBoundingClientRect();
+            show(i, (e.clientX - r.left) / r.width * d.fullEnd - d.win / 2);
+        });
+    });
+    document.querySelectorAll('.win-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var i = btn.getAttribute('data-i'), d = data[i];
+            if (!d) return;
+            var nav = btn.getAttribute('data-nav');
+            show(i, nav === 'prev' ? d.pos - d.win : nav === 'next' ? d.pos + d.win : d.init);
+        });
     });
 })();
 </script>
