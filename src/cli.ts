@@ -231,11 +231,14 @@ program
     .description('Diarize an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
     .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
-    .action(async (url: string, options: { outputFile: string; voiceprints?: string }) => {
+    .option('--both-timelines', 'Capture the raw regular AND exclusive timelines (input for compare-diarization-modes) instead of the picked production timeline')
+    .action(async (url: string, options: { outputFile: string; voiceprints?: string; bothTimelines?: boolean }) => {
         const voiceprints = options.voiceprints ? JSON.parse(fs.readFileSync(options.voiceprints, 'utf-8')) : undefined;
-        const result = await diarize({ audioUrl: url, voiceprints }, (stage: string, progressPercent: number) => {
-            process.stdout.write(`\rDiarizing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
-        });
+        const result = options.bothTimelines
+            ? await PyannoteDiarizer.getInstance().diarize([{ url, start: 0 }], voiceprints, { bothTimelines: true })
+            : await diarize({ audioUrl: url, voiceprints }, (stage: string, progressPercent: number) => {
+                process.stdout.write(`\rDiarizing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
+            });
 
         fs.writeFileSync(options.outputFile, JSON.stringify(result, null, 2));
         console.log('Diarized audio saved to', options.outputFile);

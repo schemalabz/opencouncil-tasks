@@ -97,7 +97,14 @@ export default class PyannoteDiarizer {
      * maintaining correct timestamp offsets. Uses identified speaker names 
      * when available; otherwise, prefixes diarization labels with segment numbers (e.g., SEG1:SpeakerA).
      */
-    async diarize(audioSegments: { url: string, start: number }[], voiceprints?: Voiceprint[]): Promise<DiarizeResult> {
+    async diarize(
+        audioSegments: { url: string, start: number }[],
+        voiceprints?: Voiceprint[],
+        // bothTimelines: return the raw regular timeline as `diarization` plus the
+        // exclusive one alongside, instead of the picked production timeline —
+        // used by the evaluation tooling (compare-diarization-modes)
+        options?: { bothTimelines?: boolean },
+    ): Promise<DiarizeResult & { exclusiveDiarization?: Diarization }> {
         if (!baseUrl || !apiToken) {
             throw new Error("PYANNOTE_DIARIZE_API_URL and PYANNOTE_API_TOKEN must be set in environment variables");
         }
@@ -117,7 +124,8 @@ export default class PyannoteDiarizer {
         const identificationPromises = audioSegments.map(({ url, start }) => this.identifySingle(url, effectiveVoiceprints));
         const identifications = await Promise.all(identificationPromises);
         return this.combineDiarizations(identifications.map((identification, index) => ({
-            diarization: pickDiarizationTimeline(identification.output),
+            diarization: options?.bothTimelines ? identification.output.diarization : pickDiarizationTimeline(identification.output),
+            exclusiveDiarization: options?.bothTimelines ? identification.output.exclusiveDiarization : undefined,
             voiceprints: identification.output.voiceprints,
             start: audioSegments[index].start
         })));
@@ -293,28 +301,34 @@ export default class PyannoteDiarizer {
         return result;
     }
 
-    private combineDiarizations(segments: { start: number, diarization: Diarization, voiceprints: IdentifyResponse['output']['voiceprints'] }[]): DiarizeResult {
+    /**
+     * Rebases one segment's timeline into global time and global speaker labels.
+     * We don't use output.identification directly since Pyannote may return matches
+     * with low confidence; our own threshold check keeps identification reliable.
+     */
+    private mapTimeline(timeline: Diarization, voiceprints: IdentifyResponse['output']['voiceprints'], segmentIndex: number, start: number): Diarization {
+        return timeline.map((d) => {
+            const voiceprintEntry = voiceprints.find(vp => vp.speaker === d.speaker);
+            const hasValidMatch = this.hasValidMatch(voiceprintEntry);
+            return {
+                start: d.start + start,
+                end: d.end + start,
+                // Use identified speaker only if confidence threshold is met, otherwise use diarization speaker
+                speaker: hasValidMatch ? voiceprintEntry!.match! : `SEG${segmentIndex + 1}:${d.speaker}`
+            };
+        });
+    }
+
+    private combineDiarizations(segments: { start: number, diarization: Diarization, exclusiveDiarization?: Diarization, voiceprints: IdentifyResponse['output']['voiceprints'] }[]): DiarizeResult & { exclusiveDiarization?: Diarization } {
         console.log(`Combining ${segments.length} identifications`);
 
-        // Process diarization entries
-        const diarization = segments.flatMap(({ diarization, voiceprints, start }, segmentIndex) => {
-            return diarization.map((d) => {
-                // Find the voiceprint entry for this speaker
-                const voiceprintEntry = voiceprints.find(vp => vp.speaker === d.speaker);
+        const diarization = segments.flatMap(({ diarization, voiceprints, start }, segmentIndex) =>
+            this.mapTimeline(diarization, voiceprints, segmentIndex, start));
 
-                // Check if we have a valid match with sufficient confidence
-                // We don't use output.identification directly since Pyannote may return matches with low confidence.
-                // Instead, we implement our own threshold check to ensure more reliable speaker identification.
-                const hasValidMatch = this.hasValidMatch(voiceprintEntry);
-
-                return {
-                    start: d.start + start,
-                    end: d.end + start,
-                    // Use identified speaker only if confidence threshold is met, otherwise use diarization speaker
-                    speaker: hasValidMatch ? voiceprintEntry!.match! : `SEG${segmentIndex + 1}:${d.speaker}`
-                };
-            });
-        });
+        const exclusiveDiarization = segments.every(s => s.exclusiveDiarization)
+            ? segments.flatMap(({ exclusiveDiarization, voiceprints, start }, segmentIndex) =>
+                this.mapTimeline(exclusiveDiarization!, voiceprints, segmentIndex, start))
+            : undefined;
 
         // Process speaker information
         const speakers = segments.flatMap(({ voiceprints }, segmentIndex) => {
@@ -335,6 +349,7 @@ export default class PyannoteDiarizer {
 
         return {
             diarization,
+            exclusiveDiarization,
             speakers
         };
     }
