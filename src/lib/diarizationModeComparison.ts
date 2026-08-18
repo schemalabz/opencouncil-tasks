@@ -60,6 +60,32 @@ export interface AdjudicatedDisagreement {
 }
 
 /**
+ * How cleanly each diarized voice maps to one real person. A voice that spans
+ * several reviewed speakers is a clustering failure — an error class no choice
+ * of timeline can fix, so it bounds what this comparison can achieve at all.
+ */
+export interface VoicePurity {
+    speaker: number;
+    utterances: number;
+    /** % of this voice's utterances belonging to its majority person */
+    purityPercent: number;
+    /** distinct reviewed people this voice covers */
+    peopleCovered: number;
+    majorityPerson: string;
+}
+
+export interface ClusteringQuality {
+    voices: number;
+    /** utterances not matching their voice's majority person */
+    impureUtterances: number;
+    impurePercent: number;
+    /** voices below 90% purity carrying at least 5 utterances */
+    mixedVoices: VoicePurity[];
+    /** people whose utterances are split across more than one voice */
+    peopleSplitAcrossVoices: number;
+}
+
+/**
  * Scoring of both variants against human-reviewed speaker turns. Variant speaker
  * numbers are majority-mapped to human tags, then every assigned utterance is
  * scored by the human turn at its midpoint.
@@ -77,6 +103,8 @@ export interface Adjudication {
         noHumanSegment: number;
     };
     details: AdjudicatedDisagreement[];
+    /** Clustering quality of the exclusive variant — the residual error source */
+    clustering: ClusteringQuality;
 }
 
 export interface DiarizationModeComparison {
@@ -269,6 +297,56 @@ function adjudicate(
         },
         disagreements,
         details,
+        clustering: measureClustering(exclusive, humanTags, display),
+    };
+}
+
+/**
+ * Voice-level diagnosis of the residual error: which diarized voices carry
+ * utterances from more than one reviewed person, and how many people end up
+ * split across several voices.
+ */
+function measureClustering(
+    assignments: ({ speaker: number } | null)[],
+    humanTags: (string | null)[],
+    display: (tag: string | null) => string | null,
+): ClusteringQuality {
+    const votes: Record<number, Record<string, number>> = {};
+    assignments.forEach((a, i) => {
+        const tag = humanTags[i];
+        if (a === null || tag === null) return;
+        votes[a.speaker] ??= {};
+        votes[a.speaker][tag] = (votes[a.speaker][tag] || 0) + 1;
+    });
+
+    let impureUtterances = 0;
+    let scored = 0;
+    const perVoice: VoicePurity[] = [];
+    const majorityOwners: Record<string, number> = {};
+
+    for (const [speaker, tagVotes] of Object.entries(votes)) {
+        const ranked = Object.entries(tagVotes).sort((a, b) => b[1] - a[1]);
+        const total = ranked.reduce((s, [, n]) => s + n, 0);
+        impureUtterances += total - ranked[0][1];
+        scored += total;
+        majorityOwners[ranked[0][0]] = (majorityOwners[ranked[0][0]] || 0) + 1;
+        perVoice.push({
+            speaker: Number(speaker),
+            utterances: total,
+            purityPercent: round2((ranked[0][1] / total) * 100),
+            peopleCovered: ranked.length,
+            majorityPerson: display(ranked[0][0]) ?? ranked[0][0],
+        });
+    }
+
+    return {
+        voices: perVoice.length,
+        impureUtterances,
+        impurePercent: scored ? round2((impureUtterances / scored) * 100) : 0,
+        mixedVoices: perVoice
+            .filter((v) => v.purityPercent < 90 && v.utterances >= 5)
+            .sort((a, b) => b.utterances - a.utterances),
+        peopleSplitAcrossVoices: Object.values(majorityOwners).filter((c) => c > 1).length,
     };
 }
 

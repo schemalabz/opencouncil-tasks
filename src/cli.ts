@@ -315,6 +315,9 @@ program
                 `exclusive ${a.agreementPercent.exclusive}% (${a.agree.exclusive}/${a.scored.exclusive}); ` +
                 `disagreements: exclusive right ${a.disagreements.onlyExclusiveRight}, regular right ${a.disagreements.onlyRegularRight}, ` +
                 `neither ${a.disagreements.neitherRight}`);
+            const c = a.clustering;
+            console.log(`clustering (residual error source): ${c.voices} voices, ${c.impureUtterances} utterances (${c.impurePercent}%) in a voice belonging mostly to someone else, ` +
+                `${c.mixedVoices.length} voice(s) mixing 2+ people, ${c.peopleSplitAcrossVoices} person(s) split across voices`);
         }
         console.log(`Report saved to ${options.outputFile}`);
         server.close();

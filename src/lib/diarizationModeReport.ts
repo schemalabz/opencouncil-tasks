@@ -302,6 +302,20 @@ function meetingSection(report: DiarizationModeComparison, idx: number): string 
         </tbody></table></div>`;
     }
 
+    let clustering = '';
+    if (a?.clustering) {
+        const c = a.clustering;
+        const mixed = c.mixedVoices.slice(0, 4).map((v) =>
+            `<li>one voice carrying <strong>${v.utterances}</strong> utterances is only <strong>${v.purityPercent}%</strong> one person — it spans <strong>${v.peopleCovered}</strong> different speakers (mostly ${esc(v.majorityPerson)})</li>`).join('');
+        clustering = `
+        <h4>What's still wrong after exclusive — voices that mix several people</h4>
+        <p class="note">Pyannote grouped this meeting's speech into <strong>${c.voices}</strong> voices.
+        <strong>${c.impureUtterances}</strong> utterances (${c.impurePercent}%) sit in a voice whose speech mostly belongs to
+        someone else${c.peopleSplitAcrossVoices ? `, and ${c.peopleSplitAcrossVoices} ${c.peopleSplitAcrossVoices === 1 ? 'person is' : 'people are'} split across several voices` : ''}.
+        No choice of timeline can fix this — it is a speaker-clustering problem, and it is the larger remaining error source.</p>
+        ${mixed ? `<ul class="mixed">${mixed}</ul>` : '<p class="note">No voice mixes several people here — clustering is clean in this meeting.</p>'}`;
+    }
+
     const metricsTable = `
     <details open><summary>All metrics</summary>
     <table><thead><tr><th>metric</th><th>regular</th><th>exclusive</th></tr></thead><tbody>
@@ -320,6 +334,7 @@ function meetingSection(report: DiarizationModeComparison, idx: number): string 
         <div class="tiles">${tiles}</div>
         ${strips}
         ${examples}
+        ${clustering}
         ${metricsTable}
     </section>`;
 }
@@ -456,6 +471,9 @@ th, td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--grid); vertical
 .utt { min-width: 220px; }
 .note { font-size: 12px; color: var(--muted); margin: 0 0 4px; }
 .table-scroll { overflow-x: auto; }
+.mixed { font-size: 13px; color: var(--text-secondary); margin: 6px 0; padding-left: 20px; }
+.mixed li { margin: 4px 0; }
+.mixed strong { color: var(--text-primary); }
 details { margin-top: 12px; }
 summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); }
 .method { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px;

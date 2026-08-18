@@ -93,6 +93,12 @@ describe('compareDiarizationModes', () => {
             neitherRight: 0,
             noHumanSegment: 0,
         });
+        // Exclusive's voices map cleanly here: speaker 1 → Alice, speaker 2 → Bob
+        expect(adj.clustering.voices).toBe(2);
+        expect(adj.clustering.impureUtterances).toBe(0);
+        expect(adj.clustering.mixedVoices).toEqual([]);
+        expect(adj.clustering.peopleSplitAcrossVoices).toBe(0);
+
         // regular's speaker 1 majority-maps to Alice; exclusive's speaker 2 maps to Bob
         expect(adj.details).toEqual([
             { start: 9.2, end: 9.8, text: 'b', regularSays: 'Alice', exclusiveSays: 'Bob', humanSays: 'Bob', verdict: 'fixed' },
