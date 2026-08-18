@@ -120,6 +120,23 @@ function timelineTrackSvg(
     return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px;display:block">${rects}${overlapBand}</svg>`;
 }
 
+/**
+ * One thin strip for the whole meeting showing only where cross-talk happens,
+ * with the zoomed window boxed. The full speaker layout is unreadable at this
+ * scale — density is the only honest signal, and it situates the zoom below.
+ */
+function crossTalkDensityStrip(timeline: Diarization, fullEnd: number, zoom: { start: number; end: number }): string {
+    const W = 1000, H = 14;
+    const x = (t: number) => (t / fullEnd) * W;
+    const marks = overlapRanges(timeline).map((r) =>
+        `<rect class="overlap" x="${x(r.start).toFixed(2)}" y="2" width="${Math.max(x(r.end) - x(r.start), 0.8).toFixed(2)}" height="${H - 4}" ` +
+        `data-tip="people talking over each other · ${fmtTime(r.start)}–${fmtTime(r.end)}"></rect>`).join('');
+    const zoomBox = `<rect class="zoom-box" x="${x(zoom.start).toFixed(2)}" y="0.5" width="${(x(zoom.end) - x(zoom.start)).toFixed(2)}" height="${H - 1}" ` +
+        `data-tip="zoomed below: ${fmtTime(zoom.start)}–${fmtTime(zoom.end)}"></rect>`;
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px;display:block">` +
+        `<rect class="density-track" x="0" y="${H / 2 - 1}" width="${W}" height="2"></rect>${marks}${zoomBox}</svg>`;
+}
+
 function timelineLegend(colorOf: Map<string, number>): string {
     const entries = [...colorOf.entries()].filter(([, slot]) => slot >= 0).sort((a, b) => a[1] - b[1]);
     const hasOther = [...colorOf.values()].some((s) => s < 0);
@@ -135,22 +152,52 @@ function tile(label: string, value: string, note?: string, deltaHtml?: string): 
         (note ? `<div class="tile-note">${esc(note)}</div>` : '') + `</div>`;
 }
 
-function agreementBars(reports: DiarizationModeComparison[]): string {
-    const rows = reports.filter((r) => r.adjudication).map((r) => {
-        const name = r.meta?.meeting ?? 'meeting';
-        const a = r.adjudication!;
-        const bar = (cls: string, pct: number, label: string) =>
-            `<div class="bar-row"><div class="bar-track"><div class="bar ${cls}" style="width:${pct}%" ` +
-            `data-tip="${esc(label)}: ${pct}%"></div><span class="bar-val">${pct}%</span></div></div>`;
-        return `<div class="bar-group"><div class="bar-name">${esc(name)}</div>` +
-            bar('series-regular', a.agreementPercent.regular, `${name} regular`) +
-            bar('series-exclusive', a.agreementPercent.exclusive, `${name} exclusive`) +
-            `</div>`;
+/**
+ * Dumbbell plot: one row per meeting, a dot for each variant's agreement score,
+ * rows sorted by cross-talk share so the report's thesis — more cross-talk,
+ * bigger gain — is visible as a shape. Dots need no zero baseline, so the axis
+ * can zoom to where the data lives without lying the way a truncated bar would.
+ */
+function agreementDumbbells(reports: DiarizationModeComparison[]): string {
+    const rows = reports
+        .filter((r) => r.adjudication)
+        .map((r) => {
+            const a = r.adjudication!;
+            const crossTalk = r.regular.timeline.speechSeconds
+                ? Math.round((r.regular.timeline.overlapSeconds / r.regular.timeline.speechSeconds) * 100) : 0;
+            return { name: r.meta?.meeting ?? 'meeting', crossTalk, reg: a.agreementPercent.regular, exc: a.agreementPercent.exclusive };
+        })
+        .sort((x, y) => y.crossTalk - x.crossTalk);
+    if (!rows.length) return '';
+
+    const lo = Math.floor(Math.min(...rows.flatMap((r) => [r.reg, r.exc])) / 5) * 5 - 1;
+    const hi = 100;
+    const x = (v: number) => ((v - lo) / (hi - lo)) * 100;
+    const ticks: number[] = [];
+    for (let t = Math.ceil(lo / 5) * 5; t <= hi; t += 5) ticks.push(t);
+
+    const rowHtml = rows.map((r) => {
+        const delta = Math.round((r.exc - r.reg) * 10) / 10;
+        const deltaLabel = delta === 0 ? '±0' : `+${delta} pp`;
+        return `<div class="db-row">
+            <div class="db-label">${esc(r.name)}<span class="db-crosstalk">${r.crossTalk}% cross-talk</span></div>
+            <div class="db-track">
+                ${ticks.map((t) => `<span class="db-grid" style="left:${x(t)}%"></span>`).join('')}
+                <span class="db-connector" style="left:${x(Math.min(r.reg, r.exc))}%;width:${Math.abs(x(r.exc) - x(r.reg))}%"></span>
+                <span class="db-dot db-reg" style="left:${x(r.reg)}%" data-tip="regular timeline: ${r.reg}% correct"></span>
+                <span class="db-dot db-exc" style="left:${x(r.exc)}%" data-tip="exclusive timeline: ${r.exc}% correct"></span>
+                <span class="db-delta ${delta > 0 ? 'up' : ''}" style="left:${x(Math.max(r.reg, r.exc))}%">${deltaLabel}</span>
+            </div>
+        </div>`;
     }).join('');
+
     return `<div class="chart">
-        <div class="legend"><span class="key"><span class="swatch series-regular"></span>regular</span>` +
-        `<span class="key"><span class="swatch series-exclusive"></span>exclusive</span></div>
-        ${rows}
+        <div class="legend"><span class="key"><span class="swatch dot-swatch db-reg"></span>regular timeline</span>` +
+        `<span class="key"><span class="swatch dot-swatch db-exc"></span>exclusive timeline</span></div>
+        ${rowHtml}
+        <div class="db-row db-axis-row"><div class="db-label"></div><div class="db-track db-axis">
+            ${ticks.map((t) => `<span class="db-tick" style="left:${x(t)}%">${t}%</span>`).join('')}
+        </div></div>
     </div>`;
 }
 
@@ -169,26 +216,27 @@ function meetingSection(report: DiarizationModeComparison): string {
             `${a.agreementPercent.exclusive >= a.agreementPercent.regular ? '▲' : '▼'} ` +
             `${Math.abs(Math.round((a.agreementPercent.exclusive - a.agreementPercent.regular) * 10) / 10)} pp</span>`) : '',
         a ? tile('Disputed utterances — who was right', `${a.disagreements.onlyExclusiveRight} : ${a.disagreements.onlyRegularRight}`,
-            'exclusive right : regular right, per the human reviewers') : '',
+            `exclusive right : regular right, per the human reviewers · ${report.diff.speakerChanged.length} disputed in total`) : '',
         tile('Speech with cross-talk (regular)', `${overlapShare}%`, `${Math.round(report.regular.timeline.overlapSeconds)}s of ${Math.round(report.regular.timeline.speechSeconds)}s`),
         tile('Utterances needing a judgement call', `${report.regular.ambiguous} → ${report.exclusive.ambiguous}`, 'more than one candidate segment, regular → exclusive'),
-        tile('Changed speaker', `${report.diff.speakerChanged.length}`, `of ${report.regular.utterances.total} utterances`),
-        tile('Nearest-segment fallbacks', `${report.regular.fallbackAssigned} → ${report.exclusive.fallbackAssigned}`, 'utterances attributed by guess, regular → exclusive'),
     ].join('');
 
     let strips = '';
     if (report.timelines) {
         const colorOf = speakerColorMap(report.timelines);
-        const full = { start: 0, end: Math.max(dur, ...report.timelines.regular.map((s) => s.end)) };
+        const fullEnd = Math.max(dur, ...report.timelines.regular.map((s) => s.end));
         const zoom = busiestOverlapWindow(report.timelines.regular, 180);
+        const mid = (zoom.start + zoom.end) / 2;
         strips = `
-        <h4>Speaker timelines — full meeting (${fmtTime(full.end)})</h4>
+        <h4>Where the cross-talk is — whole meeting (0:00–${fmtTime(fullEnd)}), boxed part zoomed below</h4>
+        ${crossTalkDensityStrip(report.timelines.regular, fullEnd, zoom)}
+        <h4>The busiest three minutes, on both timelines (${fmtTime(zoom.start)}–${fmtTime(zoom.end)})</h4>
+        <p class="note">Regular stacks simultaneous speakers in lanes — every stacked moment is a coin toss for
+        attribution. Exclusive resolves the same audio into clean turns.</p>
         ${timelineLegend(colorOf)}
-        <div class="strip"><div class="strip-label">regular</div>${timelineTrackSvg(report.timelines.regular, colorOf, full, { lanes: true, showOverlap: true })}</div>
-        <div class="strip"><div class="strip-label">exclusive</div>${timelineTrackSvg(report.timelines.exclusive, colorOf, full, { lanes: true, showOverlap: true })}</div>
-        <h4>Zoom: busiest cross-talk window (${fmtTime(zoom.start)}–${fmtTime(zoom.end)})</h4>
         <div class="strip"><div class="strip-label">regular</div>${timelineTrackSvg(report.timelines.regular, colorOf, zoom, { lanes: true, showOverlap: true })}</div>
-        <div class="strip"><div class="strip-label">exclusive</div>${timelineTrackSvg(report.timelines.exclusive, colorOf, zoom, { lanes: true, showOverlap: true })}</div>`;
+        <div class="strip"><div class="strip-label">exclusive</div>${timelineTrackSvg(report.timelines.exclusive, colorOf, zoom, { lanes: true, showOverlap: true })}</div>
+        <div class="strip"><div class="strip-label"></div><div class="time-axis"><span>${fmtTime(zoom.start)}</span><span>${fmtTime(mid)}</span><span>${fmtTime(zoom.end)}</span></div></div>`;
     }
 
     let examples = '';
@@ -208,11 +256,16 @@ function meetingSection(report: DiarizationModeComparison): string {
             `<td><span class="verdict ${VERDICT[d.verdict].cls}">${VERDICT[d.verdict].label}</span></td></tr>`;
         // Every disputed utterance, worst-confusion first: fixes, then regressions, then both-wrong
         const order = { 'fixed': 0, 'broken': 1, 'both-wrong': 2 } as const;
+        const counts = { fixed: 0, broken: 0, 'both-wrong': 0 };
+        for (const d of a.details) counts[d.verdict]++;
         const sorted = [...a.details].sort((x, y) => order[x.verdict] - order[y.verdict] || x.start - y.start);
-        const shown = sorted.slice(0, 20);
+        const shown = sorted.slice(0, 12);
         examples = `
         <h4>Who each version blamed — utterances where the two timelines disagree</h4>
-        <p class="note">"Reviewer says" comes from the human-corrected transcript on opencouncil.
+        <p class="note"><span class="verdict v-fixed">${counts.fixed} fixed by exclusive</span> ·
+        <span class="verdict v-broken">${counts.broken} broken by exclusive</span> ·
+        <span class="verdict v-neither">${counts['both-wrong']} both wrong</span> —
+        "reviewer says" comes from the human-corrected transcript on opencouncil.
         ${a.details.length > shown.length ? `Showing ${shown.length} of ${a.details.length}; the rest are in the report JSON.` : ''}</p>
         <div class="table-scroll"><table><thead><tr><th>time</th><th>utterance</th><th>regular says</th><th>exclusive says</th><th>reviewer says</th><th>verdict</th></tr></thead><tbody>
         ${shown.map(row).join('')}
@@ -226,6 +279,7 @@ function meetingSection(report: DiarizationModeComparison): string {
     <tr><td>skipped</td><td class="t-num">${report.regular.utterances.skippedPercent}%</td><td class="t-num">${report.exclusive.utterances.skippedPercent}%</td></tr>
     <tr><td>ambiguous</td><td class="t-num">${report.regular.ambiguous}</td><td class="t-num">${report.exclusive.ambiguous}</td></tr>
     <tr><td>drift total</td><td class="t-num">${report.regular.drift.total}</td><td class="t-num">${report.exclusive.drift.total}</td></tr>
+    <tr><td>nearest-segment fallbacks</td><td class="t-num">${report.regular.fallbackAssigned}</td><td class="t-num">${report.exclusive.fallbackAssigned}</td></tr>
     <tr><td>timeline segments</td><td class="t-num">${report.regular.timeline.segments}</td><td class="t-num">${report.exclusive.timeline.segments}</td></tr>
     <tr><td>overlapped speech</td><td class="t-num">${report.regular.timeline.overlapSeconds}s</td><td class="t-num">${report.exclusive.timeline.overlapSeconds}s</td></tr>
     ${a ? `<tr><td>agreement with human turns</td><td class="t-num">${a.agreementPercent.regular}% (${a.agree.regular}/${a.scored.regular})</td><td class="t-num">${a.agreementPercent.exclusive}% (${a.agree.exclusive}/${a.scored.exclusive})</td></tr>` : ''}
@@ -325,12 +379,28 @@ section, .chart-card { background: var(--surface-1); border: 1px solid var(--bor
 .seg:hover{opacity:0.75}
 .strip { display: grid; grid-template-columns: 74px 1fr; gap: 8px; align-items: center; margin: 4px 0; }
 .strip-label { font-size: 12px; color: var(--text-secondary); text-align: right; }
-.bar-group { margin: 10px 0; }
-.bar-name { font-size: 13px; margin-bottom: 3px; }
-.bar-row { margin: 2px 0; }
-.bar-track { position: relative; background: transparent; height: 16px; display: flex; align-items: center; }
-.bar { height: 16px; border-radius: 0 4px 4px 0; min-width: 2px; }
-.bar-val { font-size: 12px; color: var(--text-secondary); margin-left: 6px; font-variant-numeric: tabular-nums; }
+.db-row { display: grid; grid-template-columns: 190px 1fr; gap: 12px; align-items: center; margin: 14px 0; }
+.db-label { font-size: 13px; text-align: right; }
+.db-crosstalk { display: block; font-size: 11px; color: var(--muted); }
+.db-track { position: relative; height: 22px; }
+.db-grid { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--grid); }
+.db-connector { position: absolute; top: 10px; height: 2px; background: var(--baseline, var(--grid)); }
+.db-dot { position: absolute; top: 6px; width: 10px; height: 10px; border-radius: 50%; margin-left: -5px;
+    box-shadow: 0 0 0 2px var(--surface-1); }
+.db-reg { background: var(--s0); }
+.db-exc { background: var(--s1); }
+.dot-swatch { border-radius: 50%; }
+.db-delta { position: absolute; top: 3px; margin-left: 10px; font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; white-space: nowrap; }
+.db-delta.up { color: var(--good-text); font-weight: 600; }
+.db-axis-row { margin: 0; }
+.db-axis { height: 16px; }
+.db-tick { position: absolute; transform: translateX(-50%); font-size: 11px; color: var(--muted);
+    font-variant-numeric: tabular-nums; }
+.density-track { fill: var(--grid); }
+.zoom-box { fill: none; stroke: var(--text-primary); stroke-width: 1.2; }
+.time-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted);
+    font-variant-numeric: tabular-nums; }
 table { border-collapse: collapse; font-size: 13px; margin-top: 8px; width: 100%; }
 th { text-align: left; color: var(--text-secondary); font-weight: 600; }
 th, td { padding: 5px 10px 5px 0; border-bottom: 1px solid var(--grid); vertical-align: top; }
@@ -400,8 +470,8 @@ ${tile('Disputed utterances — who was right', `${exclusiveRight} : ${regularRi
 ${tile('Speech with people talking over each other', `${totalSpeech ? Math.round((totalOverlap / totalSpeech) * 100) : 0}%`, `${Math.round(totalOverlap / 60)} min across ${reports.length} meetings — the situations exclusive mode resolves`)}
 ${tile('Utterances that change speaker', `${totalChanged}`, `of ${totalUtterances} total`)}
 </div>
-<h4>Agreement with human-reviewed speaker turns, by meeting</h4>
-${agreementBars(reports)}
+<h4>Correct "who said this" labels per meeting — the gain tracks how much cross-talk a meeting has</h4>
+${agreementDumbbells(reports)}
 </div>
 
 ${reports.map(meetingSection).join('\n')}
