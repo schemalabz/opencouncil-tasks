@@ -2,6 +2,7 @@ import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
+import { fetchAgendaDocument, type AgendaDocument } from "../lib/documentConversion.js";
 import { CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
 export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX';
@@ -28,15 +29,9 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         throw new Error("Agenda is required");
     }
 
-    if (!request.agendaUrl.endsWith(".pdf")) {
-        throw new Error("Agenda must be a PDF file");
-    }
-
     console.log('');
-    console.log('📄 PHASE 1: PDF Download');
-    const base64 = await downloadFileToBase64(request.agendaUrl);
-    const pdfSizeKB = Math.round(base64.length * 3 / 4 / 1024);
-    console.log(`   Downloaded ${pdfSizeKB}KB`);
+    console.log('📄 PHASE 1: Document Download');
+    const agenda = await fetchAgendaDocument(request.agendaUrl);
 
     console.log('');
     console.log('📝 PHASE 2: Extraction');
@@ -46,8 +41,8 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         model: "claude-opus-4-6",
         label: "agenda-extraction",
         systemPrompt: getSystemPrompt(request.cityLanguage),
-        userPrompt: getUserPrompt(base64, request.cityName, request.cityLanguage, request.date, request.people, request.topicLabels),
-        documentBase64: base64,
+        userPrompt: getUserPrompt(agenda, request.cityName, request.cityLanguage, request.date, request.people, request.topicLabels),
+        documentBase64: agenda.kind === 'pdf' ? agenda.base64 : undefined,
         outputFormat: {
             type: "json_schema",
             schema: {
@@ -149,15 +144,6 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     return { subjects, warnings };
 };
 
-const downloadFileToBase64 = async (url: string) => {
-    console.log(`Downloading file from ${url}...`);
-    const response = await fetch(url);
-    const arrayBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-    console.log(`Downloaded file to base64: ${base64.length} bytes`);
-    return base64;
-}
-
 export const extractedSubjectToApiSubject = async (
     subject: ExtractedSubject,
     cityName: string,
@@ -204,7 +190,7 @@ export function fillMissingAgendaIndices(subjects: Array<{ agendaItemIndex: numb
     return [{
         code: 'MISSING_AGENDA_ITEM_INDEX',
         severity: 'warning',
-        message: `${nullCount} subject(s) had no agenda item number in the PDF — assigned sequential indices`,
+        message: `${nullCount} subject(s) had no agenda item number in the agenda document — assigned sequential indices`,
     }];
 }
 
@@ -250,10 +236,16 @@ ${IMPORTANCE_GUIDELINES}
 Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.${languageDirectiveSuffix(cityLanguage)}`;
 }
 
-export const getUserPrompt = (agendaPdfBase64: string, cityName: string, cityLanguage: CityLanguage, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: TopicLabelInfo[]) => {
+export const getUserPrompt = (agenda: AgendaDocument, cityName: string, cityLanguage: CityLanguage, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: TopicLabelInfo[]) => {
     const formattedTopics = formatTopicLabels(topicLabels);
 
-    return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.
+    // A PDF agenda rides along as a document block; a .docx was converted to
+    // HTML, so its content goes in the prompt itself.
+    const convertedDocument = agenda.kind === 'html'
+        ? `\n\nΤο έγγραφο της ημερήσιας διάταξης (μετατροπή από αρχείο Word σε HTML — η δομή του, επικεφαλίδες, λίστες και πίνακες, διατηρείται):\n\n${agenda.html}\n`
+        : '';
+
+    return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.${convertedDocument}
 
 ΣΗΜΑΝΤΙΚΟ: Η συνεδρίαση ΔΕΝ έχει γίνει ακόμα - αυτή είναι η ημερήσια διάταξη για μελλοντική συνεδρίαση. Γράψε τις περιγραφές με τρόπο που δείχνει ότι αυτά είναι θέματα ΠΡΟΣ συζήτηση, όχι θέματα που συζητούνται αυτή τη στιγμή.
 
