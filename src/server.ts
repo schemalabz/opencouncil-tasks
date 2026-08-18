@@ -138,7 +138,9 @@ app.post('/transcribe', (
     // v3: speaker attribution uses pyannote's exclusive (non-overlapping) timeline,
     // and utterances without a covering diarization segment are assigned to the
     // nearest segment instead of being dropped
-    version: 3,
+    // v4: utterances carry minWordConfidence and totalConfidence alongside the
+    // existing mean confidence, all derived from Scribe's per-word logprobs
+    version: 4,
 }));
 
 app.post('/summarize', taskManager.registerTask(summarize, {

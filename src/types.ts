@@ -244,7 +244,9 @@ export interface Utterance {
     language: string;
     start: number;
     end: number;
-    confidence: number;
+    confidence: number; // arithmetic mean of word confidences
+    minWordConfidence: number; // confidence of the least confident word
+    totalConfidence: number; // product of word confidences ≈ P(every word is right); decays with utterance length
     channel: number;
     speaker: number;
     drift: number;

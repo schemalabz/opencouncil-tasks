@@ -12,6 +12,8 @@ const utterance = (words: [number, number][]): Utterance => ({
     start: words[0][0],
     end: words[words.length - 1][1],
     confidence: 1,
+    minWordConfidence: 1,
+    totalConfidence: 1,
     channel: 0,
     speaker: 0,
     drift: 0,
