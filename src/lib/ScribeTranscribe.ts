@@ -111,6 +111,8 @@ export function scribeWordsToUtterances(words: ScribeWord[], language: string, l
             start: currentWords[0].start,
             end: currentWords[currentWords.length - 1].end,
             confidence: currentWords.reduce((acc, w) => acc + w.confidence, 0) / currentWords.length,
+            minWordConfidence: currentWords.reduce((acc, w) => Math.min(acc, w.confidence), 1),
+            totalConfidence: currentWords.reduce((acc, w) => acc * w.confidence, 1),
             channel: 0,
             speaker: 0, // placeholder — applyDiarization assigns real speakers from pyannote
             drift: 0,

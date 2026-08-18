@@ -101,6 +101,37 @@ describe("scribeWordsToUtterances", () => {
         expect(utterances[0].confidence).toBeCloseTo(Math.exp(-0.5));
     });
 
+    it("computes mean, min, and total confidence from word logprobs", () => {
+        const words: ScribeWord[] = [
+            { text: "μία", type: "word", start: 0, end: 0.4, logprob: 0 },
+            { text: " ", type: "spacing" },
+            { text: "δύσκολη", type: "word", start: 0.5, end: 0.9, logprob: -0.7 },
+            { text: " ", type: "spacing" },
+            { text: "λέξη", type: "word", start: 1.0, end: 1.4, logprob: -0.1 },
+        ];
+
+        const [utterance] = scribeWordsToUtterances(words, "el");
+
+        const confidences = [1, Math.exp(-0.7), Math.exp(-0.1)];
+        expect(utterance.confidence).toBeCloseTo(confidences.reduce((a, c) => a + c, 0) / 3);
+        expect(utterance.minWordConfidence).toBeCloseTo(Math.exp(-0.7));
+        expect(utterance.totalConfidence).toBeCloseTo(Math.exp(-0.7 - 0.1));
+    });
+
+    it("treats words with missing logprobs as fully confident", () => {
+        const words: ScribeWord[] = [
+            { text: "χωρίς", type: "word", start: 0, end: 0.4, logprob: null },
+            { text: " ", type: "spacing" },
+            { text: "logprob", type: "word", start: 0.5, end: 0.9 },
+        ];
+
+        const [utterance] = scribeWordsToUtterances(words, "el");
+
+        expect(utterance.confidence).toBe(1);
+        expect(utterance.minWordConfidence).toBe(1);
+        expect(utterance.totalConfidence).toBe(1);
+    });
+
     it("returns no utterances for an empty word stream", () => {
         expect(scribeWordsToUtterances([], "el")).toEqual([]);
     });
