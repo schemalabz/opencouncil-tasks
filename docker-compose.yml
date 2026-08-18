@@ -50,7 +50,7 @@ services:
       - ELASTICSEARCH=true
       - OPENSEARCH=false
       - ELASTICSEARCH_TIMEOUT=120
-      - ELASTICSEARCH_CHUNK_SIZE=10
+      - ELASTICSEARCH_CHUNK_SIZE=50
     command: -d
     depends_on:
       - redis
