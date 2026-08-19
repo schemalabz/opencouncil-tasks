@@ -92,7 +92,7 @@ Access via `ssh root@134.122.74.255`. Use the `/logs` skill for quick log access
 
 ## Preview deployments
 
-Every PR against `main` auto-deploys a preview at `https://pr-<N>.tasks.opencouncil.gr`.
+Every PR against `main` auto-deploys a preview at `https://pr-<N>.tasks.opencouncil.dev` (the old `pr-<N>.tasks.opencouncil.gr` links 301-redirect there).
 See [docs/guides/preview-deployments.md](./docs/guides/preview-deployments.md) — includes a "Testing a preview during PR review" section.
 
 ## Verifying task endpoints
