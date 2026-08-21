@@ -1,6 +1,6 @@
 # Preview Deployments Setup Guide
 
-This guide walks through setting up PR preview deployments for opencouncil-tasks. Previews are deployed to `https://pr-N.tasks.opencouncil.gr` when a PR is opened against `main`.
+This guide walks through setting up PR preview deployments for opencouncil-tasks. Previews are deployed to `https://pr-N.tasks.opencouncil.dev` when a PR is opened against `main`.
 
 ## Prerequisites
 
@@ -25,7 +25,7 @@ Before starting, ensure you have:
                         │           Preview Droplet                 │
                         │  ┌────────────────────────────────────┐  │
                         │  │ Caddy (reverse proxy + TLS)        │  │
-                        │  │   pr-N.tasks.opencouncil.gr:443    │  │
+                        │  │   pr-N.tasks.opencouncil.dev:443    │  │
                         │  └─────────────────┬──────────────────┘  │
                         │                    │                      │
                         │                    ▼                      │
@@ -54,7 +54,7 @@ TTL: 300 (or auto)
 **Verification:**
 ```bash
 # Wait a few minutes for DNS propagation, then:
-dig +short test.tasks.opencouncil.gr
+dig +short test.tasks.opencouncil.dev
 # Should return: <DROPLET_IP_ADDRESS>
 ```
 
@@ -238,7 +238,7 @@ ANTHROPIC_API_KEY=your-anthropic-key
 # =============================================================================
 # CORS
 # =============================================================================
-CORS_ORIGINS_ALLOWED=https://opencouncil.gr,https://*.preview.opencouncil.gr,https://*.tasks.opencouncil.gr
+CORS_ORIGINS_ALLOWED=https://opencouncil.gr,https://*.opencouncil.dev,https://*.tasks.opencouncil.dev
 ```
 
 Set proper permissions:
@@ -301,7 +301,7 @@ sudo opencouncil-tasks-preview-create 999 <STORE_PATH>
 
 ```bash
 # Health check
-curl https://pr-999.tasks.opencouncil.gr/health
+curl https://pr-999.tasks.opencouncil.dev/health
 
 # Should return JSON with status: "healthy"
 ```
@@ -330,12 +330,12 @@ ssh opencouncil@<DROPLET_IP> "sudo opencouncil-tasks-preview-destroy 999"
 When testing both services together:
 
 1. Deploy opencouncil preview at `https://pr-N.preview.opencouncil.gr`
-2. Deploy opencouncil-tasks preview at `https://pr-M.tasks.opencouncil.gr`
+2. Deploy opencouncil-tasks preview at `https://pr-M.tasks.opencouncil.dev`
 
 Configure the opencouncil preview's environment to use the tasks preview:
 
 ```env
-TASKS_API_URL=https://pr-M.tasks.opencouncil.gr
+TASKS_API_URL=https://pr-M.tasks.opencouncil.dev
 TASKS_API_TOKEN=your-preview-api-token-here  # Same as in tasks .env
 ```
 
@@ -343,9 +343,9 @@ TASKS_API_TOKEN=your-preview-api-token-here  # Same as in tasks .env
 
 ## Testing a preview during PR review
 
-To exercise a task endpoint against a running preview (`https://pr-<N>.tasks.opencouncil.gr`):
+To exercise a task endpoint against a running preview (`https://pr-<N>.tasks.opencouncil.dev`):
 
-- **Auth**: the preview runs on whatever `pr-<N>.tasks.opencouncil.gr` resolves to. Get the Bearer token from `API_TOKENS` in the preview's env file (`/var/lib/opencouncil-tasks-previews/.env` on that droplet). Verify with `GET /health` + the token → response includes `"authenticated": true`.
+- **Auth**: the preview runs on whatever `pr-<N>.tasks.opencouncil.dev` resolves to. Get the Bearer token from `API_TOKENS` in the preview's env file (`/var/lib/opencouncil-tasks-previews/.env` on that droplet). Verify with `GET /health` + the token → response includes `"authenticated": true`.
 - **Only stateless endpoints work**: previews ship placeholder `DO_SPACES_*` credentials and a stale yt-dlp, so endpoints that touch storage or downloads fail immediately. Only stateless endpoints (e.g. `fixTranscript`) are testable on a preview; for anything storage/download-heavy, run `./scripts/smoke.sh` locally instead (borrow any missing keys from the preview env file).
 - **After editing the preview env**, restart the service: `systemctl restart opencouncil-tasks-preview@<4000+N>`. Confirm the variable actually loaded via `/proc/<MainPID>/environ` — `systemctl show -p Environment` does **not** show `EnvironmentFile` vars and gives a false negative.
 - **Capturing callbacks**: run a callback listener (`./scripts/cb-listener.py` — appends each callback body to a JSONL file) + ngrok locally, not on the droplet (its bare NixOS PATH has no python/node). The `callbackUrl` must be a domain or localhost — `validateUrl` rejects bare IPs.

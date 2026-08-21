@@ -16,6 +16,7 @@ concurrency:
 
 env:
   CACHIX_CACHE_NAME: ${{ secrets.CACHIX_CACHE_NAME || 'opencouncil' }}
+  TASKS_PREVIEW_DOMAIN: tasks.opencouncil.dev
 
 jobs:
   # Route the deploy through the right environment: PRs authored by users
@@ -192,14 +193,14 @@ jobs:
 
           echo "### Preview Deployed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Preview URL: https://pr-$PR_NUM.tasks.opencouncil.gr" >> $GITHUB_STEP_SUMMARY
+          echo "Preview URL: https://pr-$PR_NUM.$TASKS_PREVIEW_DOMAIN" >> $GITHUB_STEP_SUMMARY
           echo "Port: $PORT" >> $GITHUB_STEP_SUMMARY
 
       - name: Health check
         id: health-check
         run: |
           PR_NUM="${{ github.event.pull_request.number }}"
-          URL="https://pr-${PR_NUM}.tasks.opencouncil.gr/health"
+          URL="https://pr-${PR_NUM}.${TASKS_PREVIEW_DOMAIN}/health"
           for i in $(seq 1 10); do
             HTTP_CODE=$(curl -sL -o /dev/null -w '%{http_code}' --max-time 10 "$URL" || echo "000")
             if [ "$HTTP_CODE" = "200" ]; then
@@ -219,7 +220,7 @@ jobs:
           script: |
             const commentId = ${{ steps.pr-comment.outputs.comment-id }};
             const prNumber = context.payload.pull_request.number;
-            const previewUrl = 'https://pr-' + prNumber + '.tasks.opencouncil.gr';
+            const previewUrl = 'https://pr-' + prNumber + '.' + process.env.TASKS_PREVIEW_DOMAIN;
             const commitSha = context.payload.pull_request.head.sha.substring(0, 7);
             const healthStatus = '${{ steps.health-check.outputs.status }}';
             const logsUrl = context.serverUrl + '/' + context.repo.owner + '/' + context.repo.repo + '/actions/runs/' + context.runId;

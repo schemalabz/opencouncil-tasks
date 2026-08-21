@@ -113,7 +113,10 @@ EOF
       # (github:schemalabz/pr-previews). Consumed by the host as
       #   services.pr-previews.projects = opencouncil-tasks.previews // ...;
       previews.opencouncil-tasks = {
-        hostPattern = "pr-@id@.tasks.opencouncil.gr";
+        hostPattern = "pr-@id@.tasks.opencouncil.dev";
+        # Keep the old preview URLs answering with 301s during the move;
+        # drop once the migration settles.
+        redirectFrom = [ "pr-@id@.tasks.opencouncil.gr" ];
         basePort = 4000;
 
         cachix = {
