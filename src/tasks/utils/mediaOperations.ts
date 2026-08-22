@@ -49,7 +49,6 @@ const CAPTION_CONSTANTS = {
     
     // Global styling constants (same across all resolutions and aspect ratios)
     FONT_COLOR: 'white',
-    BACKGROUND_COLOR: 'black@0.7',
     BORDER_WIDTH: 2,
     BORDER_COLOR: 'black',
 };
@@ -577,9 +576,6 @@ export async function generateCaptionFilters(
             `y=${yPosition}:` +
             `fontsize=${fontSize}:` +
             `fontcolor=${CAPTION_CONSTANTS.FONT_COLOR}:` +
-            `box=1:` +
-            `boxcolor=${CAPTION_CONSTANTS.BACKGROUND_COLOR}:` +
-            `boxborderw=5:` +
             `borderw=${CAPTION_CONSTANTS.BORDER_WIDTH}:` +
             `bordercolor=${CAPTION_CONSTANTS.BORDER_COLOR}`;
     });
