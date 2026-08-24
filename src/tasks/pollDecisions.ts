@@ -628,7 +628,18 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     let extractionResult: PollDecisionsResult['extractions'] = null;
 
-    if (allExtractionSubjects.length > 0 && request.people?.length > 0) {
+    // Extraction is gated per environment while its output quality is not yet
+    // trusted: matching results land regardless, while attendance, votes and
+    // excerpts wait. Skipped decisions stay excerpt-less, so re-enabling the
+    // flag lets later polls pick them up through the normal needsExtraction
+    // path.
+    const extractionEnabled = process.env.DECISION_EXTRACTION_ENABLED === 'true';
+
+    if (!extractionEnabled && allExtractionSubjects.length > 0) {
+        log(`\nSkipping extraction of ${allExtractionSubjects.length} decision PDFs: DECISION_EXTRACTION_ENABLED is not set.`);
+    }
+
+    if (extractionEnabled && allExtractionSubjects.length > 0 && request.people?.length > 0) {
         onProgress("extracting PDFs", 50);
         log(`\nExtracting ${allExtractionSubjects.length} decision PDFs (${extractionSubjects.length} new, ${needsExtractionSubjects.length} re-extraction)...`);
 
@@ -738,7 +749,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             unmatchedInitialAttendance: pipelineResult.unmatchedInitialAttendance,
             nonDecisionSubjectAttendance: finalNonDecisionAttendance,
         };
-    } else if (allExtractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
+    } else if (extractionEnabled && allExtractionSubjects.length > 0 && (!request.people || request.people.length === 0)) {
         log(`Skipping extraction: no people provided for name matching`);
     }
 

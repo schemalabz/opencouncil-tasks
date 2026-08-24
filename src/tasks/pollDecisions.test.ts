@@ -96,6 +96,10 @@ function makeRequest(overrides: Partial<PollDecisionsRequest> = {}): PollDecisio
 
 beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
+    // Extraction is env-gated (default off); most tests exercise the full
+    // pipeline, so enable it here and override in the gate tests below.
+    vi.stubEnv('DECISION_EXTRACTION_ENABLED', 'true');
     mockSearchAll.mockReturnValue(asyncIter([]));
     // Default: resolver returns empty results
     mockAiChat.mockResolvedValue({ result: { matches: [], reassignments: [], unmatched: [] }, usage: noUsage });
@@ -759,5 +763,47 @@ describe("pollDecisions - knownDecisions handshake", () => {
         expect(result.matches).toHaveLength(1);
         expect(result.decisions![0].subjectId).toBe("subA");
         expect(result.decisions![0].confidence).toBe(0.9);
+    });
+});
+
+describe("pollDecisions - extraction gate", () => {
+    const matchedRequest = () =>
+        makeRequest({
+            people: [{ id: "p1", name: "Μαρία Ιωάννου" }],
+            subjects: [{ subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 1 }],
+        });
+
+    function primeOneMatch() {
+        mockSearchAll.mockReturnValue(asyncIter([
+            makeDecision({ ada: "ADA-D1", subject: "Έγκριση προϋπολογισμού 2025" }),
+        ]));
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
+                reassignments: [],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
+    }
+
+    it("skips extraction and returns null extractions when DECISION_EXTRACTION_ENABLED is not set", async () => {
+        vi.stubEnv('DECISION_EXTRACTION_ENABLED', '');
+        primeOneMatch();
+
+        const result = await pollDecisions(matchedRequest(), noopProgress);
+
+        expect(result.matches).toHaveLength(1);
+        expect(mockExtractDecisions).not.toHaveBeenCalled();
+        expect(result.extractions).toBeNull();
+    });
+
+    it("runs extraction when DECISION_EXTRACTION_ENABLED=true", async () => {
+        primeOneMatch();
+
+        const result = await pollDecisions(matchedRequest(), noopProgress);
+
+        expect(mockExtractDecisions).toHaveBeenCalledTimes(1);
+        expect(result.extractions).not.toBeNull();
     });
 });
