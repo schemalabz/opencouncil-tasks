@@ -24,7 +24,16 @@ export const getFromEnvOrFile = (key: string, path: string) => {
     return value;
 }
 
-export const validateUrl = (url: string) => /^(https?:\/\/)?([\da-z\.-]+\.([a-z\.]{2,6})|localhost)(:\d+)?(\/[\w\.-]*)*\/?$/.test(url);
+// Parse rather than pattern-match: the previous regex had no provision for
+// query strings, so it rejected every callback URL carrying one.
+export const validateUrl = (url: string) => {
+    try {
+        const { protocol } = new URL(url);
+        return protocol === 'http:' || protocol === 'https:';
+    } catch {
+        return false;
+    }
+};
 export const validateYoutubeUrl = (url: string) => /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(url);
 
 /**

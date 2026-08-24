@@ -38,6 +38,9 @@ describe('validateUrl', () => {
     'https://sub.domain.co.uk/foo/bar',
     'http://localhost:3000',
     'http://localhost:3000/api/v1',
+    // Callback URLs carry an authentication token as a query parameter
+    'https://opencouncil.gr/api/cities/athens/meetings/jul29_2_2026/taskStatuses/cmt6zi5s1000x?token=6f1b2c3d4e5f6071',
+    'http://localhost:3000/api/callback?token=abc&retry=1',
   ])('accepts valid URL: %s', (url) => {
     expect(validateUrl(url)).toBe(true);
   });
