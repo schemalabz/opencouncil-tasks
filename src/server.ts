@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 import { pipeline } from './tasks/pipeline.js';
 import cors from 'cors';
 import { taskManager } from './lib/TaskManager.js';
-import { getExpressAppWithCallbacks, validateUrl } from './utils.js';
-import { TranscribeRequest, HealthResponse } from './types.js';
+import { getExpressAppWithCallbacks } from './utils.js';
+import { HealthResponse } from './types.js';
 import { authMiddleware, verifyBearerToken } from './lib/auth.js';
 import { logObservabilityStatus } from './lib/observability.js';
 import fs from 'fs';
@@ -115,24 +115,7 @@ app.get('/tasks', (req, res) => {
 // ============================================================================
 // All task endpoints are defined here with their metadata for automatic Swagger generation
 
-app.post('/transcribe', (
-    req: express.Request<{}, {}, TranscribeRequest & { callbackUrl: string }>,
-    res: express.Response,
-    next: express.NextFunction
-) => {
-    const { youtubeUrl, callbackUrl } = req.body;
-
-    /*
-    if (!validateUrl(youtubeUrl)) {
-        return res.status(400).json({ error: 'Invalid YouTube URL' });
-    }*/
-
-    if (!validateUrl(callbackUrl)) {
-        return res.status(400).json({ error: 'Invalid callback URL' });
-    }
-
-    next();
-}, taskManager.registerTask(pipeline, {
+app.post('/transcribe', taskManager.registerTask(pipeline, {
     summary: 'Transcribe audio/video content',
     description: 'Convert audio or video content to text using speech recognition',
     // v3: speaker attribution uses pyannote's exclusive (non-overlapping) timeline,

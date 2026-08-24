@@ -4,6 +4,7 @@ import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
+import { validateUrl } from '../utils.js';
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -245,6 +246,12 @@ class TaskManager {
     public serveTask<REQ, RES>(task: Task<REQ, RES>, version?: number) {
         return (req: express.Request<{}, {}, REQ & { callbackUrl: string }>, res: express.Response) => {
             let taskType = req.path.substring(1);
+
+            // Every task reports through its callback URL, so an unusable one
+            // means the result would be produced and then have nowhere to go.
+            if (!validateUrl(req.body?.callbackUrl)) {
+                return res.status(400).json({ error: 'Invalid callback URL' });
+            }
 
             this.runTaskWithCallback(
                 task,
