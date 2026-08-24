@@ -10,6 +10,7 @@ const entry = {
     savedAt: '2026-08-24T10:00:00.000Z',
     attempts: 9,
     payload: { status: 'success' },
+    filePath: '/tmp/failed-callbacks/t1.json',
 } as StoredCallback;
 
 describe('guardReplay', () => {
@@ -82,8 +83,20 @@ describe('replayStoredCallback', () => {
 
         expect(outcome.replayed).toBe(true);
         expect(post).toHaveBeenCalledWith(entry.callbackUrl, entry.payload);
-        expect(remove).toHaveBeenCalledWith(entry.taskStatusId);
+        expect(remove).toHaveBeenCalledWith(entry.filePath);
         expect(remove).toHaveBeenCalledTimes(1);
         expect(post).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call remove when the entry carries no file path', async () => {
+        const { filePath, ...entryWithoutPath } = entry;
+        const fetchState = vi.fn().mockResolvedValue({ status: 'pending', updatedAt: '2026-08-24T09:00:00.000Z' });
+        const post = vi.fn().mockResolvedValue(okResult);
+        const remove = vi.fn();
+
+        const outcome = await replayStoredCallback(entryWithoutPath as StoredCallback, { force: false }, { fetchState, post, remove });
+
+        expect(outcome.replayed).toBe(true);
+        expect(remove).not.toHaveBeenCalled();
     });
 });

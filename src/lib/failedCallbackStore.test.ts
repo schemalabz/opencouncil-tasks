@@ -37,12 +37,36 @@ describe('failedCallbackStore', () => {
         expect(all[0].callbackUrl).toContain('token=abc');
     });
 
-    it('removes by task status id', async () => {
-        await saveFailedCallback(entry);
+    it('removes by file path', async () => {
+        const filePath = await saveFailedCallback(entry);
 
-        expect(await removeFailedCallback('cmt6vzim1')).toBe(true);
+        await removeFailedCallback(filePath);
         expect(await listFailedCallbacks()).toHaveLength(0);
-        expect(await removeFailedCallback('cmt6vzim1')).toBe(false);
+    });
+
+    it('is idempotent — removing an already-removed file does not throw', async () => {
+        const filePath = await saveFailedCallback(entry);
+
+        await removeFailedCallback(filePath);
+        await expect(removeFailedCallback(filePath)).resolves.toBeUndefined();
+    });
+
+    it('overwrites the same file when given an existing path instead of deriving a new one', async () => {
+        const filePath = await saveFailedCallback(entry);
+        const updated = await saveFailedCallback({ ...entry, attempts: 9, lastStatus: 502 }, filePath);
+
+        expect(updated).toBe(filePath);
+        const all = await listFailedCallbacks();
+        expect(all).toHaveLength(1);
+        expect(all[0].attempts).toBe(9);
+        expect(all[0].lastStatus).toBe(502);
+    });
+
+    it('writes the file readable only by the owner, since it carries the callback auth token', async () => {
+        const filePath = await saveFailedCallback(entry);
+
+        const mode = (await fs.promises.stat(filePath)).mode & 0o777;
+        expect(mode).toBe(0o600);
     });
 
     it('skips a malformed file instead of failing the listing', async () => {

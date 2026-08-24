@@ -68,6 +68,10 @@ export const replayStoredCallback = async (
         return { replayed: false, reason: `delivery failed: ${result.status ?? result.error}` };
     }
 
-    await remove(entry.taskStatusId);
+    if (entry.filePath) {
+        await remove(entry.filePath);
+    } else {
+        console.warn(`Replayed ${entry.taskStatusId} but it carried no file path to clean up`);
+    }
     return { replayed: true };
 };

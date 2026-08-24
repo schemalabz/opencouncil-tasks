@@ -4,7 +4,7 @@ import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
-import { validateUrl } from '../utils.js';
+import { validateUrl, extractMeetingId } from '../utils.js';
 import { postCallback, deliverTerminalCallback } from './callbackDelivery.js';
 
 // Task metadata interface
@@ -320,7 +320,7 @@ class TaskManager {
 
         const result = await postCallback(callbackUrl, update);
         if (!result.ok) {
-            console.warn(`Progress callback for ${update.taskType} failed: ${result.status ?? result.error}`);
+            console.warn(`Progress callback for ${update.taskType} (${extractMeetingId(callbackUrl)}) failed: ${result.status ?? result.error}`);
         }
     }
 

@@ -27,7 +27,7 @@ import { compareRuns } from './lib/runs/compare.js';
 import { renderComparisonHtml } from './lib/runs/html.js';
 import path from 'path';
 import { applyDiarization } from './tasks/applyDiarization.js';
-import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials } from './utils.js';
+import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials, extractMeetingId } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
 import { CityLanguage, DiarizeResult } from './types.js';
@@ -1216,7 +1216,7 @@ callbacksCommand
             }
             for (const entry of entries) {
                 const failure = entry.lastStatus ?? entry.lastError ?? 'unknown';
-                console.log(`${entry.savedAt}  ${entry.taskType}  ${entry.taskStatusId}  ${entry.attempts} attempt(s), last ${failure}`);
+                console.log(`${entry.savedAt}  ${entry.taskType}  ${extractMeetingId(entry.callbackUrl)}  ${entry.taskStatusId}  ${entry.attempts} attempt(s), last ${failure}`);
             }
         } catch (error) {
             console.error('Error listing callbacks:', error instanceof Error ? error.message : error);
@@ -1237,6 +1237,12 @@ callbacksCommand
             const targets = options.all ? entries : entries.filter(e => e.taskStatusId === taskStatusId);
 
             if (targets.length === 0) {
+                if (options.all) {
+                    // An empty store is the healthy state, not a failure — a runbook
+                    // wrapper checking the exit code shouldn't see this as broken.
+                    console.log('No undelivered callbacks.');
+                    return;
+                }
                 console.error(taskStatusId ? `No saved payload for ${taskStatusId}` : 'Nothing to replay. Pass a task status id or --all.');
                 process.exitCode = 1;
                 return;

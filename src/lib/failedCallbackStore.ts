@@ -28,11 +28,17 @@ export const taskStatusIdFromUrl = (callbackUrl: string): string => {
 
 const safe = (value: string): string => value.replace(/[^\w.-]/g, '-');
 
-export const saveFailedCallback = async (entry: Omit<StoredCallback, 'filePath'>): Promise<string> => {
+/**
+ * Writes a fresh file unless `overwritePath` is given, in which case it rewrites that
+ * file in place — used to update attempts/status on a payload already persisted for an
+ * earlier retryable failure, without leaving two files behind for the same callback.
+ */
+export const saveFailedCallback = async (entry: Omit<StoredCallback, 'filePath'>, overwritePath?: string): Promise<string> => {
     const dir = ensureDataSubdir(SUBDIR);
     const name = [safe(entry.savedAt), safe(entry.taskType), safe(extractMeetingId(entry.callbackUrl)), safe(entry.taskStatusId)].join('_');
-    const filePath = path.join(dir, `${name}.json`);
-    await fs.promises.writeFile(filePath, JSON.stringify(entry, null, 2), 'utf8');
+    const filePath = overwritePath ?? path.join(dir, `${name}.json`);
+    // The payload carries the callback URL's auth token — keep the file readable only by us.
+    await fs.promises.writeFile(filePath, JSON.stringify(entry, null, 2), { encoding: 'utf8', mode: 0o600 });
     return filePath;
 };
 
@@ -54,10 +60,12 @@ export const listFailedCallbacks = async (): Promise<StoredCallback[]> => {
     return entries.sort((a, b) => (a.savedAt < b.savedAt ? 1 : -1));
 };
 
-export const removeFailedCallback = async (taskStatusId: string): Promise<boolean> => {
-    const entries = await listFailedCallbacks();
-    const match = entries.find(e => e.taskStatusId === taskStatusId);
-    if (!match?.filePath) return false;
-    await fs.promises.unlink(match.filePath);
-    return true;
+/**
+ * Takes the file path directly rather than a taskStatusId: re-deriving the path by listing
+ * and matching on taskStatusId could pick the wrong file if two entries ever shared one, and
+ * would delete an undelivered payload without ever having redelivered it. Idempotent so two
+ * concurrent replays of the same entry don't throw on the second unlink.
+ */
+export const removeFailedCallback = async (filePath: string): Promise<void> => {
+    await fs.promises.rm(filePath, { force: true });
 };
