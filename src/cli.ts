@@ -10,9 +10,10 @@ import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
+import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
 import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
-import { aiChat, formatUsage, HAIKU_MODEL } from './lib/ai.js';
+import { aiChat, formatUsage, HAIKU_MODEL, addUsage, NO_USAGE } from './lib/ai.js';
 import { taskManager } from './lib/TaskManager.js';
 import { isObservabilityEnabled, withPhaseSpan } from './lib/observability.js';
 import { listRuns, fetchRun } from './lib/runs/fetch.js';
@@ -865,6 +866,169 @@ runsCommand
         } finally {
             server.close();
         }
+    });
+
+program
+    .command('evaluate-decision-reading <file>')
+    .description('Score model reading of decision documents against labels. Accepts an export file (export-decision-reading-eval.ts) or the golden fixture (fixtures/decision-reading-golden.json)')
+    .option('-c, --concurrency <n>', 'parallel document reads', '4')
+    .option('-l, --limit <n>', 'only read the first N documents (cost control)')
+    .option('--skip-cache', 'ignore cached reads and call the model again')
+    .option('-O, --output-file <file>', 'write per-document results as JSON (adjudication input)')
+    .action(async (file: string, options: { concurrency: string; limit?: string; skipCache?: boolean; outputFile?: string }) => {
+        type Row = {
+            ada: string;
+            pdfUrl: string;
+            city: string;
+            body: string;
+            kind: 'decision' | 'other';
+            /** Expected meetingDate; null = no label yet (unadjudicated). */
+            expected: string | null;
+            provenance: string;
+        };
+
+        const parsed = JSON.parse(fs.readFileSync(file, 'utf-8')) as Record<string, unknown>;
+        let rows: Row[];
+        let title: string;
+        if (Array.isArray(parsed.cities)) {
+            // Golden fixture shape (v3): cities → bodies → documents,
+            // plus per-city otherDocuments outside any tracked body.
+            const toRow = (d: Record<string, unknown>, city: string, body: string): Row => ({
+                ada: d.ada as string,
+                pdfUrl: d.pdfUrl as string,
+                city,
+                body,
+                kind: (d.kind as 'decision' | 'other') ?? 'decision',
+                expected: ((d.expected as Record<string, unknown> | undefined)?.meetingDate as string | null) ?? null,
+                provenance: d.verified ? 'verified' : 'unverified',
+            });
+            rows = (parsed.cities as Array<Record<string, unknown>>).flatMap((c) => [
+                ...((c.bodies as Array<Record<string, unknown>>) ?? []).flatMap((b) =>
+                    ((b.documents as Array<Record<string, unknown>>) ?? []).map((d) =>
+                        toRow(d, c.cityId as string, b.name as string))),
+                ...((c.otherDocuments as Array<Record<string, unknown>>) ?? []).map((d) =>
+                    toRow(d, c.cityId as string, '—')),
+            ]);
+            title = `golden fixture v${parsed.version}`;
+        } else {
+            // Export-file shape (one body, labels from links)
+            const ab = parsed.administrativeBody as { id: string; name: string };
+            rows = (parsed.decisions as Array<{ ada: string; pdfUrl: string; expectedMeetingDate: string }>).map((d) => ({
+                ada: d.ada,
+                pdfUrl: d.pdfUrl,
+                city: parsed.city as string,
+                body: ab.name,
+                kind: 'decision',
+                expected: d.expectedMeetingDate,
+                provenance: 'from-link',
+            }));
+            title = `${parsed.city} / ${ab.name}`;
+        }
+
+        const totalAvailable = rows.length;
+        const limit = options.limit ? parseInt(options.limit, 10) : undefined;
+        if (limit) rows = rows.slice(0, limit);
+        const concurrency = Math.max(1, parseInt(options.concurrency, 10) || 4);
+
+        type EvalResult = Row & { read: DecisionReading | null; outcome: string; fromCache: boolean };
+        const results: EvalResult[] = [];
+        let totalUsage = { ...NO_USAGE };
+
+        let cursor = 0;
+        const worker = async () => {
+            while (cursor < rows.length) {
+                const r = rows[cursor++];
+                let read: DecisionReading | null = null;
+                let fromCache = false;
+                try {
+                    const out = await readDecisionDocument(r.pdfUrl, { skipCache: options.skipCache });
+                    read = out.result;
+                    fromCache = out.fromCache;
+                    totalUsage = addUsage(totalUsage, out.usage);
+                } catch (e) {
+                    console.warn(`  ${r.ada}: ${e instanceof Error ? e.message : e}`);
+                }
+                const md = read?.meetingDate ?? null;
+                const outcome = r.kind === 'other'
+                    ? (md ? 'false-positive' : 'true-negative')
+                    : !md
+                      ? 'unread'
+                      : !r.expected
+                        ? 'unadjudicated'
+                        : md === r.expected
+                          ? 'agree'
+                          : 'disagree';
+                results.push({ ...r, read, outcome, fromCache });
+                if (results.length % 25 === 0) {
+                    console.log(`  ${results.length}/${rows.length}`);
+                }
+            }
+        };
+        await Promise.all(Array.from({ length: concurrency }, worker));
+
+        const count = (rs: EvalResult[], o: string) => rs.filter((r) => r.outcome === o).length;
+        const pct = (n: number, total: number) => (total ? `${((n / total) * 100).toFixed(1)}%` : '—');
+
+        const groups = new Map<string, EvalResult[]>();
+        for (const r of results) {
+            const k = `${r.city} / ${r.body}`;
+            const g = groups.get(k);
+            if (g) g.push(r);
+            else groups.set(k, [r]);
+        }
+
+        console.log(`\n${title} — ${results.length} documents${limit ? ` (of ${totalAvailable}, --limit ${limit})` : ''}`);
+        const labelled = results.filter((r) => r.kind === 'decision' && r.expected);
+        const agree = count(results, 'agree');
+        const disagree = count(results, 'disagree');
+        console.log(`  labelled:          ${labelled.length}`);
+        console.log(`  session date read: ${labelled.length - count(labelled, 'unread')}  ${pct(labelled.length - count(labelled, 'unread'), labelled.length)} of labelled`);
+        console.log(`  agrees with label: ${agree}  ${pct(agree, labelled.length)}`);
+        console.log(`  disagrees:         ${disagree}  ${pct(disagree, labelled.length)}`);
+        console.log(`  unadjudicated:     ${count(results, 'unadjudicated')}`);
+        console.log(`  negatives:         ${count(results, 'true-negative')} correct, ${count(results, 'false-positive')} false-positive`);
+        console.log(`  from cache:        ${results.filter((r) => r.fromCache).length}`);
+        console.log(`  model usage:       ${formatUsage(totalUsage)}`);
+
+        if (groups.size > 1) {
+            console.log(`\nPer body (agree/disagree/unread/unadjudicated):`);
+            for (const [k, rs] of [...groups.entries()].sort()) {
+                console.log(`  ${k.padEnd(40)} ${count(rs, 'agree')}/${count(rs, 'disagree')}/${count(rs, 'unread')}/${count(rs, 'unadjudicated')}  (${rs.length})`);
+            }
+        }
+
+        const disagreements = results.filter((r) => r.outcome === 'disagree');
+        if (disagreements.length > 0) {
+            console.log(`\nDisagreements — the reading or the label is wrong; read each one:`);
+            for (const r of disagreements.slice(0, 20)) {
+                console.log(`  ${r.ada}  document says ${r.read?.meetingDate}, label says ${r.expected}  (${r.city} / ${r.body})`);
+            }
+        }
+        const falsePositives = results.filter((r) => r.outcome === 'false-positive');
+        for (const r of falsePositives) {
+            console.log(`  FALSE POSITIVE: ${r.ada} read as ${r.read?.meetingDate} but is not a session decision`);
+        }
+
+        if (options.outputFile) {
+            fs.writeFileSync(options.outputFile, JSON.stringify({ source: file, results }, null, 2));
+            console.log(`\nPer-document results -> ${options.outputFile}`);
+        }
+
+        server.close();
+    });
+
+program
+    .command('read-decision <source>')
+    .description('Read the session date, session number and decision number a document states about itself. Source: ADA, PDF URL, or local file path')
+    .option('--skip-cache', 'ignore the cached reading and call the model again')
+    .action(async (source: string, options: { skipCache?: boolean }) => {
+        const isPathOrUrl = source.startsWith('http://') || source.startsWith('https://')
+            || source.startsWith('/') || source.startsWith('./') || source.startsWith('../');
+        const pdfUrl = isPathOrUrl ? source : adaToPdfUrl(source);
+        const { result, usage, fromCache } = await readDecisionDocument(pdfUrl, { skipCache: options.skipCache });
+        console.log(JSON.stringify(result, null, 2));
+        console.log(fromCache ? '(cached — no API call)' : `Tokens: ${formatUsage(usage)}`);
+        server.close();
     });
 
 program.parse(process.argv);

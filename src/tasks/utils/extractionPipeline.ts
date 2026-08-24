@@ -416,7 +416,7 @@ export async function extractDecisionsFromPdfs(
                 : null,
             fromCache,
             warnings: decisionWarnings,
-            protocolNumber: raw.decisionNumber || null,
+            decisionNumber: raw.decisionNumber || null,
         });
 
         console.log(`  [${subjectId}] ${presentMemberIds.length} present, ${absentMemberIds.length} absent, ${voteDetails.length} votes`);

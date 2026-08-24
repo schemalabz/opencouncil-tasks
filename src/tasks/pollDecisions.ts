@@ -626,8 +626,10 @@ ${gapCandidateLines}`;
             if (meta) {
                 decision.diavgeiaTitle = meta.title;
                 decision.diavgeiaPublishDate = meta.publishDate;
-                // Prefer Diavgeia API protocolNumber over PDF-extracted one
-                decision.protocolNumber = meta.protocolNumber || decision.protocolNumber;
+                // Diavgeia's protocol field travels separately from the PDF-extracted
+                // decision number: they are different identifiers in most municipalities,
+                // and the app mirrors one while rendering the other.
+                decision.diavgeiaProtocolNumber = meta.protocolNumber || undefined;
             }
         }
 
