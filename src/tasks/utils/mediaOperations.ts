@@ -7,6 +7,7 @@ import { pipeline } from "stream/promises";
 import type { ReadableStream } from "stream/web";
 import { promisify } from "util";
 import { uploadToSpaces } from "../uploadToSpaces.js";
+import { getDataDir } from '../../lib/dataDir.js';
 import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
 
 const execAsync = promisify(cp.exec);
@@ -33,7 +34,7 @@ export async function getMediaDurationSeconds(filePath: string): Promise<number>
 }
 
 // Create data directory if it doesn't exist
-const dataDir = process.env.DATA_DIR || "./data";
+const dataDir = getDataDir();
 if (!fs.existsSync(dataDir)) {
     fs.mkdirSync(dataDir, { recursive: true });
 }
