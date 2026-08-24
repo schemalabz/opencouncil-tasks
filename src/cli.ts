@@ -34,6 +34,8 @@ import { CityLanguage, DiarizeResult } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
+import { listFailedCallbacks } from './lib/failedCallbackStore.js';
+import { replayStoredCallback } from './lib/callbackReplay.js';
 import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
 
 const program = new Command();
@@ -1196,6 +1198,61 @@ program
         console.log(JSON.stringify(result, null, 2));
         console.log(fromCache ? '(cached — no API call)' : `Tokens: ${formatUsage(usage)}`);
         server.close();
+    });
+
+const callbacksCommand = program
+    .command('callbacks')
+    .description('Inspect and replay task callbacks that could not be delivered');
+
+callbacksCommand
+    .command('list')
+    .description('List undelivered callback payloads, newest first')
+    .action(async () => {
+        try {
+            const entries = await listFailedCallbacks();
+            if (entries.length === 0) {
+                console.log('No undelivered callbacks.');
+                return;
+            }
+            for (const entry of entries) {
+                const failure = entry.lastStatus ?? entry.lastError ?? 'unknown';
+                console.log(`${entry.savedAt}  ${entry.taskType}  ${entry.taskStatusId}  ${entry.attempts} attempt(s), last ${failure}`);
+            }
+        } catch (error) {
+            console.error('Error listing callbacks:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+callbacksCommand
+    .command('replay [taskStatusId]')
+    .description('Redeliver a saved callback payload')
+    .option('--all', 'replay every saved payload')
+    .option('--force', 'post even if the task changed since the payload was saved')
+    .action(async (taskStatusId: string | undefined, options: { all?: boolean; force?: boolean }) => {
+        try {
+            const entries = await listFailedCallbacks();
+            const targets = options.all ? entries : entries.filter(e => e.taskStatusId === taskStatusId);
+
+            if (targets.length === 0) {
+                console.error(taskStatusId ? `No saved payload for ${taskStatusId}` : 'Nothing to replay. Pass a task status id or --all.');
+                process.exitCode = 1;
+                return;
+            }
+
+            for (const entry of targets) {
+                const { replayed, reason } = await replayStoredCallback(entry, { force: Boolean(options.force) });
+                console.log(replayed ? `✓ ${entry.taskStatusId} replayed` : `✗ ${entry.taskStatusId} skipped — ${reason}`);
+                if (!replayed) process.exitCode = 1;
+            }
+        } catch (error) {
+            console.error('Error replaying callbacks:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
     });
 
 program.parse(process.argv);
