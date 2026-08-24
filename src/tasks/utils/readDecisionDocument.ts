@@ -21,18 +21,25 @@ import { downloadPdfAsBuffer, extractPdfPages, readCache, writeCache } from './d
  */
 
 export interface DecisionReading {
-    /** YYYY-MM-DD as printed in the document (Athens-local). Null when not stated or unreadable. */
+    /** YYYY-MM-DD as printed in the document (city-local). Null when not stated or unreadable. */
     meetingDate: string | null;
-    /** The decision's own Αρ. Απόφασης, e.g. "425/2026" or "206". Never the protocol number. */
+    /** The decision's own Αρ. Απόφασης / Πράξη number, e.g. "425/2026" or "206". Never the protocol number. */
     decisionNumber: string | null;
+    /** The deliberative body as the document states it, verbatim (e.g. "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ", "5η Δημοτική Κοινότητα"). */
+    body: string | null;
+    /** True when the document is not a decision of a deliberative session at all (agenda, invitation, mayoral or service act). */
+    notADecision: boolean;
 }
 
 /**
  * Cache key prefix. Bump the version when a prompt or schema change could
  * alter the VALUES of fields we keep — pure field removals don't qualify
  * (cached entries simply carry an ignored extra key).
+ *
+ * v2 (2026-08-14): ΠΡΑΞΗ number labels, body extraction, not-a-decision
+ * classification.
  */
-const READING_CACHE_PREFIX = 'reading-v1-';
+const READING_CACHE_PREFIX = 'reading-v2-';
 
 /** Page 1 carries the header in every format seen so far; fall back to 3 pages when it does not. */
 const PAGE_ATTEMPTS = [1, 3];
@@ -44,16 +51,20 @@ const READING_SCHEMA = {
     properties: {
         meetingDate: { anyOf: [{ type: 'string' }, { type: 'null' }] },
         decisionNumber: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        body: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        notADecision: { type: 'boolean' },
     },
-    required: ['meetingDate', 'decisionNumber'],
+    required: ['meetingDate', 'decisionNumber', 'body', 'notADecision'],
     additionalProperties: false,
 };
 
-const READING_SYSTEM_PROMPT = `You read the opening page(s) of Greek municipal decision documents (ΑΠΟΣΠΑΣΜΑ ΠΡΑΚΤΙΚΟΥ / ΑΠΟΦΑΣΗ). Extract two facts the document states about itself:
+const READING_SYSTEM_PROMPT = `You read the opening page(s) of Greek municipal decision documents (ΑΠΟΣΠΑΣΜΑ ΠΡΑΚΤΙΚΟΥ / ΑΠΟΦΑΣΗ / ΠΡΑΞΗ). Extract what the document states about itself:
 
-1. **meetingDate** — the date of the session (συνεδρίαση) that PRODUCED this decision, as stated in the header or preamble (e.g. "συνήλθε ... σήμερα την 2α Ιουνίου 2026", "Στα Χανιά, σήμερα την ...", "της 27ης/29-7-2026 Συνεδρίασης", "στις 15 Ιανουαρίου 2024"). Return it as YYYY-MM-DD.
-   CRITICAL: the decision body mentions other dates — of laws, contracts, referenced decisions (e.g. "εγκρίνει την 12 Μαρτίου 2019 σύμβαση"). Those are NOT the session date. The document's own issue date is also NOT the session date: the letterhead date, the protocol date (Αρίθμ. Πρωτ.), the "Ημερομηνία έκδοσης", and the digital-signature date all record when the document was issued or published, days after the session. Only return the date the session itself convened. If the session date is not stated, or you cannot tell which date is the session date, return null. If the document is not a decision of a deliberative session at all (an agenda, an invitation, a mayoral act), every field is null.
-2. **decisionNumber** — the decision's own number (labelled Αρ. Απόφασης, ΑΡΙΘΜ. ΑΠΟΦ, ΑΡΙΘΜΟΣ ΑΠΟΦΑΣΗΣ, Α.Δ.Σ., ΑΠΟΦΑΣΗ ΑΡΙΘ., or similar), without the label: "ΑΡΙΘΜ. ΑΠΟΦ: 123 / 2024" → "123/2024", "Αρ. Απόφασης:206" → "206", "ΑΡΙΘΜ. ΑΠΟΦ: 123-2024" → "123/2024". This is NOT the protocol number (ΑΡΙΘΜ. ΠΡΩΤ / Αρ. Πρωτ.) — never return the protocol number. Null if absent.
+1. **notADecision** — true when the document is NOT a decision of a deliberative session: an agenda (ΗΜΕΡΗΣΙΑ ΔΙΑΤΑΞΗ), an invitation (ΠΡΟΣΚΛΗΣΗ), a mayoral act (ΑΠΟΦΑΣΗ ΔΗΜΑΡΧΟΥ), a declaratory act (ΔΙΑΠΙΣΤΩΤΙΚΗ ΠΡΑΞΗ), or any other administrative document. When true, every other field is null.
+2. **meetingDate** — the date of the session (συνεδρίαση) that PRODUCED this decision, as stated in the header or preamble (e.g. "συνήλθε ... σήμερα την 2α Ιουνίου 2026", "Στα Χανιά, σήμερα την ...", "της 27ης/29-7-2026 Συνεδρίασης", "στις 15 Ιανουαρίου 2024"). Return it as YYYY-MM-DD.
+   CRITICAL: the decision body mentions other dates — of laws, contracts, referenced decisions (e.g. "εγκρίνει την 12 Μαρτίου 2019 σύμβαση"). Those are NOT the session date. The document's own issue date is also NOT the session date: the letterhead date, the protocol date (Αρίθμ. Πρωτ.), the "Ημερομηνία έκδοσης", and the digital-signature date all record when the document was issued or published, days after the session. Only return the date the session itself convened. If the session date is not stated, or you cannot tell which date is the session date, return null.
+3. **decisionNumber** — the decision's own number, without its label. Labels vary: Αρ. Απόφασης, ΑΡΙΘΜ. ΑΠΟΦ, ΑΡΙΘΜΟΣ ΑΠΟΦΑΣΗΣ, Α.Δ.Σ., ΑΠΟΦΑΣΗ ΑΡΙΘ., and the ΠΡΑΞΗ family (ΠΡΑΞΗ 1487, ΑΡΙΘΜΟΣ ΠΡΑΞΗΣ, "Η με αριθμό 1487/2026 Πράξη", "Πράξη με αριθμό 93"). Examples: "ΑΡΙΘΜ. ΑΠΟΦ: 123 / 2024" → "123/2024", "Αρ. Απόφασης:206" → "206", "ΠΡΑΞΗ 1487" → "1487". This is NOT the protocol number (ΑΡΙΘΜ. ΠΡΩΤ / Αρ. Πρωτ. / αριθμό πρωτοκόλλου) — never return the protocol number. Null if absent.
+4. **body** — the deliberative body that held the session, verbatim as the document names it (e.g. "ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ", "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ", "ΟΙΚΟΝΟΜΙΚΗ ΕΠΙΤΡΟΠΗ", "5η Δημοτική Κοινότητα", "ΕΠΙΤΡΟΠΗ ΠΟΙΟΤΗΤΑΣ ΖΩΗΣ"). Null when no body is named.
 
 The document may be a scanned image — read it visually. Labels may use Latin lookalike characters (APIΘM. AΠOΦ). Return null for any field you cannot determine with confidence: a null is recoverable, a wrong value is not.`;
 
@@ -71,7 +82,12 @@ function nullIfBlank(v: string | null | undefined): string | null {
 export function normalizeReading(raw: {
     meetingDate?: string | null;
     decisionNumber?: string | null;
+    body?: string | null;
+    notADecision?: boolean;
 }): DecisionReading {
+    if (raw.notADecision) {
+        return { meetingDate: null, decisionNumber: null, body: null, notADecision: true };
+    }
     let meetingDate = nullIfBlank(raw.meetingDate);
     if (meetingDate) {
         const m = meetingDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -85,6 +101,8 @@ export function normalizeReading(raw: {
     return {
         meetingDate,
         decisionNumber: nullIfBlank(raw.decisionNumber),
+        body: nullIfBlank(raw.body),
+        notADecision: false,
     };
 }
 
@@ -102,7 +120,7 @@ export async function readDecisionDocument(
     const totalPages = srcDoc.getPageCount();
 
     let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
-    let reading: DecisionReading = { meetingDate: null, decisionNumber: null };
+    let reading: DecisionReading = { meetingDate: null, decisionNumber: null, body: null, notADecision: false };
 
     for (const attempt of PAGE_ATTEMPTS) {
         const pages = Math.min(attempt, totalPages);
@@ -111,9 +129,11 @@ export async function readDecisionDocument(
         const { result: raw, usage } = await aiChat<{
             meetingDate: string | null;
             decisionNumber: string | null;
+            body: string | null;
+            notADecision: boolean;
         }>({
             systemPrompt: READING_SYSTEM_PROMPT,
-            userPrompt: 'Extract the session date, session number and decision number this document states about itself.',
+            userPrompt: 'Extract what this document states about itself.',
             documentBase64: base64,
             outputFormat: { type: 'json_schema', schema: READING_SCHEMA },
             model: HAIKU_MODEL,
@@ -123,7 +143,7 @@ export async function readDecisionDocument(
 
         totalUsage = addUsage(totalUsage, usage);
         reading = normalizeReading(raw);
-        if (reading.meetingDate || pages >= totalPages) break;
+        if (reading.meetingDate || reading.notADecision || pages >= totalPages) break;
     }
 
     writeCache(pdfUrl, reading, READING_CACHE_PREFIX);

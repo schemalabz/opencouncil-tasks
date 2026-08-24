@@ -33,11 +33,24 @@ vi.mock("./utils/extractionPipeline.js", () => ({
     })),
 }));
 
+// Mock the phase-0 reader (reading is tested separately). no_meeting_date
+// routes every candidate to the fallback pool, so matching behaves exactly
+// as it did pre-partitioning — which is what these tests assert.
+vi.mock("./utils/readDecisionDocument.js", () => ({
+    readDecisionDocument: vi.fn(async () => ({
+        result: { meetingDate: null, decisionNumber: null },
+        usage: NO_USAGE_MOCK,
+        fromCache: false,
+    })),
+}));
+
 import { aiChat } from "../lib/ai.js";
 import { extractDecisionsFromPdfs } from "./utils/extractionPipeline.js";
+import { readDecisionDocument } from "./utils/readDecisionDocument.js";
 import { pollDecisions } from "./pollDecisions.js";
 
 const mockAiChat = vi.mocked(aiChat);
+const mockReadDecision = vi.mocked(readDecisionDocument);
 const mockExtractDecisions = vi.mocked(extractDecisionsFromPdfs);
 const noopProgress = vi.fn();
 const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
@@ -228,19 +241,15 @@ describe("pollDecisions - resolver matching", () => {
     });
 });
 
-describe("pollDecisions - resolver reassignments", () => {
-    it("resolver can reassign a linked decision to a different subject", async () => {
-        const D1 = makeDecision({
-            ada: "ADA-D1",
-            subject: "Παράταση προθεσμίας του έργου ανάπλασης",
-        });
-
-        mockSearchAll.mockReturnValue(asyncIter([D1]));
+describe("pollDecisions - reassignments removed", () => {
+    it("never moves confirmed links: reassignments are always empty", async () => {
+        const D1 = makeDecision({ ada: "ADA-D1", subject: "Έγκριση προϋπολογισμού 2025" });
+        const D2 = makeDecision({ ada: "ADA-D2", subject: "Τροποποίηση κανονισμού λειτουργίας" });
+        mockSearchAll.mockReturnValue(asyncIter([D1, D2]));
 
         mockAiChat.mockResolvedValueOnce({
             result: {
-                matches: [{ subjectId: "subB", ada: "ADA-D1", confidence: "high", reasoning: "Title matches" }],
-                reassignments: [{ ada: "ADA-D1", fromSubjectId: "subA", toSubjectId: "subB", reasoning: "Subject B is the correct match for this decision" }],
+                matches: [{ subjectId: "subB", ada: "ADA-D2", confidence: "high", reasoning: "Title matches" }],
                 unmatched: [],
             },
             usage: noUsage,
@@ -251,64 +260,21 @@ describe("pollDecisions - resolver reassignments", () => {
                 subjects: [
                     {
                         subjectId: "subA",
-                        name: "Ψήφισμα κατά της βίας",
+                        name: "Έγκριση προϋπολογισμού 2025",
                         agendaItemIndex: 1,
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
+                        existingDecision: { ada: "ADA-D1", decisionTitle: "Έγκριση προϋπολογισμού 2025", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
                     },
-                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 2 },
+                    { subjectId: "subB", name: "Τροποποίηση κανονισμού λειτουργίας", agendaItemIndex: 2 },
                 ],
             }),
             noopProgress,
         );
 
-        expect(result.reassignments).toHaveLength(1);
-        expect(result.reassignments[0]).toEqual({
-            ada: "ADA-D1",
-            fromSubjectId: "subA",
-            toSubjectId: "subB",
-            reason: "Subject B is the correct match for this decision",
-        });
-
-        const matchB = result.matches.find(m => m.subjectId === "subB");
-        expect(matchB).toBeDefined();
-        expect(matchB!.ada).toBe("ADA-D1");
-    });
-
-    it("reassignment reason comes from resolver reasoning", async () => {
-        const D1 = makeDecision({
-            ada: "ADA-D1",
-            subject: "Παράταση προθεσμίας του έργου ανάπλασης",
-        });
-
-        mockSearchAll.mockReturnValue(asyncIter([D1]));
-
-        const expectedReason = "Subject A is unrelated; subject B matches the extension project";
-        mockAiChat.mockResolvedValueOnce({
-            result: {
-                matches: [{ subjectId: "subB", ada: "ADA-D1", confidence: "medium", reasoning: "Partial match" }],
-                reassignments: [{ ada: "ADA-D1", fromSubjectId: "subA", toSubjectId: "subB", reasoning: expectedReason }],
-                unmatched: [],
-            },
-            usage: noUsage,
-        });
-
-        const result = await pollDecisions(
-            makeRequest({
-                subjects: [
-                    {
-                        subjectId: "subA",
-                        name: "Ψήφισμα κατά της βίας",
-                        agendaItemIndex: 1,
-                        existingDecision: { ada: "ADA-D1", decisionTitle: "Παράταση προθεσμίας του έργου ανάπλασης", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-D1" },
-                    },
-                    { subjectId: "subB", name: "Παράταση έργου ανάπλασης", agendaItemIndex: 2 },
-                ],
-            }),
-            noopProgress,
-        );
-
-        expect(result.reassignments).toHaveLength(1);
-        expect(result.reassignments[0].reason).toBe(expectedReason);
+        // The linked subject keeps its decision; the pipeline proposes nothing else for it.
+        expect(result.reassignments).toEqual([]);
+        expect(result.matches).toHaveLength(1);
+        expect(result.matches[0].subjectId).toBe("subB");
+        expect(result.matches[0].ada).toBe("ADA-D2");
     });
 });
 
@@ -352,18 +318,8 @@ describe("pollDecisions - resolver edge cases", () => {
         expect(mockAiChat).not.toHaveBeenCalled();
     });
 
-    it("works with no decisions fetched", async () => {
+    it("works with no decisions fetched (resolver skipped)", async () => {
         mockSearchAll.mockReturnValue(asyncIter([]));
-
-        // Resolver called but no candidates, returns all unmatched
-        mockAiChat.mockResolvedValueOnce({
-            result: {
-                matches: [],
-                reassignments: [],
-                unmatched: [{ subjectId: "subA", reasoning: "No decisions available" }],
-            },
-            usage: noUsage,
-        });
 
         const result = await pollDecisions(
             makeRequest({
@@ -374,10 +330,12 @@ describe("pollDecisions - resolver edge cases", () => {
             noopProgress,
         );
 
-        expect(mockAiChat).toHaveBeenCalledTimes(1);
+        // No candidates — the resolver call is skipped entirely.
+        expect(mockAiChat).not.toHaveBeenCalled();
         expect(result.matches).toHaveLength(0);
         expect(result.unmatchedSubjects).toHaveLength(1);
         expect(result.unmatchedSubjects[0].subjectId).toBe("subA");
+        expect(result.unmatchedSubjects[0].reason).toContain("No decisions available");
     });
 });
 
@@ -733,5 +691,73 @@ describe("pollDecisions - subjectInfo warnings", () => {
 
         // Three warnings emitted — one per mismatch
         expect(result.extractions?.warnings.filter(w => w.includes("subjectInfo mismatch"))).toHaveLength(3);
+    });
+});
+
+describe("pollDecisions - knownDecisions handshake", () => {
+    it("echoes a known decision without re-reading it", async () => {
+        const D1 = makeDecision({ ada: "ADA-K", subject: "Έγκριση προϋπολογισμού 2025" });
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 1 }],
+                knownDecisions: [{ ada: "ADA-K", meetingDate: "2025-01-10", readStatus: "ok" }],
+            }),
+            noopProgress,
+        );
+
+        // Never pay twice: the stored reading is echoed, no model call
+        expect(mockReadDecision).not.toHaveBeenCalled();
+        expect(result.decisions).toHaveLength(1);
+        expect(result.decisions![0]).toMatchObject({
+            ada: "ADA-K",
+            fromKnown: true,
+            readStatus: "ok",
+            meetingDate: "2025-01-10",
+        });
+    });
+
+    it("retries a known decision marked unread", async () => {
+        const D1 = makeDecision({ ada: "ADA-K", subject: "Έγκριση προϋπολογισμού 2025" });
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Κάτι εντελώς διαφορετικό", agendaItemIndex: 1 }],
+                knownDecisions: [{ ada: "ADA-K", meetingDate: null, readStatus: "unread" }],
+            }),
+            noopProgress,
+        );
+
+        // 'unread' is the one retried status
+        expect(mockReadDecision).toHaveBeenCalledTimes(1);
+        expect(result.decisions![0]).toMatchObject({ ada: "ADA-K", fromKnown: false, readStatus: "no_meeting_date" });
+    });
+
+    it("a known decision declaring this meeting joins the partition as a fact", async () => {
+        const D1 = makeDecision({ ada: "ADA-K", subject: "Έγκριση προϋπολογισμού 2025" });
+        mockSearchAll.mockReturnValue(asyncIter([D1]));
+
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-K", confidence: "high", reasoning: "Title matches" }],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Έγκριση προϋπολογισμού 2025", agendaItemIndex: 1 }],
+                knownDecisions: [{ ada: "ADA-K", meetingDate: "2025-01-10", readStatus: "ok" }],
+            }),
+            noopProgress,
+        );
+
+        expect(mockReadDecision).not.toHaveBeenCalled();
+        expect(result.matches).toHaveLength(1);
+        expect(result.decisions![0].subjectId).toBe("subA");
+        expect(result.decisions![0].confidence).toBe(0.9);
     });
 });

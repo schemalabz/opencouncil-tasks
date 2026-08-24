@@ -508,9 +508,37 @@ export interface PollDecisionsRequest extends TaskRequest {
             needsExtraction?: boolean;
         };
     }>;
+    /** The polled meeting's administrative-body name, for the (body, date) partition. Absent = date-only partitioning. */
+    administrativeBodyName?: string | null;
+    /** Fetch window derived by the app from publication-lag history. Absent = legacy 45-day window. */
+    window?: { fromDate: string; toDate: string };
+    /** Reading-cache handshake, window-scoped. Presence + readStatus decide whether to read again. */
+    knownDecisions?: Array<{ ada: string; meetingDate: string | null; readStatus: string }>;
 }
 
 export interface PollDecisionsResult {
+    /**
+     * Every decision READ in this poll's window — not only this meeting's.
+     * subjectId null = unplaced; rows declaring another meeting carry no
+     * matching fields. The app upserts the whole list into DecisionCandidate.
+     */
+    decisions?: Array<{
+        ada: string;
+        title: string | null;
+        pdfUrl: string;
+        protocolNumber: string | null;   // Diavgeia's field, verbatim
+        publishDate: string | null;
+        meetingDate: string | null;
+        decisionNumber: string | null;
+        /** The deliberative body as the document states it. */
+        body: string | null;
+        readStatus: string;
+        /** True when the reading was echoed from knownDecisions, not freshly read — reading fields carry no new information. */
+        fromKnown: boolean;
+        subjectId: string | null;
+        confidence: number | null;
+        reasoning: string | null;
+    }>;
     matches: Array<{
         subjectId: string;
         ada: string; // Unique Diavgeia decision identifier
@@ -519,6 +547,7 @@ export interface PollDecisionsResult {
         protocolNumber: string;
         publishDate: string; // ISO date when decision was published on Diavgeia
         matchConfidence: number; // 0-1 confidence score
+        reasoning?: string | null; // resolver's stated reasoning for this match
     }>;
     reassignments: Array<{
         ada: string;

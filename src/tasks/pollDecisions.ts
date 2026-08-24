@@ -9,6 +9,8 @@ import { computeSimilarityMatrix, buildCandidatePool, buildResolverPrompt, proce
 import type { ResolverOutput } from './utils/resolverMatchDecisions.js';
 import { detectProtocolPattern, findGaps, reconstructProtocolNumber } from './utils/protocolGapFill.js';
 import { createScopedLogger } from './utils/scopedLogger.js';
+import { readDecisionDocument } from './utils/readDecisionDocument.js';
+import { partitionReadDecisions, type ReadDecision } from './utils/decisionPartition.js';
 
 const client = new Diavgeia();
 
@@ -18,7 +20,9 @@ You will receive:
 1. A list of SUBJECTS (agenda items) to match
 2. CANDIDATE DECISIONS per subject, with text similarity scores, protocol numbers, and publication dates
 3. PROTOCOL NUMBER ANALYSIS showing if decisions follow a sequential pattern with gaps (when available)
-4. ALREADY LINKED decisions from previous runs that can be reassigned if wrong
+4. ALREADY LINKED decisions from previous runs (context only — not available for matching)
+
+Candidates marked [declares this session] are FACTS: their own document states it was produced by this meeting's session. They definitely belong to this meeting — the only question is which subject. Prefer them over unmarked candidates when both fit.
 
 Your job is to produce the optimal 1:1 assignment of decisions to subjects.
 
@@ -43,15 +47,9 @@ CONFIDENCE levels — use these strictly:
 - "low": Weak match. Only assign with "low" if there is some supporting signal (e.g., protocol number fits a gap) but the title match is tenuous.
 - If you find yourself writing reasoning that says "this is likely wrong" or "despite not matching", that is NOT a match at any confidence level — leave the subject unmatched.
 
-CRITICAL — ALREADY LINKED decisions and reassignments:
-- Already-linked decisions are CONFIRMED matches from previous runs. They have been verified and are almost always correct.
-- Do NOT propose reassignments unless the current link is CLEARLY WRONG — meaning the decision title has no semantic relationship whatsoever to the linked subject.
-- A slightly better similarity score for a different subject is NOT sufficient reason to reassign. The existing link was confirmed by a previous review.
-- Only reassign when you are confident the original link was a mistake (e.g., the decision is about budget amendments but is linked to a subject about road maintenance).
-- When in doubt, keep the existing link. Wrong reassignments are worse than leaving an imperfect link in place.
-- Re-extraction subjects should NEVER be reassigned.
+ALREADY LINKED decisions are CONFIRMED. Never propose moving them: their decisions and subjects are simply not available for matching. If you believe an existing link is wrong, leave the affected subject unmatched and say why in its reasoning.
 
-Return structured JSON with matches, reassignments (only for clearly wrong links), and unmatched subjects.`;
+Return structured JSON with matches and unmatched subjects.`;
 
 const RESOLVER_MODEL = 'claude-sonnet-4-5-20250929';
 
@@ -72,20 +70,6 @@ const RESOLVER_OUTPUT_SCHEMA = {
                 additionalProperties: false,
             },
         },
-        reassignments: {
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    ada: { type: 'string' },
-                    fromSubjectId: { type: 'string' },
-                    toSubjectId: { type: 'string' },
-                    reasoning: { type: 'string' },
-                },
-                required: ['ada', 'fromSubjectId', 'toSubjectId', 'reasoning'],
-                additionalProperties: false,
-            },
-        },
         unmatched: {
             type: 'array',
             items: {
@@ -99,7 +83,7 @@ const RESOLVER_OUTPUT_SCHEMA = {
             },
         },
     },
-    required: ['matches', 'reassignments', 'unmatched'],
+    required: ['matches', 'unmatched'],
     additionalProperties: false,
 };
 
@@ -194,6 +178,285 @@ async function analyzeProtocolGaps(
     return { gapCandidates, gapCandidateAdas, protocolAnalysis };
 }
 
+export interface ResolveInput {
+    subjects: PollDecisionsRequest['subjects'];
+    /** Documents whose page-1 reading declares this meeting's session date — facts, not guesses. */
+    inMeeting: Decision[];
+    /** Unread/unreadable window candidates — the legacy similarity pool. */
+    fallback: Decision[];
+    diavgeiaUid: string;
+    log: (...args: unknown[]) => void;
+    onProgress?: (status: string, percent: number) => void;
+}
+
+export interface ResolveOutcome {
+    matches: PollDecisionsResult['matches'];
+    unmatchedSubjects: PollDecisionsResult['unmatchedSubjects'];
+    usage: Anthropic.Messages.Usage;
+}
+
+/**
+ * The matching core: similarity -> candidate pool -> resolver LLM -> protocol
+ * gap-fill. Exported so the matching eval CLI measures this exact path, not a
+ * copy. Candidates split by phase-0 reading: `inMeeting` documents declare this
+ * session (exact partition), `fallback` documents could not be read and go
+ * through the legacy window-similarity flow. Protocol-chain gap-fill only ever
+ * reasons over the fallback pool — for read documents the declared date already
+ * settles meeting membership.
+ */
+export async function resolveMeetingDecisions(input: ResolveInput): Promise<ResolveOutcome> {
+    const { subjects, inMeeting, fallback, diavgeiaUid, log } = input;
+    const onProgress = input.onProgress ?? (() => {});
+
+    const subjectLookup = new Map(subjects.map(s => [s.subjectId, s]));
+    const linkedSubjects = subjects.filter(s => s.existingDecision);
+    const unlinkedSubjects = subjects.filter(s => !s.existingDecision);
+    const pooledDecisions = [...inMeeting, ...fallback];
+    const declaredAdas = new Set(inMeeting.map(d => d.ada));
+
+    const matches: PollDecisionsResult['matches'] = [];
+    const unmatchedSubjects: PollDecisionsResult['unmatchedSubjects'] = [];
+    let usage: Anthropic.Messages.Usage = { ...NO_USAGE };
+
+    if (unlinkedSubjects.length === 0) {
+        return { matches, unmatchedSubjects, usage };
+    }
+    if (pooledDecisions.length === 0) {
+        // Nothing to offer the resolver — don't burn a call on an empty pool.
+        for (const s of unlinkedSubjects) {
+            unmatchedSubjects.push({ subjectId: s.subjectId, name: s.name, reason: 'No decisions available in the window' });
+        }
+        return { matches, unmatchedSubjects, usage };
+    }
+
+    // Step 2: Compute text similarity signals
+    onProgress("computing signals", 15);
+    const similarityMatrix = computeSimilarityMatrix(
+        unlinkedSubjects.map(s => ({ subjectId: s.subjectId, name: s.name })),
+        pooledDecisions,
+    );
+
+    // Step 3: Pre-resolver gap-fill from linked decisions (confirmed anchors).
+    // Only the fallback pool needs it — read documents already declare their session.
+    const declaredBoost = inMeeting.length > 0;
+    const TOP_N = declaredBoost ? 8 : 5;
+
+    const linkedProtocolNumbers: string[] = [];
+    for (const s of linkedSubjects) {
+        if (!s.existingDecision?.ada) continue;
+        const d = pooledDecisions.find(d => d.ada === s.existingDecision!.ada);
+        if (d?.protocolNumber) linkedProtocolNumbers.push(d.protocolNumber);
+    }
+
+    const preResolverGaps = fallback.length > 0
+        ? await analyzeProtocolGaps(linkedProtocolNumbers, fallback, client, diavgeiaUid, log, 'Pre-resolver chain')
+        : { gapCandidates: [], gapCandidateAdas: new Set<string>(), protocolAnalysis: null };
+
+    // Build candidate pool: top-N by similarity + gap candidates from linked chain
+    const candidatePool = buildCandidatePool({
+        matrix: similarityMatrix,
+        decisions: pooledDecisions,
+        topN: TOP_N,
+        gapCandidateAdas: preResolverGaps.gapCandidateAdas,
+        declaredAdas,
+    });
+
+    // Build linked decisions context for resolver
+    const linkedDecisions = [
+        ...linkedSubjects.filter(s => s.existingDecision && !s.existingDecision.needsExtraction).map(s => ({
+            subjectId: s.subjectId,
+            subjectName: s.name,
+            ada: s.existingDecision!.ada,
+            decisionTitle: s.existingDecision!.decisionTitle,
+            isReExtraction: false,
+        })),
+        ...subjects.filter(s => s.existingDecision?.needsExtraction).map(s => ({
+            subjectId: s.subjectId,
+            subjectName: s.name,
+            ada: s.existingDecision!.ada,
+            decisionTitle: s.existingDecision!.decisionTitle,
+            isReExtraction: true,
+        })),
+    ];
+
+    // Step 4: Single resolver LLM call
+    onProgress("resolver matching", 30);
+    const resolverPrompt = buildResolverPrompt({
+        subjects: unlinkedSubjects.map(s => ({
+            subjectId: s.subjectId,
+            name: s.name,
+            agendaItemIndex: s.agendaItemIndex,
+            nonAgendaReason: s.nonAgendaReason ?? null,
+        })),
+        candidatePool,
+        protocolAnalysis: preResolverGaps.protocolAnalysis,
+        linkedDecisions,
+    });
+
+    const resolverStart = Date.now();
+    const { result: resolverOutput, usage: resolverUsage } = await aiChat<ResolverOutput>({
+        model: RESOLVER_MODEL,
+        label: "decision-resolver",
+        systemPrompt: RESOLVER_SYSTEM_PROMPT,
+        userPrompt: resolverPrompt,
+        outputFormat: {
+            type: 'json_schema',
+            schema: RESOLVER_OUTPUT_SCHEMA,
+        },
+    });
+    usage = addUsage(usage, resolverUsage);
+
+    // Step 5: Process resolver output
+    const resolverResult = processResolverOutput({
+        resolverOutput,
+        candidatePool,
+    });
+
+    for (const u of resolverResult.unmatchedSubjects) {
+        const reqSubject = subjectLookup.get(u.subjectId);
+        if (reqSubject) u.name = reqSubject.name;
+    }
+
+    matches.push(...resolverResult.matches);
+    unmatchedSubjects.push(...resolverResult.unmatchedSubjects);
+
+    // Add subjects not mentioned by resolver to unmatched
+    const resolverMentioned = new Set([
+        ...resolverResult.matches.map(m => m.subjectId),
+        ...resolverResult.unmatchedSubjects.map(u => u.subjectId),
+    ]);
+    for (const s of unlinkedSubjects) {
+        if (!resolverMentioned.has(s.subjectId)) {
+            unmatchedSubjects.push({ subjectId: s.subjectId, name: s.name, reason: 'Not mentioned in resolver output' });
+        }
+    }
+
+    for (const w of resolverResult.warnings) {
+        console.warn(`  \u26a0 ${w}`);
+    }
+
+    // Phase 1 summary — resolver results
+    const totalCandidates = [...candidatePool.values()].reduce((sum, c) => sum + c.length, 0);
+    const resolverElapsed = ((Date.now() - resolverStart) / 1000).toFixed(1);
+    const confidenceCounts = { high: 0, medium: 0, low: 0 };
+    for (const m of resolverOutput.matches) confidenceCounts[m.confidence]++;
+    log(`=== PHASE 1: RESOLVE ===`);
+    log(`  Pool: ${pooledDecisions.length} decisions (${inMeeting.length} declare this session, ${fallback.length} fallback)`);
+    log(`  Candidate pool: ${unlinkedSubjects.length} subjects \u00d7 ${(totalCandidates / Math.max(unlinkedSubjects.length, 1)).toFixed(1)} avg candidates`);
+    log(`  Resolver: ${matches.length} matched (${confidenceCounts.high} high, ${confidenceCounts.medium} medium, ${confidenceCounts.low} low), ${unmatchedSubjects.length} unmatched`);
+    log(`  Resolver cost: ${resolverUsage.input_tokens.toLocaleString()} input, ${resolverUsage.output_tokens.toLocaleString()} output tokens (${resolverElapsed}s)`);
+    for (const m of resolverResult.matches) {
+        const reqSubject = subjectLookup.get(m.subjectId);
+        const pos = reqSubject?.agendaItemIndex != null ? `#${reqSubject.agendaItemIndex}` : 'OA';
+        log(`    ${pos} "${reqSubject?.name}" \u2192 ADA:${m.ada} (${m.matchConfidence.toFixed(2)}) \u2014 ${resolverOutput.matches.find(rm => rm.subjectId === m.subjectId)?.reasoning ?? ''}`);
+    }
+    for (const u of unmatchedSubjects) {
+        log(`    "${u.name}" \u2192 unmatched \u2014 ${u.reason}`);
+    }
+
+    // Step 6: Post-resolver protocol number gap-fill — fallback pool only.
+    if (unmatchedSubjects.length > 0 && fallback.length > 0) {
+        const confirmedProtocolNumbers: string[] = [];
+        for (const m of matches) {
+            if (m.protocolNumber) confirmedProtocolNumbers.push(m.protocolNumber);
+        }
+        confirmedProtocolNumbers.push(...linkedProtocolNumbers);
+
+        const postResolverGaps = await analyzeProtocolGaps(
+            [...new Set(confirmedProtocolNumbers)], fallback, client, diavgeiaUid, log, 'Post-resolver chain',
+        );
+
+        // Second resolver pass: match remaining unmatched subjects against gap candidates
+        const { gapCandidates } = postResolverGaps;
+        if (gapCandidates.length > 0 && unmatchedSubjects.length > 0) {
+            log(`  Gap-fill resolver: ${gapCandidates.length} candidates \u00d7 ${unmatchedSubjects.length} unmatched subjects`);
+
+            const gapCandidateLines = gapCandidates.map(gc =>
+                `  - ADA:${gc.decision.ada} protocol:${gc.protocolNumber} "${gc.decision.subject}"`
+            ).join('\n');
+
+            const unmatchedLines = unmatchedSubjects.map(s => {
+                const reqSubject = subjectLookup.get(s.subjectId);
+                const pos = reqSubject?.agendaItemIndex != null ? `#${reqSubject.agendaItemIndex}` : 'OA';
+                return `  - [${s.subjectId}] ${pos} "${s.name}"`;
+            }).join('\n');
+
+            const gapResolverSystemPrompt = `You are matching unmatched Greek municipal council agenda subjects to GAP CANDIDATE decisions \u2014 decisions whose protocol numbers fill gaps in a confirmed sequential chain from this meeting.
+
+CRITICAL CONTEXT: These gap candidates are CONFIRMED to belong to this meeting session by their protocol number position. The structural evidence (protocol number in the sequence) is very strong. You should match aggressively.
+
+RULES:
+- Gap candidates belong to this meeting \u2014 the protocol chain proves it. The only question is WHICH subject they correspond to.
+- Greek municipal decision titles are often generic administrative language (e.g., "Approval for organizing artistic event (concert)") that doesn't name the specific event. This is normal \u2014 match by topic category (concert\u2192concert, workshop\u2192workshop, theater\u2192theater).
+- Use elimination reasoning: if there are 2 gap candidates about concerts and 2 unmatched concert subjects, assign them. Don't leave them unmatched just because the title doesn't name the artist.
+- Each decision can be assigned to at most one subject (1:1 mapping).
+- Only leave a subject unmatched if no gap candidate is even in the same topic area (e.g., a concert subject and all gap candidates are about budget/administration).
+- Provide reasoning for each match.
+
+CONFIDENCE:
+- "high": Topic clearly matches (concert\u2192concert, workshop\u2192workshop), even if title is generic.
+- "medium": Topic is related but uncertain (children's event could be theater or concert).
+- "low": Only use if the connection is very tenuous.`;
+
+            const gapResolverPrompt = `UNMATCHED SUBJECTS:
+${unmatchedLines}
+
+GAP CANDIDATE DECISIONS (protocol numbers ${postResolverGaps.protocolAnalysis?.pattern ?? 'unknown'}):
+${gapCandidateLines}`;
+
+            const gapResolverStart = Date.now();
+            const { result: gapResolverOutput, usage: gapResolverUsage } = await aiChat<ResolverOutput>({
+                model: RESOLVER_MODEL,
+                label: "protocol-gap-resolver",
+                systemPrompt: gapResolverSystemPrompt,
+                userPrompt: gapResolverPrompt,
+                outputFormat: {
+                    type: 'json_schema',
+                    schema: RESOLVER_OUTPUT_SCHEMA,
+                },
+            });
+            usage = addUsage(usage, gapResolverUsage);
+            const gapDecisionByAda = new Map(gapCandidates.map(gc => [gc.decision.ada, gc]));
+
+            for (const m of gapResolverOutput.matches) {
+                const gc = gapDecisionByAda.get(m.ada);
+                if (!gc) continue;
+                // Only accept high/medium confidence from gap resolver
+                if (m.confidence === 'low') {
+                    log(`    Gap resolver: "${unmatchedSubjects.find(u => u.subjectId === m.subjectId)?.name}" \u2192 ADA:${m.ada} rejected (low confidence) \u2014 ${m.reasoning}`);
+                    continue;
+                }
+                const matchedSubject = unmatchedSubjects.find(u => u.subjectId === m.subjectId);
+                if (!matchedSubject) continue;
+
+                matches.push({
+                    subjectId: m.subjectId,
+                    ada: gc.decision.ada,
+                    decisionTitle: gc.decision.subject,
+                    pdfUrl: decisionPdfUrl(gc.decision),
+                    protocolNumber: gc.protocolNumber,
+                    publishDate: msToISODate(gc.decision.publishTimestamp),
+                    matchConfidence: m.confidence === 'high' ? 0.75 : 0.6,
+                    reasoning: m.reasoning ?? null,
+                });
+                const unmIdx = unmatchedSubjects.findIndex(u => u.subjectId === m.subjectId);
+                if (unmIdx >= 0) unmatchedSubjects.splice(unmIdx, 1);
+                log(`    Gap resolver: "${matchedSubject.name}" \u2192 ADA:${gc.decision.ada} (${m.confidence}) \u2014 ${m.reasoning}`);
+            }
+
+            for (const u of gapResolverOutput.unmatched) {
+                const existing = unmatchedSubjects.find(s => s.subjectId === u.subjectId);
+                if (existing) existing.reason = u.reasoning;
+            }
+
+            const gapResolverElapsed = ((Date.now() - gapResolverStart) / 1000).toFixed(1);
+            log(`  Gap-fill resolver cost: ${gapResolverUsage.input_tokens.toLocaleString()} input, ${gapResolverUsage.output_tokens.toLocaleString()} output tokens (${gapResolverElapsed}s)`);
+        }
+    }
+
+    return { matches, unmatchedSubjects, usage };
+}
+
 export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = async (request, onProgress) => {
     let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
     const log = createScopedLogger.fromCallbackUrl(request.callbackUrl);
@@ -208,13 +471,14 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     onProgress("fetching decisions", 5);
 
-    // Calculate date range: meeting date to 45 days after (decisions may be published later)
+    // Date range: from the request's derived window when present, else the
+    // legacy 45 days after the meeting date.
     const meetingDate = new Date(request.meetingDate);
     if (isNaN(meetingDate.getTime())) {
         throw new Error(`Invalid meeting date: ${request.meetingDate}`);
     }
-    const fromDate = meetingDate.toISOString().split('T')[0];
-    const toDate = new Date(meetingDate.getTime() + 45 * 24 * 60 * 60 * 1000)
+    const fromDate = request.window?.fromDate ?? meetingDate.toISOString().split('T')[0];
+    const toDate = request.window?.toDate ?? new Date(meetingDate.getTime() + 45 * 24 * 60 * 60 * 1000)
         .toISOString().split('T')[0];
 
     // Fetch decisions from Diavgeia — one request per unit ID, deduplicated by ADA
@@ -238,259 +502,72 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     log(`Fetched ${decisions.length} decisions from Diavgeia (${unitIds.length} unit query/queries)`);
 
+    // --- Phase 0: read every candidate's own statement of its session ---
+    onProgress("reading decisions", 10);
+    const known = new Map((request.knownDecisions ?? []).map(k => [k.ada, k]));
+    const READ_CONCURRENCY = 4;
+    const reads: ReadDecision[] = [];
+    let readCursor = 0;
+    const readWorker = async () => {
+        while (readCursor < decisions.length) {
+            const d = decisions[readCursor++];
+            const k = known.get(d.ada);
+            if (k && k.readStatus !== 'unread') {
+                // Already read on a previous poll — never pay twice. Only
+                // 'unread' is retried; 'unreadable'/'no_meeting_date' recovery
+                // is a prompt-version bump plus manual re-run.
+                reads.push({
+                    decision: d,
+                    reading: k.meetingDate
+                        ? { meetingDate: k.meetingDate, decisionNumber: null, body: null, notADecision: false }
+                        : null,
+                    readStatus: k.readStatus,
+                    fromKnown: true,
+                });
+                continue;
+            }
+            try {
+                const { result } = await readDecisionDocument(decisionPdfUrl(d));
+                reads.push({
+                    decision: d,
+                    reading: result,
+                    readStatus: result.notADecision ? 'not_a_decision' : result.meetingDate ? 'ok' : 'no_meeting_date',
+                    fromKnown: false,
+                });
+            } catch (e) {
+                log(`  read failed for ${d.ada}: ${e instanceof Error ? e.message : e}`);
+                reads.push({ decision: d, reading: null, readStatus: 'unreadable', fromKnown: false });
+            }
+        }
+    };
+    await Promise.all(Array.from({ length: READ_CONCURRENCY }, readWorker));
+
+    const partition = partitionReadDecisions(reads, request.meetingDate, request.administrativeBodyName);
+    log(`=== PHASE 0: READ === ${reads.length} candidates: ${partition.inMeeting.length} declare this session, ${partition.elsewhere.length} another, ${partition.fallback.length} unreadable/unread (fallback pool), ${partition.nonDecisions.length} not decisions`);
+
     // Partition subjects
     const subjectLookup = new Map(request.subjects.map(s => [s.subjectId, s]));
     const linkedSubjects = request.subjects.filter(s => s.existingDecision);
     const unlinkedSubjects = request.subjects.filter(s => !s.existingDecision);
 
     const matches: PollDecisionsResult['matches'] = [];
+    // Always empty since #617 phase 3: the pipeline never moves confirmed links.
+    // The field survives for older app versions that still read it.
     const reassignments: PollDecisionsResult['reassignments'] = [];
     const unmatchedSubjects: PollDecisionsResult['unmatchedSubjects'] = [];
     const ambiguousSubjects: PollDecisionsResult['ambiguousSubjects'] = [];
 
-    if (unlinkedSubjects.length > 0) {
-        // Step 2: Compute text similarity signals
-        onProgress("computing signals", 15);
-        const similarityMatrix = computeSimilarityMatrix(
-            unlinkedSubjects.map(s => ({ subjectId: s.subjectId, name: s.name })),
-            decisions,
-        );
-
-        // Step 3: Pre-resolver gap-fill from linked decisions (confirmed anchors)
-        // Linked decisions have reliable protocol numbers — use them to detect the
-        // sequential pattern and find gap candidates BEFORE the resolver runs.
-        const TOP_N = 5;
-
-        const linkedProtocolNumbers: string[] = [];
-        for (const s of linkedSubjects) {
-            if (!s.existingDecision?.ada) continue;
-            const d = decisions.find(d => d.ada === s.existingDecision!.ada);
-            if (d?.protocolNumber) linkedProtocolNumbers.push(d.protocolNumber);
-        }
-
-        const preResolverGaps = await analyzeProtocolGaps(
-            linkedProtocolNumbers, decisions, client, request.diavgeiaUid, log, 'Pre-resolver chain',
-        );
-
-        // Build candidate pool: top-N by similarity + gap candidates from linked chain
-        const candidatePool = buildCandidatePool({
-            matrix: similarityMatrix,
-            decisions,
-            topN: TOP_N,
-            gapCandidateAdas: preResolverGaps.gapCandidateAdas,
-        });
-
-        // Build linked decisions context for resolver
-        const linkedDecisions = [
-            ...linkedSubjects.filter(s => s.existingDecision && !s.existingDecision.needsExtraction).map(s => ({
-                subjectId: s.subjectId,
-                subjectName: s.name,
-                ada: s.existingDecision!.ada,
-                decisionTitle: s.existingDecision!.decisionTitle,
-                isReExtraction: false,
-            })),
-            ...request.subjects.filter(s => s.existingDecision?.needsExtraction).map(s => ({
-                subjectId: s.subjectId,
-                subjectName: s.name,
-                ada: s.existingDecision!.ada,
-                decisionTitle: s.existingDecision!.decisionTitle,
-                isReExtraction: true,
-            })),
-        ];
-
-        // Step 4: Single resolver LLM call
-        onProgress("resolver matching", 30);
-        const resolverPrompt = buildResolverPrompt({
-            subjects: unlinkedSubjects.map(s => ({
-                subjectId: s.subjectId,
-                name: s.name,
-                agendaItemIndex: s.agendaItemIndex,
-                nonAgendaReason: s.nonAgendaReason ?? null,
-            })),
-            candidatePool,
-            protocolAnalysis: preResolverGaps.protocolAnalysis,
-            linkedDecisions,
-        });
-
-        const resolverStart = Date.now();
-        const { result: resolverOutput, usage: resolverUsage } = await aiChat<ResolverOutput>({
-            model: RESOLVER_MODEL,
-            label: "decision-resolver",
-            systemPrompt: RESOLVER_SYSTEM_PROMPT,
-            userPrompt: resolverPrompt,
-            outputFormat: {
-                type: 'json_schema',
-                schema: RESOLVER_OUTPUT_SCHEMA,
-            },
-        });
-        totalUsage = addUsage(totalUsage, resolverUsage);
-
-        // Step 5: Process resolver output
-        const resolverResult = processResolverOutput({
-            resolverOutput,
-            candidatePool,
-        });
-
-        for (const u of resolverResult.unmatchedSubjects) {
-            const reqSubject = subjectLookup.get(u.subjectId);
-            if (reqSubject) u.name = reqSubject.name;
-        }
-
-        matches.push(...resolverResult.matches);
-        reassignments.push(...resolverResult.reassignments);
-        unmatchedSubjects.push(...resolverResult.unmatchedSubjects);
-
-        // Add subjects not mentioned by resolver to unmatched
-        const resolverMentioned = new Set([
-            ...resolverResult.matches.map(m => m.subjectId),
-            ...resolverResult.unmatchedSubjects.map(u => u.subjectId),
-        ]);
-        for (const s of unlinkedSubjects) {
-            if (!resolverMentioned.has(s.subjectId)) {
-                unmatchedSubjects.push({ subjectId: s.subjectId, name: s.name, reason: 'Not mentioned in resolver output' });
-            }
-        }
-
-        for (const w of resolverResult.warnings) {
-            console.warn(`  ⚠ ${w}`);
-        }
-
-        // Phase 1 summary — resolver results
-        const totalCandidates = [...candidatePool.values()].reduce((sum, c) => sum + c.length, 0);
-        const resolverElapsed = ((Date.now() - resolverStart) / 1000).toFixed(1);
-        const confidenceCounts = { high: 0, medium: 0, low: 0 };
-        for (const m of resolverOutput.matches) confidenceCounts[m.confidence]++;
-        log(`=== PHASE 1: RESOLVE ===`);
-        log(`  Fetched: ${decisions.length} decisions from Diavgeia`);
-        log(`  Candidate pool: ${unlinkedSubjects.length} subjects × ${(totalCandidates / Math.max(unlinkedSubjects.length, 1)).toFixed(1)} avg candidates`);
-        log(`  Resolver: ${matches.length} matched (${confidenceCounts.high} high, ${confidenceCounts.medium} medium, ${confidenceCounts.low} low), ${unmatchedSubjects.length} unmatched, ${reassignments.length} reassignments`);
-        log(`  Resolver cost: ${resolverUsage.input_tokens.toLocaleString()} input, ${resolverUsage.output_tokens.toLocaleString()} output tokens (${resolverElapsed}s)`);
-        for (const m of resolverResult.matches) {
-            const reqSubject = subjectLookup.get(m.subjectId);
-            const pos = reqSubject?.agendaItemIndex != null ? `#${reqSubject.agendaItemIndex}` : 'OA';
-            log(`    ${pos} "${reqSubject?.name}" → ADA:${m.ada} (${m.matchConfidence.toFixed(2)}) — ${resolverOutput.matches.find(rm => rm.subjectId === m.subjectId)?.reasoning ?? ''}`);
-        }
-        for (const u of unmatchedSubjects) {
-            log(`    "${u.name}" → unmatched — ${u.reason}`);
-        }
-        for (const r of reassignments) {
-            log(`    reassignment: ADA:${r.ada} from ${r.fromSubjectId} → ${r.toSubjectId} — ${r.reason}`);
-        }
-
-        // --- Step 6: Post-resolver protocol number gap-fill ---
-        // Subjects that lost their decision via reassignment are now effectively
-        // unmatched — add them to the pool so gap-fill can find them a new decision.
-        for (const r of reassignments) {
-            const fromSubject = subjectLookup.get(r.fromSubjectId);
-            if (fromSubject && !matches.some(m => m.subjectId === r.fromSubjectId)) {
-                unmatchedSubjects.push({
-                    subjectId: r.fromSubjectId,
-                    name: fromSubject.name,
-                    reason: `Decision ADA ${r.ada} reassigned to another subject`,
-                });
-            }
-        }
-
-        // Build the protocol chain from CONFIRMED matches (resolver + linked).
-        if (unmatchedSubjects.length > 0) {
-            const confirmedProtocolNumbers: string[] = [];
-            for (const m of matches) {
-                if (m.protocolNumber) confirmedProtocolNumbers.push(m.protocolNumber);
-            }
-            // Add linked protocol numbers (already collected earlier, but resolver matches are new)
-            confirmedProtocolNumbers.push(...linkedProtocolNumbers);
-
-            const postResolverGaps = await analyzeProtocolGaps(
-                [...new Set(confirmedProtocolNumbers)], decisions, client, request.diavgeiaUid, log, 'Post-resolver chain',
-            );
-
-            // Second resolver pass: match remaining unmatched subjects against gap candidates
-            const { gapCandidates } = postResolverGaps;
-            if (gapCandidates.length > 0 && unmatchedSubjects.length > 0) {
-                            log(`  Gap-fill resolver: ${gapCandidates.length} candidates × ${unmatchedSubjects.length} unmatched subjects`);
-
-                            const gapCandidateLines = gapCandidates.map(gc =>
-                                `  - ADA:${gc.decision.ada} protocol:${gc.protocolNumber} "${gc.decision.subject}"`
-                            ).join('\n');
-
-                            const unmatchedLines = unmatchedSubjects.map(s => {
-                                const reqSubject = subjectLookup.get(s.subjectId);
-                                const pos = reqSubject?.agendaItemIndex != null ? `#${reqSubject.agendaItemIndex}` : 'OA';
-                                return `  - [${s.subjectId}] ${pos} "${s.name}"`;
-                            }).join('\n');
-
-                            const gapResolverSystemPrompt = `You are matching unmatched Greek municipal council agenda subjects to GAP CANDIDATE decisions — decisions whose protocol numbers fill gaps in a confirmed sequential chain from this meeting.
-
-CRITICAL CONTEXT: These gap candidates are CONFIRMED to belong to this meeting session by their protocol number position. The structural evidence (protocol number in the sequence) is very strong. You should match aggressively.
-
-RULES:
-- Gap candidates belong to this meeting — the protocol chain proves it. The only question is WHICH subject they correspond to.
-- Greek municipal decision titles are often generic administrative language (e.g., "Approval for organizing artistic event (concert)") that doesn't name the specific event. This is normal — match by topic category (concert→concert, workshop→workshop, theater→theater).
-- Use elimination reasoning: if there are 2 gap candidates about concerts and 2 unmatched concert subjects, assign them. Don't leave them unmatched just because the title doesn't name the artist.
-- Each decision can be assigned to at most one subject (1:1 mapping).
-- Only leave a subject unmatched if no gap candidate is even in the same topic area (e.g., a concert subject and all gap candidates are about budget/administration).
-- Provide reasoning for each match.
-
-CONFIDENCE:
-- "high": Topic clearly matches (concert→concert, workshop→workshop), even if title is generic.
-- "medium": Topic is related but uncertain (children's event could be theater or concert).
-- "low": Only use if the connection is very tenuous.`;
-
-                            const gapResolverPrompt = `UNMATCHED SUBJECTS:
-${unmatchedLines}
-
-GAP CANDIDATE DECISIONS (protocol numbers ${postResolverGaps.protocolAnalysis?.pattern ?? 'unknown'}):
-${gapCandidateLines}`;
-
-                            const gapResolverStart = Date.now();
-                            const { result: gapResolverOutput, usage: gapResolverUsage } = await aiChat<ResolverOutput>({
-                                model: RESOLVER_MODEL,
-                                label: "protocol-gap-resolver",
-                                systemPrompt: gapResolverSystemPrompt,
-                                userPrompt: gapResolverPrompt,
-                                outputFormat: {
-                                    type: 'json_schema',
-                                    schema: RESOLVER_OUTPUT_SCHEMA,
-                                },
-                            });
-                            totalUsage = addUsage(totalUsage, gapResolverUsage);
-                            const gapDecisionByAda = new Map(gapCandidates.map(gc => [gc.decision.ada, gc]));
-
-                            for (const m of gapResolverOutput.matches) {
-                                const gc = gapDecisionByAda.get(m.ada);
-                                if (!gc) continue;
-                                // Only accept high/medium confidence from gap resolver
-                                if (m.confidence === 'low') {
-                                    log(`    Gap resolver: "${unmatchedSubjects.find(u => u.subjectId === m.subjectId)?.name}" → ADA:${m.ada} rejected (low confidence) — ${m.reasoning}`);
-                                    continue;
-                                }
-                                const matchedSubject = unmatchedSubjects.find(u => u.subjectId === m.subjectId);
-                                if (!matchedSubject) continue;
-
-                                matches.push({
-                                    subjectId: m.subjectId,
-                                    ada: gc.decision.ada,
-                                    decisionTitle: gc.decision.subject,
-                                    pdfUrl: decisionPdfUrl(gc.decision),
-                                    protocolNumber: gc.protocolNumber,
-                                    publishDate: msToISODate(gc.decision.publishTimestamp),
-                                    matchConfidence: m.confidence === 'high' ? 0.75 : 0.6,
-                                });
-                                const unmIdx = unmatchedSubjects.findIndex(u => u.subjectId === m.subjectId);
-                                if (unmIdx >= 0) unmatchedSubjects.splice(unmIdx, 1);
-                                log(`    Gap resolver: "${matchedSubject.name}" → ADA:${gc.decision.ada} (${m.confidence}) — ${m.reasoning}`);
-                            }
-
-                            for (const u of gapResolverOutput.unmatched) {
-                                const existing = unmatchedSubjects.find(s => s.subjectId === u.subjectId);
-                                if (existing) existing.reason = u.reasoning;
-                            }
-
-                            const gapResolverElapsed = ((Date.now() - gapResolverStart) / 1000).toFixed(1);
-                            log(`  Gap-fill resolver cost: ${gapResolverUsage.input_tokens.toLocaleString()} input, ${gapResolverUsage.output_tokens.toLocaleString()} output tokens (${gapResolverElapsed}s)`);
-                        }
-        }
-    }
+    const resolveOutcome = await resolveMeetingDecisions({
+        subjects: request.subjects,
+        inMeeting: partition.inMeeting.map(r => r.decision),
+        fallback: partition.fallback.map(r => r.decision),
+        diavgeiaUid: request.diavgeiaUid,
+        log,
+        onProgress,
+    });
+    matches.push(...resolveOutcome.matches);
+    unmatchedSubjects.push(...resolveOutcome.unmatchedSubjects);
+    totalUsage = addUsage(totalUsage, resolveOutcome.usage);
 
     // --- Phase 2: Extract PDFs for newly matched subjects ---
 
@@ -698,7 +775,29 @@ ${gapCandidateLines}`;
         log(journey);
     }
 
+    // Every decision read in the window — the app's DecisionCandidate feed.
+    const matchByAda = new Map(matches.map(m => [m.ada, m] as const));
+    const decisionsOut: NonNullable<PollDecisionsResult['decisions']> = reads.map(r => {
+        const match = matchByAda.get(r.decision.ada);
+        return {
+            ada: r.decision.ada,
+            title: r.decision.subject ?? null,
+            pdfUrl: decisionPdfUrl(r.decision),
+            protocolNumber: r.decision.protocolNumber ?? null,
+            publishDate: r.decision.publishTimestamp ? msToISODate(r.decision.publishTimestamp) : null,
+            meetingDate: r.reading?.meetingDate ?? null,
+            decisionNumber: r.reading?.decisionNumber ?? null,
+            body: r.reading?.body ?? null,
+            readStatus: r.readStatus,
+            fromKnown: r.fromKnown,
+            subjectId: match?.subjectId ?? null,
+            confidence: match?.matchConfidence ?? null,
+            reasoning: match?.reasoning ?? null,
+        };
+    });
+
     return {
+        decisions: decisionsOut,
         matches,
         reassignments,
         unmatchedSubjects,

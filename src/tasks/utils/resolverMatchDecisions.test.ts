@@ -258,6 +258,7 @@ function makeCandidateDecision(overrides: Partial<CandidateDecision> & { ada: st
         publishDate: '2025-01-01',
         pdfUrl: `https://diavgeia.gov.gr/doc/${overrides.ada}`,
         similarity: 0.75,
+        declaresSession: false,
         isGapCandidate: false,
         ...overrides,
     };
@@ -407,7 +408,6 @@ describe('processResolverOutput', () => {
                 { subjectId: 'sub-1', ada: 'ADA-A1', confidence: 'high', reasoning: 'Strong match' },
                 { subjectId: 'sub-2', ada: 'ADA-B1', confidence: 'medium', reasoning: 'Partial match' },
             ],
-            reassignments: [],
             unmatched: [],
         };
         const result = processResolverOutput({ resolverOutput, candidatePool });
@@ -427,7 +427,6 @@ describe('processResolverOutput', () => {
         // Low confidence matches are rejected (treated as unmatched)
         const lowOutput: ResolverOutput = {
             matches: [{ subjectId: 'sub-1', ada: 'ADA-A1', confidence: 'low', reasoning: 'Weak' }],
-            reassignments: [],
             unmatched: [],
         };
         const lowResult = processResolverOutput({ resolverOutput: lowOutput, candidatePool });
@@ -442,7 +441,6 @@ describe('processResolverOutput', () => {
             matches: [
                 { subjectId: 'sub-1', ada: 'ADA-UNKNOWN', confidence: 'high', reasoning: 'Hallucinated' },
             ],
-            reassignments: [],
             unmatched: [],
         };
         const result = processResolverOutput({ resolverOutput, candidatePool });
@@ -458,7 +456,6 @@ describe('processResolverOutput', () => {
                 { subjectId: 'sub-1', ada: 'ADA-A1', confidence: 'high', reasoning: 'First' },
                 { subjectId: 'sub-2', ada: 'ADA-A1', confidence: 'medium', reasoning: 'Duplicate' },
             ],
-            reassignments: [],
             unmatched: [],
         };
         // sub-2 pool also needs to have ADA-A1 so it passes the unknown check
@@ -474,27 +471,9 @@ describe('processResolverOutput', () => {
         expect(result.warnings.some(w => w.includes('ADA-A1'))).toBe(true);
     });
 
-    it('maps reassignments with reasoning to reason', () => {
-        const resolverOutput: ResolverOutput = {
-            matches: [],
-            reassignments: [
-                { ada: 'ADA-A1', fromSubjectId: 'sub-1', toSubjectId: 'sub-2', reasoning: 'Better fit' },
-            ],
-            unmatched: [],
-        };
-        const result = processResolverOutput({ resolverOutput, candidatePool });
-
-        expect(result.reassignments).toHaveLength(1);
-        expect(result.reassignments[0].ada).toBe('ADA-A1');
-        expect(result.reassignments[0].fromSubjectId).toBe('sub-1');
-        expect(result.reassignments[0].toSubjectId).toBe('sub-2');
-        expect(result.reassignments[0].reason).toBe('Better fit');
-    });
-
     it('maps unmatched with empty name and reasoning to reason', () => {
         const resolverOutput: ResolverOutput = {
             matches: [],
-            reassignments: [],
             unmatched: [
                 { subjectId: 'sub-1', reasoning: 'No good candidates' },
             ],
