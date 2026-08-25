@@ -89,6 +89,30 @@ git diff $RANGE
 
 **Important**: Commit messages are a signal, not the source of truth. Always cross-reference messages against the actual diff to understand what really changed.
 
+### Collect contributors
+
+GitHub populates the release page's "Contributors" avatar list from the users @-mentioned in the release body — it does not derive it from the commits. Resolve every commit in the range to the accounts behind it:
+
+```bash
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)   # resolves a fork to its parent
+
+# Note the three-dot form: the compare endpoint wants base...head, not base..head
+gh api "repos/$REPO/compare/${LAST_TAG}...HEAD" \
+  -q '.commits[] | select(.parents|length==1)
+      | "A:" + (.author.login // .commit.author.email)
+      + " C:" + (.committer.login // .commit.committer.email)' \
+  | sort -u
+```
+
+GitHub does the resolution, so this covers squash-merged PR authors and direct pushes alike, including authors whose commit email is private (`gh api search/users?q=<email>+in:email` misses those). Merge commits are filtered out — their author is whoever clicked merge. Both refs must exist on the remote; Step 1 already verified `main` is in sync.
+
+Credit the **author** of each commit, with two corrections:
+
+- **A bot author means credit the committer instead.** A large share of this repo's commits are agent-written and pushed by a person: the author is `Claude <noreply@anthropic.com>` and the human is the committer. The miscredit is silent, because that address resolves to the real `claude` account like any other login. **Never @mention a bot** — `claude`, `dependabot`, anything `[bot]`.
+- **Ignore `web-flow` as a committer.** That is GitHub's web UI signing a squash merge; the author is the real one there.
+
+When both sides are bots, or a field came back as an email rather than a login, ask the user who it is — **never guess a username from a display name**, since a wrong @mention credits a stranger.
+
 ## Step 3: Determine Version
 
 CalVer format: `YYYY.MM.N` where N is a sequential counter starting at 1, resetting each month.

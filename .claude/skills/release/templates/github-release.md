@@ -38,6 +38,11 @@ Write for someone deciding whether to deploy this update — lead with impact, n
 
 <!-- Refactors, CI, dependencies — one line each, keep brief. -->
 <!-- Omit if nothing notable. -->
+
+## Contributors
+
+<!-- One line thanking everyone who authored code in this release, by @username: -->
+<!-- "Thanks to @user1, @user2 and @user3 for contributing to this release." -->
 ```
 
 ## Rules
@@ -46,4 +51,5 @@ Write for someone deciding whether to deploy this update — lead with impact, n
 - **Lead with user/operator impact**: "Logs now persist across container restarts" not "Add logPersistence.ts module"
 - **Reference PRs/issues** where relevant: `(#123)`
 - **Skip trivial changes** (typos, formatting) unless they're the only changes
+- **Always include the "Contributors" section** — GitHub builds the release page's contributor avatar list from the users @-mentioned in the release body, not from the commits. Without mentions, only the release author is shown. Use the usernames collected in Step 2 of the skill; never guess usernames from commit author names
 - **Omit empty sections entirely**
