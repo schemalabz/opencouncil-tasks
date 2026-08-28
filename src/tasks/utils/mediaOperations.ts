@@ -2,6 +2,9 @@ import path from "path";
 import cp from "child_process";
 import { ffmpegPath } from '../../lib/ffmpegPath.js';
 import fs from "fs";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
+import type { ReadableStream } from "stream/web";
 import { promisify } from "util";
 import { uploadToSpaces } from "../uploadToSpaces.js";
 import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
@@ -1057,24 +1060,94 @@ async function ensureFontAvailable(): Promise<string> {
 }
 
 /**
- * Download a file from a URL
+ * Ask the origin how many bytes a file has, so both cached files and fresh downloads can
+ * be checked against it. Returns null when the origin gives no usable Content-Length, in
+ * which case there is nothing to verify against.
+ */
+const getRemoteContentLength = async (url: string): Promise<number | null> => {
+    try {
+        const response = await fetch(url, { method: "HEAD" });
+        if (!response.ok) {
+            return null;
+        }
+        return parseContentLength(response.headers.get("content-length"));
+    } catch (error) {
+        console.warn(`⚠️ Could not read size of ${url}: ${error instanceof Error ? error.message : String(error)}`);
+        return null;
+    }
+};
+
+const parseContentLength = (header: string | null): number | null => {
+    if (header === null) {
+        return null;
+    }
+    const size = Number(header);
+    return Number.isSafeInteger(size) && size >= 0 ? size : null;
+};
+
+/**
+ * Download a file from a URL.
+ *
+ * The body is streamed to a per-attempt `.part` file and renamed into place only once it
+ * is complete, so a crash mid-download can never leave behind a truncated file that later
+ * runs would mistake for a valid cache entry. Streaming also keeps memory flat: buffering
+ * whole meeting videos once grew the process to 14 GiB and got it OOM-killed, which is
+ * what produced such a truncated file in the first place.
+ *
+ * A cached file is reused only when its size matches the origin's; anything else is
+ * re-downloaded.
  */
 export const downloadFile = async (url: string): Promise<string> => {
     const fallbackRandomName = Math.random().toString(36).substring(2, 15);
     const fileName = path.join(dataDir, url.split("/").pop() || fallbackRandomName);
 
-    // Check if file already exists
+    // Reuse a cached file only when we can confirm it is complete
+    let cachedSize: number | null = null;
     try {
-        await fs.promises.access(fileName);
-        console.log(`File ${fileName} already exists, skipping download`);
-        return fileName;
+        cachedSize = (await fs.promises.stat(fileName)).size;
     } catch (error) {
-        // File doesn't exist, proceed with download
+        // Not cached, fall through to the download below
+    }
+    if (cachedSize !== null) {
+        const expectedSize = await getRemoteContentLength(url);
+        if (expectedSize === null) {
+            console.log(`File ${fileName} already exists (origin reported no size, cannot verify), skipping download`);
+            return fileName;
+        }
+        if (cachedSize === expectedSize) {
+            console.log(`File ${fileName} already exists, skipping download`);
+            return fileName;
+        }
+        console.warn(
+            `⚠️ Cached file ${fileName} is ${cachedSize} bytes but origin reports ${expectedSize}, re-downloading`,
+        );
+    }
+
+    // A random suffix keeps concurrent downloads of the same url from sharing a temp file
+    const partPath = `${fileName}.part-${Math.random().toString(36).substring(2, 15)}`;
+    try {
         const response = await fetch(url);
-        const buffer = await response.arrayBuffer();
-        await fs.promises.writeFile(fileName, Buffer.from(buffer));
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} ${response.statusText}`);
+        }
+        if (!response.body) {
+            throw new Error("response had no body");
+        }
+
+        await pipeline(Readable.fromWeb(response.body as ReadableStream), fs.createWriteStream(partPath));
+
+        const expectedSize = parseContentLength(response.headers.get("content-length"));
+        const writtenSize = (await fs.promises.stat(partPath)).size;
+        if (expectedSize !== null && writtenSize !== expectedSize) {
+            throw new Error(`incomplete download: wrote ${writtenSize} bytes, expected ${expectedSize}`);
+        }
+
+        await fs.promises.rename(partPath, fileName);
         console.log(`Downloaded file ${url} to ${fileName}`);
         return fileName;
+    } catch (error) {
+        await fs.promises.rm(partPath, { force: true }).catch(() => undefined);
+        throw new Error(`Failed to download ${url}: ${error instanceof Error ? error.message : String(error)}`);
     }
 };
 

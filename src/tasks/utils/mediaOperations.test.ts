@@ -1,4 +1,7 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import fsp from 'fs/promises';
+import os from 'os';
+import path from 'path';
 import {
   normalizeUtteranceTimestamps,
   escapeTextForFFmpeg,
@@ -265,5 +268,107 @@ describe('formatSpeakerInfo', () => {
     expect(info.role).toBe('Minister');
     expect(info.party).toBe('Party A');
     expect(info.partyColor).toBe('#ff0000');
+  });
+});
+
+describe('downloadFile', () => {
+  let tmpDir: string;
+  let downloadFile: (url: string) => Promise<string>;
+
+  const bodyOf = (content: string): ReadableStream<Uint8Array> =>
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(content));
+        controller.close();
+      },
+    });
+
+  const respondWith = (
+    content: string,
+    { status = 200, contentLength }: { status?: number; contentLength?: string | null } = {},
+  ) => {
+    const declared = contentLength === undefined ? String(Buffer.byteLength(content)) : contentLength;
+    const headers = new Headers();
+    if (declared !== null) headers.set('content-length', declared);
+    return vi.fn(async (_url: string, init?: { method?: string }) => ({
+      ok: status >= 200 && status < 300,
+      status,
+      statusText: 'test',
+      headers,
+      body: init?.method === 'HEAD' ? null : bodyOf(content),
+    }));
+  };
+
+  const partFiles = async () => (await fsp.readdir(tmpDir)).filter(f => f.includes('.part-'));
+
+  beforeEach(async () => {
+    tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'mediaops-download-'));
+    process.env.DATA_DIR = tmpDir;
+    vi.resetModules();
+    ({ downloadFile } = await import('./mediaOperations.js'));
+  });
+
+  afterEach(async () => {
+    vi.unstubAllGlobals();
+    delete process.env.DATA_DIR;
+    await fsp.rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('writes the body to the final path and leaves no .part file', async () => {
+    vi.stubGlobal('fetch', respondWith('video-bytes'));
+
+    const result = await downloadFile('https://example.com/clip.mp4');
+
+    expect(result).toBe(path.join(tmpDir, 'clip.mp4'));
+    expect(await fsp.readFile(result, 'utf8')).toBe('video-bytes');
+    expect(await partFiles()).toEqual([]);
+  });
+
+  it('reuses a cached file whose size matches the origin', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'video-bytes');
+    const fetchMock = respondWith('video-bytes');
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
+    // Only the HEAD size check should have gone out, no re-download
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1]).toEqual({ method: 'HEAD' });
+  });
+
+  it('re-downloads a truncated cached file instead of trusting it', async () => {
+    // Regression: an OOM-killed download left a 170 MiB stub of a 2.6 GB video that every
+    // later highlight reused, so ffmpeg failed with "moov atom not found" forever.
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'trunc');
+    vi.stubGlobal('fetch', respondWith('the-complete-video-bytes'));
+
+    const result = await downloadFile('https://example.com/clip.mp4');
+
+    expect(await fsp.readFile(result, 'utf8')).toBe('the-complete-video-bytes');
+    expect(await partFiles()).toEqual([]);
+  });
+
+  it('keeps the cached file when the origin reports no size', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'whatever');
+    vi.stubGlobal('fetch', respondWith('whatever', { contentLength: null }));
+
+    expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
+    expect(await fsp.readFile(cached, 'utf8')).toBe('whatever');
+  });
+
+  it('throws and writes nothing when the response is an error', async () => {
+    vi.stubGlobal('fetch', respondWith('<html>not found</html>', { status: 404 }));
+
+    await expect(downloadFile('https://example.com/clip.mp4')).rejects.toThrow(/Failed to download/);
+    expect(await fsp.readdir(tmpDir)).toEqual([]);
+  });
+
+  it('throws and writes nothing when the body is shorter than Content-Length', async () => {
+    vi.stubGlobal('fetch', respondWith('short', { contentLength: '99999' }));
+
+    await expect(downloadFile('https://example.com/clip.mp4')).rejects.toThrow(/incomplete download/);
+    expect(await fsp.readdir(tmpDir)).toEqual([]);
   });
 });
