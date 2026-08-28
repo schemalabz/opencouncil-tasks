@@ -1078,7 +1078,9 @@ const getRemoteContentLength = async (url: string): Promise<number | null> => {
 };
 
 const parseContentLength = (header: string | null): number | null => {
-    if (header === null) {
+    // A blank header has to be rejected before Number(), which reads "" and " " as 0 and
+    // would have us "verify" every download against a length of zero
+    if (header === null || header.trim() === "") {
         return null;
     }
     const size = Number(header);

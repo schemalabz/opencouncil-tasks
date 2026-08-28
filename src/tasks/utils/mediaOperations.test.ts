@@ -358,6 +358,26 @@ describe('downloadFile', () => {
     expect(await fsp.readFile(cached, 'utf8')).toBe('whatever');
   });
 
+  it('downloads normally when Content-Length is blank rather than reading it as 0', async () => {
+    // Number('') is 0, so a blank header must not be treated as a declared length of zero
+    vi.stubGlobal('fetch', respondWith('video-bytes', { contentLength: '' }));
+
+    const result = await downloadFile('https://example.com/clip.mp4');
+
+    expect(await fsp.readFile(result, 'utf8')).toBe('video-bytes');
+    expect(await partFiles()).toEqual([]);
+  });
+
+  it('keeps a cached file when Content-Length is blank', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'video-bytes');
+    const fetchMock = respondWith('video-bytes', { contentLength: '   ' });
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('throws and writes nothing when the response is an error', async () => {
     vi.stubGlobal('fetch', respondWith('<html>not found</html>', { status: 404 }));
 
