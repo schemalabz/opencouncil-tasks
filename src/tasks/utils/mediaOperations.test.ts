@@ -299,6 +299,46 @@ describe('downloadFile', () => {
     }));
   };
 
+  /**
+   * An origin that answers HEAD, ranged GET and full GET independently, so the size-probe
+   * fallbacks can be driven one at a time.
+   */
+  const mockOrigin = (
+    content: string,
+    { head = 'ok', range = 'ok' }: { head?: 'ok' | 'no-length' | 'reject'; range?: 'ok' | 'ignored' | 'reject' } = {},
+  ) => {
+    const total = Buffer.byteLength(content);
+    return vi.fn(async (_url: string, init: { method?: string; headers?: Record<string, string> } = {}) => {
+      if (init.method === 'HEAD') {
+        if (head === 'reject') {
+          return { ok: false, status: 405, statusText: 'Method Not Allowed', headers: new Headers(), body: null };
+        }
+        const headers = new Headers();
+        if (head === 'ok') headers.set('content-length', String(total));
+        return { ok: true, status: 200, statusText: 'OK', headers, body: null };
+      }
+      if (init.headers?.Range !== undefined) {
+        if (range === 'reject') {
+          return { ok: false, status: 416, statusText: 'Range Not Satisfiable', headers: new Headers(), body: null };
+        }
+        if (range === 'ignored') {
+          // Origin ignores Range and offers the whole file — must not be read for its size
+          const headers = new Headers({ 'content-length': String(total) });
+          return { ok: true, status: 200, statusText: 'OK', headers, body: bodyOf(content) };
+        }
+        const headers = new Headers({ 'content-range': `bytes 0-0/${total}` });
+        return { ok: true, status: 206, statusText: 'Partial Content', headers, body: bodyOf(content.slice(0, 1)) };
+      }
+      return {
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        headers: new Headers({ 'content-length': String(total) }),
+        body: bodyOf(content),
+      };
+    });
+  };
+
   const partFiles = async () => (await fsp.readdir(tmpDir)).filter(f => f.includes('.part-'));
 
   beforeEach(async () => {
@@ -375,7 +415,8 @@ describe('downloadFile', () => {
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    // A blank length is unknown rather than 0, so the range probe is tried before giving up
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it('throws and writes nothing when the response is an error', async () => {
@@ -390,5 +431,48 @@ describe('downloadFile', () => {
 
     await expect(downloadFile('https://example.com/clip.mp4')).rejects.toThrow(/incomplete download/);
     expect(await fsp.readdir(tmpDir)).toEqual([]);
+  });
+  it('falls back to a ranged GET for the size when HEAD is rejected', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'trunc');
+    vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'reject' }));
+
+    const result = await downloadFile('https://example.com/clip.mp4');
+
+    // Without the range probe the truncated cache would have been trusted forever
+    expect(await fsp.readFile(result, 'utf8')).toBe('the-complete-video-bytes');
+    expect(await partFiles()).toEqual([]);
+  });
+
+  it('falls back to a ranged GET when HEAD omits Content-Length', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'trunc');
+    vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'no-length' }));
+
+    expect(await fsp.readFile(await downloadFile('https://example.com/clip.mp4'), 'utf8')).toBe(
+      'the-complete-video-bytes',
+    );
+  });
+
+  it('keeps the cached file when neither HEAD nor the ranged GET reports a size', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'trunc');
+    vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'reject', range: 'reject' }));
+
+    // Nothing to validate against, so re-downloading every multi-GB source on every call
+    // would cost far more than trusting what is on disk
+    expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
+    expect(await fsp.readFile(cached, 'utf8')).toBe('trunc');
+  });
+
+  it('does not read the body when the origin ignores the range probe', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'trunc');
+    const fetchMock = mockOrigin('the-complete-video-bytes', { head: 'reject', range: 'ignored' });
+    vi.stubGlobal('fetch', fetchMock);
+
+    expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
+    // HEAD then the range probe, and no third call streaming the full body for its size
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

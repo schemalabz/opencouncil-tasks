@@ -1061,20 +1061,54 @@ async function ensureFontAvailable(): Promise<string> {
 
 /**
  * Ask the origin how many bytes a file has, so both cached files and fresh downloads can
- * be checked against it. Returns null when the origin gives no usable Content-Length, in
- * which case there is nothing to verify against.
+ * be checked against it.
+ *
+ * HEAD is tried first, then a single-byte ranged GET. The fallback matters because an
+ * unanswered size question means a cached file cannot be validated, and an unvalidated
+ * cache is how a truncated file becomes permanent — so it is worth a second, cheap ask
+ * before giving up. Returns null only when neither probe yields a size.
  */
 const getRemoteContentLength = async (url: string): Promise<number | null> => {
     try {
         const response = await fetch(url, { method: "HEAD" });
-        if (!response.ok) {
-            return null;
+        if (response.ok) {
+            const size = parseContentLength(response.headers.get("content-length"));
+            if (size !== null) {
+                return size;
+            }
         }
-        return parseContentLength(response.headers.get("content-length"));
+    } catch (error) {
+        console.warn(`⚠️ HEAD ${url} failed: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    // HEAD gave us nothing, so ask for one byte instead — the full length comes back in
+    // Content-Range for a fraction of the transfer
+    try {
+        const response = await fetch(url, { headers: { Range: "bytes=0-0" } });
+        try {
+            // Anything but a 206 means the origin ignored the range and is offering the
+            // whole file, which we must not read just to learn its size
+            if (response.status === 206) {
+                return parseContentRangeTotal(response.headers.get("content-range"));
+            }
+        } finally {
+            await response.body?.cancel().catch(() => undefined);
+        }
     } catch (error) {
         console.warn(`⚠️ Could not read size of ${url}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    return null;
+};
+
+/** Pull the total length out of a `Content-Range: bytes 0-0/1234` header. */
+const parseContentRangeTotal = (header: string | null): number | null => {
+    if (header === null) {
         return null;
     }
+    // An unsatisfied range reports the total as "*", which tells us nothing
+    const total = header.split("/")[1];
+    return total === undefined ? null : parseContentLength(total.trim());
 };
 
 const parseContentLength = (header: string | null): number | null => {
