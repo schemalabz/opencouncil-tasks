@@ -303,9 +303,16 @@ describe('downloadFile', () => {
    * An origin that answers HEAD, ranged GET and full GET independently, so the size-probe
    * fallbacks can be driven one at a time.
    */
+  // Stands in for a gzipped Content-Length: smaller than the decoded body, so trusting it
+  // would produce a size mismatch on every call
+  const COMPRESSED_LENGTH = 4;
+
   const mockOrigin = (
     content: string,
-    { head = 'ok', range = 'ok' }: { head?: 'ok' | 'no-length' | 'reject'; range?: 'ok' | 'ignored' | 'reject' } = {},
+    { head = 'ok', range = 'ok' }: {
+      head?: 'ok' | 'no-length' | 'reject';
+      range?: 'ok' | 'ignored' | 'ignored-gzip' | 'reject';
+    } = {},
   ) => {
     const total = Buffer.byteLength(content);
     return vi.fn(async (_url: string, init: { method?: string; headers?: Record<string, string> } = {}) => {
@@ -321,10 +328,18 @@ describe('downloadFile', () => {
         if (range === 'reject') {
           return { ok: false, status: 416, statusText: 'Range Not Satisfiable', headers: new Headers(), body: null };
         }
-        if (range === 'ignored') {
+        if (range === 'ignored' || range === 'ignored-gzip') {
           // Origin ignores Range and offers the whole file — must not be read for its size
-          const headers = new Headers({ 'content-length': String(total) });
-          return { ok: true, status: 200, statusText: 'OK', headers, body: bodyOf(content) };
+          const headers = new Headers();
+          if (range === 'ignored-gzip') {
+            // A compressed body declares the compressed length, which is not the size the
+            // file takes on disk once undici has decoded it
+            headers.set('content-encoding', 'gzip');
+            headers.set('content-length', String(COMPRESSED_LENGTH));
+          } else {
+            headers.set('content-length', String(total));
+          }
+          return { ok: true, status: 200, statusText: 'OK', headers, body: trackedBody(content) };
         }
         const headers = new Headers({ 'content-range': `bytes 0-0/${total}` });
         return { ok: true, status: 206, statusText: 'Partial Content', headers, body: bodyOf(content.slice(0, 1)) };
@@ -339,9 +354,24 @@ describe('downloadFile', () => {
     });
   };
 
+  // Records whether a response body was cancelled rather than drained, so tests can pin
+  // down that a size probe never streams the whole file
+  let bodyCancelled = false;
+  const trackedBody = (content: string): ReadableStream<Uint8Array> =>
+    new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(content));
+        controller.close();
+      },
+      cancel() {
+        bodyCancelled = true;
+      },
+    });
+
   const partFiles = async () => (await fsp.readdir(tmpDir)).filter(f => f.includes('.part-'));
 
   beforeEach(async () => {
+    bodyCancelled = false;
     tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'mediaops-download-'));
     process.env.DATA_DIR = tmpDir;
     vi.resetModules();
@@ -465,14 +495,30 @@ describe('downloadFile', () => {
     expect(await fsp.readFile(cached, 'utf8')).toBe('trunc');
   });
 
-  it('does not read the body when the origin ignores the range probe', async () => {
+  it('uses the length from a 200 when the origin ignores the range, without reading the body', async () => {
     const cached = path.join(tmpDir, 'clip.mp4');
     await fsp.writeFile(cached, 'trunc');
-    const fetchMock = mockOrigin('the-complete-video-bytes', { head: 'reject', range: 'ignored' });
+    vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'reject', range: 'ignored' }));
+
+    const result = await downloadFile('https://example.com/clip.mp4');
+
+    // The size was there in the headers, so the truncated cache still gets caught
+    expect(await fsp.readFile(result, 'utf8')).toBe('the-complete-video-bytes');
+    // ...and the probe dropped the full body instead of streaming it to learn that size
+    expect(bodyCancelled).toBe(true);
+  });
+
+  it('ignores a content-encoded length from the range probe', async () => {
+    const cached = path.join(tmpDir, 'clip.mp4');
+    await fsp.writeFile(cached, 'video-bytes');
+    const fetchMock = mockOrigin('video-bytes', { head: 'reject', range: 'ignored-gzip' });
     vi.stubGlobal('fetch', fetchMock);
 
     expect(await downloadFile('https://example.com/clip.mp4')).toBe(cached);
-    // HEAD then the range probe, and no third call streaming the full body for its size
+    expect(await fsp.readFile(cached, 'utf8')).toBe('video-bytes');
+    // Content-Length describes the compressed bytes. Trusting it would read this intact
+    // cache as a size mismatch and pull the whole source again — on every single call —
+    // so the tell is that no third request went out to re-download it.
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

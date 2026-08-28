@@ -1086,12 +1086,19 @@ const getRemoteContentLength = async (url: string): Promise<number | null> => {
     try {
         const response = await fetch(url, { headers: { Range: "bytes=0-0" } });
         try {
-            // Anything but a 206 means the origin ignored the range and is offering the
-            // whole file, which we must not read just to learn its size
             if (response.status === 206) {
                 return parseContentRangeTotal(response.headers.get("content-range"));
             }
+            // The origin ignored the range and is offering the whole file. Its length still
+            // answers the question, provided it describes the bytes we would actually store
+            // — a content-encoded length describes the compressed form instead, and
+            // checking a decompressed file against it would mismatch on every call.
+            if (response.status === 200 && response.headers.get("content-encoding") === null) {
+                return parseContentLength(response.headers.get("content-length"));
+            }
         } finally {
+            // Either way the body goes unread: it is the whole file whenever the origin
+            // ignored the range, and we only ever wanted the headers
             await response.body?.cancel().catch(() => undefined);
         }
     } catch (error) {
