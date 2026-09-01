@@ -3,7 +3,7 @@ import { buildFfmpegSplitArgs, segmentFileName } from "./splitAudioDiarization.j
 
 describe("segmentFileName", () => {
     it("embeds the time range so different segmentations get different names", () => {
-        // uploadToSpaces skips uploading when the derived key already exists,
+        // uploadToSpaces skips uploading when an object with the derived key and same size already exists,
         // so a name collision across runs silently serves stale audio
         const hourly = segmentFileName("vid_segment_1", 3600, 7200);
         const quarterly = segmentFileName("vid_segment_1", 900, 1800);

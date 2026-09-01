@@ -1,7 +1,9 @@
 import aws from 'aws-sdk';
+import type { AWSError } from 'aws-sdk';
 const S3 = aws.S3;
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { Task } from './pipeline.js';
 import mime from 'mime/lite';
@@ -16,6 +18,41 @@ export interface UploadFilesArgs {
 
 const VERSION = "1";
 
+// Mirrors the `file.pdf -> file_2.pdf -> file_3.pdf` naming convention, and the
+// 10-candidate cap, that opencouncil uses for its own uploads.
+const MAX_REVISIONS = 10;
+
+export interface ExistingObject {
+    contentLength: number;
+}
+
+/**
+ * Picks the key to write `baseFileName` to, given what's already in the bucket.
+ *
+ * Same size means the same file, so a re-run reuses it instead of paying for the upload
+ * again. A different size means the source produced different bytes under the same name —
+ * a livestream VOD re-downloaded after processing finished is longer than the truncated
+ * one fetched while it was still `post_live` — and overwriting would destroy the original,
+ * so the new content lands on the next revision instead.
+ */
+export async function resolveUploadKey(
+    baseFileName: string,
+    localSize: number,
+    head: (fileName: string) => Promise<ExistingObject | null>,
+): Promise<{ fileName: string; reuse: boolean }> {
+    const ext = path.extname(baseFileName);
+    const stem = path.basename(baseFileName, ext);
+
+    for (let revision = 1; revision <= MAX_REVISIONS; revision++) {
+        const fileName = revision === 1 ? baseFileName : `${stem}_${revision}${ext}`;
+        const existing = await head(fileName);
+        if (!existing) return { fileName, reuse: false };
+        if (existing.contentLength === localSize) return { fileName, reuse: true };
+    }
+
+    return { fileName: `${stem}_${crypto.randomUUID()}${ext}`, reuse: false };
+}
+
 export function createSpacesClient(): aws.S3 {
     return new S3({
         endpoint: process.env.DO_SPACES_ENDPOINT,
@@ -28,6 +65,25 @@ export function createSpacesClient(): aws.S3 {
             signatureVersion: "v4",
         }),
     });
+}
+
+/** S3 reports an absent object as a `NotFound` code, or as a bare 404 on some endpoints. */
+export function isMissingObjectError(error: unknown): boolean {
+    if (typeof error !== 'object' || error === null) return false;
+    const { code, statusCode } = error as Partial<AWSError>;
+    return code === 'NotFound' || statusCode === 404;
+}
+
+async function headExistingObject(client: aws.S3, bucket: string, key: string): Promise<ExistingObject | null> {
+    try {
+        const head = await client.headObject({ Bucket: bucket, Key: key }).promise();
+        // A missing ContentLength must never compare equal to a real file size.
+        return { contentLength: head.ContentLength ?? -1 };
+    } catch (error) {
+        if (isMissingObjectError(error)) return null;
+        console.error(`Error checking file existence for ${key}:`, error);
+        throw error;
+    }
 }
 
 export async function putPublicFile(client: aws.S3, bucket: string, key: string, localFile: string): Promise<void> {
@@ -79,28 +135,23 @@ export const uploadToSpaces: Task<UploadFilesArgs, string[]> = async ({ files, s
 
     for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
-        const fileName = path.basename(file, path.extname(file)) + `_v${VERSION}` + path.extname(file);
+        const baseFileName = path.basename(file, path.extname(file)) + `_v${VERSION}` + path.extname(file);
+
+        const { fileName, reuse } = await resolveUploadKey(
+            baseFileName,
+            fs.statSync(file).size,
+            (candidate) => headExistingObject(spacesEndpoint, bucketName, `${spacesPath}/${candidate}`),
+        );
         const finalUrl = spacesUrlForKey(`${spacesPath}/${fileName}`);
-        console.log(`Checking if file ${fileName} already exists in the bucket`);
 
-        // Keys are content-addressed enough (basename + version + segment range) that an
-        // existing object is the same file, so reuse it instead of re-uploading.
-        try {
-            await spacesEndpoint.headObject({
-                Bucket: bucketName,
-                Key: `${spacesPath}/${fileName}`
-            }).promise();
-
-            console.log(`File ${fileName} already exists. Skipping upload.`);
+        if (reuse) {
+            console.log(`File ${fileName} already exists with the same size. Skipping upload.`);
             uploadedUrls.push(finalUrl);
             onProgress("uploading", ((i + 1) / filesToUpload.length) * 100);
             continue;
-        } catch (error: any) {
-            // If the file doesn't exist, we'll proceed with the upload
-            if (error.code !== 'NotFound') {
-                console.error(`Error checking file existence for ${fileName}:`, error);
-                throw error;
-            }
+        }
+        if (fileName !== baseFileName) {
+            console.log(`File ${baseFileName} exists with different content, uploading as ${fileName} instead`);
         }
         try {
             await putPublicFile(spacesEndpoint, bucketName, `${spacesPath}/${fileName}`, file);
