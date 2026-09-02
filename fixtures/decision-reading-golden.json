@@ -1052,7 +1052,7 @@
           "unitIds": [
             "100086019"
           ],
-          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number.",
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. Page 1 prints the decision number as ΑΡΙΘΜ. ΑΠΟΦ: <n>/<year>. The ΑΠΟΣΠΑΣΜΑ line names the sitting as «της <n>ης τακτικής συνεδρίασης» or «της <n>ης έκτακτης συνεδρίασης». The two layouts are otherwise identical, and the session date follows «σήμερα την» in both.",
           "documents": [
             {
               "ada": "6ΞΨΕΩΗ5-ΩΒΘ",
@@ -1181,7 +1181,7 @@
           "unitIds": [
             "83115"
           ],
-          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number.",
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. Page 1 prints «Αρ. Απόφασης: <n>» and «ΑΡΙΘΜΟΣ ΠΡΑΚΤΙΚΟΥ <n>». The πρακτικό number resets each year and is not the decision number. The opening sentence reads «συνεδρίασε δια ζώσης σήμερα την <date>» for a normal sitting. It reads «συνεδρίασε Διά Περιφοράς σήμερα την <date>», or «συνεδρίασε σε Διά Περιφοράς συνεδρίαση σήμερα την <date>», when the body decides by written circulation. The date keeps the same position in every variant.",
           "documents": [
             {
               "ada": "Ψ5ΜΟΩΗ5-Ν03",
@@ -1302,6 +1302,17 @@
                 "decisionNumber": "262"
               },
               "verified": true
+            },
+            {
+              "ada": "9ΖΝΠΩΗ5-9ΛΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΖΝΠΩΗ5-9ΛΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2025-03-26",
+                "decisionNumber": "100"
+              },
+              "verified": true,
+              "notes": "Page 1 carries four date strings and only the first is the session date: «σήμερα την 26η Μαρτίου 2025» is the sitting, while 27 Μαρτίου and 29η Μαρτίου (twice) appear in the decision body as the date of the event being approved. All three decoys fall in the same month as the session, so a reader cannot separate them by proximity alone. The session was held Διά Περιφοράς, which changes the wording of the opening sentence but not the position of the date."
             }
           ]
         }
