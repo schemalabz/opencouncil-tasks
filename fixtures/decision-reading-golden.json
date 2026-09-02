@@ -1567,6 +1567,17 @@
           },
           "verified": true,
           "notes": "mayoral declaratory act (ΔΙΑΠΙΣΤΩΤΙΚΗ ΠΡΑΞΗ), not a decision"
+        },
+        {
+          "ada": "Ρ6ΩΔΩΞΒ-3ΔΛ",
+          "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ6ΩΔΩΞΒ-3ΔΛ",
+          "kind": "other",
+          "expected": {
+            "meetingDate": null,
+            "decisionNumber": null
+          },
+          "verified": true,
+          "notes": "public call by the council president («ΔΗΜΟΣΙΑ ΠΡΟΣΚΛΗΣΗ ΤΗΣ ΠΡΟΕΔΡΟΥ ΤΟΥ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ») inviting applications for Συμπαραστάτης του Δημότη. It carries a date (05.12.2025), a protocol number (29747) and the words ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ in its own heading, so it reads like a council act, but no session produced it. The shared minutes-office unit publishes it alongside real council decisions."
         }
       ]
     },
