@@ -20,14 +20,57 @@ describe('sameSessionDate', () => {
 });
 
 describe('sameBody', () => {
+    // Every string below was observed in a real document read or is a
+    // configured production body name. The Athens community forms come from a
+    // 17-document survey across all 7 communities (2026-09-02).
     it('matches across case, accents and a municipality suffix', () => {
         expect(sameBody('ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ ΔΗΜΟΥ ΧΑΝΙΩΝ', 'Δημοτικό Συμβούλιο')).toBe(true);
         expect(sameBody('ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ', 'Δημοτική Επιτροπή')).toBe(true);
+        expect(sameBody('Δημοτική Επιτροπή Βριλησσίων', 'Δημοτική Επιτροπή')).toBe(true);
     });
 
-    it('distinguishes different bodies', () => {
-        expect(sameBody('ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ', 'Δημοτικό Συμβούλιο')).toBe(false);
+    it('matches across Greek inflection (genitive document, nominative config)', () => {
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ', '1η Δημοτική Κοινότητα')).toBe(true);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 4ΗΣ ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ', '4η Δημοτική Κοινότητα')).toBe(true);
+        expect(sameBody('Συμβούλιο 5ης Δημοτικής Κοινότητας', '5η Δημοτική Κοινότητα')).toBe(true);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 7ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ', '7η Δημοτική Κοινότητα')).toBe(true);
+    });
+
+    it('matches community shorthands: ΔΗΜΟΤΙΚΗΣ dropped, Δ.Κ. abbreviation', () => {
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 5ης ΚΟΙΝΟΤΗΤΑΣ', '5η Δημοτική Κοινότητα')).toBe(true);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 6ης ΚΟΙΝΟΤΗΤΑΣ', '6η Δημοτική Κοινότητα')).toBe(true);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 1ΗΣ Δ.Κ.', '1η Δημοτική Κοινότητα')).toBe(true);
+        // trailing punctuation must not flip the community detection
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 1ΗΣ Δ.Κ.,', '1η Δημοτική Κοινότητα')).toBe(true);
+    });
+
+    it('a blank body matches nothing', () => {
+        expect(sameBody('', 'Δημοτικό Συμβούλιο')).toBe(false);
+        expect(sameBody('   ', 'Δημοτικό Συμβούλιο')).toBe(false);
+        expect(sameBody('ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ', '  ')).toBe(false);
+    });
+
+    it('numbered communities match only on the same ordinal', () => {
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ', '2η Δημοτική Κοινότητα')).toBe(false);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 6ης ΚΟΙΝΟΤΗΤΑΣ', '5η Δημοτική Κοινότητα')).toBe(false);
+    });
+
+    it('a community never matches a plain council or committee', () => {
+        // A community's own council says ΣΥΜΒΟΥΛΙΟ — it is still not the city council.
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ', 'Δημοτικό Συμβούλιο')).toBe(false);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ ΣΠΑΡΤΙΑΤΩΝ', 'Δημοτική Επιτροπή')).toBe(false);
         expect(sameBody('5η Δημοτική Κοινότητα', 'Δημοτικό Συμβούλιο')).toBe(false);
+    });
+
+    it('an unnumbered community matches on its name', () => {
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ ΣΠΑΡΤΙΑΤΩΝ', 'Δημοτική Κοινότητα Σπαρτιατών')).toBe(true);
+        expect(sameBody('ΣΥΜΒΟΥΛΙΟ ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ ΣΠΑΡΤΙΑΤΩΝ', '1η Δημοτική Κοινότητα')).toBe(false);
+    });
+
+    it('distinguishes different bodies, including committee types', () => {
+        expect(sameBody('ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ', 'Δημοτικό Συμβούλιο')).toBe(false);
+        expect(sameBody('ΟΙΚΟΝΟΜΙΚΗ ΕΠΙΤΡΟΠΗ', 'Δημοτική Επιτροπή')).toBe(false);
+        expect(sameBody('ΕΠΙΤΡΟΠΗ ΠΟΙΟΤΗΤΑΣ ΖΩΗΣ', 'Δημοτική Επιτροπή')).toBe(false);
     });
 });
 

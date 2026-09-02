@@ -746,13 +746,191 @@
               "verified": true
             }
           ]
+        },
+        {
+          "name": "1η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02. The 1η PDFs carry a shifted-glyph text layer (ΣΥΝΕΔΡΙΑΣΗ appears as ΢ΤΝΔΓΡΗΑ΢Ζ), which stresses text extraction.",
+          "documents": [
+            {
+              "ada": "9ΗΚΑΩ6Μ-Ψ2Α",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΗΚΑΩ6Μ-Ψ2Α",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-22",
+                "decisionNumber": "405"
+              },
+              "verified": true
+            },
+            {
+              "ada": "968ΖΩ6Μ-ΞΞΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/968ΖΩ6Μ-ΞΞΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-22",
+                "decisionNumber": "404"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "2η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02.",
+          "documents": [
+            {
+              "ada": "ΨΜΞ6Ω6Μ-ΓΤΗ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΜΞ6Ω6Μ-ΓΤΗ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "111"
+              },
+              "verified": true
+            },
+            {
+              "ada": "Ψ3ΡΦΩ6Μ-14Η",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ3ΡΦΩ6Μ-14Η",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-20",
+                "decisionNumber": "114"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "3η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02.",
+          "documents": [
+            {
+              "ada": "985ΜΩ6Μ-ΟΨ0",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/985ΜΩ6Μ-ΟΨ0",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "111"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΒΤΞΩ6Μ-ΥΨΨ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΒΤΞΩ6Μ-ΥΨΨ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-14",
+                "decisionNumber": "110"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "4η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02.",
+          "documents": [
+            {
+              "ada": "9ΦΛ7Ω6Μ-5Γ8",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΛ7Ω6Μ-5Γ8",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-06",
+                "decisionNumber": "29"
+              },
+              "verified": true
+            },
+            {
+              "ada": "68ΦΙΩ6Μ-Σ9Γ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/68ΦΙΩ6Μ-Σ9Γ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-06-15",
+                "decisionNumber": "28"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "5η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02.",
+          "documents": [
+            {
+              "ada": "ΨΚΣΖΩ6Μ-ΙΨΔ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΚΣΖΩ6Μ-ΙΨΔ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-03",
+                "decisionNumber": "66"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΨΥΟΩΩ6Μ-3ΟΡ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥΟΩΩ6Μ-3ΟΡ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-03",
+                "decisionNumber": "65"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "6η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02.",
+          "documents": [
+            {
+              "ada": "ΕΟΖΠΩ6Μ-3ΟΡ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΕΟΖΠΩ6Μ-3ΟΡ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-24",
+                "decisionNumber": "76"
+              },
+              "verified": true
+            },
+            {
+              "ada": "ΡΜΣ0Ω6Μ-Ζ25",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΜΣ0Ω6Μ-Ζ25",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-08-24",
+                "decisionNumber": "75"
+              },
+              "verified": true
+            }
+          ]
+        },
+        {
+          "name": "7η Δημοτική Κοινότητα",
+          "notes": "Community documents name the body in the genitive (ΣΥΜΒΟΥΛΙΟ Nης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ); 5η/6η sometimes drop ΔΗΜΟΤΙΚΗΣ. Labels adjudicated from page 1 on 2026-09-02.",
+          "documents": [
+            {
+              "ada": "9ΖΒΣΩ6Μ-2ΣΥ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/9ΖΒΣΩ6Μ-2ΣΥ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "96"
+              },
+              "verified": true
+            },
+            {
+              "ada": "65ΝΠΩ6Μ-Λ2Κ",
+              "pdfUrl": "https://diavgeia.gov.gr/doc/65ΝΠΩ6Μ-Λ2Κ",
+              "kind": "decision",
+              "expected": {
+                "meetingDate": "2026-07-29",
+                "decisionNumber": "95"
+              },
+              "verified": true
+            }
+          ]
         }
       ],
       "bodiesNotCovered": [
-        {
-          "name": "Δημοτικές Κοινότητες (1η–7η)",
-          "reason": "all seven communities publish under one shared unit (84655); excluded 2026-08-14 pending the body-extraction capability"
-        },
         {
           "name": "ΔΑΕΜ",
           "reason": "municipal company, not a deliberative body of the municipality"
