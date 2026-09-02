@@ -492,7 +492,13 @@ export interface ExtractedDecisionResult {
 export interface PollDecisionsRequest extends TaskRequest {
     meetingDate: string; // ISO date of the meeting
     diavgeiaUid: string; // Organization UID on Diavgeia
-    diavgeiaUnitIds?: string[]; // Optional unit IDs (e.g., ["81689"] for ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ)
+    /**
+     * Optional scopes to search, one Diavgeia query each, unioned by ADA.
+     * Each entry is `unit[:signer]`: a bare `"81689"` filters by unit only,
+     * and `"84655:100010590"` also filters by signer, which separates bodies
+     * that share one unit (Athens publishes 7 communities under `84655`).
+     */
+    diavgeiaUnitIds?: string[];
     mayorId?: string; // Person ID of the city mayor, for presence extraction
     forceExtract?: boolean; // Skip extraction cache and reprocess all PDFs
     people: { id: string; name: string }[];

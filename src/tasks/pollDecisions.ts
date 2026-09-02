@@ -1,4 +1,5 @@
 import { Diavgeia, msToISODate } from '@schemalabs/diavgeia-cli';
+import { parseDiavgeiaUnitScopes, formatDiavgeiaUnitScope } from './utils/diavgeiaUnitScope.js';
 import type { Decision } from '@schemalabs/diavgeia-cli';
 import Anthropic from '@anthropic-ai/sdk';
 import { PollDecisionsRequest, PollDecisionsResult } from "../types.js";
@@ -481,16 +482,19 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     const toDate = request.window?.toDate ?? new Date(meetingDate.getTime() + 45 * 24 * 60 * 60 * 1000)
         .toISOString().split('T')[0];
 
-    // Fetch decisions from Diavgeia — one request per unit ID, deduplicated by ADA
-    const unitIds = request.diavgeiaUnitIds?.length ? request.diavgeiaUnitIds : [undefined];
+    // Fetch decisions from Diavgeia — one request per configured scope,
+    // deduplicated by ADA. A scope narrows by unit, and by signer too where
+    // several bodies share one unit. See parseDiavgeiaUnitScopes.
+    const scopes = parseDiavgeiaUnitScopes(request.diavgeiaUnitIds);
     const seenAdas = new Set<string>();
     const decisions: Decision[] = [];
-    for (const unitId of unitIds) {
+    for (const scope of scopes) {
         for await (const d of client.searchAll({
             org: request.diavgeiaUid,
             from_issue_date: fromDate,
             to_issue_date: toDate,
-            unit: unitId,
+            unit: scope.unit,
+            signer: scope.signer,
             status: 'PUBLISHED',
         })) {
             if (!seenAdas.has(d.ada)) {
@@ -500,7 +504,8 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         }
     }
 
-    log(`Fetched ${decisions.length} decisions from Diavgeia (${unitIds.length} unit query/queries)`);
+    const scopeLabels = scopes.map(formatDiavgeiaUnitScope);
+    log(`Fetched ${decisions.length} decisions from Diavgeia (${scopes.length} query/queries: ${scopeLabels.join(', ')})`);
 
     // --- Phase 0: read every candidate's own statement of its session ---
     onProgress("reading decisions", 10);
@@ -822,7 +827,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         },
         metadata: {
             diavgeiaUid: request.diavgeiaUid,
-            query: { fromDate, toDate, unitIds: request.diavgeiaUnitIds },
+            query: { fromDate, toDate, unitIds: request.diavgeiaUnitIds, scopes: scopeLabels },
             fetchedCount: decisions.length,
             matchedCount: matches.length,
             unmatchedCount: unmatchedSubjects.length,

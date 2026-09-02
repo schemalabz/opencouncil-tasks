@@ -807,3 +807,84 @@ describe("pollDecisions - extraction gate", () => {
         expect(result.extractions).not.toBeNull();
     });
 });
+
+describe("pollDecisions - unit and signer scoping", () => {
+    it("searches the whole organization when nothing is configured", async () => {
+        await pollDecisions(makeRequest(), noopProgress);
+
+        expect(mockSearchAll).toHaveBeenCalledTimes(1);
+        expect(mockSearchAll.mock.calls[0][0]).toMatchObject({ org: "6104" });
+        expect(mockSearchAll.mock.calls[0][0].unit).toBeUndefined();
+        expect(mockSearchAll.mock.calls[0][0].signer).toBeUndefined();
+    });
+
+    it("filters by unit alone for a bare entry", async () => {
+        await pollDecisions(makeRequest({ diavgeiaUnitIds: ["81689"] }), noopProgress);
+
+        expect(mockSearchAll).toHaveBeenCalledTimes(1);
+        expect(mockSearchAll.mock.calls[0][0]).toMatchObject({ unit: "81689" });
+        expect(mockSearchAll.mock.calls[0][0].signer).toBeUndefined();
+    });
+
+    it("filters by unit and signer for a scoped entry", async () => {
+        await pollDecisions(makeRequest({ diavgeiaUnitIds: ["84655:100010590"] }), noopProgress);
+
+        expect(mockSearchAll).toHaveBeenCalledTimes(1);
+        expect(mockSearchAll.mock.calls[0][0]).toMatchObject({
+            unit: "84655",
+            signer: "100010590",
+        });
+    });
+
+    it("issues one query per entry and mixes bare with scoped", async () => {
+        await pollDecisions(
+            makeRequest({ diavgeiaUnitIds: ["81689", "84655:100022189"] }),
+            noopProgress,
+        );
+
+        expect(mockSearchAll).toHaveBeenCalledTimes(2);
+        expect(mockSearchAll.mock.calls[0][0]).toMatchObject({ unit: "81689" });
+        expect(mockSearchAll.mock.calls[0][0].signer).toBeUndefined();
+        expect(mockSearchAll.mock.calls[1][0]).toMatchObject({
+            unit: "84655",
+            signer: "100022189",
+        });
+    });
+
+    it("unions two signers on one unit, deduplicating by ADA", async () => {
+        // The 2025-09-01 sitting of Athens' 1st Δ.Κ.: the president signed the
+        // superseded agenda, the deputy signed the live one. One ADA is
+        // returned by both queries and must be counted once.
+        const BY_PRESIDENT = makeDecision({ ada: "ADA-P1", subject: "Ημερήσια διάταξη (αναβολή)" });
+        const SHARED = makeDecision({ ada: "ADA-SHARED", subject: "Κοινή απόφαση" });
+        const BY_DEPUTY = makeDecision({ ada: "ADA-D1", subject: "Ημερήσια διάταξη" });
+
+        mockSearchAll
+            .mockReturnValueOnce(asyncIter([BY_PRESIDENT, SHARED]))
+            .mockReturnValueOnce(asyncIter([SHARED, BY_DEPUTY]));
+
+        const result = await pollDecisions(
+            makeRequest({ diavgeiaUnitIds: ["84655:100022189", "84655:129415"] }),
+            noopProgress,
+        );
+
+        expect(mockSearchAll).toHaveBeenCalledTimes(2);
+        expect(result.metadata?.fetchedCount).toBe(3);
+        // The set, not just the count: a dedup that dropped the deputy's
+        // decision while double-counting the shared one would also yield 3.
+        expect(new Set((result.decisions ?? []).map(d => d.ada)))
+            .toEqual(new Set(['ADA-P1', 'ADA-SHARED', 'ADA-D1']));
+    });
+
+    it("records the queried scopes in the result metadata", async () => {
+        const result = await pollDecisions(
+            makeRequest({ diavgeiaUnitIds: ["81689", "84655:129415"] }),
+            noopProgress,
+        );
+
+        expect(result.metadata?.query).toMatchObject({
+            unitIds: ["81689", "84655:129415"],
+            scopes: ["81689", "84655:129415"],
+        });
+    });
+});
