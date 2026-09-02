@@ -765,7 +765,7 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "notes": "Diavgeia's protocolNumber field usually carries the decision number, with occasional true filing protocols.",
+          "notes": "Diavgeia's protocolNumber field usually carries the decision number, with occasional true filing protocols. Page 1 opens «ΑΠΟΣΠΑΣΜΑ από το πρακτικό της υπ' αρ. <n>ης/<year> Συνεδρίασης», so the body numbers its sittings per year. The decision number follows as «Αρ. Απόφασης <n>/<year>». The session date is written «σήμερα την <n>η του μήνα <Month> του έτους <year>», which puts «του μήνα» and «του έτους» between the parts of the date. Decision numbers restart each year, so a number identifies a decision only together with its year.",
           "documents": [
             {
               "ada": "9ΔΔΦΩΗΔ-ΕΡ3",
@@ -893,7 +893,7 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "notes": "Diavgeia's protocolNumber field carries the decision number.",
+          "notes": "Diavgeia's protocolNumber field carries the decision number. Page 1 opens «ΑΠΟΣΠΑΣΜΑ από το πρακτικό της υπ' αρ. <n>ης/<year> Συνεδρίασης», so the body numbers its sittings per year. The decision number follows as «Αρ. Απόφασης <n>/<year>». The session date is written «σήμερα την <n>η του μήνα <Month> του έτους <year>», which puts «του μήνα» and «του έτους» between the parts of the date. Decision numbers restart each year, so a number identifies a decision only together with its year. Special sittings (ειδικές συνεδριάσεις) carry a second number series that also restarts at 1 each year, in parallel with the ordinary one. It covers the budget vote, the management report and the election of the presidency, so «1/2026» is not the first decision of 2026.",
           "documents": [
             {
               "ada": "96Β4ΩΗΔ-0ΑΕ",
