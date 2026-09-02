@@ -8,10 +8,7 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100086220"
-          ],
-          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number.",
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. The Diavgeia subject line starts with the decision number, in the form «<n>-<year> Απόφαση Δημοτικής Επιτροπής <title>». The number is therefore available from the search metadata, before the document is read. Use it to check the number the reader takes from page 1.",
           "documents": [
             {
               "ada": "91ΙΜΩΨ3-ΤΑ6",
@@ -149,10 +146,7 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "83024"
-          ],
-          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. The protocol number is often absent from the document itself.",
+          "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. The protocol number is often absent from the document itself. The Diavgeia subject line starts with the decision number, in the form «Α.Δ.Σ. <n>/<year> «<title>»» or «<n>-<year> Απόφαση Δημοτικού Συμβουλίου <title>». The number is therefore available from the search metadata, before the document is read. Across 138 documents of both bodies, 137 carried a number in the subject line.",
           "documents": [
             {
               "ada": "ΨΕΨΠΩΨ3-Π9Α",
@@ -255,9 +249,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100087485"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -384,9 +375,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "83271"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -509,9 +497,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100085478"
-          ],
           "notes": "Decision numbers are labelled ΠΡΑΞΗ in the documents, not Απόφαση. Diavgeia's protocolNumber field is prose that contains the number.",
           "documents": [
             {
@@ -638,9 +623,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "78341"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number. The document often states no protocol number at all.",
           "documents": [
             {
@@ -783,9 +765,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100084212"
-          ],
           "notes": "Diavgeia's protocolNumber field usually carries the decision number, with occasional true filing protocols.",
           "documents": [
             {
@@ -914,9 +893,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "79311"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -1049,9 +1025,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100086019"
-          ],
           "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. Page 1 prints the decision number as ΑΡΙΘΜ. ΑΠΟΦ: <n>/<year>. The ΑΠΟΣΠΑΣΜΑ line names the sitting as «της <n>ης τακτικής συνεδρίασης» or «της <n>ης έκτακτης συνεδρίασης». The two layouts are otherwise identical, and the session date follows «σήμερα την» in both.",
           "documents": [
             {
@@ -1178,9 +1151,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "83115"
-          ],
           "notes": "Diavgeia's protocolNumber field is a filing protocol, distinct from the decision number. Page 1 prints «Αρ. Απόφασης: <n>» and «ΑΡΙΘΜΟΣ ΠΡΑΚΤΙΚΟΥ <n>». The πρακτικό number resets each year and is not the decision number. The opening sentence reads «συνεδρίασε δια ζώσης σήμερα την <date>» for a normal sitting. It reads «συνεδρίασε Διά Περιφοράς σήμερα την <date>», or «συνεδρίασε σε Διά Περιφοράς συνεδρίαση σήμερα την <date>», when the body decides by written circulation. The date keeps the same position in every variant.",
           "documents": [
             {
@@ -1324,9 +1294,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100086151"
-          ],
           "notes": "Dedicated unit. Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -1453,9 +1420,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "79399"
-          ],
           "notes": "Publishes under the shared minutes-office unit («ΓΡΑΦΕΙΟ ΠΡΑΚΤΙΚΩΝ ΔΣ & ΕΠΙΤΡΟΠΩΝ»), which also carries mayoral and other acts. Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -1612,7 +1576,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [],
           "notes": "No unit exists for the deliberative organs — see the council's note. Diavgeia's protocolNumber field is a filing protocol.",
           "documents": [
             {
@@ -1730,7 +1693,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [],
           "notes": "No unit exists for the deliberative organs. Each decision carries the unit of the department that drafted the item (a council decision about the municipal museum carries the social-policy department's unit). Unit filters cannot identify the body; fetch org-wide and read the document. Diavgeia's protocolNumber field is a filing protocol.",
           "documents": [
             {
@@ -1875,9 +1837,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100033602"
-          ],
           "notes": "Shares its unit with the council — see the council's note. Subject prefix Α.Δ.Ε.",
           "documents": [
             {
@@ -2014,9 +1973,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "100033602"
-          ],
           "notes": "ΔΣ and ΔΕ publish in one shared unit («ΑΥΤ. ΤΜΗΜΑ ΥΠΟΣΤΗΡΙΞΗΣ ΑΙΡΕΤΩΝ ΚΑΙ ΣΥΛΛΟΓΙΚΩΝ ΟΡΓΑΝΩΝ»), together with mayoral acts. The subject prefix identifies the body: Α.Δ.Σ. for the council, Α.Δ.Ε. for the committee. Diavgeia's protocolNumber field usually carries the decision number, with occasional true filing protocols.",
           "documents": [
             {
@@ -2176,9 +2132,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100085541"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -2306,9 +2259,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "80700"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -2441,9 +2391,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [
-            "100085589"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -2570,9 +2517,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [
-            "87737"
-          ],
           "notes": "Diavgeia's protocolNumber field carries the decision number.",
           "documents": [
             {
@@ -2710,7 +2654,6 @@
       "bodies": [
         {
           "name": "Δημοτική Επιτροπή",
-          "unitIds": [],
           "documents": [
             {
               "ada": "ΨΛΝ2ΩΡΦ-ΛΧΙ",
@@ -2836,7 +2779,6 @@
         },
         {
           "name": "Δημοτικό Συμβούλιο",
-          "unitIds": [],
           "notes": "Diavgeia's protocolNumber field carries the decision number. The document often states no protocol number at all.",
           "documents": [
             {

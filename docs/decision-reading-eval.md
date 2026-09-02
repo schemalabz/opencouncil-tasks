@@ -32,7 +32,6 @@ cities[]
   cityId, orgUid          orgUid is optional; some cities omit it
   bodies[]
     name          the administrative body; this is also a label (see below)
-    unitIds       the Diavgeia unit ids that publish for this body
     notes         publishing behaviour on Diavgeia, for human readers
     documents[]
       ada, pdfUrl
@@ -100,6 +99,8 @@ A different session type is not by itself a reason. Chania holds regular, extrao
 The command never reads the `notes` fields. Notes are prose for people and for agents. No test enforces them.
 
 The fixture also has no concept of a session. It answers "does the reader extract the right values from this PDF". It cannot express "this session took place and we hold no meeting for it". Session-level gaps need a different structure.
+
+It holds no Diavgeia unit ids either. Unit ids decide which documents we collect; this file scores how we read a document we already hold. Two sources own the collection side: `AdministrativeBody.diavgeiaUnitIds` is what `pollDecisions` queries, and the `opencouncil-seed-data` extract lists every unit of all 337 municipalities with publication counts.
 
 ## Score one body against its links
 
