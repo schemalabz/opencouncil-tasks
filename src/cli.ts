@@ -1001,7 +1001,7 @@ program
 
 program
     .command('evaluate-decision-reading <file>')
-    .description('Score model reading of decision documents against labels. Accepts an export file (export-decision-reading-eval.ts) or the golden fixture (fixtures/decision-reading-golden.json)')
+    .description('Score model reading of decision documents against labels. Accepts the golden fixture (fixtures/decision-reading-golden.json) or a per-body export from opencouncil/scripts/export-decision-reading-eval.ts. See docs/decision-reading-eval.md')
     .option('-c, --concurrency <n>', 'parallel document reads', '4')
     .option('-l, --limit <n>', 'only read the first N documents (cost control)')
     .option('--skip-cache', 'ignore cached reads and call the model again')

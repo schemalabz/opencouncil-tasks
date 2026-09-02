@@ -26,6 +26,7 @@ The server supports the following processing tasks:
 
 ### Diavgeia Integration
 - [`pollDecisions`](src/tasks/pollDecisions.ts) - Fetches decisions from the Diavgeia (Greek Government Transparency) API and matches them to meeting agenda subjects using text similarity and LLM fallback
+- [**Decision reading evaluation**](docs/decision-reading-eval.md) - Golden fixture and `evaluate-decision-reading` command that score how the reader extracts the session date, decision number and administrative body from decision PDFs
 
 ### Data Synchronization
 - [**PGSync**](docs/pgsync-setup.md) - Real-time change data capture that continuously syncs PostgreSQL to Elasticsearch
