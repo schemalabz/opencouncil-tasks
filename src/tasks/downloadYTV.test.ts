@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection, isSilentAudio,
-  downloadUntilComplete, parseVideoInfoOutput,
+  downloadUntilComplete, parseVideoInfoOutput, isCachedMediaFor,
   type CompleteDownloadDeps, type CompleteDownloadConfig, type RawVideo,
 } from './downloadYTV.js';
 
@@ -600,5 +600,36 @@ describe('downloadUntilComplete', () => {
     } finally {
       logSpy.mockRestore();
     }
+  });
+});
+
+describe('isCachedMediaFor', () => {
+  const videoId = 'EcGyyyrLNhQ';
+
+  it('matches the downloaded media and yt-dlp intermediates', () => {
+    expect(isCachedMediaFor(videoId, videoId)).toBe(true);
+    expect(isCachedMediaFor(videoId, `${videoId}.mp4`)).toBe(true);
+    expect(isCachedMediaFor(videoId, `${videoId}.mp3`)).toBe(true);
+    expect(isCachedMediaFor(videoId, `${videoId}.f399.mp4`)).toBe(true);
+    expect(isCachedMediaFor(videoId, `${videoId}.mp4.part`)).toBe(true);
+  });
+
+  it('matches the split audio derived from it', () => {
+    expect(isCachedMediaFor(videoId, `${videoId}_segment_0_0-620.mp3`)).toBe(true);
+    expect(isCachedMediaFor(videoId, `${videoId}_full_0-880.mp3`)).toBe(true);
+  });
+
+  it('leaves a Spaces-sourced sibling task alone', () => {
+    // A Spaces reprocess takes its videoId from the object basename, so `<id>_v1` is
+    // another task's own media — not a variant of this video's.
+    expect(isCachedMediaFor(videoId, `${videoId}_v1.mp3`)).toBe(false);
+    expect(isCachedMediaFor(videoId, `${videoId}_v1.mp4`)).toBe(false);
+    expect(isCachedMediaFor(videoId, `${videoId}_v1_full_0-880.mp3`)).toBe(false);
+  });
+
+  it('does not match a different video whose id merely shares the prefix', () => {
+    expect(isCachedMediaFor(videoId, `${videoId}v1.mp3`)).toBe(false);
+    expect(isCachedMediaFor(videoId, `${videoId}X.mp4`)).toBe(false);
+    expect(isCachedMediaFor(videoId, 'otherId.mp4')).toBe(false);
   });
 });

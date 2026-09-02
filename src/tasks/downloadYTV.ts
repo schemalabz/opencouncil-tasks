@@ -312,8 +312,23 @@ async function getInfo(url: string): Promise<VideoInfo> {
 }
 
 /**
- * Removes ALL cached files for the video — the final mp4/mp3 AND yt-dlp's intermediates
- * (`.part`, `.ytdl`, per-format `.fNNN.*`) — so the next attempt re-downloads fresh against
+ * Whether a data-dir file belongs to this video: its media, yt-dlp's intermediates
+ * (`.part`, `.ytdl`, per-format `.fNNN.*`), and the split audio derived from it.
+ *
+ * Deliberately not a bare `${videoId}_` prefix. A Spaces-sourced download takes its
+ * videoId from the object basename, so `<id>_v1` is a sibling task's own media rather
+ * than a variant of this video's, and matching it would delete another task's cache.
+ * Only the splitter's `_segment_`/`_full_` outputs are ours to remove.
+ */
+export function isCachedMediaFor(videoId: string, fileName: string): boolean {
+    return fileName === videoId
+        || fileName.startsWith(`${videoId}.`)
+        || fileName.startsWith(`${videoId}_segment_`)
+        || fileName.startsWith(`${videoId}_full_`);
+}
+
+/**
+ * Removes ALL cached files for the video, so the next attempt re-downloads fresh against
  * the current manifest instead of resuming a stale/partial one (resume behaviour after a
  * manifestless→manifest transition is not something we want to rely on).
  */
@@ -322,14 +337,19 @@ function dropCachedMedia(youtubeUrl: string): void {
     const { videoId } = getVideoIdAndUrl(youtubeUrl);
     if (!fs.existsSync(outputDir)) return;
     for (const name of fs.readdirSync(outputDir)) {
-        if (name === videoId || name.startsWith(`${videoId}.`)) {
+        if (isCachedMediaFor(videoId, name)) {
             const file = path.join(outputDir, name);
             try { fs.unlinkSync(file); } catch (err) { console.warn(`Failed to remove ${file}:`, err); }
         }
     }
 }
 
-/** Total bytes on disk for the video's files (final mp4 plus yt-dlp intermediates). */
+/**
+ * Total bytes on disk for the video's files (final mp4 plus yt-dlp intermediates).
+ * Narrower than isCachedMediaFor on purpose: this measures download progress for the
+ * post_live heartbeat, and a previous run's split audio is already on disk at the first
+ * attempt, so counting it would corrupt the byte curve.
+ */
 function downloadedBytes(youtubeUrl: string): number {
     const outputDir = process.env.DATA_DIR || "./data";
     const { videoId } = getVideoIdAndUrl(youtubeUrl);
