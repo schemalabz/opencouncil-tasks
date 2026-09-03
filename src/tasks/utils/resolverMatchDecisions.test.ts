@@ -436,6 +436,27 @@ describe('processResolverOutput', () => {
         );
     });
 
+    it('ignores a subjectId the request never contained and adds a warning', () => {
+        // The resolver is an LLM: a mangled or hallucinated subjectId must be
+        // rejected here, not crash the task at the extraction mapping
+        // (production TypeError on athens/jan19_2_2026, 2026-09-02).
+        const resolverOutput: ResolverOutput = {
+            matches: [
+                { subjectId: 'sub-HALLUCINATED', ada: 'ADA-A1', confidence: 'high', reasoning: 'Invented' },
+                { subjectId: 'sub-1', ada: 'ADA-A2', confidence: 'high', reasoning: 'Real' },
+            ],
+            unmatched: [
+                { subjectId: 'sub-GHOST', reasoning: 'Also invented' },
+            ],
+        };
+        const result = processResolverOutput({ resolverOutput, candidatePool });
+
+        expect(result.matches.map(m => m.subjectId)).toEqual(['sub-1']);
+        expect(result.unmatchedSubjects.map(u => u.subjectId)).toEqual([]);
+        expect(result.warnings.some(w => w.includes('sub-HALLUCINATED'))).toBe(true);
+        expect(result.warnings.some(w => w.includes('sub-GHOST'))).toBe(true);
+    });
+
     it('ignores unknown ADAs and adds a warning', () => {
         const resolverOutput: ResolverOutput = {
             matches: [

@@ -317,6 +317,13 @@ export function processResolverOutput(options: {
 
     const matches: ProcessedResolverResult['matches'] = [];
     for (const match of resolverOutput.matches) {
+        // The resolver is an LLM: a subjectId it invents has no request subject
+        // behind it, and downstream lookups (the extraction mapping) assume
+        // every match resolves. Reject it here, like an unknown ADA.
+        if (!candidatePool.has(match.subjectId)) {
+            warnings.push(`Unknown subjectId "${match.subjectId}" returned by resolver — skipping.`);
+            continue;
+        }
         if (unmatchedSubjectIds.has(match.subjectId)) {
             warnings.push(`Subject "${match.subjectId}" appears in both matches and unmatched — treating as unmatched.`);
             continue;
@@ -347,11 +354,18 @@ export function processResolverOutput(options: {
         });
     }
 
-    const unmatchedSubjects: ProcessedResolverResult['unmatchedSubjects'] = resolverOutput.unmatched.map(u => ({
-        subjectId: u.subjectId,
-        name: '', // caller fills in
-        reason: u.reasoning,
-    }));
+    const unmatchedSubjects: ProcessedResolverResult['unmatchedSubjects'] = [];
+    for (const u of resolverOutput.unmatched) {
+        if (!candidatePool.has(u.subjectId)) {
+            warnings.push(`Unknown subjectId "${u.subjectId}" returned by resolver — skipping.`);
+            continue;
+        }
+        unmatchedSubjects.push({
+            subjectId: u.subjectId,
+            name: '', // caller fills in
+            reason: u.reasoning,
+        });
+    }
 
     return { matches, unmatchedSubjects, warnings };
 }
