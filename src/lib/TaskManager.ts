@@ -4,7 +4,8 @@ import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
-import { validateUrl } from '../utils.js';
+import { validateUrl, extractMeetingId } from '../utils.js';
+import { postCallback, deliverTerminalCallback } from './callbackDelivery.js';
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -308,16 +309,18 @@ class TaskManager {
 
     private async sendCallback(callbackUrl: string, update: CallbackPayload): Promise<void> {
         console.log('Sending callback to ', callbackUrl);
-        try {
-            await fetch(callbackUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(update),
-            });
-        } catch (error) {
-            console.error('Error sending callback:', error);
+
+        // Only the terminal callback carries the result, so only it is worth
+        // retrying and keeping. Progress updates are superseded by the next one.
+        const isTerminal = update.status === 'success' || update.status === 'error';
+        if (isTerminal) {
+            await deliverTerminalCallback(callbackUrl, update, update.taskType);
+            return;
+        }
+
+        const result = await postCallback(callbackUrl, update);
+        if (!result.ok) {
+            console.warn(`Progress callback for ${update.taskType} (${extractMeetingId(callbackUrl)}) failed: ${result.status ?? result.error}`);
         }
     }
 
