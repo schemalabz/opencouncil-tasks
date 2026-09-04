@@ -96,11 +96,20 @@ describe("spacesPublicBase", () => {
 });
 
 describe("spacesUrlForKey", () => {
+    const saved = { ...process.env };
+    afterEach(() => {
+        process.env = { ...saved };
+    });
+
     it("builds `${base}/${key}`", () => {
         expect(spacesUrlForKey("uploads/a.mp4", ORIGIN)).toBe(`${ORIGIN}/uploads/a.mp4`);
     });
 
     it("throws rather than emitting an `undefined/...` URL when unconfigured", () => {
+        // Passing undefined falls through to the default parameter, which reads
+        // process.env — so the env has to be cleared for this to mean anything.
+        delete process.env.DO_SPACES_BUCKET;
+        delete process.env.DO_SPACES_ENDPOINT;
         expect(() => spacesUrlForKey("uploads/a.mp4", undefined)).toThrow(/DO_SPACES_BUCKET/);
     });
 

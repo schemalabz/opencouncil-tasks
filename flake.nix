@@ -80,6 +80,8 @@
             cp -r dist $out/
             cp -r node_modules $out/
             cp package.json $out/
+            # Bundled caption fonts, read from cwd at render time
+            cp -r assets $out/
 
             # Create start script that sets the working directory and pins the
             # full runtime to THIS flake's nixpkgs — the app runs on the

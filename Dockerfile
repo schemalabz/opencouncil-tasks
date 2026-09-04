@@ -52,6 +52,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy built assets and version
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/VERSION ./VERSION
+COPY --from=builder /app/assets ./assets
 
 # Download latest yt-dlp binary. Own the whole /app/bin DIRECTORY (not just the
 # file) by apify: yt-dlp's `--update-to` self-update writes a new binary into the

@@ -1,0 +1,89 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderAss card container > matches snapshot 1`] = `
+"[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 3
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Inter Black,73,&H00111111,&H00111111,&H00000000,&H0AFFFFFF,0,0,0,0,100,100,0,0,4,0,16,5,119,119,0,1
+Style: Chip,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H33000000,0,0,0,0,100,100,0,0,4,0,12,7,0,0,0,1
+Style: Accent,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.10,0:00:00.70,Caption,,0,0,0,,{\\an5\\pos(540,1344)}{\\c&H0066FF&}Ξεκινάμε{\\r} την ανάπλαση
+Dialogue: 0,0:00:00.70,0:00:00.95,Caption,,0,0,0,,{\\an5\\pos(540,1344)}Ξεκινάμε {\\c&H0066FF&}την{\\r} ανάπλαση
+Dialogue: 0,0:00:00.95,0:00:01.60,Caption,,0,0,0,,{\\an5\\pos(540,1344)}Ξεκινάμε την {\\c&H0066FF&}ανάπλαση{\\r}
+Dialogue: 0,0:00:01.60,0:00:02.80,Caption,,0,0,0,,{\\an5\\pos(540,1344)}{\\c&H0066FF&}σήμερα{\\r}
+"
+`;
+
+exports[`renderAss core > matches snapshot 1`] = `
+"[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 3
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Inter Black,86,&H00338CFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,6,3,5,108,108,0,1
+Style: Chip,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H33000000,0,0,0,0,100,100,0,0,4,0,12,7,0,0,0,1
+Style: Accent,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.10,0:00:01.60,Caption,,0,0,0,,{\\an5\\pos(540,1344)}{\\kf50}ΞΕΚΙΝΑΜΕ {\\kf10}{\\kf20}ΤΗΝ {\\kf5}{\\kf55}ΑΝΑΠΛΑΣΗ
+Dialogue: 0,0:00:01.60,0:00:02.80,Caption,,0,0,0,,{\\an5\\pos(540,1344)}{\\kf50}ΣΗΜΕΡΑ
+"
+`;
+
+exports[`renderAss pop emphasis > matches snapshot 1`] = `
+"[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 3
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Inter Black,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,6,3,5,108,108,0,1
+Style: Chip,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H33000000,0,0,0,0,100,100,0,0,4,0,12,7,0,0,0,1
+Style: Accent,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.10,0:00:00.70,Caption,,0,0,0,,{\\an5\\pos(540,1344)}{\\c&H0AD6FF&\\t(0,120,\\fscy106)\\t(120,240,\\fscy100)}ΞΕΚΙΝΑΜΕ{\\r} ΤΗΝ ΑΝΑΠΛΑΣΗ
+Dialogue: 0,0:00:00.70,0:00:00.95,Caption,,0,0,0,,{\\an5\\pos(540,1344)}ΞΕΚΙΝΑΜΕ {\\c&H0AD6FF&\\t(0,120,\\fscy106)\\t(120,240,\\fscy100)}ΤΗΝ{\\r} ΑΝΑΠΛΑΣΗ
+Dialogue: 0,0:00:00.95,0:00:01.60,Caption,,0,0,0,,{\\an5\\pos(540,1344)}ΞΕΚΙΝΑΜΕ ΤΗΝ {\\c&H0AD6FF&\\t(0,120,\\fscy106)\\t(120,240,\\fscy100)}ΑΝΑΠΛΑΣΗ{\\r}
+Dialogue: 0,0:00:01.60,0:00:02.80,Caption,,0,0,0,,{\\an5\\pos(540,1344)}{\\c&H0AD6FF&\\t(0,120,\\fscy106)\\t(120,240,\\fscy100)}ΣΗΜΕΡΑ{\\r}
+"
+`;
+
+exports[`renderAss speaker chip > matches snapshot 1`] = `
+"[Script Info]
+ScriptType: v4.00+
+PlayResX: 1080
+PlayResY: 1920
+WrapStyle: 3
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Caption,Inter Black,86,&H00338CFF,&H00FFFFFF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,1,6,3,5,108,108,0,1
+Style: Chip,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H33000000,0,0,0,0,100,100,0,0,4,0,12,7,0,0,0,1
+Style: Accent,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 2,0:00:00.10,0:00:02.80,Accent,,0,0,0,,{\\an7\\pos(30,513)\\fad(200,0)\\c&HDE862E&\\p1}m 0 0 l 4 0 l 4 86 l 0 86{\\p0}
+Dialogue: 1,0:00:00.10,0:00:02.80,Chip,,0,0,0,,{\\an7\\pos(46,525)\\fad(200,0)}Μαρία Παπαδοπούλου\\N{\\fs26}Δήμαρχος
+"
+`;
