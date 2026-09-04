@@ -3,6 +3,7 @@ import type { CityLanguage, Transcript } from "../../types.js";
 import { scribeResponseToTranscript, type ScribeResponse } from "../ScribeTranscribe.js";
 import { fusionConfigSha, type FusionConfig } from "./config.js";
 import { FusionCache, componentCacheKey, fusionCacheKey } from "./cache.js";
+import { sha256OfValue } from "./hash.js";
 import { createDeadline } from "./deadline.js";
 import { runFusionPython, fusionEngineRevision } from "./fusePy.js";
 import { buildFusedTranscript } from "./toTranscript.js";
@@ -77,6 +78,27 @@ export interface FusionTranscriberDeps {
     trace: TraceWriter;
     runFusion?: typeof runFusionPython;
 }
+
+/**
+ * Text chunking, frozen 2026-09-04. Python's own default is 800, and at 800 a
+ * segment-sized input (2500 normalized tokens per system, ~20 minutes of
+ * council audio) takes 260.6 s — over four times the 60 s resource gate,
+ * because alignment cost grows far faster than chunk length. Measured on one
+ * fuse.py call per value, same input, `tests/fusion/measure_chunking.py`:
+ *
+ *     max_tokens   800    400    240    160    120     80
+ *     wall s     260.6   75.7   40.0   26.3   20.1   14.7
+ *     peak RSS    340 MB at every value — time is the binding constraint
+ *
+ * 120 is the value whose text cost is already measured over all 391 benchmark
+ * windows: +0.00009 WER against unchunked, against a 0.002 gate. 240 also fits
+ * the time gate, but its ΔWER has not been measured and no sweep was run to
+ * pick a winner — the config is frozen before the blind run, not tuned on it.
+ *
+ * This must be sent explicitly. Omitting it does not mean "no chunking"; it
+ * means Python's 800.
+ */
+export const PRODUCTION_CHUNKING = { max_tokens: 120, anchor_n: 3, search_radius: 200 } as const;
 
 export class FusionTranscriber {
     private readonly config: FusionConfig;
@@ -215,6 +237,7 @@ export class FusionTranscriber {
             arm,
             guard: true,
             llm,
+            chunking: PRODUCTION_CHUNKING,
             engineRev: fusionEngineRevision(this.config.repoRoot),
         });
     }
@@ -313,7 +336,7 @@ export class FusionTranscriber {
                 ours: hashWords(systems.ours.words),
             },
             normalizerRev: engineRev,
-            chunkingRev: engineRev,
+            chunkingRev: sha256OfValue({ engineRev, chunking: PRODUCTION_CHUNKING }),
             arm,
             guard: true,
             policySha: engineRev,
@@ -329,7 +352,7 @@ export class FusionTranscriber {
                 params_sha: systems[id].identity.paramsSha,
                 words: systems[id].words,
             })),
-            config: { arm, guard: true, llm },
+            config: { arm, guard: true, llm, chunking: { ...PRODUCTION_CHUNKING } },
         };
 
         let elapsedMs = 0;

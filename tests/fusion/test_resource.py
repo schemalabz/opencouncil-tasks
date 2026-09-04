@@ -7,6 +7,13 @@ subprocess so the numbers include interpreter startup and JSON I/O, and read
 the child's peak RSS from `resource.getrusage(RUSAGE_CHILDREN)`.
 
 Gates: wall < 60 s, peak RSS < 1 GB. Both are printed either way.
+
+The chunking config here must stay the one production sends
+(PRODUCTION_CHUNKING in src/lib/fusion/FusionTranscriber.ts). Measured
+2026-09-04 on this input: Python's own default of 800 takes 260.6 s and fails
+this gate; the frozen 120 takes 20.1 s. Peak RSS is 340 MB at every value, so
+time is the only binding constraint. `measure_chunking.py` reproduces the
+table.
 """
 from __future__ import annotations
 
@@ -25,6 +32,10 @@ FUSE = REPO / "fusion" / "fuse.py"
 TARGET_TOKENS = 2500
 WALL_GATE_S = 60.0
 RSS_GATE_BYTES = 1 << 30
+
+# Mirrors PRODUCTION_CHUNKING in src/lib/fusion/FusionTranscriber.ts. Frozen
+# 2026-09-04; do not adjust to make this test pass.
+PRODUCTION_CHUNKING = {"max_tokens": 120, "anchor_n": 3, "search_radius": 200}
 
 
 def _big_streams(fx_inputs):
@@ -46,8 +57,7 @@ def test_segment_sized_input_time_and_memory(fx_inputs, capsys):
         "systems": [{"id": ids[k], "params_sha": None,
                      "words": as_words(streams[k])} for k in range(3)],
         "config": {"arm": "rules", "guard": True, "llm": None,
-                   "chunking": {"max_tokens": 800, "anchor_n": 3,
-                                "search_radius": 200}},
+                   "chunking": dict(PRODUCTION_CHUNKING)},
     }
     blob = json.dumps(payload, ensure_ascii=False)
 

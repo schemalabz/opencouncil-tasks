@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fsp from "fs/promises";
 import os from "os";
 import path from "path";
-import { FusionTranscriber } from "./FusionTranscriber.js";
+import { FusionTranscriber, PRODUCTION_CHUNKING } from "./FusionTranscriber.js";
 import { FusionCache } from "./cache.js";
 import { TraceWriter } from "./trace.js";
 import { loadFusionConfig } from "./config.js";
@@ -156,7 +156,20 @@ describe("failure matrix", () => {
         expect(input.schema).toBe("oc-fusion-in/1");
         expect(input.systems.map((s: any) => s.id)).toEqual(["scribe", "soniox", "ours"]);
         expect(input.audio_sha256).toBe(AUDIO.sha256);
-        expect(input.config).toEqual({ arm: "rules", guard: true, llm: null });
+        expect(input.config).toEqual({ arm: "rules", guard: true, llm: null, chunking: PRODUCTION_CHUNKING });
+    });
+
+    it("sends the frozen chunking config, because Python's default is too slow", async () => {
+        // Measured 2026-09-04 on a 2500-token-per-system segment, one fuse.py
+        // call each: max_tokens 800 (Python's default when `chunking` is
+        // omitted) takes 260.6 s, over the 60 s resource gate. 120 takes 20.1 s
+        // and costs +0.00009 WER over unchunked on all 391 windows. If this
+        // assertion is loosened, production silently runs the slow config.
+        expect(PRODUCTION_CHUNKING).toEqual({ max_tokens: 120, anchor_n: 3, search_radius: 200 });
+
+        const { transcriber, runFusion } = build({ providers: {} });
+        await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" });
+        expect(runFusion.mock.calls[0][0].config.chunking).toEqual(PRODUCTION_CHUNKING);
     });
 
     it("falls back to the exact Scribe transcript when an aux provider fails", async () => {
