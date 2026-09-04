@@ -402,6 +402,9 @@ export interface GenerateHighlightRequest extends TaskRequest {
         includeSpeakerOverlay?: boolean;
         aspectRatio?: AspectRatio;
 
+        /** Caption style preset id ('team' | 'sweep' | 'pop' | 'card', or one defined in captions.json). Omitted → server default. */
+        captionStyle?: string;
+
         // Social media formatting options (only used when aspectRatio is 'social-9x16')
         socialOptions?: {
             marginType?: 'blur' | 'solid';
@@ -422,6 +425,9 @@ export interface GenerateHighlightResult {
         duration: number;
         startTimestamp: number;
         endTimestamp: number;
+        /** Caption preset used, and a digest of its resolved values. */
+        captionStyle?: string;
+        captionPresetHash?: string;
     }>;
 }
 

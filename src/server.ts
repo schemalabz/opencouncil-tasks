@@ -159,7 +159,8 @@ app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
 app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
   summary: 'Generate video highlight',
   description: 'Create video highlights from source media with visual enhancements',
-  version: 1,
+  // v2: word-timed animated ASS captions (forced alignment), restyled speaker chip
+  version: 2,
 }));
 
 app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {

@@ -1,7 +1,28 @@
+import fs from 'fs';
+import path from 'path';
 import { createMuxAsset } from "../lib/mux.js";
 import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
-import { splitAndUploadMedia, generateSocialFilter, generateCaptionFilters, generateSpeakerOverlayFilter, getVideoResolution, downloadFile } from "./utils/mediaOperations.js";
+import {
+  splitAndUploadMedia,
+  generateSocialFilter,
+  getVideoResolution,
+  downloadFile,
+  getFileParts,
+  normalizeUtteranceTimestamps,
+  getPresetConfig,
+} from "./utils/mediaOperations.js";
+import { forcedAlign, AlignedWord } from '../lib/ElevenLabsAlign.js';
+import { resolveWordTimings } from '../lib/captions/wordTimings.js';
+import { buildCaptionTimeline } from '../lib/captions/timeline.js';
+import { resolveForOrientation } from '../lib/captions/presets.js';
+import { getCaptionConfig, presetFingerprint, selectPreset } from '../lib/captions/presetConfig.js';
+import { renderAss } from '../lib/captions/assRenderer.js';
+import { ensureFonts, getFontsDir } from '../lib/captions/fonts.js';
+import type { UtteranceForCaptions, WordTiming } from '../lib/captions/types.js';
+import { getDataDir } from '../lib/dataDir.js';
+
+const dataDir = getDataDir();
 
 /**
  * Merge consecutive video segments to simplify FFmpeg operations
@@ -141,7 +162,7 @@ export const generateHighlight: Task<
     let result;
 
     // Generate video filters based on render options
-    // Filter chain: social_transform → speaker_overlays → captions
+    // Filter chain: social_transform → captions+speaker chip (single ASS burn)
     let videoFilters: string | undefined;
     const aspectRatio = render.aspectRatio || 'default';
     const isSocial = aspectRatio === 'social-9x16';
@@ -164,26 +185,89 @@ export const generateHighlight: Task<
       partProgress(15);
     }
 
-    // Step 2: Speaker overlays (if enabled)
-    // Use adjustedUtterances to keep overlays synced with bridged video segments
-    let speakerFilter = '';
-    if (render.includeSpeakerOverlay) {
-      console.log(`👤 Generating speaker overlays for ${adjustedUtterances.length} utterances`);
-      speakerFilter = await generateSpeakerOverlayFilter(adjustedUtterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
-      partProgress(isSocial ? 18 : 10);
-    }
-
-    // Step 3: Captions (if enabled)
-    // Use adjustedUtterances to keep captions synced with bridged video segments
+    // Steps 2-3: word-timed captions + speaker chip, burned via one ASS file.
+    // Pipeline: clip audio → forced alignment (fallback: interpolation) →
+    // caption timeline → .ass → subtitles filter appended after the social transform.
     let captionFilter = '';
-    if (render.includeCaptions) {
-      console.log(`📝 Generating captions for ${adjustedUtterances.length} utterances in ${aspectRatio} format`);
-      captionFilter = await generateCaptionFilters(adjustedUtterances, aspectRatio, inputVideoWidth || 1280, inputVideoHeight || 720);
+    let assPath: string | undefined;
+    // Recorded on the result so a rendered video can always be traced back to
+    // the styling that produced it, even after the config file changes.
+    let captionStyle: string | undefined;
+    let captionPresetHash: string | undefined;
+    if (render.includeCaptions || render.includeSpeakerOverlay) {
+      const localVideoPath = await downloadFile(media.videoUrl);
+      partProgress(isSocial ? 16 : 8);
+
+      const normalized = normalizeUtteranceTimestamps(adjustedUtterances);
+      const utterancesForCaptions: UtteranceForCaptions[] = normalized.map((n, i) => ({
+        utteranceId: adjustedUtterances[i].utteranceId,
+        startMs: Math.round(n.normalizedStart * 1000),
+        endMs: Math.round(n.normalizedEnd * 1000),
+        text: n.text,
+        speaker: adjustedUtterances[i].speaker,
+      }));
+
+      let words: WordTiming[][];
+      if (render.includeCaptions) {
+        // Only extract clip audio and pay for forced alignment when captions are
+        // actually rendered — a chip-only render never displays word timings.
+        const clipAudioPath = await getFileParts(localVideoPath, segments, 'audio');
+        partProgress(isSocial ? 18 : 12);
+
+        try {
+          let aligned: AlignedWord[] | null = null;
+          try {
+            aligned = await forcedAlign(clipAudioPath, utterancesForCaptions.map(u => u.text).join(' '));
+            console.log(`🎯 Forced alignment returned ${aligned.length} words`);
+          } catch (err) {
+            console.warn(`⚠️ Forced alignment unavailable, interpolating word timings: ${err instanceof Error ? err.message : String(err)}`);
+          }
+          const resolved = resolveWordTimings(utterancesForCaptions, aligned);
+          words = resolved.words;
+          if (resolved.interpolatedUtterances > 0) {
+            console.warn(`⚠️ Interpolated timings for ${resolved.interpolatedUtterances}/${utterancesForCaptions.length} utterances`);
+          }
+        } finally {
+          try { fs.unlinkSync(clipAudioPath); } catch { /* best effort */ }
+        }
+      } else {
+        words = utterancesForCaptions.map(() => []);
+      }
+
+      // Presets come from the config layer, so a styling change on the data
+      // volume takes effect on the next render without a rebuild.
+      const { id: presetId, preset: basePreset } = selectPreset(getCaptionConfig(), render.captionStyle);
+      const frame = isSocial
+        ? getPresetConfig(`${inputVideoWidth || 1280}x${inputVideoHeight || 720}`, 'social-9x16').dimensions
+        : { width: inputVideoWidth || 1280, height: inputVideoHeight || 720 };
+      // Flatten the landscape override group for this output frame; downstream
+      // consumers (paging + renderer) never branch on aspect themselves.
+      const preset = resolveForOrientation(basePreset, frame);
+      captionStyle = presetId;
+      captionPresetHash = presetFingerprint(preset);
+
+      const timeline = buildCaptionTimeline(utterancesForCaptions, words, preset.layout);
+      // Populates the fonts directory and reports which family the chip can
+      // actually name, so libass is never left to substitute.
+      const chipFont = await ensureFonts();
+      const ass = renderAss(timeline, preset, frame, {
+        includeCaptions: !!render.includeCaptions,
+        includeSpeakerOverlay: !!render.includeSpeakerOverlay,
+        chipFont,
+      });
+
+      // Random name (never caller-supplied): the path lands inside a quoted ffmpeg filter value
+      const assRandomId = Math.random().toString(36).substring(2, 15);
+      assPath = path.join(dataDir, `captions-${assRandomId}.ass`);
+      await fs.promises.writeFile(assPath, ass, 'utf-8');
+      console.log(`📝 Captions: preset '${presetId}', ${timeline.pages.length} pages, ${timeline.speakerSpans.length} speaker spans → ${assPath}`);
+
+      captionFilter = `subtitles=filename='${assPath}':fontsdir='${getFontsDir()}'`;
       partProgress(isSocial ? 20 : 15);
     }
 
-    // Combine all filters in the correct order
-    const filterParts = [baseFilter, speakerFilter, captionFilter].filter(f => f.length > 0);
+    // Combine all filters in the correct order (captions burn AFTER the social transform)
+    const filterParts = [baseFilter, captionFilter].filter(f => f.length > 0);
     if (filterParts.length > 0) {
       videoFilters = filterParts.join(',');
       console.log(`🎬 Combined filter chain: ${filterParts.length} filter(s)`);
@@ -198,11 +282,15 @@ export const generateHighlight: Task<
       media.type,
       segments,
       `highlights`,
-      (progress) => partProgress(progressStart + progress * (progressRange / 100)),
+      (_stage, progress) => partProgress(progressStart + progress * (progressRange / 100)),
       videoFilters
     );
 
-
+    // Rendered successfully — the burned-in .ass is no longer needed.
+    // On failure the file is deliberately left in dataDir for debugging.
+    if (assPath) {
+      try { fs.unlinkSync(assPath); } catch { /* best effort */ }
+    }
 
     const highlightResult: GenerateHighlightResult["parts"][0] = {
       id: part.id,
@@ -210,6 +298,7 @@ export const generateHighlight: Task<
       duration: result.duration,
       startTimestamp: result.startTimestamp,
       endTimestamp: result.endTimestamp,
+      ...(captionStyle ? { captionStyle, captionPresetHash } : {}),
     };
 
     // Generate Mux playback ID for video highlights
