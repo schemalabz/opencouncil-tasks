@@ -20,6 +20,7 @@ import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { devSlowTask } from './tasks/devSlowTask.js';
+import { loadFusionConfig } from './lib/fusion/config.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
@@ -224,6 +225,20 @@ import('./lib/swaggerConfig.js').then(({ swaggerSpec }) => {
 // ============================================================================
 
 app.use('/upload-video', uploadRouter);
+
+// ============================================================================
+// FUSION PROVIDER (openai-compatible route)
+// ============================================================================
+// Validated here, at startup, so an invalid FUSION_* value stops the process
+// instead of quietly meaning "off" — which is indistinguishable from an outage.
+const fusionConfig = loadFusionConfig();
+if (fusionConfig.openaiRoute === 'on') {
+    const { mountOpenAiCompatRoute } = await import('./routes/openaiCompat.js');
+    mountOpenAiCompatRoute(app);
+    console.log(`🔀 Fusion openai-compatible route mounted at /v1/audio/transcriptions (mode=${fusionConfig.mode}, llm=${fusionConfig.llm})`);
+} else if (fusionConfig.mode !== 'off') {
+    console.log(`🔀 Fusion enabled (mode=${fusionConfig.mode}, canary=${fusionConfig.canaryPercent}%), openai-compatible route disabled`);
+}
 
 // ============================================================================
 // DEVELOPMENT ROUTES

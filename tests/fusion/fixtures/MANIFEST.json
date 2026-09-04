@@ -1,0 +1,64 @@
+{
+ "schema": "oc-fusion-fixture-manifest/1",
+ "report": {
+  "name": "bench_2026-08-22-post-june-held-out-test-clean-pack-cont-.json",
+  "sha256": "e33d5617fc2b1c3088a9f4a137780158a303a49237ca574aed07e0b39400ca85"
+ },
+ "guard": {
+  "critical_tokens": [
+   "ναι",
+   "δεν"
+  ],
+  "islands_fired": 75,
+  "rules_on_sidn": [
+   5036,
+   1848,
+   5519,
+   110694
+  ]
+ },
+ "totals": {
+  "W": [
+   5396,
+   1332,
+   6577,
+   110694
+  ],
+  "rules_off": [
+   5030,
+   1865,
+   5452,
+   110694
+  ],
+  "rules_on": [
+   5036,
+   1848,
+   5519,
+   110694
+  ]
+ },
+ "n_windows": 391,
+ "n_islands": 13414,
+ "fixtures": {
+  "fixture_inputs_391.json": {
+   "sha256": "d391f91ed2d64cd2761fa2121800450d135e04844308d14b70c9b68013612e84",
+   "bytes": 6584387
+  },
+  "fixture_W_391.json": {
+   "sha256": "d9f85f7e4cac50ce52418521ccae460469192229ee3d570a785903ed9054cdca",
+   "bytes": 1680831
+  },
+  "fixture_rules_off_391.json": {
+   "sha256": "e984c01e640650fb667236149f0f4d068e0ca1c4d3fda7cde526a033210f2b9d",
+   "bytes": 1659665
+  },
+  "fixture_rules_on_391.json": {
+   "sha256": "e6f6fe7b41a2584f37ec444c566d69ce9956a67e246dee4b0900e98fd37dcb30",
+   "bytes": 1660503
+  },
+  "fixture_policy_islands_391.json": {
+   "sha256": "c00c24b80a464b4d1e782c0ac835d6320bb6161297d089f56ffeb765d04d321c",
+   "bytes": 4224725
+  }
+ }
+}

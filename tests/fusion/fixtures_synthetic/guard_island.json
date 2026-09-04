@@ -1,0 +1,130 @@
+{
+ "schema": "oc-fusion-in/1",
+ "audio_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ "systems": [
+  {
+   "id": "scribe",
+   "params_sha": "p-scribe",
+   "words": [
+    {
+     "raw": "αλφα",
+     "start": 0.0,
+     "end": 0.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "βητα",
+     "start": 0.5,
+     "end": 0.9,
+     "conf": 0.9
+    },
+    {
+     "raw": "ζητα",
+     "start": 1.0,
+     "end": 1.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "θητα",
+     "start": 1.5,
+     "end": 1.9,
+     "conf": 0.9
+    },
+    {
+     "raw": "ιωτα",
+     "start": 2.0,
+     "end": 2.4,
+     "conf": 0.9
+    }
+   ]
+  },
+  {
+   "id": "soniox",
+   "params_sha": "p-soniox",
+   "words": [
+    {
+     "raw": "αλφα",
+     "start": 0.0,
+     "end": 0.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "βητα",
+     "start": 0.5,
+     "end": 0.9,
+     "conf": 0.9
+    },
+    {
+     "raw": "δεν",
+     "start": 1.0,
+     "end": 1.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "ζητα",
+     "start": 1.5,
+     "end": 1.9,
+     "conf": 0.9
+    },
+    {
+     "raw": "θητα",
+     "start": 2.0,
+     "end": 2.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "ιωτα",
+     "start": 2.5,
+     "end": 2.9,
+     "conf": 0.9
+    }
+   ]
+  },
+  {
+   "id": "ours",
+   "params_sha": "p-ours",
+   "words": [
+    {
+     "raw": "αλφα",
+     "start": 0.0,
+     "end": 0.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "βητα",
+     "start": 0.5,
+     "end": 0.9,
+     "conf": 0.9
+    },
+    {
+     "raw": "ζητα",
+     "start": 1.0,
+     "end": 1.4,
+     "conf": 0.9
+    },
+    {
+     "raw": "θητα",
+     "start": 1.5,
+     "end": 1.9,
+     "conf": 0.9
+    },
+    {
+     "raw": "ιωτα",
+     "start": 2.0,
+     "end": 2.4,
+     "conf": 0.9
+    }
+   ]
+  }
+ ],
+ "config": {
+  "arm": "rules",
+  "guard": true,
+  "llm": null,
+  "chunking": {
+   "max_tokens": 800,
+   "anchor_n": 3,
+   "search_radius": 200
+  }
+ }
+}

@@ -237,6 +237,17 @@ export interface Transcript {
         number_of_distinct_channels: number;
         billing_time: number;
         transcription_time: number;
+        /**
+         * Which system produced this transcript. Absent means the historical
+         * single-provider path (Scribe). Present only when fusion is enabled.
+         */
+        provider?: "fusion-rules" | "fusion-policy-opus" | "fusion-policy-sonnet" | "scribe" | "scribe-fallback";
+        /** Why fusion fell back to Scribe, when it did. */
+        fallbackReason?: string;
+        /** Identity of the fusion configuration behind this output. */
+        fusionConfigSha?: string;
+        /** Share of words whose timing was estimated rather than measured. */
+        timingEstimatedRate?: number;
     };
     transcription: {
         languages: string[];
@@ -263,7 +274,20 @@ export interface Word {
     word: string;
     start: number;
     end: number;
+    /**
+     * Provider confidence — for Scribe, exp(logprob). Fusion keeps these exact
+     * semantics: the three-system vote agreement is reported separately in
+     * `fusionAgreement` rather than overwriting this field, so that consumers
+     * reading `confidence` keep reading the same quantity they always did.
+     * (Redefining it as agreement would be a /transcribe version 5.)
+     */
     confidence: number;
+    /** Column agreement across the three fused systems: 1.0 / 0.67 / 0.33. Fusion only. */
+    fusionAgreement?: number;
+    /** How this word's time was obtained — see src/lib/fusion/timing.ts. Fusion only. */
+    timingSource?: string;
+    /** True when the time is interpolated or glued rather than measured. Fusion only. */
+    timingEstimated?: boolean;
 }
 
 /*

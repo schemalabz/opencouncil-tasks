@@ -25,3 +25,10 @@ squid.conf
 
 # Debug output (CLI intermediates)
 .debug/
+
+# Python bytecode (fusion package)
+__pycache__/
+*.py[cod]
+
+# Fixture bundle holds verbatim council speech; never commit it
+tests/fusion/fixtures/fixture_*.json

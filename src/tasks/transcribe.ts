@@ -15,6 +15,55 @@ export interface TranscribeArgs {
     // Content language of the meeting; selects the Scribe ASR language. Defaults
     // to Greek when omitted.
     language?: CityLanguage;
+    // Stable identifier for the meeting these segments belong to. Only used to
+    // allocate the fusion canary, which must be decided per meeting: segments of
+    // one meeting transcribed by two different systems would produce a mixture
+    // that is neither the control nor the treatment. Absent ⇒ never canaried.
+    meetingKey?: string;
+}
+
+/**
+ * The single ASR call site. Which system answers is decided here and nowhere
+ * else:
+ *
+ *   off     Scribe, byte for byte what this task did before fusion existed.
+ *   shadow  Scribe answers; one fusion run happens beside it, in the background,
+ *           reusing that same Scribe result. A shadow failure never reaches the
+ *           caller — that is what makes it a shadow.
+ *   on      Fusion answers for canaried meetings, with an exact Scribe fallback
+ *           built into the fusion path itself. Meetings outside the canary keep
+ *           the `off` behaviour.
+ *
+ * Note that `on` with FUSION_CANARY_PERCENT unset (default 0) transcribes
+ * nothing with fusion. That is deliberate — §10.7 replaced "flip" with "canary"
+ * — and it is documented in docs/fusion-provider.md.
+ */
+async function transcribeOneSegment(request: {
+    audioUrl: string; label: string; language?: CityLanguage; meetingKey?: string;
+}): Promise<Transcript> {
+    const configured = process.env.FUSION_MODE?.trim();
+    if (!configured || configured === "off") {
+        // Not just an early return: an environment that has not enabled fusion
+        // never even loads its module graph, so "off" cannot regress by way of
+        // an import side effect. (An invalid FUSION_MODE still throws — at
+        // startup, in server.ts, where a bad config should stop the process.)
+        return scribeTranscriber.transcribe({ audioUrl: request.audioUrl, label: request.label, language: request.language });
+    }
+
+    const { getFusionRuntime, isCanarySelected, transcribeSegmentFused, transcribeSegmentShadow } = await import("../lib/fusion/index.js");
+    const runtime = getFusionRuntime();
+    const mode = runtime.effectiveMode();
+
+    if (mode === "off") {
+        return scribeTranscriber.transcribe({ audioUrl: request.audioUrl, label: request.label, language: request.language });
+    }
+    if (mode === "shadow") {
+        return transcribeSegmentShadow(request, runtime);
+    }
+    if (!isCanarySelected(request.meetingKey, runtime.effectiveCanaryPercent())) {
+        return scribeTranscriber.transcribe({ audioUrl: request.audioUrl, label: request.label, language: request.language });
+    }
+    return transcribeSegmentFused(request, "fusion-rules", runtime);
 }
 
 const combineTranscripts = (transcripts: Transcript[]): Transcript => {
@@ -39,7 +88,7 @@ const combineTranscripts = (transcripts: Transcript[]): Transcript => {
     return combinedTranscript;
 }
 
-export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, language }, onProgress) => {
+export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, language, meetingKey }, onProgress) => {
     let completedSegments = 0;
     const totalSegments = segments.length;
     const startedAt = Date.now();
@@ -48,7 +97,7 @@ export const transcribe: Task<TranscribeArgs, Transcript> = async ({ segments, l
 
     const transcribeSegment = async ({ url, start }: TranscribeArgs['segments'][0], index: number) => {
         const fullUrl = url.startsWith('http') ? url : `https://${url}`;
-        const transcript = await scribeTranscriber.transcribe({ audioUrl: fullUrl, label: segmentLabel(index), language });
+        const transcript = await transcribeOneSegment({ audioUrl: fullUrl, label: segmentLabel(index), language, meetingKey });
 
         // Audio longer than any segment can be means the file doesn't belong
         // to this run's segmentation (a stale object left by a previous run). Its
