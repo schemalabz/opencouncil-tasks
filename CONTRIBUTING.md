@@ -108,7 +108,7 @@ Run this after significant pipeline changes or when onboarding to verify the ful
 - **`src/utils.test.ts`** — `IdCompressor`, `validateUrl`, `validateYoutubeUrl`, `formatTime`
 - **`src/tasks/downloadYTV.test.ts`** — `getVideoIdAndUrl`, `formatBytes`, loudnorm helpers, `parseVideoInfoOutput`, `downloadUntilComplete` (livestream retry loop, fake clock + injected deps)
 - **`src/tasks/generateHighlight.test.ts`** — `mergeConsecutiveSegments`, `bridgeUtteranceGaps`
-- **`src/tasks/utils/mediaOperations.test.ts`** — `normalizeUtteranceTimestamps`, `escapeTextForFFmpeg`, `wrapTextByPixelWidth`, `calculateOptimalFontSizeWithStartAndCap`, `getPresetConfig`, `generateSocialFilter`, `generateBlurredMarginFilter`, `generateSolidMarginFilter`, `calculateSpeakerDisplaySegments`, `wrapSpeakerText`, `formatSpeakerInfo`
+- **`src/tasks/utils/mediaOperations.test.ts`** — `normalizeUtteranceTimestamps`, `getPresetConfig`, `generateSocialFilter`, `generateBlurredMarginFilter`, `generateSolidMarginFilter`, `downloadFile`
 - **`src/tasks/pipeline.test.ts`** — pipeline orchestration via `createPipeline(deps)` with stubbed tasks (happy path, Spaces skip and in-place overwrite, progress stages, error propagation, data flow)
 
 **Smoke test** (slow, requires network + API keys, run manually):
