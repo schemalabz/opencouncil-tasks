@@ -99,28 +99,50 @@ export function assignTimings(input: TimingInput): TimingResult {
     }
 
     const upperBound = input.segmentDurationSec;
-    const words: TimedWord[] = drafts.map((draft) => {
-        const source = draft.token.src;
-        const providerWord = input.words[source]?.[draft.token.src_word];
+    const words: TimedWord[] = [];
+    // One output word per raw provider word, not per token. fuse.py's contract:
+    // a raw word that normalizes to several tokens ("κ.λπ" -> ["κ", "λπ"])
+    // emits several consecutive tokens carrying the SAME (src, src_word, text),
+    // and TS must treat that run as one word. Emitting one per token would put
+    // "κ.λπ" in `full_transcript` and in `words[]` twice.
+    for (let k = 0; k < drafts.length; k++) {
+        const draft = drafts[k];
+        const token = draft.token;
+        let last = k;
+        while (last + 1 < drafts.length && sameRawWord(token, drafts[last + 1].token)) last++;
+
+        const providerWord = input.words[token.src]?.[token.src_word];
         const timingSource = draft.timingSource!;
-        return {
-            word: draft.token.text,
+        let agreement = token.agreement;
+        for (let m = k + 1; m <= last; m++) {
+            // The run is one word, so it gets the most cautious agreement of
+            // the tokens it covers rather than an arbitrary one.
+            agreement = Math.min(agreement, drafts[m].token.agreement);
+        }
+        words.push({
+            word: token.text,
             start: clamp(draft.start!, upperBound),
-            end: clamp(draft.end!, upperBound),
+            end: clamp(drafts[last].end!, upperBound),
             // Provider-confidence semantics, unchanged. Vote agreement is a
             // separate field on purpose: merging them would silently redefine
             // what every downstream consumer of `confidence` is reading.
             confidence: providerWord?.conf ?? 1,
-            fusionAgreement: draft.token.agreement,
+            fusionAgreement: agreement,
             timingSource,
             timingEstimated: timingSource === "interpolated" || timingSource === "unaligned",
-        };
-    });
+        });
+        k = last;
+    }
 
     assertTimingInvariants(words, upperBound);
 
     const estimated = words.filter((word) => word.timingEstimated).length;
     return { words, timingEstimatedRate: words.length === 0 ? 0 : estimated / words.length };
+}
+
+/** Two consecutive tokens that came out of the same raw provider word. */
+function sameRawWord(a: FusionToken, b: FusionToken): boolean {
+    return a.src === b.src && a.src_word === b.src_word && a.text === b.text;
 }
 
 function usable(word: NormalizedWord | undefined): boolean {

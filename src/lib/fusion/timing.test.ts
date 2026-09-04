@@ -120,17 +120,43 @@ describe("assignTimings", () => {
         expect(result.words[2].end).toBeLessThanOrEqual(3);
     });
 
-    it("splits one raw word's span across the tokens it normalized into", () => {
+    it("emits one word for a raw word that normalized into several tokens", () => {
+        // fuse.py's contract: consecutive tokens sharing (src, src_word) carry
+        // the SAME raw text and differ only in `norm`. Emitting one word per
+        // token would put "κ.λπ" in the transcript twice.
         const result = assignTimings({
             tokens: [
-                token({ text: "Κ.Κ.Ε", src: "scribe", src_word: 0 }),
-                token({ text: "νταξει", src: "scribe", src_word: 0 }),
+                token({ text: "αλφα", src: "scribe", src_word: 0 }),
+                token({ text: "κ.λπ", norm: "κ", src: "scribe", src_word: 1 }),
+                token({ text: "κ.λπ", norm: "λπ", src: "scribe", src_word: 1, agreement: 0.67 }),
+                token({ text: "γαμμα", src: "scribe", src_word: 2 }),
             ],
-            words: words({ scribe: scribeWords(["Κ.Κ.Ε νταξει", 0, 1.2]) }),
+            words: words({ scribe: scribeWords(["αλφα", 0, 0.4], ["κ.λπ", 0.5, 1.2], ["γαμμα", 1.3, 1.8]) }),
         });
-        expect(result.words[0].start).toBe(0);
-        expect(result.words[1].end).toBe(1.2);
-        expect(result.words[1].start).toBeGreaterThan(result.words[0].start);
+        expect(result.words.map((w) => w.word)).toEqual(["αλφα", "κ.λπ", "γαμμα"]);
+        // The collapsed word keeps the whole span of its Scribe word...
+        expect(result.words[1]).toMatchObject({ start: 0.5, end: 1.2, timingSource: "scribe-native" });
+        // ...and the most cautious agreement of the tokens it covers.
+        expect(result.words[1].fusionAgreement).toBe(0.67);
+    });
+
+    it("does not merge two different words that share one Scribe column", () => {
+        // Same anchor index, different src_word: two real words, not one raw
+        // word split in two. They must stay separate.
+        const result = assignTimings({
+            tokens: [
+                token({ text: "της", src: "ours", src_word: 0, scribe_word: 0 }),
+                token({ text: "επιτροπής", src: "ours", src_word: 1, scribe_word: 0 }),
+            ],
+            words: words({
+                scribe: scribeWords(["επιτροπή", 2.0, 2.8]),
+                ours: [{ raw: "της", start: 2.0, end: 2.3, conf: 0.8 },
+                       { raw: "επιτροπής", start: 2.3, end: 2.8, conf: 0.8 }],
+            }),
+        });
+        expect(result.words.map((w) => w.word)).toEqual(["της", "επιτροπής"]);
+        expect(result.words[0].start).toBe(2.0);
+        expect(result.words[1].end).toBe(2.8);
     });
 
     it("returns nothing for no tokens, and utterance building survives it", () => {
