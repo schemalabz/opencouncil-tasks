@@ -148,7 +148,8 @@ app.post('/processAgenda', taskManager.registerTask(processAgenda, {
   summary: 'Process meeting agenda',
   description: 'Extracts and structures agenda information from documents',
   // v4: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
-  version: 4,
+  // v5: agendaItemTitle, the item as written on the agenda (schemalabz/opencouncil#616)
+  version: 5,
 }));
 
 app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
