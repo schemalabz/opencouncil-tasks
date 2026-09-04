@@ -226,6 +226,32 @@ program
     });
 
 program
+    .command('align <audioFile> <text...>')
+    .description('Probe the ElevenLabs forced-alignment API: print word timestamps for the given audio + text')
+    .action(async (audioFile: string, textParts: string[]) => {
+        const { forcedAlign } = await import('./lib/ElevenLabsAlign.js');
+        const text = textParts.join(' ');
+        const startedAt = Date.now();
+        const words = await forcedAlign(audioFile, text);
+        console.log(`Aligned ${words.length} words in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`);
+        for (const w of words) {
+            console.log(`${w.start.toFixed(2).padStart(8)}s → ${w.end.toFixed(2).padStart(8)}s  loss=${w.loss.toFixed(3)}  ${w.text}`);
+        }
+        server.close();
+    });
+
+program
+    .command('highlight <requestFile>')
+    .description('Run the generateHighlight task locally from a JSON request file (GenerateHighlightRequest without callbackUrl)')
+    .action(async (requestFile: string) => {
+        const { generateHighlight } = await import('./tasks/generateHighlight.js');
+        const request = JSON.parse(fs.readFileSync(requestFile, 'utf-8'));
+        const result = await generateHighlight(request, (stage, pct) => console.log(`[${pct.toFixed(0).padStart(3)}%] ${stage}`));
+        console.log(JSON.stringify(result, null, 2));
+        server.close();
+    });
+
+program
     .command('diarize <url>')
     .description('Diarize an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the diarization')
