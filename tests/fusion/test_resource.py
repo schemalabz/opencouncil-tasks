@@ -63,8 +63,12 @@ def test_segment_sized_input_time_and_memory(fx_inputs, capsys):
 
     before = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     t0 = time.monotonic()
+    # Bounded: a fuse.py that hangs must fail this gate, not the whole suite's
+    # wall clock. The margin over WALL_GATE_S keeps a slow-but-passing machine
+    # reporting a real number instead of a timeout.
     p = subprocess.run([sys.executable, str(FUSE)], input=blob,
-                       capture_output=True, text=True, cwd=str(REPO))
+                       capture_output=True, text=True, cwd=str(REPO),
+                       timeout=WALL_GATE_S * 4)
     wall = time.monotonic() - t0
     after = resource.getrusage(resource.RUSAGE_CHILDREN).ru_maxrss
     # ru_maxrss is kilobytes on Linux; RUSAGE_CHILDREN reports the max over all

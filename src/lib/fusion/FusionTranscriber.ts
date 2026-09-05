@@ -132,7 +132,7 @@ export class FusionTranscriber {
             if (!scribe.ok) {
                 await this.writeTrace({
                     requestId, arm, audio: request.audio, components, startedAt,
-                    outcome: "failed", fallbackReason: scribe.reason, pythonMs, pythonStderrTail,
+                    outcome: "failed", fallbackReason: scribe.reason, pythonMs, pythonStderrTail, llm,
                 });
                 throw new ScribeUnavailableError(`Scribe unusable for this segment: ${scribe.detail}`, scribe.reason);
             }
@@ -149,7 +149,7 @@ export class FusionTranscriber {
                 const transcript = annotate(scribeTranscript(), "scribe-fallback", "scribe_empty", this.configSha(arm, llm));
                 await this.writeTrace({
                     requestId, arm, audio: request.audio, components, startedAt,
-                    outcome: "scribe-only", fallbackReason: "scribe_empty", pythonMs, pythonStderrTail,
+                    outcome: "scribe-only", fallbackReason: "scribe_empty", pythonMs, pythonStderrTail, llm,
                 });
                 return { transcript, outcome: "scribe-only", fallbackReason: "scribe_empty", requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
@@ -157,7 +157,7 @@ export class FusionTranscriber {
             if (request.model === "scribe") {
                 const transcript = annotate(scribeTranscript(), "scribe", undefined, this.configSha(arm, llm));
                 await this.writeTrace({
-                    requestId, arm: "scribe", audio: request.audio, components, startedAt, outcome: "scribe-only",
+                    requestId, arm: "scribe", audio: request.audio, components, startedAt, outcome: "scribe-only", llm,
                 });
                 return { transcript, outcome: "scribe-only", requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
@@ -168,7 +168,7 @@ export class FusionTranscriber {
                 const transcript = annotate(scribeTranscript(), "scribe-fallback", auxFailure, this.configSha(arm, llm));
                 await this.writeTrace({
                     requestId, arm, audio: request.audio, components, startedAt,
-                    outcome: "scribe-fallback", fallbackReason: auxFailure,
+                    outcome: "scribe-fallback", fallbackReason: auxFailure, llm,
                 });
                 return { transcript, outcome: "scribe-fallback", fallbackReason: auxFailure, requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
@@ -203,7 +203,7 @@ export class FusionTranscriber {
                 await this.writeTrace({
                     requestId, arm, audio: request.audio, components, startedAt, outcome: "fused",
                     pythonMs, pythonStderrTail, timingEstimatedRate: transcript.metadata.timingEstimatedRate,
-                    fusionConfig: output.config,
+                    fusionConfig: output.config, llm,
                 });
                 return { transcript, outcome: "fused", requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             } catch (error) {
@@ -211,7 +211,7 @@ export class FusionTranscriber {
                 const transcript = annotate(scribeTranscript(), "scribe-fallback", error.reason, this.configSha(arm, llm));
                 await this.writeTrace({
                     requestId, arm, audio: request.audio, components, startedAt,
-                    outcome: "scribe-fallback", fallbackReason: error.reason, pythonMs, pythonStderrTail,
+                    outcome: "scribe-fallback", fallbackReason: error.reason, pythonMs, pythonStderrTail, llm,
                 });
                 console.warn(`[fusion] ${request.label ?? request.audio.sha256.slice(0, 12)}: falling back to Scribe (${error.reason}): ${error.message}`);
                 return { transcript, outcome: "scribe-fallback", fallbackReason: error.reason, requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
@@ -384,6 +384,10 @@ export class FusionTranscriber {
         pythonStderrTail?: string;
         timingEstimatedRate?: number;
         fusionConfig?: Record<string, unknown>;
+        /** The same envelope the transcript was hashed with. Passing null here
+         *  while the transcript used a real one would make the trace a record
+         *  of a configuration that never ran. */
+        llm: { model: string } | null;
     }): Promise<void> {
         await this.deps.trace.write({
             schema: "oc-fusion-trace/1",
@@ -392,7 +396,7 @@ export class FusionTranscriber {
             audioSha256: input.audio.sha256,
             arm: input.arm,
             mode: this.config.mode,
-            configSha: this.configSha(input.arm === "scribe" ? "rules" : input.arm, null),
+            configSha: this.configSha(input.arm === "scribe" ? "rules" : input.arm, input.llm),
             components: input.components,
             timings: { totalMs: Date.now() - input.startedAt, pythonMs: input.pythonMs },
             outcome: input.outcome,

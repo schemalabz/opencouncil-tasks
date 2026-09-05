@@ -2,7 +2,7 @@ import crypto from "crypto";
 import type { CityLanguage, Transcript } from "../../types.js";
 import { FusionCache } from "./cache.js";
 import { loadFusionConfig, type FusionConfig, type FusionMode } from "./config.js";
-import { createProviders } from "./providers/index.js";
+import { createProviders, type ProviderSet } from "./providers/index.js";
 import { FusionTranscriber, type FuseSegmentResult, type FusionModel } from "./FusionTranscriber.js";
 import { ShadowFusionQueue } from "./shadow.js";
 import { TraceWriter } from "./trace.js";
@@ -33,6 +33,20 @@ export function createFusionRuntime(config: FusionConfig): FusionRuntime {
     const trace = new TraceWriter(config.traceDir);
     const shadowQueue = new ShadowFusionQueue(trace);
 
+    // One provider set per language, not one per segment. OcAsrProvider caches
+    // the model's provenance on the instance, so a fresh set every call means
+    // one extra RunPod round trip before every single segment.
+    const providerSets = new Map<string, ProviderSet>();
+    const providersFor = (language: CityLanguage | undefined): ProviderSet => {
+        const key = language ?? "";
+        let set = providerSets.get(key);
+        if (!set) {
+            set = createProviders(config, language);
+            providerSets.set(key, set);
+        }
+        return set;
+    };
+
     return {
         config,
         cache,
@@ -40,7 +54,7 @@ export function createFusionRuntime(config: FusionConfig): FusionRuntime {
         shadowQueue,
         transcriberFor: (language) => new FusionTranscriber({
             config,
-            providers: createProviders(config, language),
+            providers: providersFor(language),
             cache,
             trace,
         }),

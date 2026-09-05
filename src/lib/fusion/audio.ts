@@ -4,7 +4,7 @@ import path from "path";
 import os from "os";
 import crypto from "crypto";
 import { pipeline } from "stream/promises";
-import { Readable } from "stream";
+import { Readable, Transform } from "stream";
 import mime from "mime";
 import { createSpacesClient, putPublicFile, deleteFromSpacesByPrefix } from "../../tasks/uploadToSpaces.js";
 import { spacesUrlForKey } from "../../tasks/utils/spacesUrl.js";
@@ -67,7 +67,14 @@ export async function artifactFromUrl(
         if (declared > MAX_AUDIO_BYTES) {
             throw new AudioTooLargeError(declared);
         }
-        await pipeline(Readable.fromWeb(response.body as never), fs.createWriteStream(file));
+        // Counted as it arrives, not after. `content-length` is a claim: a
+        // response that omits it or lies would otherwise write the whole body
+        // to disk before anyone measured it.
+        await pipeline(
+            Readable.fromWeb(response.body as never),
+            boundedBytes(MAX_AUDIO_BYTES),
+            fs.createWriteStream(file),
+        );
         const stat = await fsp.stat(file);
         if (stat.size > MAX_AUDIO_BYTES) {
             throw new AudioTooLargeError(stat.size);
@@ -85,6 +92,21 @@ export async function artifactFromUrl(
         await cleanup();
         throw error;
     }
+}
+
+/** Stops the download the moment it passes `limit`, and destroys the pipeline. */
+function boundedBytes(limit: number): Transform {
+    let seen = 0;
+    return new Transform({
+        transform(chunk: Buffer, _encoding, callback) {
+            seen += chunk.length;
+            if (seen > limit) {
+                callback(new AudioTooLargeError(seen));
+                return;
+            }
+            callback(null, chunk);
+        },
+    });
 }
 
 export function hashFile(filePath: string): Promise<string> {

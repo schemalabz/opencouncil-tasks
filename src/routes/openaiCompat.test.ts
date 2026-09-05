@@ -202,10 +202,12 @@ describe("POST /v1/audio/transcriptions", () => {
     });
 
     it("leaves no upload behind", async () => {
-        const before = fs.readdirSync(os.tmpdir()).filter((name) => name.startsWith("oc-fusion-upload-"));
+        // Cleanup happens after the response is sent, so this has to wait for
+        // it rather than read the directory once and call that proof.
+        const count = () => fs.readdirSync(os.tmpdir()).filter((name) => name.startsWith("oc-fusion-upload-")).length;
+        const before = count();
         await post(`${baseUrl}/v1/audio/transcriptions`, { model: "scribe" });
-        const after = fs.readdirSync(os.tmpdir()).filter((name) => name.startsWith("oc-fusion-upload-"));
-        expect(after.length).toBeLessThanOrEqual(before.length);
+        await vi.waitFor(() => expect(count()).toBeLessThanOrEqual(before), { timeout: 5_000 });
     });
 });
 
