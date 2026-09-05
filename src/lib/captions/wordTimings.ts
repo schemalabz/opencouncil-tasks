@@ -33,39 +33,81 @@ export function interpolateWords(u: UtteranceForCaptions): WordTiming[] {
 
 const normalize = (s: string) => s.normalize('NFC').toLowerCase();
 
+export interface TimingReasons {
+    /** Utterances with a token the aligner did not return in sequence. */
+    unmatched: number;
+    /** Utterances whose mean alignment loss exceeded MAX_MEAN_LOSS. */
+    highLoss: number;
+    /** No alignment at all (API failure), so every utterance is interpolated. */
+    unavailable?: boolean;
+}
+
+/**
+ * Longest common subsequence of transcript tokens and aligner words on
+ * normalized text: for each token, the aligner word it pairs with, or -1.
+ * The aligner sees the concatenated clip, so a word it adds or drops anywhere
+ * shifts every position after it — a positional slice would misattribute the
+ * whole tail, which is how one stray word used to cost a whole clip.
+ */
+function pairTokens(tokens: string[], aligned: AlignedWord[]): Int32Array {
+    const n = tokens.length, m = aligned.length;
+    const t = tokens.map(normalize), a = aligned.map(w => normalize(w.text));
+    // lcs[i][j] = LCS length of tokens[i..] and aligned[j..]
+    const lcs = new Uint16Array((n + 1) * (m + 1));
+    const at = (i: number, j: number) => i * (m + 1) + j;
+    for (let i = n - 1; i >= 0; i--) {
+        for (let j = m - 1; j >= 0; j--) {
+            lcs[at(i, j)] = t[i] === a[j]
+                ? lcs[at(i + 1, j + 1)] + 1
+                : Math.max(lcs[at(i + 1, j)], lcs[at(i, j + 1)]);
+        }
+    }
+    const pair = new Int32Array(n).fill(-1);
+    for (let i = 0, j = 0; i < n && j < m;) {
+        if (t[i] === a[j]) { pair[i] = j; i++; j++; }
+        else if (lcs[at(i + 1, j)] >= lcs[at(i, j + 1)]) i++;
+        else j++;
+    }
+    return pair;
+}
+
 export function resolveWordTimings(
     utterances: UtteranceForCaptions[],
     aligned: AlignedWord[] | null,
-): { words: WordTiming[][]; interpolatedUtterances: number } {
-    const tokenCounts = utterances.map(u => tokenizeWords(u.text).length);
-    const totalTokens = tokenCounts.reduce((a, b) => a + b, 0);
-
-    if (!aligned || aligned.length !== totalTokens) {
-        if (aligned) {
-            console.warn(`⚠️ alignment token count ${aligned.length} != transcript token count ${totalTokens}; interpolating all utterances`);
-        }
-        return { words: utterances.map(interpolateWords), interpolatedUtterances: utterances.length };
+): { words: WordTiming[][]; interpolatedUtterances: number; reasons: TimingReasons } {
+    const reasons: TimingReasons = { unmatched: 0, highLoss: 0 };
+    if (!aligned) {
+        reasons.unavailable = true;
+        return { words: utterances.map(interpolateWords), interpolatedUtterances: utterances.length, reasons };
     }
+
+    const perUtterance = utterances.map(u => tokenizeWords(u.text));
+    const pair = pairTokens(perUtterance.flat(), aligned);
 
     let offset = 0;
     let interpolatedUtterances = 0;
     const words = utterances.map((u, i) => {
-        const slice = aligned.slice(offset, offset + tokenCounts[i]);
-        offset += tokenCounts[i];
+        const tokens = perUtterance[i];
+        const pairs = Array.from(pair.subarray(offset, offset + tokens.length));
+        offset += tokens.length;
 
-        const textMatches = normalize(slice.map(w => w.text).join(' ')) === normalize(tokenizeWords(u.text).join(' '));
+        const complete = pairs.every(j => j >= 0);
+        const slice = complete ? pairs.map(j => aligned[j]) : [];
         const meanLoss = slice.length === 0 ? 0 : slice.reduce((s, w) => s + w.loss, 0) / slice.length;
-
-        if (!textMatches || meanLoss > MAX_MEAN_LOSS) {
+        if (!complete || meanLoss > MAX_MEAN_LOSS) {
+            if (!complete) reasons.unmatched++; else reasons.highLoss++;
             interpolatedUtterances++;
             return interpolateWords(u);
         }
-        return slice.map(w => ({
-            text: w.text,
-            startMs: Math.round(w.start * 1000),
-            endMs: Math.round(w.end * 1000),
-        }));
+        // Transcript text, aligner timing: the aligner's echo can differ in case
+        // or normalization. Timings are clamped to the utterance so a word
+        // straddling a cut cannot overlap the neighbouring utterance's page.
+        const clamp = (ms: number) => Math.min(Math.max(ms, u.startMs), u.endMs);
+        return tokens.map((text, k) => {
+            const startMs = clamp(Math.round(slice[k].start * 1000));
+            return { text, startMs, endMs: Math.max(startMs, clamp(Math.round(slice[k].end * 1000))) };
+        });
     });
 
-    return { words, interpolatedUtterances };
+    return { words, interpolatedUtterances, reasons };
 }

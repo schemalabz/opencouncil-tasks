@@ -76,7 +76,7 @@ flowchart TD
 - getFileParts(localVideoPath, segments, 'audio') extracts and concatenates the bridged segments' audio to one clip
 - normalizeUtteranceTimestamps(adjustedUtterances) maps each utterance to clip-local ms timestamps (0-based, matching the extracted audio)
 - forcedAlign(clipAudioPath, concatenatedText) POSTs the audio + all utterance text joined with spaces to ElevenLabs `/v1/forced-alignment`; one retry inside forcedAlign on failure; throws AlignmentError if ELEVENLABS_API_KEY is unset or both attempts fail
-- resolveWordTimings validates the alignment: total aligned word count must equal the transcript's token count, and each utterance's mean word loss must be ≤ MAX_MEAN_LOSS (2.5). Utterances that fail either check — or the whole set if alignment failed/mismatched entirely — fall back to interpolateWords, which distributes an utterance's duration across its words proportional to word character length
+- resolveWordTimings pairs transcript tokens with aligner words by longest common subsequence on normalized text — the aligner sees the whole clip, so a word it adds or drops shifts every later position, and a positional slice would misattribute the entire tail. An utterance uses aligner timings only when every one of its tokens paired and its mean word loss is ≤ MAX_MEAN_LOSS; otherwise that utterance alone falls back to interpolateWords (duration split across words by character length). Rendered text is always the transcript token, and timings are clamped to the utterance window
 - resolveForOrientation(preset, frame) flattens the preset's landscape override group when the output frame is landscape, so paging and rendering never branch on aspect ratio themselves
 - buildCaptionTimeline: @remotion/captions' createTikTokStyleCaptions groups words into pages within combineWithinMs, then a constraint post-pass re-chunks by maxWordsPerPage and sentence-final punctuation (`. ! ? ; U+037E …`), extending short pages to minPageDurationMs
 - Speaker spans are built by merging consecutive same-speaker utterances with zero gap between them
@@ -188,5 +188,5 @@ sequenceDiagram
 - Stateless per request; no persistent state.
 - Temporary files under DATA_DIR: downloaded video, extracted clip audio (deleted after captions are built), rendered `.ass` (deleted on success, left in place on failure for debugging).
 - Each request composes an independent FFmpeg command; progress reported via onProgress.
-- Alignment fallback ladder: alignment failure, token-count mismatch, or high mean loss on a given utterance falls back to char-weighted interpolation for that utterance — a render never fails due to alignment.
+- Alignment fallback ladder: alignment failure interpolates everything; an unpaired token or high mean loss interpolates only that utterance — a render never fails due to alignment.
 - Fallback logic: missing resolution/aspect ratio presets fall back to the first available preset.
