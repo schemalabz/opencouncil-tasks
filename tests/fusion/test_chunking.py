@@ -139,3 +139,31 @@ def test_bad_chunk_config_rejected():
         ChunkConfig.from_dict({"max_tokens": 0})
     with pytest.raises(ValueError):
         ChunkConfig.from_dict({"nonsense": 1})
+
+
+def test_no_chunk_exceeds_max_tokens_in_any_stream():
+    """align3 allocates n**3 bytes for the longest of the three spans, so a cap
+    on scribe's side alone does not bound the memory. A stream that runs much
+    longer than scribe's -- a verbose system, or one that did not stop when the
+    others did -- used to be handed a proportional cut far past max_tokens."""
+    cfg = ChunkConfig(max_tokens=120, anchor_n=3, search_radius=200)
+    # Deliberately anchor-free: distinct tokens everywhere, so every cut is
+    # forced and the proportional placement is what decides the spans.
+    streams = [
+        [f"α{i}" for i in range(60)],
+        [f"β{i}" for i in range(600)],
+        [f"γ{i}" for i in range(60)],
+    ]
+    chunks, _forced = plan_chunks(streams, cfg)
+
+    for chunk in chunks:
+        for k, (start, end) in enumerate(chunk):
+            assert end - start <= cfg.max_tokens, (
+                f"stream {k} got a span of {end - start} tokens, over the "
+                f"{cfg.max_tokens} cap")
+
+    # and it still covers each stream exactly once
+    for k in range(3):
+        spans = [c[k] for c in chunks]
+        assert spans[0][0] == 0 and spans[-1][1] == len(streams[k])
+        assert all(a[1] == b[0] for a, b in zip(spans, spans[1:]))

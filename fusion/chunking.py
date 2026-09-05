@@ -141,8 +141,12 @@ def _find_anchor(streams, offsets, ends, cfg):
             rel.append((hits[k] - lo) / width)
         if max(rel) - min(rel) > TEMPORAL_TOLERANCE:
             continue
-        # a cut must make progress in every stream and leave work behind
-        if any(hits[k] <= offsets[k] or hits[k] >= ends[k] for k in range(3)):
+        # A cut must make progress in every stream, leave work behind, and hand
+        # align3 no more than max_tokens from ANY stream. The ops table
+        # allocates n**3 bytes, so one oversized stream is the whole failure --
+        # capping only scribe's side would still blow up on a verbose system.
+        if any(hits[k] <= offsets[k] or hits[k] >= ends[k]
+               or hits[k] - offsets[k] > cfg.max_tokens for k in range(3)):
             continue
         return list(hits)
     return None
@@ -159,6 +163,10 @@ def _forced(streams, offsets, ends, cfg):
         c = _proportional(offsets, ends, k, cut0) if e0 - o0 > 0 else offsets[k]
         c = min(max(c, offsets[k]), ends[k])
         cuts.append(c)
+    # A proportional cut follows scribe's fraction of its own remaining span, so
+    # a stream several times longer than scribe's can be handed a span far past
+    # max_tokens -- the n**3 MemoryError this module exists to prevent.
+    cuts = [min(cuts[k], offsets[k] + cfg.max_tokens) for k in range(3)]
     # guarantee progress: at least one stream must advance
     if all(cuts[k] <= offsets[k] for k in range(3)):
         for k in range(3):
