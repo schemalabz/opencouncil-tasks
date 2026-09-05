@@ -70,4 +70,37 @@ describe("enrichSubjectData", () => {
         expect(mockedGeocode).not.toHaveBeenCalled();
         expect(result.location).toBeNull();
     });
+
+    it("passes agendaItemTitle through when the input defines it", async () => {
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(
+            input({ agendaItemTitle: "ΑΝΑΠΛΑΣΗ ΠΛΑΤΕΙΑΣ ΣΥΝΤΑΓΜΑΤΟΣ" }),
+            "abc123",
+            { cityName: "Αθήνα", date: "2026-09-05" }
+        );
+
+        expect(result.agendaItemTitle).toBe("ΑΝΑΠΛΑΣΗ ΠΛΑΤΕΙΑΣ ΣΥΝΤΑΓΜΑΤΟΣ");
+    });
+
+    it("passes an explicit null agendaItemTitle through", async () => {
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(
+            input({ agendaItemTitle: null }),
+            "abc123",
+            { cityName: "Αθήνα", date: "2026-09-05" }
+        );
+
+        expect(result.agendaItemTitle).toBeNull();
+    });
+
+    it("omits agendaItemTitle when the input does not define it", async () => {
+        // summarize never sets the field; the app keeps the stored value when it is absent.
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(input(), "abc123", { cityName: "Αθήνα", date: "2026-09-05" });
+
+        expect("agendaItemTitle" in result).toBe(false);
+    });
 });

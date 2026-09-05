@@ -3,13 +3,34 @@ import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichmen
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
 import { fetchAgendaDocument, type AgendaDocument } from "../lib/documentConversion.js";
+import { AGENDA_ITEM_TITLE_RULES, normalizeAgendaItemTitle } from "../lib/agendaItemTitle.js";
 import { CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
-export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX';
+export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX' | 'MISSING_AGENDA_ITEM_TITLE';
 import { formatTopicLabels } from "../lib/promptUtils.js";
 import { Task } from "./pipeline.js";
 import { generateSubjectUUID, extractMeetingId } from "../utils.js";
 import { logMultiPhaseUsage } from "../lib/usageLogging.js";
+
+export const AGENDA_EXTRACTION_SCHEMA = {
+    type: "array",
+    items: {
+        type: "object",
+        properties: {
+            name: { type: "string" },
+            description: { type: "string" },
+            agendaItemTitle: { type: ["string", "null"] },
+            agendaItemIndex: { type: ["number", "null"] },
+            locationText: { type: ["string", "null"] },
+            introducedByPersonId: { type: ["string", "null"] },
+            topicLabel: { type: ["string", "null"] },
+            topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
+            proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
+        },
+        required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance"],
+        additionalProperties: false
+    }
+};
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
     const meetingId = extractMeetingId(request.callbackUrl);
@@ -45,24 +66,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
         documentBase64: agenda.kind === 'pdf' ? agenda.base64 : undefined,
         outputFormat: {
             type: "json_schema",
-            schema: {
-                type: "array",
-                items: {
-                    type: "object",
-                    properties: {
-                        name: { type: "string" },
-                        description: { type: "string" },
-                        agendaItemIndex: { type: ["number", "null"] },
-                        locationText: { type: ["string", "null"] },
-                        introducedByPersonId: { type: ["string", "null"] },
-                        topicLabel: { type: ["string", "null"] },
-                        topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
-                        proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
-                    },
-                    required: ["name", "description", "agendaItemIndex", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance"],
-                    additionalProperties: false
-                }
-            }
+            schema: AGENDA_EXTRACTION_SCHEMA
         }
     });
 
@@ -72,16 +76,19 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     const extractionModel = result.resolvedModel;
     const extractionBatch = result.batchMode;
     const warnings = fillMissingAgendaIndices(extracted);
+    warnings.push(...normalizeExtractedTitles(extracted));
 
     const importanceDist = { doNotNotify: 0, normal: 0, high: 0 };
     let introducerCount = 0;
     let topicCount = 0;
     let locationTextCount = 0;
+    let titledCount = 0;
     for (const s of extracted) {
         importanceDist[s.topicImportance]++;
         if (s.introducedByPersonId) introducerCount++;
         if (s.topicLabel) topicCount++;
         if (s.locationText) locationTextCount++;
+        if (s.agendaItemTitle !== null) titledCount++;
     }
 
     console.log(`   Extracted ${extracted.length} subjects`);
@@ -89,6 +96,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     console.log(`   Introducers matched: ${introducerCount}/${extracted.length}`);
     console.log(`   Topics assigned: ${topicCount}/${extracted.length}`);
     console.log(`   Locations found: ${locationTextCount}/${extracted.length}`);
+    console.log(`   Agenda item titles kept: ${titledCount}/${extracted.length}`);
 
     const usagePhases: ({ label: string } & UsageStats)[] = [
         { label: 'Phase 2 (Extraction)', usage: result.usage, resolvedModel: extractionModel, batchMode: extractionBatch }
@@ -156,6 +164,7 @@ export const extractedSubjectToApiSubject = async (
     const input: EnrichmentInput = {
         name: subject.name,
         description: subject.description,
+        agendaItemTitle: subject.agendaItemTitle,
         locationText: subject.locationText,
         topicImportance: subject.topicImportance,
         proximityImportance: subject.proximityImportance,
@@ -194,9 +203,30 @@ export function fillMissingAgendaIndices(subjects: Array<{ agendaItemIndex: numb
     }];
 }
 
+/**
+ * Collapses each extracted title and turns an empty one into null. The model
+ * already returns null when it cannot read an item's text; this also covers
+ * an empty or whitespace-only string. The app stores null for that.
+ */
+export function normalizeExtractedTitles(subjects: Array<{ name: string; agendaItemTitle: string | null }>): TaskWarning<AgendaWarningCode>[] {
+    const missing: string[] = [];
+    for (const s of subjects) {
+        s.agendaItemTitle = normalizeAgendaItemTitle(s.agendaItemTitle);
+        if (s.agendaItemTitle === null) missing.push(s.name);
+    }
+    if (missing.length === 0) return [];
+    console.warn(`   ⚠️  ${missing.length} subject(s) came back without an agenda item title: ${missing.join(' | ')}`);
+    return [{
+        code: 'MISSING_AGENDA_ITEM_TITLE',
+        severity: 'warning',
+        message: `${missing.length} subject(s) came back without the verbatim agenda item title; the minutes fall back to the summary name for: ${missing.join(' | ')}`,
+    }];
+}
+
 export type ExtractedSubject = {
     name: string;
     description: string;
+    agendaItemTitle: string | null;
     agendaItemIndex: number | null;
     introducedByPersonId: string | null;
     speakerContributions: {
@@ -220,10 +250,12 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
                           // Γράψε την περιγραφή με ουδέτερο χρόνο που δείχνει ότι το θέμα ΘΑ συζητηθεί (όχι ότι συζητείται τώρα).
                           // ✓ Σωστά: "Το θέμα αφορά...", "Θα εξεταστεί...", "Προς έγκριση η..."
                           // ✗ Λάθος: "Συζητούνται...", "Εγκρίνεται...", "Παρουσιάζεται..."
+    agendaItemTitle: string | null; // Ο τίτλος του θέματος ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένος στην ημερήσια διάταξη — βλ. τους κανόνες παρακάτω. null μόνο αν το κείμενο δεν διαβάζεται.
+                          // Οι κανόνες για το πεδίο, μαζί με την εξαίρεση γλώσσας, είναι παρακάτω.
     agendaItemIndex: number | null; // Ο αριθμός που συνοδεύει το θέμα στο έγγραφο της ημερήσιας διάταξης, αν υπάρχει
     locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος.
                           // Γράψε ΜΟΝΟ το τοπωνύμιο· ΜΗΝ προσθέτεις πόλη, περιοχή ή χώρα — μπαίνουν αυτόματα αργότερα.
-                          // ΕΞΑΙΡΕΣΗ ΓΛΩΣΣΑΣ (ισχύει ΜΟΝΟ για το locationText, όχι για τα υπόλοιπα πεδία): κράτα το τοπωνύμιο στη γλώσσα και το αλφάβητο που χρησιμοποιεί το έγγραφο — ΜΗΝ μεταφράζεις και ΜΗΝ μεταγράφεις μεταξύ αλφαβήτων.
+                          // ΕΞΑΙΡΕΣΗ ΓΛΩΣΣΑΣ (ισχύει ΜΟΝΟ για το locationText και το agendaItemTitle, όχι για τα υπόλοιπα πεδία): κράτα το τοπωνύμιο στη γλώσσα και το αλφάβητο που χρησιμοποιεί το έγγραφο — ΜΗΝ μεταφράζεις και ΜΗΝ μεταγράφεις μεταξύ αλφαβήτων.
                           // Αν το θέμα δεν έχει τοποθεσία, ή αφορά ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου), τότε null
     introducedByPersonId: string | null; // Το id του εισηγητή του θέματος, αν αναφέρετε σαφώς στη διάταξη
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
@@ -232,6 +264,8 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
 };
 
 ${IMPORTANCE_GUIDELINES}
+
+${AGENDA_ITEM_TITLE_RULES}
 
 Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.${languageDirectiveSuffix(cityLanguage)}`;
 }

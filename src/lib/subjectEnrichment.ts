@@ -10,6 +10,8 @@ import { ResultWithUsage, NO_USAGE_STATS, type UsageStats } from './ai.js';
 export interface EnrichmentInput {
     name: string;
     description: string;
+    /** Present only for agenda extraction; see Subject.agendaItemTitle. */
+    agendaItemTitle?: string | null;
     locationText: string | null;
     topicImportance: 'doNotNotify' | 'normal' | 'high';
     proximityImportance: 'none' | 'near' | 'wide';
@@ -89,6 +91,7 @@ export async function enrichSubjectData(
             id,
             name: input.name,
             description: input.description,
+            ...(input.agendaItemTitle !== undefined ? { agendaItemTitle: input.agendaItemTitle } : {}),
             agendaItemIndex: input.agendaItemIndex,
             introducedByPersonId: input.introducedByPersonId,
             speakerContributions: input.speakerContributions,
