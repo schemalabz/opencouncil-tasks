@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { ensureDataSubdir } from './dataDir.js';
+import { ensureDataSubdir, getDataDir } from './dataDir.js';
 import { extractMeetingId } from '../utils.js';
 
 export type StoredCallback = {
@@ -43,7 +43,15 @@ export const saveFailedCallback = async (entry: Omit<StoredCallback, 'filePath'>
 };
 
 export const listFailedCallbacks = async (): Promise<StoredCallback[]> => {
-    const dir = ensureDataSubdir(SUBDIR);
+    // Deliberately does not create the directory. `callbacks list` is normally run through
+    // `docker compose exec` as root while the app runs as apify, so creating it here would
+    // leave a root-owned directory the app cannot write into — silently disabling
+    // persistence until the next container restart. An absent store means nothing has failed.
+    const dir = path.join(getDataDir(), SUBDIR);
+    if (!fs.existsSync(dir)) return [];
+
+    // Any other read failure is left to throw. Unlike a cache miss, an empty listing here is
+    // a claim that nothing was lost, so an unreadable store must not be able to make it.
     const files = (await fs.promises.readdir(dir)).filter(f => f.endsWith('.json'));
     const entries: StoredCallback[] = [];
 

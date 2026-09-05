@@ -86,3 +86,27 @@ describe('failedCallbackStore', () => {
         expect(path.basename(filePath)).not.toContain(':');
     });
 });
+
+describe('listFailedCallbacks — a read must not create the store', () => {
+    // ensureDataSubdir creates the directory as whoever is running. `callbacks list` is
+    // usually run through `docker compose exec`, which is root, while the app runs as
+    // apify — so a listing that mkdirs leaves a root-owned directory the app cannot
+    // write into, silently disabling persistence until the next container restart.
+    it('returns nothing and leaves the directory absent', async () => {
+        const dir = path.join(tmp, 'failed-callbacks');
+        expect(fs.existsSync(dir)).toBe(false);
+
+        await expect(listFailedCallbacks()).resolves.toEqual([]);
+
+        expect(fs.existsSync(dir)).toBe(false);
+    });
+
+    it('throws rather than reporting an empty store it could not read', async () => {
+        // The neighbouring extraction cache swallows every read error and returns a miss,
+        // which is safe for a cache. Here an empty listing is a claim that nothing was
+        // lost, so only a genuinely absent store may produce one.
+        fs.writeFileSync(path.join(tmp, 'failed-callbacks'), 'not a directory');
+
+        await expect(listFailedCallbacks()).rejects.toThrow();
+    });
+});

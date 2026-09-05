@@ -166,3 +166,56 @@ describe('deliverTerminalCallback — disk persistence lifecycle', () => {
         expect((await listFailedCallbacks())[0].savedAt).toBe(written[0]);
     });
 });
+
+describe('deliverTerminalCallback — when the payload cannot be persisted', () => {
+    // Persisting is the last line of defence: nothing else still holds the result.
+    // If the write fails too, the only place it can still be recovered from is the
+    // log — which is how the highlight lost in the 2026-08-24 incident was rebuilt.
+    const secretUrl = 'https://opencouncil.gr/api/cities/chania/meetings/aug24_2026/taskStatuses/t1?token=SUPERSECRET';
+
+    let errors: string[];
+    beforeEach(() => {
+        errors = [];
+        vi.spyOn(console, 'log').mockImplementation(() => { });
+        vi.spyOn(console, 'warn').mockImplementation(() => { });
+        vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+            errors.push(args.map(a => typeof a === 'string' ? a : JSON.stringify(a)).join(' '));
+        });
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    const failingSave = () => vi.fn(async () => { throw new Error('EACCES: permission denied'); });
+
+    it('logs the payload so the result can still be recovered', async () => {
+        const post = vi.fn(async () => ({ ok: false, status: 401 }));
+
+        await deliverTerminalCallback(secretUrl, payload, 'summarize', { post, sleep: spySleep(), save: failingSave() });
+
+        const logged = errors.join('\n');
+        expect(logged).toContain('"ok":true');
+        // Enough to locate the task without the URL: the same meeting id the CLI listing
+        // and the filename use, plus the task status id.
+        expect(logged).toContain('chania/aug24_2026');
+        expect(logged).toContain('t1');
+    });
+
+    it('includes the callback URL, token and all, so the payload can be posted back', async () => {
+        // Without the token the dump is only half a recovery: the result with nowhere to
+        // send it. TaskManager already logs this same URL once per attempt, so keeping it
+        // here exposes nothing a log reaching this point does not already carry.
+        const post = vi.fn(async () => ({ ok: false, status: 401 }));
+
+        await deliverTerminalCallback(secretUrl, payload, 'summarize', { post, sleep: spySleep(), save: failingSave() });
+
+        expect(errors.join('\n')).toContain(secretUrl);
+    });
+
+    it('does not dump the payload when persistence succeeded', async () => {
+        const post = vi.fn(async () => ({ ok: false, status: 401 }));
+        const save = vi.fn(async () => '/tmp/saved.json');
+
+        await deliverTerminalCallback(secretUrl, payload, 'summarize', { post, sleep: spySleep(), save });
+
+        expect(errors.join('\n')).not.toContain('"ok":true');
+    });
+});

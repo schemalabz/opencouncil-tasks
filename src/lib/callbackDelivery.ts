@@ -1,4 +1,5 @@
 import { saveFailedCallback, removeFailedCallback, taskStatusIdFromUrl } from './failedCallbackStore.js';
+import { extractMeetingId } from '../utils.js';
 
 export type PostResult = { ok: boolean; status?: number; error?: string };
 
@@ -80,6 +81,25 @@ export const deliverTerminalCallback = async (
         }
     };
 
+    // Both ways out of the loop end the same way: say why, try to keep the payload, and if
+    // even that failed put it in the log — the last copy of the result, in the only place
+    // that still ships off the box.
+    //
+    // The URL goes in token and all, because that is the whole point: re-delivering by hand
+    // means POSTing the payload back, and a result with no destination is only half a
+    // recovery. It widens nothing — TaskManager logs the same URL on every attempt, so any
+    // log that reaches this line already carries the token nine times over.
+    const giveUp = async (): Promise<void> => {
+        console.error(`Callback for ${taskType} undeliverable after ${attempts} attempt(s): ${last.status ?? last.error}`);
+        await persist();
+        if (savedPath) return;
+        console.error(
+            `UNRECOVERABLE ${taskType} callback for ${extractMeetingId(callbackUrl)} (${taskStatusId}): neither ` +
+            `delivered nor persisted. Re-deliver by POSTing the payload below to its callbackUrl. ` +
+            JSON.stringify({ callbackUrl, payload })
+        );
+    };
+
     for (let i = 0; i <= RETRY_DELAYS_MS.length; i++) {
         last = await post(callbackUrl, payload);
         attempts++;
@@ -97,8 +117,7 @@ export const deliverTerminalCallback = async (
         }
 
         if (!isRetryable(last)) {
-            console.error(`Callback for ${taskType} undeliverable after ${attempts} attempt(s): ${last.status ?? last.error}`);
-            await persist();
+            await giveUp();
             return;
         }
 
@@ -112,8 +131,7 @@ export const deliverTerminalCallback = async (
         }
     }
 
-    console.error(`Callback for ${taskType} undeliverable after ${attempts} attempt(s): ${last.status ?? last.error}`);
-    // Overwrites the file saved on the first retryable failure so it reflects the final
-    // attempt count and last status, rather than the stale values from that first failure.
-    await persist();
+    // giveUp's persist overwrites the file saved on the first retryable failure, so it ends up
+    // with the final attempt count and status rather than the stale values from that failure.
+    await giveUp();
 };
