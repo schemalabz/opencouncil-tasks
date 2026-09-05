@@ -10,6 +10,7 @@
     "cli": "node dist/cli.js",
     "cli:dev": "npm run build && node dist/cli.js",
     "test": "vitest run",
+    "test:fusion-route-gate": "vitest run --config vitest.gate.config.ts",
     "typecheck": "tsc --noEmit",
     "test:watch": "vitest",
     "test:upload": "curl -X POST http://localhost:3005/dev/test-upload",
