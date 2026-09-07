@@ -111,10 +111,17 @@ describe("live replay: every recorded live window through the real route", () =>
         const traceDir = path.join(workDir, "traces");
         const outcomes: Record<string, number> = {};
         const fallbacks: { id: string; reason: string; detail: string }[] = [];
+        // Counted, not skipped. A missing wav silently narrowing the loop would
+        // let this gate pass having measured a fallback rate over two windows
+        // (CodeRabbit 2026-09-07).
+        const missingAudio: string[] = [];
 
         for (const [windowId, audioSha] of Object.entries(index.windows)) {
             const wav = path.join(AUDIO_DIR, `${windowId}.wav`);
-            if (!fs.existsSync(wav)) continue;
+            if (!fs.existsSync(wav)) {
+                missingAudio.push(windowId);
+                continue;
+            }
             const form = new FormData();
             form.append("file", new Blob([await fsp.readFile(wav)], { type: "audio/wav" }), `${windowId}.wav`);
             form.append("model", "fusion-rules");
@@ -150,7 +157,8 @@ describe("live replay: every recorded live window through the real route", () =>
             console.info(`[live replay] ${fallback.id}: ${fallback.reason} — ${fallback.detail}`);
         }
 
-        expect(total, "the bundle produced no requests").toBeGreaterThan(0);
+        expect(missingAudio, `no audio for ${missingAudio.length} bundled windows`).toEqual([]);
+        expect(total, "the bundle produced no requests").toBe(Object.keys(index.windows).length);
         expect(rate, `fallbacks: ${JSON.stringify(fallbacks)}`).toBeLessThanOrEqual(MAX_FALLBACK_RATE);
     }, 1_800_000);
 });
