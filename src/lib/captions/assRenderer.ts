@@ -1,4 +1,4 @@
-import { escapeAssText, hexToAssColorTag, hexToAssStyleColor, msToAssTime, msToCs } from './assFormat.js';
+import { assAlphaTag, escapeAssText, hexToAssColorTag, hexToAssStyleColor, msToAssTime, msToCs } from './assFormat.js';
 import type { CaptionPage, CaptionPreset, CaptionTimeline, SpeakerSpan } from './types.js';
 
 interface Frame { width: number; height: number }
@@ -10,6 +10,9 @@ interface RenderOpts {
 }
 
 const CHIP_FONT_DEFAULT = 'Inter Medium';
+const CHIP_FADE_MS = 200;
+/** Chip box tint (BorderStyle=4 BackColour) alpha: 0 = opaque, 255 = transparent. */
+const CHIP_BOX_ALPHA = 51;
 
 /** px values in presets are calibrated for a 1920-high frame; scale linearly. */
 const scale = (px: number, frame: Frame) => Math.max(1, Math.round(px * (frame.height / 1920)));
@@ -41,7 +44,7 @@ function styleSection(preset: CaptionPreset, frame: Frame, chipFont: string): st
         '[V4+ Styles]',
         'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
         `Style: Caption,${preset.font.family},${fontSize},${primary},${secondary},${outlineColor},${backColor},0,0,0,0,100,100,0,0,${borderStyle},${outline},${shadowDepth},5,${marginX},${marginX},0,1`,
-        `Style: Chip,${chipFont},${chip.nameSize},${hexToAssStyleColor('#E0E0E0')},${hexToAssStyleColor('#E0E0E0')},${hexToAssStyleColor('#000000')},${hexToAssStyleColor('#000000', 51)},0,0,0,0,100,100,0,0,4,0,${chip.padV},7,0,0,0,1`,
+        `Style: Chip,${chipFont},${chip.nameSize},${hexToAssStyleColor('#E0E0E0')},${hexToAssStyleColor('#E0E0E0')},${hexToAssStyleColor('#000000')},${hexToAssStyleColor('#000000', CHIP_BOX_ALPHA)},0,0,0,0,100,100,0,0,4,0,${chip.padV},7,0,0,0,1`,
         `Style: Accent,${chipFont},${chip.nameSize},${hexToAssStyleColor('#E0E0E0')},${hexToAssStyleColor('#E0E0E0')},${hexToAssStyleColor('#000000')},${hexToAssStyleColor('#000000')},0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1`,
     ].join('\n');
 }
@@ -176,12 +179,24 @@ function chipEvents(spans: SpeakerSpan[], frame: Frame): string[] {
             // libass stacks lines at exactly their \fs height with no gap, so this
             // is the box's height: padding above and below plus one size per line.
             const barH = g.padV * 2 + g.nameSize + roleLines.length * g.roleSize;
+            // A span that opens with the clip has nothing to fade in over, and
+            // frame 0 doubles as the poster frame, so it shows the finished chip.
+            const fades = s.startMs > 0;
+            // \fad leaves the BorderStyle=4 box at its style alpha, so without
+            // animating \4a alongside it the box paints a full fade ahead of the
+            // name it frames — an empty tint card at every speaker change.
+            const chipFade = fades
+                ? `\\fad(${CHIP_FADE_MS},0)\\4a${assAlphaTag(255)}\\t(0,${CHIP_FADE_MS},\\4a${assAlphaTag(CHIP_BOX_ALPHA)})`
+                : '';
+            // The accent bar is a \p drawing in PrimaryColour with no box, which
+            // \fad covers on its own.
+            const accentFade = fades ? `\\fad(${CHIP_FADE_MS},0)` : '';
             const events = [
-                `Dialogue: 1,${msToAssTime(s.startMs)},${msToAssTime(s.endMs)},Chip,,0,0,0,,{\\an7\\pos(${textX},${g.y})\\fad(200,0)}${escapeAssText(s.speaker.name!)}${roleText}`,
+                `Dialogue: 1,${msToAssTime(s.startMs)},${msToAssTime(s.endMs)},Chip,,0,0,0,,{\\an7\\pos(${textX},${g.y})${chipFade}}${escapeAssText(s.speaker.name!)}${roleText}`,
             ];
             if (s.speaker.partyColorHex) {
                 events.unshift(
-                    `Dialogue: 2,${msToAssTime(s.startMs)},${msToAssTime(s.endMs)},Accent,,0,0,0,,{\\an7\\pos(${g.x},${g.y - g.padV})\\fad(200,0)\\c${hexToAssColorTag(s.speaker.partyColorHex)}\\p1}m 0 0 l ${g.accentW} 0 l ${g.accentW} ${barH} l 0 ${barH}{\\p0}`
+                    `Dialogue: 2,${msToAssTime(s.startMs)},${msToAssTime(s.endMs)},Accent,,0,0,0,,{\\an7\\pos(${g.x},${g.y - g.padV})${accentFade}\\c${hexToAssColorTag(s.speaker.partyColorHex)}\\p1}m 0 0 l ${g.accentW} 0 l ${g.accentW} ${barH} l 0 ${barH}{\\p0}`
                 );
             }
             return events;

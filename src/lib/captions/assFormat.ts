@@ -32,6 +32,11 @@ export function hexToAssStyleColor(hex: string, alpha = 0): string {
     return `&H${alpha.toString(16).padStart(2, '0').toUpperCase()}${hexToBgr(hex)}`;
 }
 
+/** Inline alpha override value: &HAA& (00 = opaque, FF = transparent). */
+export function assAlphaTag(alpha: number): string {
+    return `&H${alpha.toString(16).padStart(2, '0').toUpperCase()}&`;
+}
+
 /**
  * Braces would open override blocks and a backslash would start a control
  * sequence (\N, \h) even outside braces; newlines must become \N.

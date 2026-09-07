@@ -212,8 +212,23 @@ describe('renderAss speaker chip', () => {
         expect(chip.split('\\N').length).toBeGreaterThan(3);  // name plus several wrapped lines
     });
 
-    it('fades in and sits where the legacy overlay did (1080p preset: 30, 525)', () => {
-        expect(output).toContain('\\fad(200,0)');
+    it('fades the box in step with the text, not a fade ahead of it', () => {
+        const chip = output.split('\n').find(l => l.startsWith('Dialogue: 1'))!;
+        // \fad alone skips the BorderStyle=4 box, which would then show as an
+        // empty tint card for the whole fade before the name arrives.
+        expect(chip).toContain('\\fad(200,0)\\4a&HFF&\\t(0,200,\\4a&H33&)');
+    });
+
+    it('renders a span that opens with the clip complete on frame 0', () => {
+        const out = renderAss(
+            { pages: [], speakerSpans: [{ startMs: 0, endMs: 900, speaker: { name: 'Χ', roleLabel: 'Δήμαρχος', partyColorHex: '#2E86DE' } }] },
+            CAPTION_PRESETS.sweep, frame, { includeCaptions: false, includeSpeakerOverlay: true },
+        );
+        expect(out).not.toContain('\\fad');
+        expect(out).not.toContain('\\4a');
+    });
+
+    it('sits where the legacy overlay did (1080p preset: 30, 525)', () => {
         // Legacy 1080p overlay sat at leftPadding 30 / topPadding 525; the text
         // clears the bar and the box padding.
         expect(output).toContain('\\an7\\pos(46,525)');  // name + role

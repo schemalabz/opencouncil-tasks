@@ -84,6 +84,6 @@ Style: Accent,Inter Medium,36,&H00E0E0E0,&H00E0E0E0,&H00000000,&H00000000,0,0,0,
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 Dialogue: 2,0:00:00.10,0:00:02.80,Accent,,0,0,0,,{\\an7\\pos(30,513)\\fad(200,0)\\c&HDE862E&\\p1}m 0 0 l 4 0 l 4 86 l 0 86{\\p0}
-Dialogue: 1,0:00:00.10,0:00:02.80,Chip,,0,0,0,,{\\an7\\pos(46,525)\\fad(200,0)}Μαρία Παπαδοπούλου\\N{\\fs26}Δήμαρχος
+Dialogue: 1,0:00:00.10,0:00:02.80,Chip,,0,0,0,,{\\an7\\pos(46,525)\\fad(200,0)\\4a&HFF&\\t(0,200,\\4a&H33&)}Μαρία Παπαδοπούλου\\N{\\fs26}Δήμαρχος
 "
 `;
