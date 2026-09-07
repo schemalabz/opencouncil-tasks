@@ -459,3 +459,118 @@ describe('classifyTransientError on a stream the SDK tore down', () => {
         expect(classifyTransientError(error)).toBe('connection');
     });
 });
+
+// ===========================================================================
+// Stop reasons that end the response early
+//
+// A refusal and a context-window overflow come back as HTTP 200, sometimes with
+// no content at all and sometimes after partial text. Before these were handled
+// the empty case fell through to the content checks and raised "Expected at
+// least one text response from claude, got" — an error naming neither cause, on
+// a path that is not retryable — and the partial case was parsed or returned as
+// if it were the answer.
+//
+// stop_details and model_context_window_exceeded are both 0.124 additions;
+// 0.71.2 could not express either.
+// ===========================================================================
+
+describe('stop reasons that end the response early', () => {
+
+    const originalApiKey = process.env.ANTHROPIC_API_KEY;
+    let aiChat: typeof import('./ai.js').aiChat;
+    let respond: () => Response;
+
+    /** The event stream a refusal or an overflow actually produces: a normal
+     *  message_start, a text block only if the stop came mid-answer, and the
+     *  stop reason arriving on the message_delta. Built as SSE so the SDK's own
+     *  accumulation runs. */
+    const stopped = (stop_reason: string, stop_details: unknown = null, partialText?: string) => () => {
+        const ev = (type: string, data: unknown) => `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
+        const body = ev('message_start', {
+            type: 'message_start',
+            message: {
+                id: 'msg_probe', type: 'message', role: 'assistant',
+                model: 'claude-haiku-4-5-20251001', content: [],
+                stop_reason: null, stop_sequence: null,
+                usage: { input_tokens: 1, output_tokens: 0 },
+            },
+        }) + (partialText === undefined ? '' :
+            ev('content_block_start', { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } })
+            + ev('content_block_delta', { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: partialText } })
+            + ev('content_block_stop', { type: 'content_block_stop', index: 0 })
+        ) + ev('message_delta', {
+            type: 'message_delta',
+            delta: { stop_reason, stop_sequence: null, stop_details, container: null },
+            usage: { output_tokens: 0 },
+        }) + ev('message_stop', { type: 'message_stop' });
+        return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } });
+    };
+
+    beforeAll(async () => {
+        vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => respond()));
+        process.env.ANTHROPIC_API_KEY = 'sk-ant-wire-probe';
+        vi.resetModules();
+        ({ aiChat } = await import('./ai.js'));
+    });
+
+    afterAll(() => {
+        vi.unstubAllGlobals();
+        vi.resetModules();
+        if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = originalApiKey;
+    });
+
+    it('names the refusal and its category instead of blaming the content', async () => {
+        respond = stopped('refusal', { type: 'refusal', category: 'cyber', explanation: 'The request asks for exploit code.' });
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        // Cause, category, and the API's own explanation — and nothing the code
+        // cannot back up: callers decide whether to retry, and one of them does.
+        expect(err.message).toBe('Claude declined this request (category: cyber): The request asks for exploit code.');
+    });
+
+    it('still names a refusal that carries no stop_details', async () => {
+        respond = stopped('refusal', null);
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(err.message).toMatch(/declined this request/i);
+        expect(err.message).not.toMatch(/Expected at least one text response/);
+    });
+
+    it('says the input was too long when the context window overflowed', async () => {
+        respond = stopped('model_context_window_exceeded');
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(err.message).toBe("Input plus output hit the model's context window; the response is truncated and the input has to be smaller.");
+    });
+
+    // A guard that only fired on empty content would let the fragment through as
+    // a short answer, so the outcome is asserted as a shape: a leak shows up as
+    // `{ resolved: 'Here is how to' }` instead of an unrelated parse failure.
+    it('refuses the fragment when the classifier stops a response part-way', async () => {
+        respond = stopped('refusal', { type: 'refusal', category: 'cyber', explanation: null }, 'Here is how to');
+        const outcome = await aiChat<string>({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
+            .then((r) => ({ resolved: r.result }), (e: Error) => ({ rejected: e.message }));
+
+        expect(outcome).toEqual({ rejected: expect.stringMatching(/declined this request/i) });
+    });
+
+    it('rejects the truncated answer when the window fills mid-response', async () => {
+        respond = stopped('model_context_window_exceeded', null, '{"subjects": [');
+        const outcome = await aiChat<string>({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
+            .then((r) => ({ resolved: r.result }), (e: Error) => ({ rejected: e.message }));
+
+        expect(outcome).toEqual({ rejected: expect.stringMatching(/context window/i) });
+    });
+
+    it('leaves other empty-content responses on the original error', async () => {
+        respond = stopped('end_turn');
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(err.message).toMatch(/Expected at least one text response/);
+    });
+});

@@ -465,6 +465,23 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
 
         console.log(`Claude stop_reason: ${response.stop_reason}, tokens: ${response.usage.output_tokens}/${maxTokens}`);
 
+        // Checked before the content checks: either stop can arrive after partial
+        // text (the classifier cuts in mid-stream; the window fills mid-answer), and
+        // that fragment must not be parsed or returned as the answer. Left to the
+        // content checks, an empty response surfaced as "Expected at least one text
+        // response", sending whoever is debugging after a parsing problem instead.
+        if (response.stop_reason === "refusal") {
+            const details = response.stop_details;
+            const category = details?.category ? ` (category: ${details.category})` : '';
+            const explanation = details?.explanation ? `: ${details.explanation}` : '.';
+            throw new Error(`Claude declined this request${category}${explanation}`);
+        }
+        if (response.stop_reason === "model_context_window_exceeded") {
+            throw new Error(
+                `Input plus output hit the model's context window; the response is truncated and the input has to be smaller.`
+            );
+        }
+
         // When using tools, response can have multiple content blocks
         // Extract all text blocks
         const textBlocks = response.content.filter(block => block.type === "text");
