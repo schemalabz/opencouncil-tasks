@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, structuredOutputParams } from './ai.js';
 
 // ===========================================================================
 // cutToLineBoundary — truncated partials stitch at line boundaries so the
@@ -174,5 +174,157 @@ describe('addUsage', () => {
 
         expect(leftAssoc.input_tokens).toBe(rightAssoc.input_tokens);
         expect(leftAssoc.output_tokens).toBe(rightAssoc.output_tokens);
+    });
+});
+
+// ===========================================================================
+// structuredOutputParams — structured outputs are requested through the GA
+// `output_config.format` parameter, not the deprecated top-level
+// `output_format` plus its beta header
+// ===========================================================================
+
+describe('structuredOutputParams', () => {
+
+    const format: Anthropic.Beta.Messages.BetaJSONOutputFormat = {
+        type: 'json_schema',
+        schema: { type: 'object', properties: { name: { type: 'string' } } },
+    };
+
+    it('nests the schema under output_config.format', () => {
+        expect(structuredOutputParams(format)).toEqual({ output_config: { format } });
+    });
+
+    it('does not emit the deprecated top-level output_format', () => {
+        expect(structuredOutputParams(format)).not.toHaveProperty('output_format');
+    });
+
+    it('adds nothing when no format is requested', () => {
+        expect(structuredOutputParams(undefined)).toEqual({});
+    });
+});
+
+// ===========================================================================
+// Request shape at the wire — the tests above only prove the fragment aiChat
+// builds. `output_config` is not on the SDK's stable request type, so it is
+// spread in untyped and survives only while the SDK forwards unknown keys. A
+// quiet drop there would disable structured outputs everywhere with no type
+// error and no failure above, so assert the bytes actually sent.
+//
+// fetch is stubbed (as in ElevenLabsAlign.test.ts) rather than a server stood
+// up, so nothing binds a socket and no API key is involved.
+// ===========================================================================
+
+describe('request shape at the wire', () => {
+
+    type Captured = { url: string; headers: Record<string, string>; body: any };
+
+    let aiChat: typeof import('./ai.js').aiChat;
+    let fetchMock: ReturnType<typeof vi.fn>;
+    const originalApiKey = process.env.ANTHROPIC_API_KEY;
+
+    const SCHEMA = { type: 'object', properties: { name: { type: 'string' } } } as const;
+    const FORMAT = { type: 'json_schema', schema: SCHEMA } as const;
+
+    const errorResponse = (status: number, message: string) => new Response(
+        JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message } }),
+        { status, headers: { 'content-type': 'application/json' } },
+    );
+    /** 400 is non-transient per classifyTransientError, so aiChat fails fast. */
+    const probeResponse = () => errorResponse(400, 'wire probe');
+
+    /** Fails by naming the actual problem — no request was made — rather than
+     *  dereferencing undefined inside whichever assertion happens to run first. */
+    function lastRequest(): Captured {
+        const call = fetchMock.mock.calls.at(-1);
+        if (!call) throw new Error('aiChat made no request');
+        const [url, init] = call as [string, RequestInit];
+        return {
+            url: String(url),
+            headers: Object.fromEntries(new Headers(init.headers).entries()),
+            body: JSON.parse(String(init.body ?? '{}')),
+        };
+    }
+
+    beforeAll(async () => {
+        fetchMock = vi.fn().mockResolvedValue(probeResponse());
+        vi.stubGlobal('fetch', fetchMock);
+
+        // The stub never checks credentials, but the SDK refuses to build a request
+        // without one ("Could not resolve authentication method"), so a placeholder is
+        // required for the request to reach fetch at all. Locally dotenv would supply
+        // a real key and mask this; CI has no .env.
+        process.env.ANTHROPIC_API_KEY = 'sk-ant-wire-probe';
+
+        // Re-imported under the stub rather than using the module already imported at
+        // the top of this file: ai.ts builds its Anthropic client at module scope and
+        // the SDK captures the ambient fetch in the constructor (client.js —
+        // `this.fetch = options.fetch ?? getDefaultFetch()`). Without resetting the
+        // registry first, aiChat would hold the real fetch, and dotenv would have
+        // handed it a working key to reach the live API with.
+        vi.resetModules();
+        ({ aiChat } = await import('./ai.js'));
+    });
+
+    beforeEach(() => {
+        fetchMock.mockClear();
+        fetchMock.mockResolvedValue(probeResponse());
+    });
+
+    afterAll(() => {
+        vi.unstubAllGlobals();
+        vi.resetModules();
+        // Assigning undefined would store the string "undefined", so an
+        // originally-unset variable has to be deleted rather than reassigned.
+        if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = originalApiKey;
+    });
+
+    it('puts the schema under output_config.format, with no beta header', async () => {
+        // Rejects with the stub's own 400 — which also proves the request was built
+        // and dispatched, rather than failing somewhere earlier.
+        await expect(aiChat({ systemPrompt: 'sys', userPrompt: 'usr', outputFormat: FORMAT }))
+            .rejects.toThrow(/wire probe/);
+
+        expect(lastRequest().body.output_config).toEqual({ format: FORMAT });
+        // The deprecated pair: top-level parameter and the beta header that gated it.
+        expect(lastRequest().body.output_format).toBeUndefined();
+        expect(lastRequest().headers['anthropic-beta']).toBeUndefined();
+    });
+
+    it('carries the same params through the batch path', async () => {
+        await expect(aiChat({ systemPrompt: 'sys', userPrompt: 'usr', batchFirst: true, outputFormat: FORMAT }))
+            .rejects.toThrow(/wire probe/);
+
+        expect(lastRequest().body.requests[0].params.output_config).toEqual({ format: FORMAT });
+        expect(lastRequest().headers['anthropic-beta']).toBeUndefined();
+    });
+
+    it('omits output_config entirely when no schema is requested', async () => {
+        await expect(aiChat({ systemPrompt: 'sys', userPrompt: 'usr' })).rejects.toThrow(/wire probe/);
+
+        expect(lastRequest().body).not.toHaveProperty('output_config');
+        expect(lastRequest().headers['anthropic-beta']).toBeUndefined();
+    });
+
+    it('sends the same params to the batch endpoint when streaming falls back', async () => {
+        // The fallback in aiChat re-sends requestParams to the batch endpoint after
+        // streaming exhausts its retries. It is a separate call site from batchFirst
+        // above, and nothing else covers it. 500 is a `server` transient error, so
+        // this costs two backoffs (30s then 60s) that fake timers collapse.
+        fetchMock.mockResolvedValue(errorResponse(500, 'upstream boom'));
+        vi.useFakeTimers();
+        try {
+            const assertion = expect(
+                aiChat({ systemPrompt: 'sys', userPrompt: 'usr', outputFormat: FORMAT })
+            ).rejects.toThrow();
+            await vi.runAllTimersAsync();
+            await assertion;
+        } finally {
+            vi.useRealTimers();
+        }
+
+        const last = lastRequest();
+        expect(last.url).toContain('/v1/messages/batches');
+        expect(last.body.requests[0].params.output_config).toEqual({ format: FORMAT });
     });
 });
