@@ -4,6 +4,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { abortableSleep, getTaskControl, throwIfCancelled } from '../../lib/taskControl.js';
 import { CityLanguage, DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile, type UsageStats } from "../../lib/ai.js";
@@ -133,7 +134,8 @@ export async function processBatchesWithState(
                 if (i > 0 && classifyTransientError(e) && attempt <= MAX_BATCH_RETRIES) {
                     console.log(`\n⚠️  Batch ${i + 1}/${batches.length} failed (attempt ${attempt}/${MAX_BATCH_RETRIES}), retrying in ${BATCH_RETRY_DELAY_MS / 1000}s...`);
                     console.log(`   Previous batch progress (${i} batches) preserved.`);
-                    await new Promise(resolve => setTimeout(resolve, BATCH_RETRY_DELAY_MS));
+                    await abortableSleep(BATCH_RETRY_DELAY_MS, getTaskControl()?.cancel.signal);
+                    throwIfCancelled();
                     continue;
                 }
                 throw e;

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, structuredOutputParams } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, structuredOutputParams, BatchPromotedError, executeBatch } from './ai.js';
+import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // ===========================================================================
 // cutToLineBoundary — truncated partials stitch at line boundaries so the
@@ -326,5 +327,81 @@ describe('request shape at the wire', () => {
         const last = lastRequest();
         expect(last.url).toContain('/v1/messages/batches');
         expect(last.body.requests[0].params.output_config).toEqual({ format: FORMAT });
+    });
+});
+
+const FAKE_MESSAGE = {
+    content: [{ type: 'text', text: 'hello' }],
+    stop_reason: 'end_turn',
+    usage: NO_USAGE,
+};
+
+const FAKE_PARAMS = { model: 'test', max_tokens: 10, system: 's', messages: [] } as any;
+
+function fakeBatchClient(overrides: Partial<Record<'create' | 'retrieve' | 'cancel' | 'results', any>> = {}) {
+    const batches = {
+        create: vi.fn(async () => ({ id: 'msgbatch_test', created_at: new Date().toISOString() })),
+        retrieve: vi.fn(async () => ({
+            id: 'msgbatch_test', processing_status: 'ended', created_at: new Date().toISOString(),
+        request_counts: { processing: 0, succeeded: 1, errored: 0, canceled: 0, expired: 0 },
+        })),
+        cancel: vi.fn(async () => ({ id: 'msgbatch_test', processing_status: 'canceling' })),
+        results: vi.fn(async () => (async function* () {
+            yield { custom_id: 'request-1', result: { type: 'succeeded', message: FAKE_MESSAGE } };
+        })()),
+        ...overrides,
+    };
+    return { client: { messages: { batches } } as any, batches };
+}
+
+describe('executeBatch cancellation & promotion', () => {
+
+    it('cancel: cancels the Anthropic batch and throws TaskCancelledError', async () => {
+        const { client, batches } = fakeBatchClient();
+        const control = newTaskControl('task_1');
+        control.cancel.abort(); // pre-aborted → poll wakes immediately
+
+        await expect(
+            runWithTaskControl(control, () => executeBatch(FAKE_PARAMS, {}, client))
+        ).rejects.toThrow(TaskCancelledError);
+        expect(batches.cancel).toHaveBeenCalledWith('msgbatch_test');
+    });
+
+    it('promote, cancel wins: throws BatchPromotedError so the caller retries via streaming', async () => {
+        const { client, batches } = fakeBatchClient({
+            results: vi.fn(async () => (async function* () {
+                yield { custom_id: 'request-1', result: { type: 'canceled' } };
+            })()),
+        });
+        const control = newTaskControl('task_2');
+        control.promote.abort();
+        control.llmMode = 'streaming';
+
+        await expect(
+            runWithTaskControl(control, () => executeBatch(FAKE_PARAMS, {}, client))
+        ).rejects.toThrow(BatchPromotedError);
+        expect(batches.cancel).toHaveBeenCalledWith('msgbatch_test');
+    });
+
+    it('promote, request already succeeded: returns the paid result instead of retrying', async () => {
+        const { client } = fakeBatchClient(); // default results yield 'succeeded'
+        const control = newTaskControl('task_3');
+        control.promote.abort();
+        control.llmMode = 'streaming';
+
+        const message = await runWithTaskControl(control, () => executeBatch(FAKE_PARAMS, {}, client));
+        expect(message).toEqual(FAKE_MESSAGE);
+    });
+
+    it('completes normally without any task control (CLI behavior)', async () => {
+        vi.useFakeTimers();
+        try {
+            const { client } = fakeBatchClient();
+            const pending = executeBatch(FAKE_PARAMS, {}, client);
+            await vi.advanceTimersByTimeAsync(60_000);
+            expect(await pending).toEqual(FAKE_MESSAGE);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 });

@@ -28,6 +28,7 @@ export function makeRun(traceId: string, subjects: Subject[], extras?: Partial<S
             env: 'development',
             promptsHash: null,
             isError: false,
+        isCancelled: false,
             totalCost: null,
             latencySeconds: null,
         },

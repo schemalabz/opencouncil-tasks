@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 import { fetch, Agent, FormData } from "undici";
 import { CityLanguage, Transcript, Utterance, Word } from "../types.js";
 import { getLanguageConfig } from "./language.js";
@@ -34,7 +35,8 @@ const scribeDispatcher = new Agent({
     bodyTimeout: SCRIBE_REQUEST_TIMEOUT_MS,
 });
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/** Wakes early on cancellation; callers re-check at the next throwIfCancelled. */
+const sleep = (ms: number) => abortableSleep(ms, getTaskControl()?.cancel.signal);
 
 function getScribeKey(): string {
     const key = process.env.ELEVENLABS_API_KEY;
@@ -279,6 +281,7 @@ class ScribeTranscriber {
             // wave when only a few account slots have freed
             while (Date.now() < this.pausedUntil) {
                 await sleep(this.pausedUntil - Date.now() + Math.random() * 3000);
+                throwIfCancelled();
             }
 
             const result = await this.attemptRequest(audioUrl, languageCode);
@@ -314,6 +317,7 @@ class ScribeTranscriber {
             const delayMs = BASE_RETRY_DELAY_MS * Math.pow(2, failures - 1);
             console.log(`[Scribe] ${label}: request failed (attempt ${failures}/${MAX_ATTEMPTS}), retrying in ${Math.round(delayMs / 1000)}s: ${result.error.message}`);
             await sleep(delayMs);
+            throwIfCancelled();
         }
     }
 
