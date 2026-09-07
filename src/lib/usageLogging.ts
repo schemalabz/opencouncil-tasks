@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { formatTokenCount } from '../utils.js';
-import { addUsage, type UsageStats } from './ai.js';
+import { addUsage, NO_USAGE, type UsageStats } from './ai.js';
 
 /**
  * Log token usage for a single operation or phase
@@ -45,15 +45,7 @@ export function logMultiPhaseUsage(
     console.log('═══════════════════════════════════════════════════════════');
 
     // Calculate totals
-    let totalUsage = phases[0]?.usage || {
-        input_tokens: 0,
-        output_tokens: 0,
-        cache_creation_input_tokens: null,
-        cache_read_input_tokens: null,
-        cache_creation: null,
-        server_tool_use: null,
-        service_tier: null
-    };
+    let totalUsage = phases[0]?.usage || NO_USAGE;
 
     for (let i = 1; i < phases.length; i++) {
         totalUsage = addUsage(totalUsage, phases[i].usage);
@@ -75,6 +67,14 @@ export function logMultiPhaseUsage(
         const webSearches = usage.server_tool_use?.web_search_requests || 0;
         if (webSearches > 0) {
             details.push(`${webSearches} web searches`);
+        }
+        const webFetches = usage.server_tool_use?.web_fetch_requests || 0;
+        if (webFetches > 0) {
+            details.push(`${webFetches} web fetches`);
+        }
+        const thinkingTokens = usage.output_tokens_details?.thinking_tokens || 0;
+        if (thinkingTokens > 0) {
+            details.push(`${formatTokenCount(thinkingTokens)} thinking`);
         }
         const detailStr = details.length > 0 ? ` (${details.join(', ')})` : '';
 

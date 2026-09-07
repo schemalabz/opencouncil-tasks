@@ -154,7 +154,11 @@ describe('addUsage', () => {
         const result = addUsage(NO_USAGE, NO_USAGE);
 
         expect(result.cache_creation).toBeNull();
-        expect(result.server_tool_use).toEqual({ web_search_requests: 0 });
+        expect(result.server_tool_use).toEqual({ web_search_requests: 0, web_fetch_requests: 0 });
+        // Absent on both sides stays absent, so "no thinking tokens" and "the
+        // model never reported any" don't collapse into the same zero.
+        expect(result.output_tokens_details).toBeNull();
+        expect(result.inference_geo).toBeNull();
     });
 
     it('preserves the first non-null service_tier', () => {
@@ -176,6 +180,24 @@ describe('addUsage', () => {
         expect(leftAssoc.input_tokens).toBe(rightAssoc.input_tokens);
         expect(leftAssoc.output_tokens).toBe(rightAssoc.output_tokens);
     });
+
+    const withDetails = (thinking: number, geo: string | null) => ({
+        ...NO_USAGE, output_tokens_details: { thinking_tokens: thinking }, inference_geo: geo,
+    });
+
+    it('sums thinking tokens when either side reports them', () => {
+        expect(addUsage(withDetails(10, null), withDetails(5, null)).output_tokens_details)
+            .toEqual({ thinking_tokens: 15 });
+        // One side reporting is enough to produce a total.
+        expect(addUsage(withDetails(7, null), NO_USAGE).output_tokens_details)
+            .toEqual({ thinking_tokens: 7 });
+    });
+
+    it('keeps the first non-null inference_geo', () => {
+        expect(addUsage(withDetails(0, 'us'), withDetails(0, 'eu')).inference_geo).toBe('us');
+        expect(addUsage(NO_USAGE, withDetails(0, 'eu')).inference_geo).toBe('eu');
+    });
+
 });
 
 // ===========================================================================

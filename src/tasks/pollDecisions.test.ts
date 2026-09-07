@@ -53,7 +53,7 @@ const mockAiChat = vi.mocked(aiChat);
 const mockReadDecision = vi.mocked(readDecisionDocument);
 const mockExtractDecisions = vi.mocked(extractDecisionsFromPdfs);
 const noopProgress = vi.fn();
-const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
+const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null, inference_geo: null, output_tokens_details: null };
 
 async function* asyncIter<T>(items: T[]): AsyncIterable<T> {
     for (const item of items) yield item;

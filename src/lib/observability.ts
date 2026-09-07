@@ -254,6 +254,8 @@ export function observeGeneration(options: ObserveGenerationOptions): Generation
                     // Server-side tool use ($10/1k web searches) — recorded so search-heavy
                     // calls are visible even though Langfuse doesn't price this component.
                     ...(usage.server_tool_use?.web_search_requests ? { web_search_requests: usage.server_tool_use.web_search_requests } : {}),
+                    ...(usage.server_tool_use?.web_fetch_requests ? { web_fetch_requests: usage.server_tool_use.web_fetch_requests } : {}),
+                    ...(usage.output_tokens_details?.thinking_tokens ? { thinking_tokens: usage.output_tokens_details.thinking_tokens } : {}),
                 },
             });
         },

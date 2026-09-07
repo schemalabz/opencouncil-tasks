@@ -8,7 +8,7 @@ import { SubjectInProgress, UtteranceStatus } from './types.js';
  * is deterministic code that these tests exercise.
  */
 vi.mock('../../lib/ai.js', () => {
-    const NO_USAGE = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
+    const NO_USAGE = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null, inference_geo: null, output_tokens_details: null };
     return {
         aiChat: vi.fn(),
         addUsage: vi.fn((a, b) => a),
@@ -21,7 +21,7 @@ import { aiChat } from '../../lib/ai.js';
 import { mergeSubjects } from './mergeSubjects.js';
 
 const mockAiChat = vi.mocked(aiChat);
-const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null };
+const noUsage = { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0, cache_creation: null, server_tool_use: null, service_tier: null, inference_geo: null, output_tokens_details: null };
 
 // ---------------------------------------------------------------------------
 // Helpers

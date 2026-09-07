@@ -25,7 +25,9 @@ export const NO_USAGE: Anthropic.Messages.Usage = {
     cache_read_input_tokens: null,
     cache_creation: null,
     server_tool_use: null,
-    service_tier: null
+    service_tier: null,
+    inference_geo: null,
+    output_tokens_details: null
 };
 export const NO_USAGE_STATS: UsageStats = { usage: NO_USAGE };
 export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage): Anthropic.Messages.Usage => ({
@@ -36,8 +38,19 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     cache_creation: null,  // Don't aggregate cache_creation details
     server_tool_use: {
         web_search_requests: (usage.server_tool_use?.web_search_requests || 0) + (otherUsage.server_tool_use?.web_search_requests || 0),
+        web_fetch_requests: (usage.server_tool_use?.web_fetch_requests || 0) + (otherUsage.server_tool_use?.web_fetch_requests || 0),
     },
-    service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
+    service_tier: usage.service_tier || otherUsage.service_tier,  // Take the first non-null tier
+    inference_geo: usage.inference_geo || otherUsage.inference_geo,  // Take the first non-null geo
+    // Sums like the other token counters, but stays null when neither side
+    // reported any — so "no thinking tokens" and "the model never told us"
+    // don't collapse into the same zero.
+    output_tokens_details: (usage.output_tokens_details || otherUsage.output_tokens_details)
+        ? {
+            thinking_tokens: (usage.output_tokens_details?.thinking_tokens || 0)
+                + (otherUsage.output_tokens_details?.thinking_tokens || 0),
+        }
+        : null
 });
 
 export function formatUsage(usage: Anthropic.Messages.Usage): string {
