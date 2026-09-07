@@ -79,10 +79,10 @@ SCRIPT
 
 The response looks like:
 ```json
-{"running":[...],"queued":0,"maxParallelTasks":10}
+{"running":[...],"queued":[...],"maxParallelTasks":10}
 ```
 
-If there are running or queued tasks, **stop and warn the user**. Show what's running (task type, stage, duration, and the meeting context parsed from the callback URL — e.g. `https://opencouncil.gr/api/cities/zografou/meetings/dec11_2025/...` → `zografou / dec11_2025`). Ask whether to proceed or wait. Do not deploy without explicit confirmation that it's OK to interrupt running tasks.
+If there are running or queued tasks, **stop and warn the user**. Show what's running (task type, stage, how long it has been running — `now - createdAt` — and the meeting context parsed from the callback URL — e.g. `https://opencouncil.gr/api/cities/zografou/meetings/dec11_2025/...` → `zografou / dec11_2025`). Ask whether to proceed or wait. Do not deploy without explicit confirmation that it's OK to interrupt running tasks.
 
 If no tasks are running or queued, proceed.
 
