@@ -220,6 +220,7 @@ describe('request shape at the wire', () => {
 
     let aiChat: typeof import('./ai.js').aiChat;
     let fetchMock: ReturnType<typeof vi.fn>;
+    const originalApiKey = process.env.ANTHROPIC_API_KEY;
 
     const SCHEMA = { type: 'object', properties: { name: { type: 'string' } } } as const;
     const FORMAT = { type: 'json_schema', schema: SCHEMA } as const;
@@ -248,6 +249,12 @@ describe('request shape at the wire', () => {
         fetchMock = vi.fn().mockResolvedValue(probeResponse());
         vi.stubGlobal('fetch', fetchMock);
 
+        // The stub never checks credentials, but the SDK refuses to build a request
+        // without one ("Could not resolve authentication method"), so a placeholder is
+        // required for the request to reach fetch at all. Locally dotenv would supply
+        // a real key and mask this; CI has no .env.
+        process.env.ANTHROPIC_API_KEY = 'sk-ant-wire-probe';
+
         // Re-imported under the stub rather than using the module already imported at
         // the top of this file: ai.ts builds its Anthropic client at module scope and
         // the SDK captures the ambient fetch in the constructor (client.js —
@@ -266,6 +273,10 @@ describe('request shape at the wire', () => {
     afterAll(() => {
         vi.unstubAllGlobals();
         vi.resetModules();
+        // Assigning undefined would store the string "undefined", so an
+        // originally-unset variable has to be deleted rather than reassigned.
+        if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = originalApiKey;
     });
 
     it('puts the schema under output_config.format, with no beta header', async () => {
