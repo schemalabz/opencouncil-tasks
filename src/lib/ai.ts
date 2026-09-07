@@ -94,7 +94,7 @@ type AiChatOptions = {
     parseJson?: boolean;
     maxTokens?: number;
     tools?: Anthropic.Messages.Tool[];
-    outputFormat?: Anthropic.Beta.Messages.BetaJSONOutputFormat;
+    outputFormat?: Anthropic.Messages.JSONOutputFormat;
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
     batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
     label?: string;  // Observability: generation name shown in Langfuse (defaults to "aiChat")
@@ -328,15 +328,6 @@ export function continuationPrompt(partial: string): string {
     return `Your previous response was cut off by the output token limit. It currently ends with:\n${tail}\n\nContinue EXACTLY from where it stopped: output only the remaining content, completing the line you were in the middle of if it was cut mid-line. Do not repeat anything already written, do not add any preamble or commentary, and do not restart any numbering or structure from the beginning.`;
 }
 
-/**
- * `output_config` is not declared on the SDK's stable request type yet (the
- * installed 0.71.2 only types it under the beta namespace, and even there
- * without a `format` field), so this is spread into the params object to reach
- * the wire untyped. Inline it once the SDK is bumped far enough to type it.
- */
-export function structuredOutputParams(outputFormat?: Anthropic.Beta.Messages.BetaJSONOutputFormat) {
-    return outputFormat ? { output_config: { format: outputFormat } } : {};
-}
 
 export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
@@ -398,7 +389,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             // Opus 4.7 rejects the temperature parameter; older models still accept it.
             ...(resolvedModel.startsWith("claude-opus-4-7") ? {} : { temperature: 0 }),
             ...(tools && { tools }),
-            ...structuredOutputParams(outputFormat)
+            ...(outputFormat && { output_config: { format: outputFormat } })
         };
 
         generation = observeGeneration({

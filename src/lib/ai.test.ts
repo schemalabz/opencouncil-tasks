@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, structuredOutputParams, BatchPromotedError, executeBatch } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, executeBatch } from './ai.js';
 import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // ===========================================================================
@@ -201,37 +201,12 @@ describe('addUsage', () => {
 });
 
 // ===========================================================================
-// structuredOutputParams — structured outputs are requested through the GA
-// `output_config.format` parameter, not the deprecated top-level
-// `output_format` plus its beta header
-// ===========================================================================
-
-describe('structuredOutputParams', () => {
-
-    const format: Anthropic.Beta.Messages.BetaJSONOutputFormat = {
-        type: 'json_schema',
-        schema: { type: 'object', properties: { name: { type: 'string' } } },
-    };
-
-    it('nests the schema under output_config.format', () => {
-        expect(structuredOutputParams(format)).toEqual({ output_config: { format } });
-    });
-
-    it('does not emit the deprecated top-level output_format', () => {
-        expect(structuredOutputParams(format)).not.toHaveProperty('output_format');
-    });
-
-    it('adds nothing when no format is requested', () => {
-        expect(structuredOutputParams(undefined)).toEqual({});
-    });
-});
-
-// ===========================================================================
-// Request shape at the wire — the tests above only prove the fragment aiChat
-// builds. `output_config` is not on the SDK's stable request type, so it is
-// spread in untyped and survives only while the SDK forwards unknown keys. A
-// quiet drop there would disable structured outputs everywhere with no type
-// error and no failure above, so assert the bytes actually sent.
+// Request shape at the wire — `output_config` is typed on the request, so tsc
+// catches a wrong shape under it but not a misspelled key: excess-property
+// checks don't apply to spread expressions, so `output_confg` would compile and
+// silently disable structured outputs everywhere. Types also say nothing about
+// the beta header that used to gate the feature, or about whether the batch and
+// streaming→batch fallback call sites re-send the same params. Assert the bytes.
 //
 // fetch is stubbed (as in ElevenLabsAlign.test.ts) rather than a server stood
 // up, so nothing binds a socket and no API key is involved.
