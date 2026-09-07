@@ -18,6 +18,7 @@ function toRunInfo(trace: { id: string; timestamp: string | Date; name?: string 
         env: trace.environment ?? null,
         promptsHash: tagValue(tags, 'prompts'),
         isError: tags.includes('status:error'),
+        isCancelled: tags.includes('status:cancelled'),
         totalCost: trace.totalCost ?? null,
         latencySeconds: trace.latency ?? null,
     };

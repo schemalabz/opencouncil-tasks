@@ -10,6 +10,7 @@ export interface RunInfo {
     env: string | null;
     promptsHash: string | null; // composite prompt fingerprint tag
     isError: boolean;
+    isCancelled: boolean;
     totalCost: number | null;
     latencySeconds: number | null;
 }
