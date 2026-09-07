@@ -8,7 +8,7 @@ import { Readable, Transform } from "stream";
 import mime from "mime";
 import { createSpacesClient, putPublicFile, deleteFromSpacesByPrefix } from "../../tasks/uploadToSpaces.js";
 import { spacesUrlForKey } from "../../tasks/utils/spacesUrl.js";
-import type { AudioArtifact } from "./types.js";
+import type { AudioArtifact, AudioTransport } from "./types.js";
 import { throwIfAborted } from "./deadline.js";
 
 /**
@@ -132,6 +132,41 @@ export interface PublicAudioHandle {
  * Otherwise the bytes go to `fusion-tmp/<sha256>.<ext>` exactly once, and the
  * caller releases them in a finally block.
  */
+/**
+ * Which transport this segment uses. Pure: same artifact and same setting, same
+ * answer, whoever asks and whenever.
+ *
+ * `auto` prefers the URL whenever one is already canonical or a bucket exists,
+ * because that is the cheapest path and the one production has always used. It
+ * falls back to uploading the bytes rather than failing, so a deployment with no
+ * bucket loses a transport, not the feature.
+ */
+export function resolveAudioTransport(
+    audio: AudioArtifact,
+    configured: AudioTransport | "auto",
+    env: Record<string, string | undefined> = process.env,
+): AudioTransport {
+    if (configured === "url") {
+        if (!audio.canonicalUrl && !env.DO_SPACES_BUCKET) {
+            throw new Error("FUSION_AUDIO_TRANSPORT=url but the audio has no canonical URL "
+                + "and DO_SPACES_BUCKET is not set");
+        }
+        return "url";
+    }
+    if (configured === "bytes") {
+        if (!audio.path) {
+            throw new Error("FUSION_AUDIO_TRANSPORT=bytes but the audio has no local path");
+        }
+        return "bytes";
+    }
+    if (audio.canonicalUrl || env.DO_SPACES_BUCKET) return "url";
+    if (!audio.path) {
+        throw new Error("audio artifact has neither a canonical URL nor a local path, and no "
+            + "bucket is configured to publish one");
+    }
+    return "bytes";
+}
+
 export async function ensurePublicUrl(audio: AudioArtifact, options: { signal?: AbortSignal } = {}): Promise<PublicAudioHandle> {
     if (audio.canonicalUrl) {
         return { url: audio.canonicalUrl, release: async () => { } };

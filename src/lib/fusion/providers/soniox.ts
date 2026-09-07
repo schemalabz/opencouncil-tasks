@@ -1,8 +1,10 @@
 import { sha256OfValue, shortSha } from "../hash.js";
 import { sleep, throwIfAborted } from "../deadline.js";
-import type { AsrProvider, AudioArtifact, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
+import type { AsrProvider, AudioArtifact, AudioTransport, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
 import { ProviderError } from "../types.js";
-import { ensurePublicUrl } from "../audio.js";
+import { readFile } from "fs/promises";
+import path from "path";
+import { ensurePublicUrl, type PublicAudioHandle } from "../audio.js";
 
 /**
  * Soniox `stt-async-v5` over the async REST API (spec §4.5):
@@ -35,10 +37,11 @@ export const SONIOX_REQUEST_PARAMS = {
     enable_language_identification: false,
 } as const;
 
-export function sonioxIdentity(): ProviderIdentity {
+export function sonioxIdentity(transport: AudioTransport = "url"): ProviderIdentity {
     return {
         model: SONIOX_MODEL,
-        paramsSha: shortSha(sha256OfValue(SONIOX_REQUEST_PARAMS)),
+        // See scribe.ts: the transport is isolation, not a decode parameter.
+        paramsSha: shortSha(sha256OfValue({ ...SONIOX_REQUEST_PARAMS, transport })),
         schemaRev: SONIOX_SCHEMA_REV,
     };
 }
@@ -110,8 +113,8 @@ export class SonioxProvider implements AsrProvider {
 
     constructor(private readonly fetchImpl: typeof fetch = fetch) { }
 
-    async identify(): Promise<ProviderIdentity> {
-        return sonioxIdentity();
+    async identify(_audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderIdentity> {
+        return sonioxIdentity(ctx.transport);
     }
 
     async transcribe(audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderResult> {
@@ -119,13 +122,29 @@ export class SonioxProvider implements AsrProvider {
         const startedAt = Date.now();
         const key = apiKey();
 
-        const published = await ensurePublicUrl(audio, { signal: ctx.signal });
+        // Both resources are tracked from before they exist: a create whose
+        // response is lost still leaves something behind on Soniox's side, and
+        // the only defence is to record the id the instant it arrives.
+        let published: PublicAudioHandle | undefined;
+        let fileId: string | undefined;
         let transcriptionId: string | undefined;
 
         try {
+            let source: Record<string, string>;
+            if (ctx.transport === "bytes") {
+                if (!audio.path) {
+                    throw new ProviderError("soniox", "byte transport needs a local audio path", "no_audio_path");
+                }
+                fileId = (await this.uploadFile(key, audio.path, ctx)).id;
+                source = { file_id: fileId };
+            } else {
+                published = await ensurePublicUrl(audio, { signal: ctx.signal });
+                source = { audio_url: published.url };
+            }
+
             const created = await this.request<{ id: string }>(key, "POST", "/transcriptions", ctx, {
                 ...SONIOX_REQUEST_PARAMS,
-                audio_url: published.url,
+                ...source,
             });
             transcriptionId = created.id;
 
@@ -134,17 +153,44 @@ export class SonioxProvider implements AsrProvider {
 
             return {
                 providerId: "soniox",
-                identity: sonioxIdentity(),
+                identity: sonioxIdentity(ctx.transport),
                 raw: transcript,
                 rawSha256: sha256OfValue(transcript),
                 words: normalizeSonioxTokens(transcript),
                 elapsedMs: Date.now() - startedAt,
             };
         } finally {
-            // Quota, not tidiness: 100 pending / 2000 stored per account.
+            // Quota, not tidiness: 100 pending / 2000 stored transcriptions and
+            // 1000 files / 10 GB of uploads per account. Order matters — Soniox
+            // refuses to delete a transcription that is still processing, and
+            // deleting the file under a queued job fails that job — so the
+            // transcription goes first and the file only after it.
             await this.deleteQuietly(key, transcriptionId && `/transcriptions/${transcriptionId}`);
-            await published.release();
+            await this.deleteQuietly(key, fileId && `/files/${fileId}`);
+            if (published) await published.release();
         }
+    }
+
+    /**
+     * Upload the bytes and get a file id. Used when no bucket is configured:
+     * Soniox needs the audio somehow, and a vendor upload is the alternative to
+     * publishing a temporary public object of our own.
+     */
+    private async uploadFile(key: string, filePath: string, ctx: ProviderContext): Promise<{ id: string }> {
+        throwIfAborted(ctx.signal);
+        const form = new FormData();
+        form.append("file", new Blob([await readFile(filePath)]), path.basename(filePath));
+        const response = await this.fetchImpl(`${SONIOX_API_BASE}/files`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${key}` },
+            body: form as unknown as BodyInit,
+            signal: ctx.signal,
+        });
+        if (!response.ok) {
+            const text = await response.text().catch(() => "");
+            throw new ProviderError("soniox", `POST /files returned ${response.status}: ${text.slice(0, 300)}`, `http_${response.status}`);
+        }
+        return (await response.json()) as { id: string };
     }
 
     private async waitUntilDone(key: string, id: string, ctx: ProviderContext): Promise<void> {

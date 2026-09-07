@@ -3,7 +3,7 @@ import { getLanguageConfig } from "../../language.js";
 import type { CityLanguage } from "../../../types.js";
 import { sha256OfValue, shortSha } from "../hash.js";
 import { throwIfAborted } from "../deadline.js";
-import type { AsrProvider, AudioArtifact, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
+import type { AsrProvider, AudioArtifact, AudioTransport, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
 import { ProviderError } from "../types.js";
 
 export const SCRIBE_SCHEMA_REV = "scribe-words/1";
@@ -22,10 +22,14 @@ export const SCRIBE_REQUEST_PARAMS = {
     diarize: false,
 } as const;
 
-export function scribeIdentity(languageCode: string): ProviderIdentity {
+export function scribeIdentity(languageCode: string, transport: AudioTransport = "url"): ProviderIdentity {
     return {
         model: SCRIBE_REQUEST_PARAMS.model_id,
-        paramsSha: shortSha(sha256OfValue({ ...SCRIBE_REQUEST_PARAMS, language_code: languageCode })),
+        // The transport is in the key as conservative isolation, not because it
+        // is a decode parameter. Sending the same bytes by URL and by upload
+        // ought to give the same words; nobody has measured that here, so a
+        // result fetched one way is never served for the other.
+        paramsSha: shortSha(sha256OfValue({ ...SCRIBE_REQUEST_PARAMS, language_code: languageCode, transport })),
         schemaRev: SCRIBE_SCHEMA_REV,
     };
 }
@@ -51,31 +55,36 @@ export class ScribeProvider implements AsrProvider {
 
     constructor(private readonly language: CityLanguage | undefined, private readonly transcriber = scribeTranscriber) { }
 
-    async identify(): Promise<ProviderIdentity> {
-        return scribeIdentity(getLanguageConfig(this.language).scribeCode);
+    async identify(_audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderIdentity> {
+        return scribeIdentity(getLanguageConfig(this.language).scribeCode, ctx.transport);
     }
 
     async transcribe(audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderResult> {
         throwIfAborted(ctx.signal);
-        if (!audio.canonicalUrl) {
+        if (ctx.transport === "url" && !audio.canonicalUrl) {
             throw new ProviderError("scribe", "Scribe needs a fetchable audio URL", "no_audio_url");
+        }
+        if (ctx.transport === "bytes" && !audio.path) {
+            throw new ProviderError("scribe", "byte transport needs a local audio path", "no_audio_path");
         }
         const startedAt = Date.now();
         // The shared signal is honoured at the queue boundary: a request that is
         // already in flight inside ScribeTranscriber cannot be recalled, but a
         // queued one must not start once the deadline has passed.
         const raw = await Promise.race([
-            this.transcriber.transcribeRaw({ audioUrl: audio.canonicalUrl, label: ctx.label, language: this.language }),
+            this.transcriber.transcribeRaw(ctx.transport === "bytes"
+                ? { audioPath: audio.path, label: ctx.label, language: this.language }
+                : { audioUrl: audio.canonicalUrl, label: ctx.label, language: this.language }),
             abortRace(ctx.signal),
         ]);
-        return toProviderResult(raw.response, this.language, Date.now() - startedAt);
+        return toProviderResult(raw.response, this.language, Date.now() - startedAt, ctx.transport);
     }
 }
 
-export function toProviderResult(response: ScribeResponse, language: CityLanguage | undefined, elapsedMs: number): ProviderResult {
+export function toProviderResult(response: ScribeResponse, language: CityLanguage | undefined, elapsedMs: number, transport: AudioTransport = "url"): ProviderResult {
     return {
         providerId: "scribe",
-        identity: scribeIdentity(getLanguageConfig(language).scribeCode),
+        identity: scribeIdentity(getLanguageConfig(language).scribeCode, transport),
         raw: response,
         rawSha256: sha256OfValue(response),
         words: normalizeScribeWords(response),

@@ -13,7 +13,7 @@ const FAILING_SHA = "c".repeat(64);
 let bundle: string;
 
 const audio = (sha256: string): AudioArtifact => ({ sha256, sizeBytes: 10, mime: "audio/mpeg", canonicalUrl: "https://example/a.mp3" });
-const ctx = (deadlineMs = 200): ProviderContext => ({ signal: new AbortController().signal, deadlineAt: Date.now() + deadlineMs });
+const ctx = (deadlineMs = 200): ProviderContext => ({ signal: new AbortController().signal, deadlineAt: Date.now() + deadlineMs, transport: "url" });
 
 beforeAll(async () => {
     bundle = await fsp.mkdtemp(path.join(os.tmpdir(), "fusion-replay-"));

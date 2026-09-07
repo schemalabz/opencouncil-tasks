@@ -67,7 +67,17 @@ export interface ProviderContext {
     /** Absolute epoch-ms deadline shared by all three providers and the subprocess. */
     deadlineAt: number;
     label?: string;
+    /**
+     * How the audio reaches each provider, decided ONCE for the segment before
+     * any provider is dispatched. It is not re-derived per provider: three
+     * parallel calls inspecting an artifact that `ensurePublicUrl` mutates would
+     * let timing choose the transport, and two of them could take different
+     * paths for the same segment.
+     */
+    transport: AudioTransport;
 }
+
+export type AudioTransport = "url" | "bytes";
 
 export interface AsrProvider {
     readonly id: ProviderId;

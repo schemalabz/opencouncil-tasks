@@ -26,6 +26,15 @@ export interface FusionConfig {
     cacheDir: string;
     traceDir: string;
     deadlineMs: number;
+    /**
+     * How audio reaches the two providers that fetch it out of process.
+     * `url` publishes one temporary public object and hands all three the same
+     * link. `bytes` uploads the file to each vendor instead, which is what a
+     * deployment with no bucket has to do. `auto` picks `url` when the caller
+     * already has a canonical URL or a bucket is configured, and `bytes`
+     * otherwise -- so a missing bucket degrades the transport, never the result.
+     */
+    audioTransport: "url" | "bytes" | "auto";
     /** When set, providers are served from a replay bundle and never hit the network. */
     replayDir?: string;
     /** Repo root; fuse.py is spawned with this as cwd. */
@@ -72,6 +81,8 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
     const llm = readEnum(env, "FUSION_LLM", ["off", "on"] as const, "off");
     const openaiRoute = readEnum(env, "FUSION_OPENAI_ROUTE", ["off", "on"] as const, "off");
     const canaryPercent = readInt(env, "FUSION_CANARY_PERCENT", 0, 0, 100);
+    const audioTransport = readEnum(env, "FUSION_AUDIO_TRANSPORT",
+        ["url", "bytes", "auto"] as const, "auto");
     const deadlineMs = readInt(env, "FUSION_DEADLINE_MS", 240_000, 1_000, 3_600_000);
 
     const replayDir = env.FUSION_REPLAY_DIR?.trim() || undefined;
@@ -81,6 +92,7 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
         llm,
         openaiRoute,
         canaryPercent,
+        audioTransport,
         pythonBin: env.FUSION_PYTHON_BIN?.trim() || "python3",
         cacheDir: env.FUSION_CACHE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-cache"),
         traceDir: env.FUSION_TRACE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-traces"),

@@ -1,8 +1,10 @@
 import { sha256OfValue, shortSha } from "../hash.js";
 import { sleep, throwIfAborted } from "../deadline.js";
-import type { AsrProvider, AudioArtifact, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
+import type { AsrProvider, AudioArtifact, AudioTransport, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
 import { ProviderError } from "../types.js";
-import { ensurePublicUrl } from "../audio.js";
+import { readFile } from "fs/promises";
+import { extname } from "path";
+import { ensurePublicUrl, type PublicAudioHandle } from "../audio.js";
 
 /**
  * Our own adapter (`artifact-ct2-cleanpack-cont-s47`) on a RunPod serverless
@@ -22,8 +24,20 @@ import { ensurePublicUrl } from "../audio.js";
 export const OCASR_SCHEMA_REV = "ocasr-words/1";
 const POLL_INTERVAL_MS = 3_000;
 
+/**
+ * RunPod documents 10 MB for /run (20 MB for /runsync). Base64 costs
+ * 4*ceil(n/3) bytes plus the JSON envelope, so the raw-audio ceiling is just
+ * under 7.5 MB. The cap here is on the SERIALIZED BODY, checked before the
+ * request is built, with headroom left for the envelope.
+ *
+ * A 15-minute 16 kHz mono 16-bit segment is about 28.8 MB and cannot use this
+ * path. It fails as `inline_payload_too_large` and the segment takes the Scribe
+ * fallback: transcoding or splitting it to fit would change the audio the model
+ * hears, and that is a different measurement, not a smaller request.
+ */
+export const OCASR_MAX_INLINE_BODY_BYTES = 9_000_000;
+
 export const OCASR_REQUEST_PARAMS = {
-    op: "transcribe_url",
     word_timestamps: true,
     language: "el",
 } as const;
@@ -40,12 +54,23 @@ export interface OcAsrWord {
 export interface OcAsrOutput {
     words?: OcAsrWord[];
     segments?: { words?: OcAsrWord[] }[];
+    /**
+     * What the endpoint actually returns: the OpenCouncil Transcript schema.
+     * Measured live 2026-09-07 — before that this parser looked only at `words`
+     * and `segments`, found neither, and every real call produced an empty
+     * stream, which the route correctly turned into a Scribe fallback. A replay
+     * bundle built from a hand-written shape cannot catch that.
+     */
+    transcription?: { utterances?: { words?: OcAsrWord[] }[] };
     text?: string;
 }
 
 export function normalizeOcAsrWords(output: OcAsrOutput): NormalizedWord[] {
-    const words = output.words ?? (output.segments ?? []).flatMap((segment) => segment.words ?? []);
-    return words
+    const words = output.words
+        ?? (output.transcription?.utterances ?? []).flatMap((utterance) => utterance.words ?? [])
+        ?? [];
+    const fallback = words.length > 0 ? words : (output.segments ?? []).flatMap((segment) => segment.words ?? []);
+    return fallback
         .map((word) => ({
             raw: (word.word ?? word.text ?? "").trim(),
             start: word.start ?? null,
@@ -64,6 +89,8 @@ interface RunPodStatus {
 export class OcAsrProvider implements AsrProvider {
     readonly id = "ours" as const;
     private provenance?: Record<string, unknown>;
+    /** Set from the context before the identity is asked for; see ProviderContext. */
+    private transport: AudioTransport = "url";
 
     constructor(private readonly fetchImpl: typeof fetch = fetch) { }
 
@@ -84,6 +111,7 @@ export class OcAsrProvider implements AsrProvider {
     }
 
     async identify(_audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderIdentity> {
+        this.transport = ctx.transport;
         // Provenance is what makes the cache key mean "the same weights", not
         // "the same endpoint alias" — but an endpoint that cannot answer must
         // not block transcription, so a failure degrades the key, loudly.
@@ -98,15 +126,43 @@ export class OcAsrProvider implements AsrProvider {
         const provenance = this.provenance ?? {};
         return {
             model: String(provenance.model_bin_sha256 ?? provenance.model ?? process.env.OC_ASR_ENDPOINT_ID ?? "oc-asr"),
-            paramsSha: shortSha(sha256OfValue({ ...OCASR_REQUEST_PARAMS, provenance })),
+            paramsSha: shortSha(sha256OfValue({ ...OCASR_REQUEST_PARAMS, provenance, transport: this.transport })),
             schemaRev: OCASR_SCHEMA_REV,
         };
     }
 
     async transcribe(audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderResult> {
         throwIfAborted(ctx.signal);
+        this.transport = ctx.transport;
         const startedAt = Date.now();
-        const published = await ensurePublicUrl(audio, { signal: ctx.signal });
+
+        // Admission first, before any upload and before Soniox has been given
+        // work that would only be thrown away: an oversized segment cannot use
+        // this transport at all, and the sooner it says so the cheaper it is.
+        let source: Record<string, unknown>;
+        let published: PublicAudioHandle | undefined;
+        if (ctx.transport === "bytes") {
+            if (!audio.path) {
+                throw new ProviderError("ours", "byte transport needs a local audio path", "no_audio_path");
+            }
+            const projected = Math.ceil(audio.sizeBytes / 3) * 4 + 512;
+            if (projected > OCASR_MAX_INLINE_BODY_BYTES) {
+                throw new ProviderError("ours",
+                    `inline body would be about ${projected} bytes, over the `
+                    + `${OCASR_MAX_INLINE_BODY_BYTES} limit for RunPod /run; this segment needs `
+                    + "a bucket, and must not be transcoded or split to fit",
+                    "inline_payload_too_large");
+            }
+            source = { audioBase64: (await readFile(audio.path)).toString("base64"), suffix: extname(audio.path) || ".wav" };
+        } else {
+            published = await ensurePublicUrl(audio, { signal: ctx.signal });
+            // `audioUrl`, not `url`. Measured against the live endpoint on
+            // 2026-09-07: `url` is rejected with "input needs either 'audioUrl'
+            // or 'audioBase64'". The replay gate cannot see this, because a fake
+            // provider never reaches RunPod.
+            source = { audioUrl: published.url };
+        }
+
         try {
             await this.getProvenance(ctx).catch((error) => {
                 // Provenance is evidence, not a gate: losing it must not lose the
@@ -114,7 +170,7 @@ export class OcAsrProvider implements AsrProvider {
                 console.warn(`[fusion] oc-asr provenance unavailable: ${error}`);
                 return {};
             });
-            const output = (await this.runJob({ ...OCASR_REQUEST_PARAMS, url: published.url }, ctx)) as OcAsrOutput;
+            const output = (await this.runJob({ ...OCASR_REQUEST_PARAMS, ...source }, ctx)) as OcAsrOutput;
             return {
                 providerId: "ours",
                 identity: this.identity(),
@@ -124,7 +180,7 @@ export class OcAsrProvider implements AsrProvider {
                 elapsedMs: Date.now() - startedAt,
             };
         } finally {
-            await published.release();
+            if (published) await published.release();
         }
     }
 

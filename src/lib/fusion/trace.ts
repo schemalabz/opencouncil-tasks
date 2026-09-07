@@ -43,6 +43,12 @@ export interface FusionTrace {
     };
     outcome: "fused" | "scribe-fallback" | "scribe-only" | "failed";
     fallbackReason?: string;
+    /**
+     * The engine error's message, not just its category. A production fallback
+     * whose cause is only a word like "timing_invariant" cannot be diagnosed
+     * from the trace, which is the one artifact that survives the request.
+     */
+    fallbackDetail?: string;
     timingEstimatedRate?: number;
     fusionConfig?: Record<string, unknown>;
     pythonStderrTail?: string;

@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 import { fetch, Agent, FormData } from "undici";
+import { readFile } from "fs/promises";
+import path from "path";
 import { CityLanguage, Transcript, Utterance, Word } from "../types.js";
 import { getLanguageConfig } from "./language.js";
 
@@ -223,7 +225,10 @@ export interface ScribeRawResult {
 }
 
 type TranscribeRequest = {
+    /** Either a fetchable URL for `source_url`, or "" when audioPath is set. */
     audioUrl: string;
+    /** Local file uploaded as multipart `file`, for callers with no bucket. */
+    audioPath?: string;
     label: string; // identifies the segment in logs (15 requests can be in flight at once)
     languageCode: string; // ISO-639-3 code sent to Scribe ("ell", "fra")
     resolve: (result: ScribeRawResult) => void;
@@ -250,11 +255,15 @@ class ScribeTranscriber {
      * response. Used by the fusion provider, which needs Scribe's word stream
      * (and its logprobs) as one of three aligned inputs.
      */
-    async transcribeRaw(request: { audioUrl: string; label?: string; language?: CityLanguage }): Promise<ScribeRawResult> {
+    async transcribeRaw(request: { audioUrl?: string; audioPath?: string; label?: string; language?: CityLanguage }): Promise<ScribeRawResult> {
+        if (!request.audioUrl && !request.audioPath) {
+            throw new Error("transcribeRaw needs either audioUrl or audioPath");
+        }
         return new Promise((resolve, reject) => {
             this.queue.push({
-                audioUrl: request.audioUrl,
-                label: request.label ?? request.audioUrl.split('/').pop() ?? request.audioUrl,
+                audioUrl: request.audioUrl ?? "",
+                audioPath: request.audioPath,
+                label: request.label ?? (request.audioUrl ?? request.audioPath ?? "").split('/').pop() ?? "audio",
                 languageCode: getLanguageConfig(request.language).scribeCode,
                 resolve,
                 reject,
@@ -273,7 +282,7 @@ class ScribeTranscriber {
         console.log(`[Scribe] ${request.label}: starting (${this.activeTranscriptions}/${SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS} slots active, ${this.queue.length} queued)`);
 
         try {
-            request.resolve(await this.transcribeSegment(request.audioUrl, request.label, request.languageCode));
+            request.resolve(await this.transcribeSegment(request.audioUrl, request.label, request.languageCode, request.audioPath));
         } catch (error) {
             console.log(`[Scribe] ${request.label}: FAILED: ${error}`);
             request.reject(error as Error);
@@ -283,13 +292,13 @@ class ScribeTranscriber {
         }
     }
 
-    private async transcribeSegment(audioUrl: string, label: string, languageCode: string): Promise<ScribeRawResult> {
+    private async transcribeSegment(audioUrl: string, label: string, languageCode: string, audioPath?: string): Promise<ScribeRawResult> {
         const startedAt = Date.now();
-        const response = await this.requestWithRetries(audioUrl, label, languageCode);
+        const response = await this.requestWithRetries(audioUrl, label, languageCode, audioPath);
         return { response, elapsedSeconds: (Date.now() - startedAt) / 1000 };
     }
 
-    private async requestWithRetries(audioUrl: string, label: string, languageCode: string): Promise<ScribeResponse> {
+    private async requestWithRetries(audioUrl: string, label: string, languageCode: string, audioPath?: string): Promise<ScribeResponse> {
         let failures = 0;
         let saturationWaitMs = 0;
         let rateLimitStreak = 0;
@@ -303,7 +312,7 @@ class ScribeTranscriber {
                 throwIfCancelled();
             }
 
-            const result = await this.attemptRequest(audioUrl, languageCode);
+            const result = await this.attemptRequest(audioUrl, languageCode, audioPath);
             if (result.ok) {
                 return result.response;
             }
@@ -340,7 +349,7 @@ class ScribeTranscriber {
         }
     }
 
-    private async attemptRequest(audioUrl: string, languageCode: string): Promise<
+    private async attemptRequest(audioUrl: string, languageCode: string, audioPath?: string): Promise<
         { ok: true; response: ScribeResponse } |
         { ok: false; retryable: boolean; rateLimited?: boolean; retryAfterMs?: number; error: Error }
     > {
@@ -355,7 +364,15 @@ class ScribeTranscriber {
         form.append("timestamps_granularity", "word");
         // Speakers are assigned downstream by merging pyannote diarization (applyDiarization)
         form.append("diarize", "false");
-        form.append("source_url", audioUrl);
+        if (audioPath) {
+            // Uploading the bytes is the same request with a different audio
+            // field: no bucket, no temporary public object, and nothing about
+            // the decode changes. Read per attempt, so a retry sends the same
+            // file rather than an exhausted stream.
+            form.append("file", new Blob([await readFile(audioPath)]), path.basename(audioPath));
+        } else {
+            form.append("source_url", audioUrl);
+        }
 
         try {
             const response = await fetch(SCRIBE_API_URL, {

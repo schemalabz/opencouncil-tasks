@@ -4,6 +4,7 @@ import { scribeResponseToTranscript, type ScribeResponse } from "../ScribeTransc
 import { fusionConfigSha, type FusionConfig } from "./config.js";
 import { FusionCache, componentCacheKey, fusionCacheKey } from "./cache.js";
 import { sha256OfValue } from "./hash.js";
+import { resolveAudioTransport } from "./audio.js";
 import { createDeadline } from "./deadline.js";
 import { runFusionPython, fusionEngineRevision } from "./fusePy.js";
 import { buildFusedTranscript } from "./toTranscript.js";
@@ -118,7 +119,12 @@ export class FusionTranscriber {
         const llm = this.llmEnvelopeFor(request.model);
 
         const deadline = createDeadline(startedAt + this.config.deadlineMs, request.signal);
-        const ctx: ProviderContext = { signal: deadline.signal, deadlineAt: deadline.deadlineAt, label: request.label };
+        const ctx: ProviderContext = {
+            signal: deadline.signal,
+            deadlineAt: deadline.deadlineAt,
+            label: request.label,
+            transport: resolveAudioTransport(request.audio, this.config.audioTransport),
+        };
 
         const components: TraceComponent[] = [];
         let pythonMs: number | undefined;
@@ -211,7 +217,8 @@ export class FusionTranscriber {
                 const transcript = annotate(scribeTranscript(), "scribe-fallback", error.reason, this.configSha(arm, llm));
                 await this.writeTrace({
                     requestId, arm, audio: request.audio, components, startedAt,
-                    outcome: "scribe-fallback", fallbackReason: error.reason, pythonMs, pythonStderrTail, llm,
+                    outcome: "scribe-fallback", fallbackReason: error.reason,
+                    fallbackDetail: error.message.slice(0, 400), pythonMs, pythonStderrTail, llm,
                 });
                 console.warn(`[fusion] ${request.label ?? request.audio.sha256.slice(0, 12)}: falling back to Scribe (${error.reason}): ${error.message}`);
                 return { transcript, outcome: "scribe-fallback", fallbackReason: error.reason, requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
@@ -380,6 +387,7 @@ export class FusionTranscriber {
         startedAt: number;
         outcome: "fused" | "scribe-fallback" | "scribe-only" | "failed";
         fallbackReason?: string;
+        fallbackDetail?: string;
         pythonMs?: number;
         pythonStderrTail?: string;
         timingEstimatedRate?: number;
@@ -401,6 +409,7 @@ export class FusionTranscriber {
             timings: { totalMs: Date.now() - input.startedAt, pythonMs: input.pythonMs },
             outcome: input.outcome,
             fallbackReason: input.fallbackReason,
+            fallbackDetail: input.fallbackDetail,
             timingEstimatedRate: input.timingEstimatedRate,
             fusionConfig: input.fusionConfig,
             pythonStderrTail: input.pythonStderrTail,
