@@ -241,11 +241,6 @@ export function continuationPrompt(partial: string): string {
 }
 
 /**
- * Structured outputs went GA: the canonical request parameter is
- * `output_config.format`, and no beta header is needed. The older top-level
- * `output_format` plus the `structured-outputs-2025-11-13` header still works
- * but is deprecated, so it will break whenever that path is dropped.
- *
  * `output_config` is not declared on the SDK's stable request type yet (the
  * installed 0.71.2 only types it under the beta namespace, and even there
  * without a `format` field), so this is spread into the params object to reach
