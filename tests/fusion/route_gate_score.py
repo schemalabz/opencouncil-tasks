@@ -14,9 +14,14 @@ merged into one:
      is a pre-declared budget (DELTA_GATE, frozen before any of this was
      measured), not something the integration test gets to absorb silently.
 
-So a window whose text differs from the frozen fixture is NOT a pass and NOT a
-failure yet: it is re-fused here at the production config, and it passes only if
-fuse.py reproduces it byte for byte. Anything else is a TypeScript defect.
+EVERY window is re-fused here at the production config and compared to the HTTP
+text byte for byte. Matching the frozen unchunked fixture is never on its own a
+pass: Astra review 2026-09-07 found that the first version only called the oracle
+when HTTP differed from the frozen text, so the acceptance condition was really
+`HTTP == frozen OR HTTP == oracle`, and any TypeScript defect that moved output
+back towards the unchunked text passed unexamined. Anything the oracle does not
+reproduce is a TypeScript defect. A window that matches the oracle but not the
+frozen fixture is the priced cost of chunking.
 
 Scoring lives here, in Python, on purpose. `wtoks` and `sdi` are the frozen
 definitions the 0.11205 was measured with; a TypeScript reimplementation would
@@ -33,6 +38,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import multiprocessing as mp
 import os
 import sys
 from pathlib import Path
@@ -52,6 +58,12 @@ PRODUCTION_CHUNKING = {"max_tokens": 120, "anchor_n": 3, "search_radius": 200}
 DELTA_GATE = 0.002
 
 DEFAULT_DIR = Path.home() / ".cache/oc-public/chooser-2026-08-25"
+
+
+def _oracle(item):
+    """Re-fuse one window at the production config. Module scope for spawn."""
+    wid, hyps = item
+    return wid, fused_norm(fuse(payload_for(hyps, "rules_on", PRODUCTION_CHUNKING)))
 
 
 def bundle_dir() -> Path:
@@ -85,38 +97,48 @@ def main(argv) -> int:
 
     hard_mismatches = []
     chunking_divergences = []
-    missing = []
+    unexpected = []
     total = [0, 0, 0, 0]
     frozen_total = [0, 0, 0, 0]
 
-    for row in results:
-        wid = row["id"]
-        if wid not in expected or wid not in inputs:
-            missing.append(wid)
-            continue
+    # Coverage is checked as a set, not as a count: 391 rows summing to the
+    # frozen totals can still be one window submitted twice and another dropped,
+    # if the two carry the same [S,D,I,N] (Astra review 2026-09-07, finding 3).
+    submitted = [row["id"] for row in results]
+    duplicates = sorted({wid for wid in submitted if submitted.count(wid) > 1})
+    scored_rows = [row for row in results if row["id"] in expected and row["id"] in inputs]
+    unexpected = sorted({wid for wid in submitted if wid not in expected or wid not in inputs})
+    missing = sorted(set(expected) - set(submitted))
 
+    # The oracle runs for EVERY window, not only for the ones that already
+    # differ from the frozen text. 391 chunked fusions, so spend the cores.
+    with mp.get_context("spawn").Pool(min(12, os.cpu_count() or 4)) as pool:
+        oracle = dict(pool.imap(
+            _oracle, [(r["id"], inputs[r["id"]]["hyps"]) for r in scored_rows],
+            chunksize=1))
+
+    for row in scored_rows:
+        wid = row["id"]
         want = expected[wid]["tokens"]
         got = wtoks(row["text"])
+        produced = oracle[wid]
 
-        if row["text"] != " ".join(want):
-            # Re-fuse at the production config. If fuse.py agrees with what came
-            # out of HTTP, the route is faithful and the difference is the price
-            # of chunking; if it does not, the TypeScript path invented it.
-            produced = fused_norm(fuse(payload_for(inputs[wid]["hyps"], "rules_on",
-                                                   PRODUCTION_CHUNKING)))
-            if row["text"] == " ".join(produced):
-                cs, cd, ci, _cn = sdi(" ".join(inputs[wid]["ref"]), " ".join(produced))
-                fs_, fd_, fi_, _ = expected[wid]["sidn"]
-                chunking_divergences.append({
-                    "id": wid, "frozen_n": len(want), "produced_n": len(produced),
-                    "frozen_sha": toks_sha(want), "produced_sha": toks_sha(produced),
-                    "extra_errors": (cs + cd + ci) - (fs_ + fd_ + fi_),
-                })
-            else:
-                hard_mismatches.append({
-                    "id": wid, "want_sha": toks_sha(produced), "got_sha": toks_sha(got),
-                    "want_n": len(produced), "got_n": len(got),
-                })
+        if row["text"] != " ".join(produced):
+            # fuse.py at the production config did not produce this text. The
+            # TypeScript path invented it, whatever it happens to equal.
+            hard_mismatches.append({
+                "id": wid, "want_sha": toks_sha(produced), "got_sha": toks_sha(got),
+                "want_n": len(produced), "got_n": len(got),
+                "equals_frozen": row["text"] == " ".join(want),
+            })
+        elif produced != want:
+            cs, cd, ci, _cn = sdi(" ".join(inputs[wid]["ref"]), " ".join(produced))
+            fs_, fd_, fi_, _ = expected[wid]["sidn"]
+            chunking_divergences.append({
+                "id": wid, "frozen_n": len(want), "produced_n": len(produced),
+                "frozen_sha": toks_sha(want), "produced_sha": toks_sha(produced),
+                "extra_errors": (cs + cd + ci) - (fs_ + fd_ + fi_),
+            })
 
         s_, d_, i_, n_ = sdi(" ".join(inputs[wid]["ref"]), " ".join(got))
         total = [total[0] + s_, total[1] + d_, total[2] + i_, total[3] + n_]
@@ -142,7 +164,8 @@ def main(argv) -> int:
     total_extra = sum(extra)
     dominance = round(max(extra) / total_extra, 3) if total_extra else None
 
-    ok = (not hard_mismatches and not missing
+    ok = (not hard_mismatches and not missing and not unexpected
+          and not duplicates
           and len(results) == n_windows
           and frozen_total == frozen
           and delta is not None and abs(delta) <= DELTA_GATE)
@@ -169,6 +192,8 @@ def main(argv) -> int:
         # another offsets it. That is the point of reporting it.
         "largest_window_share_of_net_delta": dominance,
         "missing_ids": missing[:10],
+        "unexpected_ids": unexpected[:10],
+        "duplicate_ids": duplicates[:10],
     }, ensure_ascii=False))
     return 0 if ok else 1
 

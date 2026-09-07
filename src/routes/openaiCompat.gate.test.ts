@@ -344,6 +344,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
     let server: http.Server;
     let baseUrl: string;
     let resultsPath: string;
+    let cleanSummary: { chunking_divergences?: { id: string }[] } | undefined;
     const audioShas = new Map<string, string>();
 
     beforeAll(async () => {
@@ -429,6 +430,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
             maxBuffer: 8 * 1024 * 1024,
         });
         const summary = JSON.parse(stdout.trim().split("\n").pop()!);
+        cleanSummary = summary;
         console.info(`[gate] ${JSON.stringify(summary)}`);
 
         expect(summary.n_results).toBe(bundle.manifest.n_windows);
@@ -467,7 +469,76 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
         expect(JSON.stringify(summary.hard_mismatches)).not.toContain("παρεμβολη");
     });
 
+    it("fails the scorer when a divergent window is replaced by the frozen text", async () => {
+        // The control Astra review 2026-09-07 asked for. The old scorer skipped
+        // the oracle whenever HTTP matched the frozen unchunked fixture, so a
+        // TypeScript defect that moved output back towards that text passed. Here
+        // the mutation IS the frozen text: it must still be a hard mismatch,
+        // because fuse.py at max_tokens=120 does not produce it for this window.
+        const divergent = cleanSummary?.chunking_divergences?.[0]?.id;
+        if (!divergent) {
+            console.info("[gate] no chunking divergence in this bundle; control not exercised");
+            return;
+        }
+
+        const control = path.join(workDir, "results-frozen-swap.jsonl");
+        const lines = fs.readFileSync(resultsPath, "utf8").trimEnd().split("\n")
+            .map((line) => {
+                const row = JSON.parse(line);
+                if (row.id !== divergent) return line;
+                return JSON.stringify({
+                    ...row,
+                    text: bundle.expected.get(divergent)!.tokens.join(" "),
+                    matched_frozen: true,
+                });
+            });
+        fs.writeFileSync(control, `${lines.join("\n")}\n`);
+
+        const failure = await execFileAsync(PYTHON, [SCORER, control], {
+            cwd: REPO_ROOT,
+            env: { ...process.env, FUSION_FIXTURES_DIR: bundle.dir },
+            maxBuffer: 8 * 1024 * 1024,
+        }).catch((error) => error as { code: number; stdout: string });
+
+        expect((failure as { code: number }).code).toBe(1);
+        const summary = JSON.parse((failure as { stdout: string }).stdout.trim().split("\n").pop()!);
+        expect(summary.ok).toBe(false);
+        expect(summary.n_hard_mismatches).toBe(1);
+        expect(summary.hard_mismatches[0].id).toBe(divergent);
+        expect(summary.hard_mismatches[0].equals_frozen).toBe(true);
+    });
+
+    it("fails the scorer when a window is submitted twice and another dropped", async () => {
+        // Row count and summed totals both survive this swap; only set equality
+        // catches it (Astra review 2026-09-07, finding 3).
+        const control = path.join(workDir, "results-dup.jsonl");
+        const lines = fs.readFileSync(resultsPath, "utf8").trimEnd().split("\n");
+        const first = JSON.parse(lines[0]);
+        lines[lines.length - 1] = JSON.stringify(first);
+        fs.writeFileSync(control, `${lines.join("\n")}\n`);
+
+        const failure = await execFileAsync(PYTHON, [SCORER, control], {
+            cwd: REPO_ROOT,
+            env: { ...process.env, FUSION_FIXTURES_DIR: bundle.dir },
+            maxBuffer: 8 * 1024 * 1024,
+        }).catch((error) => error as { code: number; stdout: string });
+
+        expect((failure as { code: number }).code).toBe(1);
+        const summary = JSON.parse((failure as { stdout: string }).stdout.trim().split("\n").pop()!);
+        expect(summary.ok).toBe(false);
+        expect(summary.duplicate_ids).toContain(first.id);
+        expect(summary.missing_ids.length).toBe(1);
+    });
+
     it("keeps request ids and results separate under concurrency", async () => {
+        // Compare against what the sequential run already recorded for the same
+        // window, never against the unchunked fixture: this test is about
+        // crossed caches and shared temp paths, and a chunking-divergent window
+        // would make the frozen text a wrong expectation (CodeRabbit 2026-09-07).
+        const recorded = new Map<string, string>(
+            fs.readFileSync(resultsPath, "utf8").trimEnd().split("\n")
+                .map((line) => JSON.parse(line))
+                .map((row: { id: string; text: string }) => [row.id, row.text]));
         const sample = bundle.windows.slice(0, 8);
         const responses = await Promise.all(sample.map(async (window) => {
             const response = await postAudio(`${baseUrl}/v1/audio/transcriptions`, audioFor(window.id), "fusion-rules");
@@ -487,7 +558,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
             expect(r.sha).toBe(audioShas.get(r.id));
             // The result must belong to the window that asked for it — a shared
             // temp path or a crossed cache entry shows up here and nowhere else.
-            expect(tokensSha(r.text.split(" "))).toBe(tokensSha(bundle.expected.get(r.id)!.tokens));
+            expect(tokensSha(r.text.split(" "))).toBe(tokensSha(recorded.get(r.id)!.split(" ")));
         }
     });
 });
@@ -531,11 +602,15 @@ describe("route gate: the Transcript behind the text", () => {
             const { transcript, outcome } = await fuseWindow(window);
             expect(outcome).toBe("fused");
 
-            const want = bundle.expected.get(window.id)!.tokens;
+            // The invariant is words[] === full_transcript. Whether that stream is
+            // the right one is the scorer's verdict on all 391 windows; asserting
+            // the unchunked fixture here would fail on a chunking-divergent
+            // window for the wrong reason (CodeRabbit 2026-09-07).
             const words = transcript.transcription.utterances.flatMap((u) => u.words);
+            const text = transcript.transcription.full_transcript.split(" ");
 
-            expect(tokensSha(words.map((w) => w.word))).toBe(tokensSha(want));
-            expect(tokensSha(transcript.transcription.full_transcript.split(" "))).toBe(tokensSha(want));
+            expect(words.length).toBeGreaterThan(0);
+            expect(tokensSha(words.map((w) => w.word))).toBe(tokensSha(text));
 
             let previous = -Infinity;
             for (const word of words) {
