@@ -236,6 +236,15 @@ MUX_TOKEN_SECRET=your-mux-token-secret
 ANTHROPIC_API_KEY=your-anthropic-key
 
 # =============================================================================
+# YouTube downloads
+# =============================================================================
+# Residential proxy (pi-proxy). YouTube answers the droplet's datacenter IP with
+# "Sign in to confirm you're not a bot", so every download fails without this.
+# Same value as production. The proxy authorises callers by IP, so the preview
+# droplet's IP must also be in pi-proxy's Allow list.
+YTDLP_PROXY=http://your-proxy-host:3128
+
+# =============================================================================
 # CORS
 # =============================================================================
 CORS_ORIGINS_ALLOWED=https://opencouncil.gr,https://*.opencouncil.dev,https://*.tasks.opencouncil.dev
@@ -346,7 +355,7 @@ TASKS_API_TOKEN=your-preview-api-token-here  # Same as in tasks .env
 To exercise a task endpoint against a running preview (`https://pr-<N>.tasks.opencouncil.dev`):
 
 - **Auth**: the preview runs on whatever `pr-<N>.tasks.opencouncil.dev` resolves to. Get the Bearer token from `API_TOKENS` in the preview's env file (`/var/lib/opencouncil-tasks-previews/.env` on that droplet). Verify with `GET /health` + the token → response includes `"authenticated": true`.
-- **Only stateless endpoints work**: previews ship placeholder `DO_SPACES_*` credentials and a stale yt-dlp, so endpoints that touch storage or downloads fail immediately. Only stateless endpoints (e.g. `fixTranscript`) are testable on a preview; for anything storage/download-heavy, run `./scripts/smoke.sh` locally instead (borrow any missing keys from the preview env file).
+- **Pipeline endpoints work**: previews carry real `DO_SPACES_*` credentials (their own `opencouncil-previews` bucket), the yt-dlp and deno the flake pinned at build, and `YTDLP_PROXY`. Storage and download stages are exercisable end to end. `./scripts/smoke.sh` locally remains the faster loop for a full pipeline run.
 - **After editing the preview env**, restart the service: `systemctl restart opencouncil-tasks-preview@<4000+N>`. Confirm the variable actually loaded via `/proc/<MainPID>/environ` — `systemctl show -p Environment` does **not** show `EnvironmentFile` vars and gives a false negative.
 - **Capturing callbacks**: run a callback listener (`./scripts/cb-listener.py` — appends each callback body to a JSONL file) + ngrok locally, not on the droplet (its bare NixOS PATH has no python/node). The `callbackUrl` must be a domain or localhost — `validateUrl` rejects bare IPs.
 

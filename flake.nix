@@ -63,7 +63,7 @@
           npmConfigHook = pkgs.importNpmLock.npmConfigHook;
 
           # Handle peer dependency conflicts and skip postinstall scripts
-          # (puppeteer downloads Chromium, ffmpeg-static downloads ffmpeg)
+          # (ffmpeg-static downloads ffmpeg)
           # The preview server will use system-provided binaries instead
           npmFlags = [ "--legacy-peer-deps" "--ignore-scripts" ];
 

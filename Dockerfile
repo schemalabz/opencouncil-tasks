@@ -24,19 +24,10 @@ RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
 FROM node:20.11.1 AS runner
-# Install the latest Chrome dev package, necessary fonts and libraries
 RUN apt-get update \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] https://dl-ssl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-khmeros fonts-kacst fonts-freefont-ttf libxss1 dbus dbus-x11 \
-      --no-install-recommends \
     && apt-get install -y tini ffmpeg curl gosu unzip \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd -r apify && useradd -rm -g apify -G audio,video apify
-
-# Determine the path of the installed Google Chrome
-RUN which google-chrome-stable || true
 
 # Set the working directory
 WORKDIR /app
@@ -83,8 +74,6 @@ RUN mkdir -p /app/.deno \
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
 ENV YTDLP_BIN_PATH=/app/bin/yt-dlp
 ENV DENO_DIR=/app/.deno
 
