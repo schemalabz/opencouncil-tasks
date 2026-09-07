@@ -405,3 +405,60 @@ describe('executeBatch cancellation & promotion', () => {
         }
     });
 });
+
+// ===========================================================================
+// Connection drops — the shape classifyTransientError depends on
+//
+// When the TCP connection dies mid-stream, undici throws `TypeError:
+// terminated`. The SDK's MessageStream rewraps that as a bare AnthropicError
+// carrying the original as `.cause`, and classifyTransientError sniffs exactly
+// that shape. Nothing in the type system holds it together, so an SDK upgrade
+// can break it silently: a dropped connection would stop counting as transient,
+// and a long summarize would fail outright instead of retrying and then falling
+// back to batch.
+//
+// These drive the real SDK rather than hand-building the wrapper, so they
+// detect a change in how it wraps. The client is local to the test with
+// maxRetries 0 — going through aiChat's own retry loop instead would add ~15s
+// of backoff for nothing.
+// ===========================================================================
+
+describe('classifyTransientError on a stream the SDK tore down', () => {
+
+    /** A 200 whose body dies partway, the way a dropped connection presents. */
+    function terminatingStreamResponse() {
+        const enc = new TextEncoder();
+        return new Response(new ReadableStream({
+            start(c) {
+                c.enqueue(enc.encode('event: message_start\ndata: ' + JSON.stringify({
+                    type: 'message_start',
+                    message: {
+                        id: 'msg_probe', type: 'message', role: 'assistant',
+                        model: 'claude-haiku-4-5-20251001', content: [],
+                        stop_reason: null, stop_sequence: null,
+                        usage: { input_tokens: 1, output_tokens: 1 },
+                    },
+                }) + '\n\n'));
+                c.error(new TypeError('terminated'));
+            },
+        }), { status: 200, headers: { 'content-type': 'text/event-stream' } });
+    }
+
+    it('classifies what the SDK rejects with as a connection error', async () => {
+        const client = new Anthropic({
+            apiKey: 'sk-ant-wire-probe',
+            maxRetries: 0,
+            fetch: (async () => terminatingStreamResponse()) as unknown as typeof fetch,
+        });
+
+        const error = await client.messages
+            .stream({ model: 'claude-haiku-4-5-20251001', max_tokens: 16, messages: [{ role: 'user', content: 'hi' }] })
+            .finalMessage()
+            .then(() => { throw new Error('expected the stream to reject'); }, (e: unknown) => e);
+
+        // Guard the premise: if this stops being the terminated path, the
+        // assertion below would pass or fail for unrelated reasons.
+        expect(String(error)).toMatch(/terminated/);
+        expect(classifyTransientError(error)).toBe('connection');
+    });
+});
