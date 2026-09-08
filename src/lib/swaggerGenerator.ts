@@ -64,7 +64,7 @@ export function generateSwaggerPaths(): Record<string, any> {
                                         items: {
                                             type: 'object',
                                             properties: {
-                                                taskId: { type: 'string', example: 'task_ab12cd34_1' },
+                                                taskId: { type: 'string', description: "The task status id from the caller's callback URL, or a generated id when the URL carries none", example: 'clx8h2k9p0001' },
                                                 taskType: { type: 'string' },
                                                 status: { type: 'string' },
                                                 stage: { type: 'string', nullable: true },
@@ -189,7 +189,7 @@ export function generateSwaggerPaths(): Record<string, any> {
                                     type: 'object',
                                     properties: {
                                         message: { type: 'string', example: 'Task started' },
-                                        taskId: { type: 'string', example: 'task_1a2b3c4d_1' },
+                                        taskId: { type: 'string', description: "Echoes the task status id from the callback URL; addresses this task in /tasks/{taskId}/cancel and /promote", example: 'clx8h2k9p0001' },
                                         queueSize: { type: 'number' },
                                         runningTasks: { type: 'number' },
                                         maxParallelTasks: { type: 'number' }
@@ -200,6 +200,9 @@ export function generateSwaggerPaths(): Record<string, any> {
                     },
                     '400': {
                         description: 'Invalid request'
+                    },
+                    '409': {
+                        description: 'A task with this task status id is already running or queued'
                     },
                     '500': {
                         description: 'Task execution failed'

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import express from 'express';
-import { TaskManager, taskManager } from './TaskManager.js';
+import { DuplicateTaskIdError, TaskManager, taskManager } from './TaskManager.js';
 import { Task } from '../tasks/pipeline.js';
 import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 
@@ -273,6 +273,83 @@ describe('TaskManager cancellation (proposed)', () => {
         manager.promoteTask(taskId);
         expect(manager.getTaskUpdates()[0].llmMode).toBe('streaming');
 
+        await completion;
+    });
+});
+
+describe('task ids derived from the callback URL', () => {
+
+    beforeEach(() => vi.unstubAllGlobals());
+
+    const callbackUrl = 'https://opencouncil.gr/api/cities/athens/meetings/m1/taskStatuses/clx123?token=abc';
+
+    // Resolves only when the test lets it, so a submission is provably still
+    // running when the duplicate arrives — no reliance on timing.
+    const gatedTask = (): { task: Task<{}, string>; release: () => void } => {
+        let release!: () => void;
+        const gate = new Promise<void>(resolve => { release = resolve; });
+        return { task: async () => { await gate; return 'ok'; }, release };
+    };
+
+    it('addresses the task by the caller task status id', async () => {
+        stubCallbacks();
+        const manager = new TaskManager(2);
+        const { taskId, completion } = manager.runTaskWithCallback(slowTask, { steps: 1 }, callbackUrl, 'test');
+
+        expect(taskId).toBe('clx123');
+        expect(manager.getTaskUpdates()[0].taskId).toBe('clx123');
+        await completion;
+    });
+
+    it('generates an id when the callback URL carries no task status', async () => {
+        stubCallbacks();
+        const manager = new TaskManager(2);
+        const local = 'http://localhost:3000/callback/cities/dev/meetings/observability-check';
+        const { taskId, completion } = manager.runTaskWithCallback(slowTask, { steps: 1 }, local, 'test');
+
+        expect(taskId).toMatch(/^task_[0-9a-f]{8}_\d+$/);
+        await completion;
+    });
+
+    it('refuses to run a second task under an id already in flight', async () => {
+        stubCallbacks();
+        const manager = new TaskManager(2);
+        const { task, release } = gatedTask();
+        manager.runTaskWithCallback(task, {}, callbackUrl, 'test');
+
+        expect(() => manager.runTaskWithCallback(task, {}, callbackUrl, 'test')).toThrow(DuplicateTaskIdError);
+
+        release();
+        await new Promise(resolve => setTimeout(resolve, 10));
+    });
+
+    it('answers a duplicate submission with 409 and starts nothing', async () => {
+        stubCallbacks();
+        const manager = new TaskManager(2);
+        const { task, release } = gatedTask();
+        const handler = manager.serveTask(task);
+
+        const first = buildResponse();
+        handler(buildRequest({ callbackUrl }), first);
+        const second = buildResponse();
+        handler(buildRequest({ callbackUrl }), second);
+
+        expect(first.statusCode).toBe(202);
+        expect(first.body.taskId).toBe('clx123');
+        expect(second.statusCode).toBe(409);
+        expect(manager.getTaskUpdates()).toHaveLength(1);
+
+        release();
+        await new Promise(resolve => setTimeout(resolve, 10));
+    });
+
+    it('frees the id once the task finishes', async () => {
+        stubCallbacks();
+        const manager = new TaskManager(2);
+        await manager.runTaskWithCallback(slowTask, { steps: 1 }, callbackUrl, 'test').completion;
+
+        const { taskId, completion } = manager.runTaskWithCallback(slowTask, { steps: 1 }, callbackUrl, 'test');
+        expect(taskId).toBe('clx123');
         await completion;
     });
 });

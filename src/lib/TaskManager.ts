@@ -5,12 +5,24 @@ import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
-import { validateUrl, extractMeetingId } from '../utils.js';
+import { validateUrl, extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
 import { postCallback, deliverTerminalCallback } from './callbackDelivery.js';
 import { LlmMode, TaskCancelledError, TaskControl, isCancellation, newTaskControl, runWithTaskControl } from './taskControl.js';
 
-// Per-process prefix so task IDs never collide across server restarts.
+// Per-process prefix so generated task IDs never collide across server restarts.
 const INSTANCE_ID = randomUUID().slice(0, 8);
+
+/**
+ * A caller submitted a task under an id that is already in flight. The id comes
+ * from the caller's own record, so this is always the same record submitted
+ * twice — never a coincidence — and running it twice would duplicate the work.
+ */
+export class DuplicateTaskIdError extends Error {
+    constructor(readonly taskId: string) {
+        super(`Task ${taskId} is already running or queued`);
+        this.name = 'DuplicateTaskIdError';
+    }
+}
 
 // Task metadata interface
 export interface TaskMetadata {
@@ -212,7 +224,13 @@ export class TaskManager {
         taskType: string,
         version?: number
     ): { taskId: string; completion: Promise<void> } {
-        const taskId = `task_${INSTANCE_ID}_${++this.taskCounter}`;
+        // The caller's own task id addresses the task here too, so cancel and
+        // promote need no second identifier. Callers with no record behind them
+        // (the CLI, the observability check) get a generated one.
+        const taskId = taskStatusIdFromUrl(callbackUrl) ?? `task_${INSTANCE_ID}_${++this.taskCounter}`;
+        if (this.runningTasks.has(taskId) || this.taskQueue.some(t => t.taskId === taskId)) {
+            throw new DuplicateTaskIdError(taskId);
+        }
 
         if (this.runningTasks.size >= this.maxParallelTasks) {
             let onDone!: () => void;
@@ -341,13 +359,21 @@ export class TaskManager {
                 return res.status(400).json({ error: 'Invalid callback URL' });
             }
 
-            const { taskId } = this.runTaskWithCallback(
-                task,
-                req.body,
-                req.body.callbackUrl,
-                taskType,
-                version
-            );
+            let taskId: string;
+            try {
+                ({ taskId } = this.runTaskWithCallback(
+                    task,
+                    req.body,
+                    req.body.callbackUrl,
+                    taskType,
+                    version
+                ));
+            } catch (error) {
+                if (error instanceof DuplicateTaskIdError) {
+                    return res.status(409).json({ error: error.message });
+                }
+                throw error;
+            }
 
             res.status(202).json({
                 message: 'Task started',
