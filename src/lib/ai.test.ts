@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, structuredOutputParams, BatchPromotedError, executeBatch } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, executeBatch } from './ai.js';
 import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // ===========================================================================
@@ -154,7 +154,11 @@ describe('addUsage', () => {
         const result = addUsage(NO_USAGE, NO_USAGE);
 
         expect(result.cache_creation).toBeNull();
-        expect(result.server_tool_use).toEqual({ web_search_requests: 0 });
+        expect(result.server_tool_use).toEqual({ web_search_requests: 0, web_fetch_requests: 0 });
+        // Absent on both sides stays absent, so "no thinking tokens" and "the
+        // model never reported any" don't collapse into the same zero.
+        expect(result.output_tokens_details).toBeNull();
+        expect(result.inference_geo).toBeNull();
     });
 
     it('preserves the first non-null service_tier', () => {
@@ -176,40 +180,33 @@ describe('addUsage', () => {
         expect(leftAssoc.input_tokens).toBe(rightAssoc.input_tokens);
         expect(leftAssoc.output_tokens).toBe(rightAssoc.output_tokens);
     });
+
+    const withDetails = (thinking: number, geo: string | null) => ({
+        ...NO_USAGE, output_tokens_details: { thinking_tokens: thinking }, inference_geo: geo,
+    });
+
+    it('sums thinking tokens when either side reports them', () => {
+        expect(addUsage(withDetails(10, null), withDetails(5, null)).output_tokens_details)
+            .toEqual({ thinking_tokens: 15 });
+        // One side reporting is enough to produce a total.
+        expect(addUsage(withDetails(7, null), NO_USAGE).output_tokens_details)
+            .toEqual({ thinking_tokens: 7 });
+    });
+
+    it('keeps the first non-null inference_geo', () => {
+        expect(addUsage(withDetails(0, 'us'), withDetails(0, 'eu')).inference_geo).toBe('us');
+        expect(addUsage(NO_USAGE, withDetails(0, 'eu')).inference_geo).toBe('eu');
+    });
+
 });
 
 // ===========================================================================
-// structuredOutputParams — structured outputs are requested through the GA
-// `output_config.format` parameter, not the deprecated top-level
-// `output_format` plus its beta header
-// ===========================================================================
-
-describe('structuredOutputParams', () => {
-
-    const format: Anthropic.Beta.Messages.BetaJSONOutputFormat = {
-        type: 'json_schema',
-        schema: { type: 'object', properties: { name: { type: 'string' } } },
-    };
-
-    it('nests the schema under output_config.format', () => {
-        expect(structuredOutputParams(format)).toEqual({ output_config: { format } });
-    });
-
-    it('does not emit the deprecated top-level output_format', () => {
-        expect(structuredOutputParams(format)).not.toHaveProperty('output_format');
-    });
-
-    it('adds nothing when no format is requested', () => {
-        expect(structuredOutputParams(undefined)).toEqual({});
-    });
-});
-
-// ===========================================================================
-// Request shape at the wire — the tests above only prove the fragment aiChat
-// builds. `output_config` is not on the SDK's stable request type, so it is
-// spread in untyped and survives only while the SDK forwards unknown keys. A
-// quiet drop there would disable structured outputs everywhere with no type
-// error and no failure above, so assert the bytes actually sent.
+// Request shape at the wire — `output_config` is typed on the request, so tsc
+// catches a wrong shape under it but not a misspelled key: excess-property
+// checks don't apply to spread expressions, so `output_confg` would compile and
+// silently disable structured outputs everywhere. Types also say nothing about
+// the beta header that used to gate the feature, or about whether the batch and
+// streaming→batch fallback call sites re-send the same params. Assert the bytes.
 //
 // fetch is stubbed (as in ElevenLabsAlign.test.ts) rather than a server stood
 // up, so nothing binds a socket and no API key is involved.
@@ -404,4 +401,272 @@ describe('executeBatch cancellation & promotion', () => {
             vi.useRealTimers();
         }
     });
+});
+
+// ===========================================================================
+// Connection drops — the shape classifyTransientError depends on
+//
+// When the TCP connection dies mid-stream, undici throws `TypeError:
+// terminated`. The SDK's MessageStream rewraps that as a bare AnthropicError
+// carrying the original as `.cause`, and classifyTransientError sniffs exactly
+// that shape. Nothing in the type system holds it together, so an SDK upgrade
+// can break it silently: a dropped connection would stop counting as transient,
+// and a long summarize would fail outright instead of retrying and then falling
+// back to batch.
+//
+// These drive the real SDK rather than hand-building the wrapper, so they
+// detect a change in how it wraps. The client is local to the test with
+// maxRetries 0 — going through aiChat's own retry loop instead would add ~15s
+// of backoff for nothing.
+// ===========================================================================
+
+describe('classifyTransientError on a stream the SDK tore down', () => {
+
+    /** A 200 whose body dies partway, the way a dropped connection presents. */
+    function terminatingStreamResponse() {
+        const enc = new TextEncoder();
+        return new Response(new ReadableStream({
+            start(c) {
+                c.enqueue(enc.encode('event: message_start\ndata: ' + JSON.stringify({
+                    type: 'message_start',
+                    message: {
+                        id: 'msg_probe', type: 'message', role: 'assistant',
+                        model: 'claude-haiku-4-5-20251001', content: [],
+                        stop_reason: null, stop_sequence: null,
+                        usage: { input_tokens: 1, output_tokens: 1 },
+                    },
+                }) + '\n\n'));
+                c.error(new TypeError('terminated'));
+            },
+        }), { status: 200, headers: { 'content-type': 'text/event-stream' } });
+    }
+
+    it('classifies what the SDK rejects with as a connection error', async () => {
+        const client = new Anthropic({
+            apiKey: 'sk-ant-wire-probe',
+            maxRetries: 0,
+            fetch: (async () => terminatingStreamResponse()) as unknown as typeof fetch,
+        });
+
+        const error = await client.messages
+            .stream({ model: 'claude-haiku-4-5-20251001', max_tokens: 16, messages: [{ role: 'user', content: 'hi' }] })
+            .finalMessage()
+            .then(() => { throw new Error('expected the stream to reject'); }, (e: unknown) => e);
+
+        // Guard the premise: if this stops being the terminated path, the
+        // assertion below would pass or fail for unrelated reasons.
+        expect(String(error)).toMatch(/terminated/);
+        expect(classifyTransientError(error)).toBe('connection');
+    });
+});
+
+// ===========================================================================
+// Stop reasons that end the response early
+//
+// A refusal and a context-window overflow come back as HTTP 200, sometimes with
+// no content at all and sometimes after partial text. Before these were handled
+// the empty case fell through to the content checks and raised "Expected at
+// least one text response from claude, got" — an error naming neither cause, on
+// a path that is not retryable — and the partial case was parsed or returned as
+// if it were the answer.
+//
+// stop_details and model_context_window_exceeded are both 0.124 additions;
+// 0.71.2 could not express either.
+// ===========================================================================
+
+describe('stop reasons that end the response early', () => {
+
+    const originalApiKey = process.env.ANTHROPIC_API_KEY;
+    let aiChat: typeof import('./ai.js').aiChat;
+    let respond: () => Response;
+    // Stands in for the Langfuse generation so what aiChat reports on failure
+    // can be asserted; outside a traced run the real one is a no-op.
+    const generationHandle = { end: vi.fn(), error: vi.fn() };
+
+    /** The event stream a refusal or an overflow actually produces: a normal
+     *  message_start, a text block only if the stop came mid-answer, and the
+     *  stop reason arriving on the message_delta. Built as SSE so the SDK's own
+     *  accumulation runs. */
+    const stopped = (stop_reason: string, stop_details: unknown = null, partialText?: string) => () => {
+        const ev = (type: string, data: unknown) => `event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;
+        const body = ev('message_start', {
+            type: 'message_start',
+            message: {
+                id: 'msg_probe', type: 'message', role: 'assistant',
+                model: 'claude-haiku-4-5-20251001', content: [],
+                stop_reason: null, stop_sequence: null,
+                usage: { input_tokens: 1, output_tokens: 0 },
+            },
+        }) + (partialText === undefined ? '' :
+            ev('content_block_start', { type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } })
+            + ev('content_block_delta', { type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: partialText } })
+            + ev('content_block_stop', { type: 'content_block_stop', index: 0 })
+        ) + ev('message_delta', {
+            type: 'message_delta',
+            delta: { stop_reason, stop_sequence: null, stop_details, container: null },
+            usage: { output_tokens: 0 },
+        }) + ev('message_stop', { type: 'message_stop' });
+        return new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } });
+    };
+
+    beforeAll(async () => {
+        vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => respond()));
+        process.env.ANTHROPIC_API_KEY = 'sk-ant-wire-probe';
+        vi.doMock('./observability.js', async (importOriginal) => ({
+            ...(await importOriginal<typeof import('./observability.js')>()),
+            observeGeneration: vi.fn(() => generationHandle),
+        }));
+        vi.resetModules();
+        ({ aiChat } = await import('./ai.js'));
+    });
+
+    beforeEach(() => {
+        generationHandle.end.mockClear();
+        generationHandle.error.mockClear();
+    });
+
+    afterAll(() => {
+        vi.unstubAllGlobals();
+        vi.doUnmock('./observability.js');
+        vi.resetModules();
+        if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = originalApiKey;
+    });
+
+    it('closes the generation as an error carrying the billed usage', async () => {
+        // A mid-stream refusal bills the input and the text already streamed, so
+        // the usage has to reach the trace even though the call rejects.
+        respond = stopped('refusal', { type: 'refusal', category: 'cyber', explanation: null }, 'Here is how to');
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(generationHandle.error).toHaveBeenCalledWith(err.message, expect.objectContaining({ input_tokens: 1 }));
+        expect(generationHandle.end).not.toHaveBeenCalled();
+    });
+
+    it('names the refusal and its category instead of blaming the content', async () => {
+        respond = stopped('refusal', { type: 'refusal', category: 'cyber', explanation: 'The request asks for exploit code.' });
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        // Cause, category, and the API's own explanation — and nothing the code
+        // cannot back up: callers decide whether to retry, and one of them does.
+        expect(err.message).toBe('Claude declined this request (category: cyber): The request asks for exploit code.');
+    });
+
+    it('still names a refusal that carries no stop_details', async () => {
+        respond = stopped('refusal', null);
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(err.message).toMatch(/declined this request/i);
+        expect(err.message).not.toMatch(/Expected at least one text response/);
+    });
+
+    it('says the input was too long when the context window overflowed', async () => {
+        respond = stopped('model_context_window_exceeded');
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(err.message).toBe("Input plus output hit the model's context window; the response is truncated and the input has to be smaller.");
+    });
+
+    // A guard that only fired on empty content would let the fragment through as
+    // a short answer, so the outcome is asserted as a shape: a leak shows up as
+    // `{ resolved: 'Here is how to' }` instead of an unrelated parse failure.
+    it('refuses the fragment when the classifier stops a response part-way', async () => {
+        respond = stopped('refusal', { type: 'refusal', category: 'cyber', explanation: null }, 'Here is how to');
+        const outcome = await aiChat<string>({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
+            .then((r) => ({ resolved: r.result }), (e: Error) => ({ rejected: e.message }));
+
+        expect(outcome).toEqual({ rejected: expect.stringMatching(/declined this request/i) });
+    });
+
+    it('rejects the truncated answer when the window fills mid-response', async () => {
+        respond = stopped('model_context_window_exceeded', null, '{"subjects": [');
+        const outcome = await aiChat<string>({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
+            .then((r) => ({ resolved: r.result }), (e: Error) => ({ rejected: e.message }));
+
+        expect(outcome).toEqual({ rejected: expect.stringMatching(/context window/i) });
+    });
+
+    it('leaves other empty-content responses on the original error', async () => {
+        respond = stopped('end_turn');
+        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u' })
+            .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
+
+        expect(err.message).toMatch(/Expected at least one text response/);
+    });
+});
+
+// ===========================================================================
+// Cancellation reaching the SDK. The per-task cancel signal has to arrive at the
+// transport, not just at the checkpoints between calls, and nothing types that:
+// requestOptions carries only the signal, so wherever it is dropped the code
+// still compiles and every other test still passes. It has already been deleted
+// once as apparently-dead code, and an SDK bump is the other way this plumbing
+// goes quiet — so both call sites that take it are asserted directly.
+// ===========================================================================
+
+describe('the cancel signal reaches the SDK transport', () => {
+
+    let aiChat: typeof import('./ai.js').aiChat;
+    let taskControl: typeof import('./taskControl.js');
+    let fetchMock: ReturnType<typeof vi.fn>;
+    const originalApiKey = process.env.ANTHROPIC_API_KEY;
+
+    beforeAll(async () => {
+        fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+        process.env.ANTHROPIC_API_KEY = 'sk-ant-cancel-probe';
+        // Re-imported under the stub for the same reason as the wire probe above:
+        // the client captures fetch when it is constructed at module scope.
+        vi.resetModules();
+        ({ aiChat } = await import('./ai.js'));
+        taskControl = await import('./taskControl.js');
+    });
+
+    afterAll(() => {
+        vi.unstubAllGlobals();
+        vi.resetModules();
+        if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = originalApiKey;
+    });
+
+    it.each([
+        ['the streaming call', false, '/v1/messages'],
+        ['batch creation', true, '/v1/messages/batches'],
+    ])('%s carries it, and aborting mid-flight ends the call', async (_label, batchFirst, urlFragment) => {
+        const seen: { url: string; init: any }[] = [];
+        // Hangs until the request's own signal aborts, standing in for an in-flight call.
+        fetchMock.mockImplementation((...args: any[]) => {
+            seen.push({ url: String(args[0]), init: args[1] });
+            return new Promise((_resolve, reject) => {
+                args[1]?.signal?.addEventListener('abort', () => {
+                    const error: any = new Error('The operation was aborted.');
+                    error.name = 'AbortError';
+                    reject(error);
+                }, { once: true });
+            });
+        });
+
+        const control = taskControl.newTaskControl('task_probe');
+        const settled = taskControl.runWithTaskControl(control, () => aiChat<string>({
+            model: 'claude-haiku-4-5-20251001',
+            systemPrompt: 's', userPrompt: 'u', parseJson: false, maxTokens: 16,
+            label: 'probe', batchFirst,
+        })).then(() => 'resolved' as const, (error: unknown) => error);
+
+        await vi.waitFor(() => expect(seen.some(c => c.url.includes(urlFragment))).toBe(true));
+        const { init } = seen.find(c => c.url.includes(urlFragment))!;
+
+        expect(init?.signal, 'no AbortSignal reached fetch — a cancel cannot interrupt this call').toBeDefined();
+        expect(init.signal.aborted).toBe(false);
+
+        // ...and it is this task's signal, not some unrelated one.
+        control.cancel.abort();
+        expect(init.signal.aborted, 'the signal at the transport is not the task control signal').toBe(true);
+
+        expect(await settled).not.toBe('resolved');
+    }, 20_000);
 });

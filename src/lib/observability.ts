@@ -205,8 +205,23 @@ export async function withPhaseSpan<T>(name: string, fn: () => Promise<T>): Prom
 
 export type GenerationHandle = {
     end: (params: { output: unknown; usage: Anthropic.Messages.Usage; metadata?: Record<string, unknown> }) => void;
-    error: (message: string) => void;
+    /** `usage` is for calls that failed after a response arrived: those tokens are billed regardless. */
+    error: (message: string, usage?: Anthropic.Messages.Usage) => void;
 };
+
+function usageDetails(usage: Anthropic.Messages.Usage): Record<string, number> {
+    return {
+        input: usage.input_tokens,
+        output: usage.output_tokens,
+        ...(usage.cache_read_input_tokens ? { cache_read_input_tokens: usage.cache_read_input_tokens } : {}),
+        ...(usage.cache_creation_input_tokens ? { cache_creation_input_tokens: usage.cache_creation_input_tokens } : {}),
+        // Server-side tool use ($10/1k web searches) — recorded so search-heavy
+        // calls are visible even though Langfuse doesn't price this component.
+        ...(usage.server_tool_use?.web_search_requests ? { web_search_requests: usage.server_tool_use.web_search_requests } : {}),
+        ...(usage.server_tool_use?.web_fetch_requests ? { web_fetch_requests: usage.server_tool_use.web_fetch_requests } : {}),
+        ...(usage.output_tokens_details?.thinking_tokens ? { thinking_tokens: usage.output_tokens_details.thinking_tokens } : {}),
+    };
+}
 
 const NOOP_GENERATION: GenerationHandle = { end: () => { }, error: () => { } };
 
@@ -246,21 +261,13 @@ export function observeGeneration(options: ObserveGenerationOptions): Generation
             generation.end({
                 output,
                 ...(metadata && { metadata }),
-                usageDetails: {
-                    input: usage.input_tokens,
-                    output: usage.output_tokens,
-                    ...(usage.cache_read_input_tokens ? { cache_read_input_tokens: usage.cache_read_input_tokens } : {}),
-                    ...(usage.cache_creation_input_tokens ? { cache_creation_input_tokens: usage.cache_creation_input_tokens } : {}),
-                    // Server-side tool use ($10/1k web searches) — recorded so search-heavy
-                    // calls are visible even though Langfuse doesn't price this component.
-                    ...(usage.server_tool_use?.web_search_requests ? { web_search_requests: usage.server_tool_use.web_search_requests } : {}),
-                },
+                usageDetails: usageDetails(usage),
             });
         },
-        error: (message) => {
+        error: (message, usage) => {
             if (done) return;
             done = true;
-            generation.end({ level: 'ERROR', statusMessage: message });
+            generation.end({ level: 'ERROR', statusMessage: message, ...(usage && { usageDetails: usageDetails(usage) }) });
         },
     };
 }

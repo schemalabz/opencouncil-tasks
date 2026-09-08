@@ -21,12 +21,14 @@ function duration(start?: string | Date | null, end?: string | Date | null): str
     return seconds >= 90 ? `${Math.floor(seconds / 60)}m${seconds % 60}s` : `${seconds}s`;
 }
 
-function formatUsage(usage?: Record<string, number> | null): string {
+export function formatUsage(usage?: Record<string, number> | null): string {
     if (!usage) return '';
     const parts = [`${(usage.input ?? 0).toLocaleString()} in`, `${(usage.output ?? 0).toLocaleString()} out`];
     if (usage.cache_creation_input_tokens) parts.push(`${usage.cache_creation_input_tokens.toLocaleString()} cache-write`);
     if (usage.cache_read_input_tokens) parts.push(`${usage.cache_read_input_tokens.toLocaleString()} cache-read`);
     if (usage.web_search_requests) parts.push(`${usage.web_search_requests} searches`);
+    if (usage.web_fetch_requests) parts.push(`${usage.web_fetch_requests} fetches`);
+    if (usage.thinking_tokens) parts.push(`${usage.thinking_tokens.toLocaleString()} thinking`);
     return parts.join(', ');
 }
 

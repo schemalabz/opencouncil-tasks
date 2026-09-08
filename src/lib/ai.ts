@@ -25,7 +25,9 @@ export const NO_USAGE: Anthropic.Messages.Usage = {
     cache_read_input_tokens: null,
     cache_creation: null,
     server_tool_use: null,
-    service_tier: null
+    service_tier: null,
+    inference_geo: null,
+    output_tokens_details: null
 };
 export const NO_USAGE_STATS: UsageStats = { usage: NO_USAGE };
 export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.Messages.Usage): Anthropic.Messages.Usage => ({
@@ -36,8 +38,19 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
     cache_creation: null,  // Don't aggregate cache_creation details
     server_tool_use: {
         web_search_requests: (usage.server_tool_use?.web_search_requests || 0) + (otherUsage.server_tool_use?.web_search_requests || 0),
+        web_fetch_requests: (usage.server_tool_use?.web_fetch_requests || 0) + (otherUsage.server_tool_use?.web_fetch_requests || 0),
     },
-    service_tier: usage.service_tier || otherUsage.service_tier  // Take the first non-null tier
+    service_tier: usage.service_tier || otherUsage.service_tier,  // Take the first non-null tier
+    inference_geo: usage.inference_geo || otherUsage.inference_geo,  // Take the first non-null geo
+    // Sums like the other token counters, but stays null when neither side
+    // reported any — so "no thinking tokens" and "the model never told us"
+    // don't collapse into the same zero.
+    output_tokens_details: (usage.output_tokens_details || otherUsage.output_tokens_details)
+        ? {
+            thinking_tokens: (usage.output_tokens_details?.thinking_tokens || 0)
+                + (otherUsage.output_tokens_details?.thinking_tokens || 0),
+        }
+        : null
 });
 
 export function formatUsage(usage: Anthropic.Messages.Usage): string {
@@ -81,7 +94,7 @@ type AiChatOptions = {
     parseJson?: boolean;
     maxTokens?: number;
     tools?: Anthropic.Messages.Tool[];
-    outputFormat?: Anthropic.Beta.Messages.BetaJSONOutputFormat;
+    outputFormat?: Anthropic.Messages.JSONOutputFormat;
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
     batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
     label?: string;  // Observability: generation name shown in Langfuse (defaults to "aiChat")
@@ -207,7 +220,7 @@ export async function executeBatch(
             custom_id: 'request-1',
             params: requestParams,
         }],
-    });
+    }, requestOptions);
 
     console.log(`Batch created: ${batch.id}, polling for result...`);
 
@@ -315,15 +328,6 @@ export function continuationPrompt(partial: string): string {
     return `Your previous response was cut off by the output token limit. It currently ends with:\n${tail}\n\nContinue EXACTLY from where it stopped: output only the remaining content, completing the line you were in the middle of if it was cut mid-line. Do not repeat anything already written, do not add any preamble or commentary, and do not restart any numbering or structure from the beginning.`;
 }
 
-/**
- * `output_config` is not declared on the SDK's stable request type yet (the
- * installed 0.71.2 only types it under the beta namespace, and even there
- * without a `format` field), so this is spread into the params object to reach
- * the wire untyped. Inline it once the SDK is bumped far enough to type it.
- */
-export function structuredOutputParams(outputFormat?: Anthropic.Beta.Messages.BetaJSONOutputFormat) {
-    return outputFormat ? { output_config: { format: outputFormat } } : {};
-}
 
 export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
@@ -385,7 +389,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             // Opus 4.7 rejects the temperature parameter; older models still accept it.
             ...(resolvedModel.startsWith("claude-opus-4-7") ? {} : { temperature: 0 }),
             ...(tools && { tools }),
-            ...structuredOutputParams(outputFormat)
+            ...(outputFormat && { output_config: { format: outputFormat } })
         };
 
         generation = observeGeneration({
@@ -460,6 +464,29 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         }
 
         console.log(`Claude stop_reason: ${response.stop_reason}, tokens: ${response.usage.output_tokens}/${maxTokens}`);
+
+        // Checked before the content checks: either stop can arrive after partial
+        // text (the classifier cuts in mid-stream; the window fills mid-answer), and
+        // that fragment must not be parsed or returned as the answer. Left to the
+        // content checks, an empty response surfaced as "Expected at least one text
+        // response", sending whoever is debugging after a parsing problem instead.
+        // Billed even though the call fails, so the usage goes on the generation
+        // here; the catch below then finds it already closed.
+        const stopError = (message: string) => {
+            generation?.error(message, response.usage);
+            return new Error(message);
+        };
+        if (response.stop_reason === "refusal") {
+            const details = response.stop_details;
+            const category = details?.category ? ` (category: ${details.category})` : '';
+            const explanation = details?.explanation ? `: ${details.explanation}` : '.';
+            throw stopError(`Claude declined this request${category}${explanation}`);
+        }
+        if (response.stop_reason === "model_context_window_exceeded") {
+            throw stopError(
+                `Input plus output hit the model's context window; the response is truncated and the input has to be smaller.`
+            );
+        }
 
         // When using tools, response can have multiple content blocks
         // Extract all text blocks

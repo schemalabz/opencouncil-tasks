@@ -16,7 +16,7 @@
     "smoke": "npm run build && node dist/cli.js smoke"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
+    "@anthropic-ai/sdk": "^0.124.0",
     "@remotion/captions": "^4.0.516",
     "@schemalabs/diavgeia-cli": "^0.1.0",
     "aws-sdk": "^2.1687.0",
