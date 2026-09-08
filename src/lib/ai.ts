@@ -470,14 +470,20 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         // that fragment must not be parsed or returned as the answer. Left to the
         // content checks, an empty response surfaced as "Expected at least one text
         // response", sending whoever is debugging after a parsing problem instead.
+        // Billed even though the call fails, so the usage goes on the generation
+        // here; the catch below then finds it already closed.
+        const stopError = (message: string) => {
+            generation?.error(message, response.usage);
+            return new Error(message);
+        };
         if (response.stop_reason === "refusal") {
             const details = response.stop_details;
             const category = details?.category ? ` (category: ${details.category})` : '';
             const explanation = details?.explanation ? `: ${details.explanation}` : '.';
-            throw new Error(`Claude declined this request${category}${explanation}`);
+            throw stopError(`Claude declined this request${category}${explanation}`);
         }
         if (response.stop_reason === "model_context_window_exceeded") {
-            throw new Error(
+            throw stopError(
                 `Input plus output hit the model's context window; the response is truncated and the input has to be smaller.`
             );
         }

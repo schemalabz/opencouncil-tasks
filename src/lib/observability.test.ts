@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // The only real obstacle to testing runWithTaskTrace is the Langfuse client
 // construction; the trace object it hands back is a plain recorder.
-const trace = { update: vi.fn(), event: vi.fn() };
+const generation = { end: vi.fn() };
+const trace = { update: vi.fn(), event: vi.fn(), generation: vi.fn(() => generation) };
 const traceFactory = vi.fn(() => trace);
 vi.mock('langfuse', () => ({
     Langfuse: class {
@@ -12,7 +13,8 @@ vi.mock('langfuse', () => ({
     },
 }));
 
-const { runWithTaskTrace } = await import('./observability.js');
+const { runWithTaskTrace, observeGeneration } = await import('./observability.js');
+const { NO_USAGE } = await import('./ai.js');
 const { TaskCancelledError, newTaskControl, runWithTaskControl } = await import('./taskControl.js');
 
 const OPTS = { taskType: 'test', version: 1, input: {}, callbackUrl: 'http://cb' };
@@ -48,5 +50,28 @@ describe('runWithTaskTrace failure tagging', () => {
         )).rejects.toThrow();
         expect(tagsOf()).toContain('status:cancelled');
         expect(tagsOf()).not.toContain('status:error');
+    });
+});
+
+describe('observeGeneration on a call that fails after its response arrived', () => {
+    beforeEach(() => {
+        vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk');
+        vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk');
+        generation.end.mockClear();
+    });
+
+    it('keeps the usage on a generation closed with an error', async () => {
+        // A refusal after partial text or a context-window stop is billed; closing
+        // the generation as an error must not drop those tokens from the trace.
+        await runWithTaskTrace(OPTS, async () => {
+            observeGeneration({ name: 'g', model: 'm', input: [], systemPrompt: 's' })
+                .error('Claude declined this request.', { ...NO_USAGE, input_tokens: 12, output_tokens: 3 });
+        });
+
+        expect(generation.end).toHaveBeenCalledWith(expect.objectContaining({
+            level: 'ERROR',
+            statusMessage: 'Claude declined this request.',
+            usageDetails: expect.objectContaining({ input: 12, output: 3 }),
+        }));
     });
 });
