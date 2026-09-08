@@ -220,7 +220,7 @@ export async function executeBatch(
             custom_id: 'request-1',
             params: requestParams,
         }],
-    });
+    }, requestOptions);
 
     console.log(`Batch created: ${batch.id}, polling for result...`);
 

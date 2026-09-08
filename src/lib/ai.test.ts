@@ -598,3 +598,75 @@ describe('stop reasons that end the response early', () => {
         expect(err.message).toMatch(/Expected at least one text response/);
     });
 });
+
+// ===========================================================================
+// Cancellation reaching the SDK. The per-task cancel signal has to arrive at the
+// transport, not just at the checkpoints between calls, and nothing types that:
+// requestOptions carries only the signal, so wherever it is dropped the code
+// still compiles and every other test still passes. It has already been deleted
+// once as apparently-dead code, and an SDK bump is the other way this plumbing
+// goes quiet — so both call sites that take it are asserted directly.
+// ===========================================================================
+
+describe('the cancel signal reaches the SDK transport', () => {
+
+    let aiChat: typeof import('./ai.js').aiChat;
+    let taskControl: typeof import('./taskControl.js');
+    let fetchMock: ReturnType<typeof vi.fn>;
+    const originalApiKey = process.env.ANTHROPIC_API_KEY;
+
+    beforeAll(async () => {
+        fetchMock = vi.fn();
+        vi.stubGlobal('fetch', fetchMock);
+        process.env.ANTHROPIC_API_KEY = 'sk-ant-cancel-probe';
+        // Re-imported under the stub for the same reason as the wire probe above:
+        // the client captures fetch when it is constructed at module scope.
+        vi.resetModules();
+        ({ aiChat } = await import('./ai.js'));
+        taskControl = await import('./taskControl.js');
+    });
+
+    afterAll(() => {
+        vi.unstubAllGlobals();
+        vi.resetModules();
+        if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = originalApiKey;
+    });
+
+    it.each([
+        ['the streaming call', false, '/v1/messages'],
+        ['batch creation', true, '/v1/messages/batches'],
+    ])('%s carries it, and aborting mid-flight ends the call', async (_label, batchFirst, urlFragment) => {
+        const seen: { url: string; init: any }[] = [];
+        // Hangs until the request's own signal aborts, standing in for an in-flight call.
+        fetchMock.mockImplementation((...args: any[]) => {
+            seen.push({ url: String(args[0]), init: args[1] });
+            return new Promise((_resolve, reject) => {
+                args[1]?.signal?.addEventListener('abort', () => {
+                    const error: any = new Error('The operation was aborted.');
+                    error.name = 'AbortError';
+                    reject(error);
+                }, { once: true });
+            });
+        });
+
+        const control = taskControl.newTaskControl('task_probe');
+        const settled = taskControl.runWithTaskControl(control, () => aiChat<string>({
+            model: 'claude-haiku-4-5-20251001',
+            systemPrompt: 's', userPrompt: 'u', parseJson: false, maxTokens: 16,
+            label: 'probe', batchFirst,
+        })).then(() => 'resolved' as const, (error: unknown) => error);
+
+        await vi.waitFor(() => expect(seen.some(c => c.url.includes(urlFragment))).toBe(true));
+        const { init } = seen.find(c => c.url.includes(urlFragment))!;
+
+        expect(init?.signal, 'no AbortSignal reached fetch — a cancel cannot interrupt this call').toBeDefined();
+        expect(init.signal.aborted).toBe(false);
+
+        // ...and it is this task's signal, not some unrelated one.
+        control.cancel.abort();
+        expect(init.signal.aborted, 'the signal at the transport is not the task control signal').toBe(true);
+
+        expect(await settled).not.toBe('resolved');
+    }, 20_000);
+});
