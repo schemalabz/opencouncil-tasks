@@ -166,6 +166,36 @@ describe("assignTimings", () => {
     });
 });
 
+    it("keeps one Scribe word's span whole when an unanchored token splits it", () => {
+        // The shape that broke three of 250 benchmark windows on 2026-09-08.
+        // Two tokens anchor to the SAME Scribe word with an unanchored token
+        // between them. Grouping only consecutive tokens handed that word's span
+        // out twice, so the second copy started before the first one ended and
+        // the timeline jumped backwards by the width of the word.
+        const result = assignTimings({
+            tokens: [
+                token({ text: "συνεδρίαση", src: "scribe", src_word: 1 }),
+                token({ text: "ε", src: "ours", src_word: 0, agreement: 0.34 }),
+                token({ text: "συνεδρίαση", src: "scribe", src_word: 1 }),
+                token({ text: "λήγει", src: "scribe", src_word: 2 }),
+            ],
+            words: words({
+                scribe: scribeWords(["πρώτη", 20.0, 25.979], ["συνεδρίαση", 25.979, 28.099], ["λήγει", 28.899, 29.079]),
+                ours: [{ raw: "ε", start: 27.0, end: 27.1, conf: 0.3 }],
+            }),
+        });
+
+        const starts = result.words.map((w) => w.start);
+        const ends = result.words.map((w) => w.end);
+        for (let i = 1; i < starts.length; i++) {
+            expect(starts[i], `word ${i} starts before word ${i - 1} ends`).toBeGreaterThanOrEqual(ends[i - 1] - 1e-9);
+        }
+        // All three sit inside the one Scribe word they share.
+        expect(starts[0]).toBeCloseTo(25.979, 3);
+        expect(ends[2]).toBeCloseTo(28.099, 3);
+        expect(result.words[3]).toMatchObject({ start: 28.899, timingSource: "scribe-native" });
+    });
+
 describe("assertTimingInvariants", () => {
     const word = (start: number, end: number): TimedWord => ({
         word: "λ", start, end, confidence: 1, timingSource: "scribe-native", timingEstimated: false,

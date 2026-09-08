@@ -73,9 +73,20 @@ export function assignTimings(input: TimingInput): TimingResult {
         }
         let j = i;
         while (j + 1 < drafts.length) {
-            const next = anchorOf(drafts[j + 1].token);
-            if (!next || next.index !== anchor.index || next.source !== anchor.source) break;
-            j++;
+            // Look past tokens with no anchor of their own. If the SAME Scribe
+            // word anchors again after them, they sit inside that word, not in a
+            // gap between two words -- and treating them as a gap is what broke
+            // three of 250 benchmark windows: the anchor's span was handed out
+            // twice, once before the unanchored token and once after, so the
+            // timeline jumped backwards by the width of the word (measured
+            // 2026-09-08, up to 3.4 s). Absorbing them keeps one span, split
+            // across everything it covers, and monotonic by construction.
+            let k = j + 1;
+            while (k < drafts.length && !anchorOf(drafts[k].token)) k++;
+            if (k >= drafts.length) break;
+            const next = anchorOf(drafts[k].token)!;
+            if (next.index !== anchor.index || next.source !== anchor.source) break;
+            j = k;
         }
         const word = scribeWords[anchor.index];
         distribute(drafts, i, j, word.start!, word.end!, anchor.source);
@@ -246,7 +257,14 @@ export function assertTimingInvariants(words: TimedWord[], segmentDurationSec?: 
             throw new FusionEngineError(`word ${i} ends before it starts (${word.start} > ${word.end})`, "timing_invariant");
         }
         if (word.start < previousEnd - EPSILON) {
-            throw new FusionEngineError(`word ${i} starts at ${word.start}, overlapping the previous word ending at ${previousEnd}`, "timing_invariant");
+            // Name both timing sources. "Overlapping" alone cannot distinguish a
+            // bad anchor from a bad interpolation, and this error is the only
+            // thing that survives the request.
+            const previous = words[i - 1];
+            throw new FusionEngineError(
+                `word ${i} starts at ${word.start} (${word.timingSource}), overlapping the previous `
+                + `word ending at ${previousEnd} (${previous?.timingSource})`,
+                "timing_invariant");
         }
         if (word.start < -EPSILON) {
             throw new FusionEngineError(`word ${i} starts before the segment (${word.start})`, "timing_invariant");
