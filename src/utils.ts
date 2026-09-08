@@ -45,6 +45,21 @@ export function extractMeetingId(callbackUrl: string): string {
     return match ? `${match[1]}/${match[2]}` : 'unknown';
 }
 
+/**
+ * Extract the caller's task status id from a callback URL.
+ * The same id addresses the task on this server, so the caller and the server
+ * never hold two identities for one task.
+ * e.g. ".../meetings/may18_3_2026/taskStatuses/clx123?token=..." → "clx123"
+ * Returns null when the URL carries no such id — the CLI and the observability
+ * check have no opencouncil task status behind them. The id also becomes a path
+ * parameter of /tasks/{taskId}/cancel, so only a URL-safe one is accepted;
+ * cuids and uuids both qualify.
+ */
+export function taskStatusIdFromUrl(callbackUrl: string): string | null {
+    const match = callbackUrl.match(/\/taskStatuses\/([A-Za-z0-9_-]+)(?:[?#]|$)/);
+    return match ? match[1] : null;
+}
+
 export const getExpressAppWithCallbacks = (): express.Express => {
     const app = express();
     const port = process.env.PORT || 3000;

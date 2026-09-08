@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { IdCompressor, validateUrl, validateYoutubeUrl, formatTime, generateSubjectUUID } from './utils.js';
+import { IdCompressor, validateUrl, validateYoutubeUrl, formatTime, generateSubjectUUID, taskStatusIdFromUrl } from './utils.js';
 
 describe('IdCompressor', () => {
   it('round-trips: add → getShort → getLong', () => {
@@ -171,3 +171,22 @@ describe('generateSubjectUUID', () => {
   });
 });
 
+
+describe('taskStatusIdFromUrl', () => {
+  it.each([
+    ['a plain callback URL', 'https://opencouncil.gr/api/cities/athens/meetings/may18_3_2026/taskStatuses/clx123', 'clx123'],
+    ['a callback URL with a token', 'https://opencouncil.gr/api/cities/athens/meetings/may18_3_2026/taskStatuses/clx123?token=abc', 'clx123'],
+  ])('reads the task status id from %s', (_label, url, expected) => {
+    expect(taskStatusIdFromUrl(url)).toBe(expected);
+  });
+
+  it.each([
+    ['an empty string', ''],
+    ['a URL with no taskStatuses segment', 'http://localhost:3000/callback/cities/dev/meetings/observability-check'],
+    ['a taskStatuses segment with no id', 'https://opencouncil.gr/api/cities/a/meetings/b/taskStatuses/'],
+    ['a URL with segments after the id', 'https://opencouncil.gr/api/cities/a/meetings/b/taskStatuses/clx123/extra'],
+    ['an id that would not survive a URL round-trip', 'https://opencouncil.gr/api/cities/a/meetings/b/taskStatuses/a%20b'],
+  ])('returns null for %s', (_label, url) => {
+    expect(taskStatusIdFromUrl(url)).toBeNull();
+  });
+});

@@ -17,15 +17,6 @@ export type StoredCallback = {
 
 const SUBDIR = 'failed-callbacks';
 
-/** The task status id is the last path segment of the callback URL. */
-export const taskStatusIdFromUrl = (callbackUrl: string): string => {
-    try {
-        return new URL(callbackUrl).pathname.split('/').filter(Boolean).pop() || 'unknown';
-    } catch {
-        return 'unknown';
-    }
-};
-
 const safe = (value: string): string => value.replace(/[^\w.-]/g, '-');
 
 /**

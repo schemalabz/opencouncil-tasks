@@ -1,5 +1,5 @@
-import { saveFailedCallback, removeFailedCallback, taskStatusIdFromUrl } from './failedCallbackStore.js';
-import { extractMeetingId } from '../utils.js';
+import { saveFailedCallback, removeFailedCallback } from './failedCallbackStore.js';
+import { extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
 
 export type PostResult = { ok: boolean; status?: number; error?: string };
 
@@ -45,7 +45,7 @@ export const deliverTerminalCallback = async (
     const sleep = deps.sleep ?? defaultSleep;
     const save = deps.save ?? saveFailedCallback;
 
-    const taskStatusId = taskStatusIdFromUrl(callbackUrl);
+    const taskStatusId = taskStatusIdFromUrl(callbackUrl) ?? 'unknown';
     let attempts = 0;
     let last: PostResult = { ok: false };
     // Once set, the payload is on disk; further persists overwrite this same file instead
