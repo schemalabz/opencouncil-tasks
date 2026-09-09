@@ -117,7 +117,7 @@ All four image checks were run and passed on 2026-09-09.
 | `npm run typecheck` | 29 errors | 29 errors, **none in `src/lib/fusion/`** |
 | `npx tsc --outDir /tmp/x` (declaration emit) | +7 `TS4094` | 0 `TS4094` |
 | `docker build .` | **fails** at `npm run build` | **succeeds** |
-| `npm run test:fusion-route-gate` | see below | see below |
+| `npm run test:fusion-route-gate` | not re-measured | **15 passed, 0 failed** (1522 s) |
 
 **The pre-existing failures are a stale local `node_modules`, not the repo.**
 `@anthropic-ai/sdk` is installed at `0.71.2` while `package-lock.json` pins
@@ -131,12 +131,29 @@ them; it was not run here because it would have wiped `node_modules` under a
 long-running gate. The Docker build installs from the lock, and it now succeeds
 — which is the evidence that these are local.
 
+### Route gate
+
+`npm run test:fusion-route-gate` on the final commit: **15 passed, 0 failed**, 1522 s.
+Note it is 15 tests, not the 13 from `52b33a2`; two were added later on this branch.
+The scorer's verdict:
+
+```json
+{"ok":true,"n_results":391,"n_expected":391,
+ "sidn":[5030,1861,5520,110694],"wer":0.11212,
+ "frozen_sidn":[5036,1848,5519,110694],"frozen_wer":0.11205,
+ "delta_wer":0.00007,"delta_gate":0.002,
+ "n_hard_mismatches":0,"n_chunking_divergences":2,"total_extra_errors":8,
+ "largest_window_share_of_net_delta":1.25,
+ "missing_ids":[],"unexpected_ids":[],"duplicate_ids":[]}
+```
+
+Zero hard mismatches: the production route reproduces fuse.py's text exactly for
+every window. The two chunking divergences and the +0.00007 WER are the frozen
+`max_tokens=120` cost, well inside the pre-declared 0.002 budget, and they are
+not new to this change.
+
 ## What I could not verify, and why
 
-- **The route gate's 13/13.** It replays the frozen 391-window bundle through
-  the real server, spawning `fuse.py` per window, and takes well over 20 minutes
-  on this machine; its result is recorded in the PR thread rather than here. It
-  is the one check that must not be skipped before merge: `npm run test:fusion-route-gate`.
 - **The staging run itself.** Nothing here has touched a real meeting. It needs
   credentials, a staging host and a chosen meeting — the open questions in the
   plan. The rollout steps are in the plan, in order.
@@ -246,8 +263,9 @@ against 0.124.0 locked, and `mammoth`, `@remotion/captions`, `ass-compiler` and
 through `npm run build`, so I have not seen these failures anywhere but this
 checkout. Worth a second pair of eyes if they show up in CI.
 
-`npm run test:fusion-route-gate` has to be run before merge. Its result is in the
-thread.
+`npm run test:fusion-route-gate` passes 15/15 on the final commit (1522 s). The
+scorer reports `ok:true`, zero hard mismatches against fuse.py, and WER 0.11212
+against the frozen 0.11205, inside the pre-declared 0.002 budget.
 
 ### Still needed before staging can run
 
