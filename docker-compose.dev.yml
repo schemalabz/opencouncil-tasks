@@ -5,6 +5,10 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./src:/app/src
+      # The fuse core, spawned as a subprocess by src/lib/fusion/fusePy.ts.
+      # Dockerfile.dev copies no source at all, so without this mount
+      # FUSION_MODE=on has nothing to run.
+      - ./fusion:/app/fusion
       - ./.env:/app/.env
       - ./tsconfig.json:/app/tsconfig.json
       - ./secrets:/app/secrets

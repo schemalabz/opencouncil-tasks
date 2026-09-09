@@ -10,9 +10,14 @@ COPY package.json package-lock.json ./
 # Install all dependencies (including dev dependencies)
 # Using cache mount for faster builds - this persists npm cache across builds
 # See: https://docs.docker.com/build/cache/
+# python3: runtime dependency of the fusion provider, same as the production
+# image. The fuse core is stdlib-only, so there is no pip step. Without it, dev
+# and production would differ in exactly the way the 2026-09-09 decision said
+# they must not.
 RUN --mount=type=cache,target=/root/.npm \
     npm ci && \
-    apk add --no-cache ffmpeg
+    apk add --no-cache ffmpeg python3 && \
+    python3 -c "import sys; assert sys.version_info >= (3, 11), sys.version"
 
 # Expose the port the app runs on
 EXPOSE ${PORT}
