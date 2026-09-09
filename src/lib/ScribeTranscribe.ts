@@ -235,7 +235,15 @@ type TranscribeRequest = {
     reject: (error: Error) => void;
 }
 
-class ScribeTranscriber {
+/**
+ * Exported for its *type*, not to be instantiated twice: `scribeTranscriber`
+ * below is the one instance, and its in-process concurrency cap only means
+ * anything while there is exactly one. It has to be exported because
+ * `declaration: true` cannot emit a `.d.ts` for an exported value whose class
+ * it is not allowed to name — which failed the image build (TS4094), not the
+ * `tsc --noEmit` typecheck, since only declaration emit needs the name.
+ */
+export class ScribeTranscriber {
     private queue: TranscribeRequest[] = [];
     private activeTranscriptions = 0;
     // When ElevenLabs reports account saturation (429), every request holds
