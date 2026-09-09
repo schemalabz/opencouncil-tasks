@@ -302,6 +302,9 @@ describe("RawTranscriptLog retention", () => {
 
     it("touches nothing that is not a record", async () => {
         const foreign = await writeAged("app.log", 400);
+        // Someone else's gzipped JSON in a shared directory. The name is what
+        // tells them apart: a record always starts with the audio sha256.
+        const otherJson = await writeAged("metrics-2026-08.json.gz", 400);
         const nested = path.join(dir, "keep");
         await fsp.mkdir(nested, { recursive: true });
 
@@ -309,7 +312,18 @@ describe("RawTranscriptLog retention", () => {
         await log.write(attempt());
 
         expect(fs.existsSync(foreign)).toBe(true);
+        expect(fs.existsSync(otherJson)).toBe(true);
         expect(fs.existsSync(nested)).toBe(true);
+    });
+
+    it("expires a temp file left by a write that died mid-way", async () => {
+        // Same speech as a record, so retention has to reach it as well.
+        const orphan = await writeAged(`${"a".repeat(64)}.abandoned.json.gz.deadbeef.tmp`, 400);
+
+        const log = new RawTranscriptLog(dir, { retentionDays: 14 });
+        await log.write(attempt());
+
+        expect(fs.existsSync(orphan)).toBe(false);
     });
 
     it("sweeps once per interval, not once per segment", async () => {

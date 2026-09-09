@@ -31,8 +31,6 @@ import type { FusionArm, NormalizedWord, ProviderId } from "./types.js";
 
 export const RAW_LOG_SCHEMA = "oc-fusion-raw/1";
 
-const gzip = promisify(zlib.gzip);
-
 /**
  * Written compact and gzipped, because the three streams are mostly the same
  * words three times over and a word record is short. Measured on 2.5 hours of
@@ -45,6 +43,7 @@ const gzip = promisify(zlib.gzip);
  * valve below measures, so a record is capped by its content and not by how
  * well that content happened to compress.
  */
+const gzip = promisify(zlib.gzip);
 
 /** Default valve, not a routine path: a 20-minute segment is about 0.6 MB. */
 const DEFAULT_MAX_BYTES = 32 * 1024 * 1024;
@@ -58,6 +57,20 @@ const DEFAULT_RETENTION_DAYS = 14;
 
 /** The sweep is housekeeping, not part of writing a record. Hourly is enough. */
 const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+
+/**
+ * What this class writes, and nothing else. The directory may be shared with
+ * other logs, and a sweep that took every `*.json.gz` in it would delete data
+ * it never created. A record's name always begins with the audio sha256.
+ */
+const RECORD_NAME = /^[0-9a-f]{64}\.[^/]+\.json\.gz$/;
+
+/**
+ * A write that died between writeFile and rename leaves this behind. It holds
+ * the same speech as a record, so retention has to reach it too, or the
+ * expiry guarantee has a hole in it.
+ */
+const ABANDONED_TMP = /^[0-9a-f]{64}\.[^/]+\.json\.gz\.[0-9a-f]+\.tmp$/;
 
 export type RawStreamStatus = "ok" | "empty" | "failed";
 
@@ -185,7 +198,7 @@ export class RawTranscriptLog {
      * directory scan, and a deployment that never restarts still expires its
      * speech.
      *
-     * Only files this class writes are considered: a directory it shares with
+     * Only names this class writes are considered: a directory it shares with
      * other logs must not lose them. Failure is silent by design, exactly like
      * a failed write — deleting is housekeeping, and housekeeping must never
      * turn a transcription into an error.
@@ -200,7 +213,7 @@ export class RawTranscriptLog {
             const names = await fsp.readdir(dir);
             const cutoff = now - this.retentionMs;
             for (const name of names) {
-                if (!name.endsWith(".json.gz")) continue;
+                if (!RECORD_NAME.test(name) && !ABANDONED_TMP.test(name)) continue;
                 const file = path.join(dir, name);
                 try {
                     const stat = await fsp.stat(file);
