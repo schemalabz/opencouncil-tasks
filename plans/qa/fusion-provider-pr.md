@@ -163,8 +163,9 @@ not new to this change.
 - **RunPod cold start inside the 240 s deadline.** The most likely cause of an
   aux-provider timeout on a real meeting, and it cannot be measured without
   calling the real endpoint.
-- **Whether `/app/logs` has room for the raw log.** ~0.6 MB per segment attempt,
-  ~30 MB per meeting, with no retention policy. Open question 1 in the plan.
+- **Whether `/app/logs` has room for the raw log.** Gzipped, a 2.5-hour meeting
+  is about 0.75 MB, or 1.5 MB in shadow mode. Nothing deletes it yet, which is
+  the remaining half of open question 1.
 - **Shadow mode writes two raw records per segment** (one for the Scribe-only
   answer, one for the background fusion), which doubles disk in that mode. It is
   deliberate — a record whose existence depends on the mode loses evidence — but
@@ -214,9 +215,9 @@ successful fusion.
 
 ### Keeping the three raw transcripts
 
-`FUSION_RAW_LOG_DIR` (unset by default) gets one JSON file per segment attempt
-holding the three normalized word streams, sharing its id with the existing
-trace. Provider error strings and raw provider responses are deliberately left
+`FUSION_RAW_LOG_DIR` (unset by default) gets one gzipped JSON file per segment
+attempt holding the three normalized word streams, sharing its id with the
+existing trace. Read one with `gunzip -c <file> | jq`. Provider error strings and raw provider responses are deliberately left
 out: a vendor error can carry a signed URL, and errors already live in the
 trace. The directory holds transcript text, so it points at a mounted volume and
 is gitignored, on the same reasoning as the 2026-07-21 history purge.

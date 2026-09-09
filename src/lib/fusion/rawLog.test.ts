@@ -3,6 +3,7 @@ import fs from "fs";
 import fsp from "fs/promises";
 import os from "os";
 import path from "path";
+import zlib from "zlib";
 import { RawTranscriptLog, type RawTranscriptAttempt } from "./rawLog.js";
 import type { NormalizedWord, ProviderId } from "./types.js";
 
@@ -60,8 +61,13 @@ afterEach(async () => {
 function readOnly(logDir: string): unknown[] {
     if (!fs.existsSync(logDir)) return [];
     return fs.readdirSync(logDir)
-        .filter((name) => name.endsWith(".json"))
-        .map((name) => JSON.parse(fs.readFileSync(path.join(logDir, name), "utf8")));
+        .filter((name) => name.endsWith(".json.gz"))
+        .map((name) => JSON.parse(readRecord(path.join(logDir, name))));
+}
+
+/** A record is gzipped on disk, so every assertion about its text goes through here. */
+function readRecord(file: string): string {
+    return zlib.gunzipSync(fs.readFileSync(file)).toString("utf8");
 }
 
 describe("RawTranscriptLog when it is not configured", () => {
@@ -111,10 +117,31 @@ describe("RawTranscriptLog record", () => {
         const log = new RawTranscriptLog(dir);
         await log.write(attempt());
 
-        const [name] = fs.readdirSync(dir).filter((n) => n.endsWith(".json"));
-        expect(name).toBe(`${"a".repeat(64)}.11111111-2222-3333-4444-555555555555.json`);
+        const [name] = fs.readdirSync(dir).filter((n) => n.endsWith(".json.gz"));
+        expect(name).toBe(`${"a".repeat(64)}.11111111-2222-3333-4444-555555555555.json.gz`);
         // No temp file survives a successful write.
         expect(fs.readdirSync(dir).filter((n) => n.includes(".tmp"))).toEqual([]);
+    });
+
+    it("stores the record gzipped, and much smaller than the text it holds", async () => {
+        const log = new RawTranscriptLog(dir);
+        // Repetition is what a council transcript looks like: three systems
+        // emitting mostly the same words, and those words drawn from a small
+        // vocabulary. A record that is not compressed would not show it.
+        const many = Array.from({ length: 2000 }, (_, i) => (i % 2 ? "συνεδριάζει" : "επιτροπή"));
+        await log.write(attempt({ systems: [stream("scribe", many), stream("soniox", many), stream("ours", many)] }));
+
+        const file = path.join(dir, fs.readdirSync(dir)[0]);
+        const onDisk = fs.readFileSync(file);
+        expect(onDisk[0]).toBe(0x1f);
+        expect(onDisk[1]).toBe(0x8b);
+
+        const text = readRecord(file);
+        expect(onDisk.length * 4).toBeLessThan(Buffer.byteLength(text, "utf8"));
+        // Round trip, so compression is not hiding a truncated record.
+        const record = JSON.parse(text);
+        expect(record.systems.map((s: any) => s.wordCount)).toEqual([2000, 2000, 2000]);
+        expect(record.systems[0].words[1999].raw).toBe("συνεδριάζει");
     });
 
     it("records a provider that produced nothing without discarding the ones that did", async () => {
@@ -150,7 +177,7 @@ describe("RawTranscriptLog record", () => {
             ],
         }));
 
-        const serialized = fs.readFileSync(path.join(dir, fs.readdirSync(dir)[0]), "utf8");
+        const serialized = readRecord(path.join(dir, fs.readdirSync(dir)[0]));
         expect(serialized).not.toContain("SECRET");
         expect(serialized).not.toContain("token=");
         expect(serialized).not.toContain("\"error\"");

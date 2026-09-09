@@ -1,6 +1,8 @@
 import fsp from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import zlib from "zlib";
+import { promisify } from "util";
 import type { FusionArm, NormalizedWord, ProviderId } from "./types.js";
 
 /**
@@ -28,6 +30,21 @@ import type { FusionArm, NormalizedWord, ProviderId } from "./types.js";
  */
 
 export const RAW_LOG_SCHEMA = "oc-fusion-raw/1";
+
+const gzip = promisify(zlib.gzip);
+
+/**
+ * Written compact and gzipped, because the three streams are mostly the same
+ * words three times over and a word record is short. Measured on 2.5 hours of
+ * audio at the rate the benchmark saw (9,800 words per audio hour per system):
+ * 9.7 MB indented, 4.9 MB compact, 0.75 MB compact and gzipped. Shadow mode
+ * writes two records per segment, so the number that reaches a disk quota is
+ * the last one doubled.
+ *
+ * Read one with `gunzip -c <file> | jq`. The uncompressed size is what the
+ * valve below measures, so a record is capped by its content and not by how
+ * well that content happened to compress.
+ */
 
 /** Default valve, not a routine path: a 20-minute segment is about 0.6 MB. */
 const DEFAULT_MAX_BYTES = 32 * 1024 * 1024;
@@ -118,20 +135,20 @@ export class RawTranscriptLog {
         let file = "";
         try {
             const record = this.buildRecord(attempt);
-            let body = JSON.stringify(record, null, 2);
+            let body = JSON.stringify(record);
             if (Buffer.byteLength(body, "utf8") > this.maxBytes) {
                 // Explicit marker, never a silent shortening: a record with
                 // half a transcript in it would read as a complete one.
-                body = JSON.stringify(withoutWords(record), null, 2);
+                body = JSON.stringify(withoutWords(record));
             }
 
             // The name carries only hashes and an id. No word ever reaches a
             // filename, where it would show up in every directory listing and
             // every backup manifest.
-            file = path.join(dir, `${attempt.audioSha256}.${attempt.attemptId}.json`);
+            file = path.join(dir, `${attempt.audioSha256}.${attempt.attemptId}.json.gz`);
             await fsp.mkdir(dir, { recursive: true });
             const tmp = `${file}.${crypto.randomBytes(4).toString("hex")}.tmp`;
-            await fsp.writeFile(tmp, body, "utf8");
+            await fsp.writeFile(tmp, await gzip(Buffer.from(body, "utf8")));
             await fsp.rename(tmp, file);
             return true;
         } catch (error) {

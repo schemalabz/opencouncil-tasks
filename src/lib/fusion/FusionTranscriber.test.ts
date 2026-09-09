@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fsp from "fs/promises";
 import os from "os";
 import path from "path";
+import zlib from "zlib";
 import { FusionTranscriber, PRODUCTION_CHUNKING } from "./FusionTranscriber.js";
 import { FusionCache } from "./cache.js";
 import { TraceWriter } from "./trace.js";
@@ -350,8 +351,12 @@ describe("component sharing across arms", () => {
 async function rawRecords(): Promise<any[]> {
     const names = await fsp.readdir(rawDir).catch(() => [] as string[]);
     const records = await Promise.all(
-        names.filter((n) => n.endsWith(".json"))
-            .map(async (n) => JSON.parse(await fsp.readFile(path.join(rawDir, n), "utf8"))),
+        names.filter((n) => n.endsWith(".json.gz"))
+            .map(async (n) => {
+                // Records are gzipped on disk. See rawLog.ts for why.
+                const raw = await fsp.readFile(path.join(rawDir, n));
+                return JSON.parse(zlib.gunzipSync(raw).toString("utf8"));
+            }),
     );
     return records;
 }

@@ -151,9 +151,14 @@ New `src/lib/fusion/rawLog.ts`, `RawTranscriptLog`:
   and `failed` alike. A provider that failed does not take a provider that
   succeeded down with it: whatever streams were collected are recorded.
 
-Not in the database, and no schema change anywhere. Growth: roughly 0.6 MB per
-segment attempt, so about 30 MB for a three-hour meeting. Retention is an ops
-question — see the open questions.
+Not in the database, and no schema change anywhere. Each record is written
+compact and gzipped, because three systems emit mostly the same words and a word
+record is short. Measured at the rate the benchmark saw, 9,800 words per audio
+hour per system: a 2.5-hour meeting is 9.7 MB indented, 4.9 MB compact and
+0.75 MB gzipped, doubled in shadow mode because that writes a record for the
+Scribe answer and one for the background fusion. Read one with
+`gunzip -c <file> | jq`. Retention is still an ops question, but at 1.5 MB per
+long meeting it is a housekeeping job rather than a capacity problem.
 
 ## 3. Staging first, and diffing against production
 
@@ -232,12 +237,13 @@ step in the QA doc. Quality acceptance is not re-litigated here — that is the
 
 ## OPEN QUESTIONS FOR HAROLD
 
-1. **Raw-transcript log destination.** The plan writes files to
-   `/app/logs/fusion-raw`, i.e. the existing bind-mounted volume on the droplet, at
-   ~30 MB per meeting with no retention policy. Do you want that, or should the log
-   go to DigitalOcean Spaces (we already have `DO_SPACES_*` credentials and an
-   uploader) so it survives the droplet and can be pulled without SSH? If it stays
-   on disk, what deletes it, and after how long?
+1. **Raw-transcript log destination.** Disk for now, by Harold's call on
+   2026-09-09: files go to `/app/logs/fusion-raw` on the existing bind-mounted
+   volume, gzipped, about 1.5 MB per long meeting in shadow mode. Two things are
+   still open: whether it should later move to DigitalOcean Spaces (the
+   `DO_SPACES_*` credentials and an uploader already exist) so it survives the
+   droplet and can be pulled without SSH, and what deletes it, after how long.
+   Nothing deletes it today.
 2. **Staging credentials.** Does the staging `.env` already have `SONIOX_API_KEY`,
    `RUNPOD_API_KEY` and `OC_ASR_ENDPOINT_ID`, or do they need to be put there — and
    is the Soniox key the paid `stt-async-v5` account rather than the free realtime one?
