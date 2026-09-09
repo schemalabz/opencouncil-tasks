@@ -89,8 +89,6 @@ interface RunPodStatus {
 export class OcAsrProvider implements AsrProvider {
     readonly id = "ours" as const;
     private provenance?: Record<string, unknown>;
-    /** Set from the context before the identity is asked for; see ProviderContext. */
-    private transport: AudioTransport = "url";
 
     constructor(private readonly fetchImpl: typeof fetch = fetch) { }
 
@@ -111,7 +109,6 @@ export class OcAsrProvider implements AsrProvider {
     }
 
     async identify(_audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderIdentity> {
-        this.transport = ctx.transport;
         // Provenance is what makes the cache key mean "the same weights", not
         // "the same endpoint alias" — but an endpoint that cannot answer must
         // not block transcription, so a failure degrades the key, loudly.
@@ -119,21 +116,26 @@ export class OcAsrProvider implements AsrProvider {
             console.warn(`[fusion] oc-asr provenance unavailable for cache key: ${error}`);
             return {};
         });
-        return this.identity();
+        return this.identity(ctx.transport);
     }
 
-    identity(): ProviderIdentity {
+    /**
+     * Takes the transport of the call being identified. One provider instance
+     * serves every concurrent segment, so reading it from a field would let a
+     * URL request and an upload request swap identities across a network wait,
+     * and an identity is half the component cache key.
+     */
+    identity(transport: AudioTransport): ProviderIdentity {
         const provenance = this.provenance ?? {};
         return {
             model: String(provenance.model_bin_sha256 ?? provenance.model ?? process.env.OC_ASR_ENDPOINT_ID ?? "oc-asr"),
-            paramsSha: shortSha(sha256OfValue({ ...OCASR_REQUEST_PARAMS, provenance, transport: this.transport })),
+            paramsSha: shortSha(sha256OfValue({ ...OCASR_REQUEST_PARAMS, provenance, transport })),
             schemaRev: OCASR_SCHEMA_REV,
         };
     }
 
     async transcribe(audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderResult> {
         throwIfAborted(ctx.signal);
-        this.transport = ctx.transport;
         const startedAt = Date.now();
 
         // Admission first, before any upload and before Soniox has been given
@@ -173,7 +175,7 @@ export class OcAsrProvider implements AsrProvider {
             const output = (await this.runJob({ ...OCASR_REQUEST_PARAMS, ...source }, ctx)) as OcAsrOutput;
             return {
                 providerId: "ours",
-                identity: this.identity(),
+                identity: this.identity(ctx.transport),
                 raw: output,
                 rawSha256: sha256OfValue(output),
                 words: normalizeOcAsrWords(output),
