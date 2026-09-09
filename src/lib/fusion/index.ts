@@ -34,7 +34,7 @@ let runtime: FusionRuntime | undefined;
 export function createFusionRuntime(config: FusionConfig): FusionRuntime {
     const cache = new FusionCache(config.cacheDir);
     const trace = new TraceWriter(config.traceDir);
-    const rawLog = new RawTranscriptLog(config.rawLogDir, { maxBytes: config.rawLogMaxBytes });
+    const rawLog = new RawTranscriptLog(config.rawLogDir, { maxBytes: config.rawLogMaxBytes, retentionDays: config.rawLogRetentionDays });
     const shadowQueue = new ShadowFusionQueue(trace);
 
     // One provider set per language, not one per segment. OcAsrProvider caches

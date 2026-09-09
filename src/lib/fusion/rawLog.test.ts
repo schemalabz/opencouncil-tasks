@@ -254,3 +254,80 @@ describe("RawTranscriptLog under load and failure", () => {
         expect(record.systems[0].words).toHaveLength(2);
     });
 });
+
+describe("RawTranscriptLog retention", () => {
+    async function writeAged(name: string, ageDays: number): Promise<string> {
+        const file = path.join(dir, name);
+        await fsp.mkdir(dir, { recursive: true });
+        // A real record, so the sweep is exercised against what it will meet.
+        const body = name.endsWith(".json.gz")
+            ? zlib.gzipSync(Buffer.from(JSON.stringify({ schema: "oc-fusion-raw/1", systems: [] }), "utf8"))
+            : Buffer.from("not a record", "utf8");
+        await fsp.writeFile(file, body);
+        const when = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
+        await fsp.utimes(file, when, when);
+        return file;
+    }
+
+    it("deletes records past the retention window and keeps the rest", async () => {
+        const old = await writeAged(`${"a".repeat(64)}.old.json.gz`, 20);
+        const recent = await writeAged(`${"b".repeat(64)}.recent.json.gz`, 3);
+
+        const log = new RawTranscriptLog(dir, { retentionDays: 14 });
+        await log.write(attempt());
+
+        expect(fs.existsSync(old)).toBe(false);
+        expect(fs.existsSync(recent)).toBe(true);
+        // The record just written, plus the one still inside the window.
+        expect(readOnly(dir)).toHaveLength(2);
+    });
+
+    it("has a finite default, so an unconfigured deployment does not keep speech forever", async () => {
+        const old = await writeAged(`${"a".repeat(64)}.ancient.json.gz`, 400);
+
+        const log = new RawTranscriptLog(dir);
+        await log.write(attempt());
+
+        expect(fs.existsSync(old)).toBe(false);
+    });
+
+    it("keeps everything when retention is explicitly turned off", async () => {
+        const old = await writeAged(`${"a".repeat(64)}.old.json.gz`, 400);
+
+        const log = new RawTranscriptLog(dir, { retentionDays: 0 });
+        await log.write(attempt());
+
+        expect(fs.existsSync(old)).toBe(true);
+    });
+
+    it("touches nothing that is not a record", async () => {
+        const foreign = await writeAged("app.log", 400);
+        const nested = path.join(dir, "keep");
+        await fsp.mkdir(nested, { recursive: true });
+
+        const log = new RawTranscriptLog(dir, { retentionDays: 14 });
+        await log.write(attempt());
+
+        expect(fs.existsSync(foreign)).toBe(true);
+        expect(fs.existsSync(nested)).toBe(true);
+    });
+
+    it("sweeps once per interval, not once per segment", async () => {
+        const log = new RawTranscriptLog(dir, { retentionDays: 14 });
+        await log.write(attempt());
+
+        const readdir = vi.spyOn(fsp, "readdir");
+        await log.write(attempt({ attemptId: "second" }));
+        await log.write(attempt({ attemptId: "third" }));
+
+        expect(readdir).not.toHaveBeenCalled();
+    });
+
+    it("still writes the record when the sweep cannot read the directory", async () => {
+        vi.spyOn(fsp, "readdir").mockRejectedValue(new Error("EACCES"));
+
+        const log = new RawTranscriptLog(dir, { retentionDays: 14 });
+        await expect(log.write(attempt())).resolves.toBe(true);
+        expect(readOnly(dir)).toHaveLength(1);
+    });
+});

@@ -49,6 +49,16 @@ const gzip = promisify(zlib.gzip);
 /** Default valve, not a routine path: a 20-minute segment is about 0.6 MB. */
 const DEFAULT_MAX_BYTES = 32 * 1024 * 1024;
 
+/**
+ * A record is verbatim council speech, so it expires by default. A deployment
+ * that forgets to configure retention keeps two weeks, not forever; keeping it
+ * forever has to be asked for with FUSION_RAW_LOG_RETENTION_DAYS=0.
+ */
+const DEFAULT_RETENTION_DAYS = 14;
+
+/** The sweep is housekeeping, not part of writing a record. Hourly is enough. */
+const SWEEP_INTERVAL_MS = 60 * 60 * 1000;
+
 export type RawStreamStatus = "ok" | "empty" | "failed";
 
 export interface RawProviderStream {
@@ -111,16 +121,22 @@ export interface RawTranscriptRecord {
 
 export interface RawTranscriptLogOptions {
     maxBytes?: number;
+    /** Days a record survives. 0 keeps everything, and has to be asked for. */
+    retentionDays?: number;
 }
 
 export class RawTranscriptLog {
     private readonly dir?: string;
     private readonly maxBytes: number;
+    private readonly retentionMs: number;
+    private lastSweep = 0;
     private warned = false;
 
     constructor(dir: string | undefined, options: RawTranscriptLogOptions = {}) {
         this.dir = dir?.trim() || undefined;
         this.maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
+        const days = options.retentionDays ?? DEFAULT_RETENTION_DAYS;
+        this.retentionMs = days > 0 ? days * 24 * 60 * 60 * 1000 : 0;
     }
 
     get enabled(): boolean {
@@ -150,6 +166,7 @@ export class RawTranscriptLog {
             const tmp = `${file}.${crypto.randomBytes(4).toString("hex")}.tmp`;
             await fsp.writeFile(tmp, await gzip(Buffer.from(body, "utf8")));
             await fsp.rename(tmp, file);
+            await this.sweep(dir);
             return true;
         } catch (error) {
             // The path and the error, never the payload: a warning that quotes
@@ -159,6 +176,44 @@ export class RawTranscriptLog {
                 console.warn(`[fusion] raw transcript log write failed (${file || dir}): ${error}`);
             }
             return false;
+        }
+    }
+
+    /**
+     * Delete records older than the retention window. Runs after a successful
+     * write and at most once an hour, so a busy segment does not pay for a
+     * directory scan, and a deployment that never restarts still expires its
+     * speech.
+     *
+     * Only files this class writes are considered: a directory it shares with
+     * other logs must not lose them. Failure is silent by design, exactly like
+     * a failed write — deleting is housekeeping, and housekeeping must never
+     * turn a transcription into an error.
+     */
+    private async sweep(dir: string): Promise<void> {
+        if (this.retentionMs <= 0) return;
+        const now = Date.now();
+        if (now - this.lastSweep < SWEEP_INTERVAL_MS) return;
+        this.lastSweep = now;
+
+        try {
+            const names = await fsp.readdir(dir);
+            const cutoff = now - this.retentionMs;
+            for (const name of names) {
+                if (!name.endsWith(".json.gz")) continue;
+                const file = path.join(dir, name);
+                try {
+                    const stat = await fsp.stat(file);
+                    if (stat.isFile() && stat.mtimeMs < cutoff) await fsp.unlink(file);
+                } catch {
+                    // Gone already, or racing another sweep. Either is fine.
+                }
+            }
+        } catch (error) {
+            if (!this.warned) {
+                this.warned = true;
+                console.warn(`[fusion] raw transcript log sweep failed (${dir}): ${error}`);
+            }
         }
     }
 

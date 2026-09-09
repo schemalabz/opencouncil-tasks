@@ -47,6 +47,7 @@ export interface FusionConfig {
     rawLogDir?: string;
     /** Size valve for one raw record. Default 32 MB; a 20-minute segment is ~0.6 MB. */
     rawLogMaxBytes: number;
+    rawLogRetentionDays: number;
     /** Repo root; fuse.py is spawned with this as cwd. */
     repoRoot: string;
 }
@@ -96,6 +97,9 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
     const deadlineMs = readInt(env, "FUSION_DEADLINE_MS", 240_000, 1_000, 3_600_000);
 
     const rawLogMaxBytes = readInt(env, "FUSION_RAW_LOG_MAX_BYTES", 32 * 1024 * 1024, 4096, 1024 * 1024 * 1024);
+    // Records are council speech. The default expires them; 0 keeps them for
+    // good and has to be typed out on purpose.
+    const rawLogRetentionDays = readInt(env, "FUSION_RAW_LOG_RETENTION_DAYS", 14, 0, 3650);
 
     const replayDir = env.FUSION_REPLAY_DIR?.trim() || undefined;
 
@@ -112,6 +116,7 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
         replayDir,
         rawLogDir: env.FUSION_RAW_LOG_DIR?.trim() || undefined,
         rawLogMaxBytes,
+        rawLogRetentionDays,
         repoRoot,
     };
 }
