@@ -37,6 +37,9 @@ import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscri
 import { listFailedCallbacks } from './lib/failedCallbackStore.js';
 import { replayStoredCallback } from './lib/callbackReplay.js';
 import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
+import { diffTranscripts, formatTranscriptDiff } from './lib/fusion/diffTranscripts.js';
+import { loadFusionConfig } from './lib/fusion/config.js';
+import { fusionPreflight } from './lib/fusion/preflight.js';
 
 const program = new Command();
 const app = getExpressAppWithCallbacks();
@@ -1359,6 +1362,49 @@ tasksCommand
             console.log(`${result.taskId}: llmMode=${result.llmMode}`);
         } catch (e) {
             console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+// ============================================================================
+// FUSION PROVIDER
+// ============================================================================
+
+program
+    .command('fusion-diff <left> <right>')
+    .description('Diff two transcript JSON files of the same audio (e.g. staging fusion vs production Scribe)')
+    .option('--json', 'emit the diff as JSON instead of text')
+    .option('--max-changes <n>', 'cap the listed changes; the counts are never capped', parseIntOption)
+    .action(async (left: string, right: string, options: { json?: boolean; maxChanges?: number }) => {
+        try {
+            const read = (file: string) => JSON.parse(fs.readFileSync(file, 'utf8'));
+            const diff = diffTranscripts(read(left), read(right), { maxChanges: options.maxChanges });
+            // Straight to stdout so the caller can redirect it. The output
+            // contains transcript words, so it must not be committed anywhere.
+            console.log(options.json ? JSON.stringify(diff, null, 2) : formatTranscriptDiff(diff));
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('fusion-preflight')
+    .description('Check whether this environment can actually run the fusion engine (python3 + fusion/)')
+    .action(async () => {
+        try {
+            const config = loadFusionConfig();
+            // Probed even when FUSION_MODE is off, because the point of running
+            // this by hand is to find out before flipping the switch.
+            const result = await fusionPreflight({ ...config, mode: config.mode === 'off' ? 'on' : config.mode });
+            console.log(JSON.stringify(result, null, 2));
+            if (!result.ok) process.exitCode = 1;
+        } catch (error) {
+            console.error(error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();
