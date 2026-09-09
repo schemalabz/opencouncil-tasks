@@ -2,3 +2,8 @@ node_modules
 dist
 data
 secrets
+logs
+__pycache__
+# The fixture bundle is verbatim council speech. A developer with a local copy
+# must not be able to bake it into an image layer.
+tests/fusion/fixtures

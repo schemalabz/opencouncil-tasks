@@ -232,6 +232,12 @@ app.use('/upload-video', uploadRouter);
 // Validated here, at startup, so an invalid FUSION_* value stops the process
 // instead of quietly meaning "off" — which is indistinguishable from an outage.
 const fusionConfig = loadFusionConfig();
+// And the engine itself is probed here, before app.listen: with fusion enabled
+// but no Python in the image, every segment bills ElevenLabs, Soniox and RunPod,
+// discards two of the three, and returns a Scribe transcript that looks normal.
+// Failing to start is the cheap failure.
+const { assertFusionRuntimeUsable } = await import('./lib/fusion/preflight.js');
+await assertFusionRuntimeUsable(fusionConfig);
 if (fusionConfig.openaiRoute === 'on') {
     const { mountOpenAiCompatRoute } = await import('./routes/openaiCompat.js');
     mountOpenAiCompatRoute(app);

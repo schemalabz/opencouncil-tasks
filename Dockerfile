@@ -24,9 +24,14 @@ RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
 FROM node:20.11.1 AS runner
+# python3 is a runtime dependency of the fusion provider, not a build tool: the
+# fuse core (fusion/) is spawned as a subprocess by src/lib/fusion/fusePy.ts.
+# Debian bookworm ships 3.11, which is the minimum fusion/__init__.py states.
+# The fuse core is stdlib-only, so there is no pip step and no requirements file.
 RUN apt-get update \
-    && apt-get install -y tini ffmpeg curl gosu unzip \
+    && apt-get install -y tini ffmpeg curl gosu unzip python3 \
     && rm -rf /var/lib/apt/lists/* \
+    && python3 -c "import sys; assert sys.version_info >= (3, 11), sys.version" \
     && groupadd -r apify && useradd -rm -g apify -G audio,video apify
 
 # Set the working directory
@@ -44,6 +49,12 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/VERSION ./VERSION
 COPY --from=builder /app/assets ./assets
+
+# The fuse core. It is not TypeScript, so `npm run build` does not produce it
+# and it has to be copied on its own; without it FUSION_MODE=on falls back to
+# Scribe on every segment after paying all three providers. fusion/ holds only
+# *.py, *.json and CONTRACT.md — no fixtures, no audio, no transcript text.
+COPY --from=builder /app/fusion ./fusion
 
 # Download latest yt-dlp binary. Own the whole /app/bin DIRECTORY (not just the
 # file) by apify: yt-dlp's `--update-to` self-update writes a new binary into the
