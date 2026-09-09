@@ -26,6 +26,17 @@ describe("normalizeAgendaItemTitle", () => {
         expect(normalizeAgendaItemTitle("Ορισμός Προέδρων Συμβουλίων Δ.Κ.")).toBe("Ορισμός Προέδρων Συμβουλίων Δ.Κ.");
     });
 
+    it("drops a run of stops, not only the last one", () => {
+        // «Στ. Ελλάδας..» — argithea/mar26_2026 closes the item with two stops.
+        expect(normalizeAgendaItemTitle("Αποκεντρωμένης Διοίκησης Θεσσαλίας – Στ. Ελλάδας..")).toBe("Αποκεντρωμένης Διοίκησης Θεσσαλίας – Στ. Ελλάδας");
+        expect(normalizeAgendaItemTitle("Έγκριση προϋπολογισμού...")).toBe("Έγκριση προϋπολογισμού");
+    });
+
+    it("keeps one stop when a run closes an abbreviation", () => {
+        expect(normalizeAgendaItemTitle("Καταλόγους Τ.Α.Π..")).toBe("Καταλόγους Τ.Α.Π.");
+        expect(normalizeAgendaItemTitle("στην ΤΡΑΠΕΖΑ ALPHA BANK Α.Ε..")).toBe("στην ΤΡΑΠΕΖΑ ALPHA BANK Α.Ε.");
+    });
+
     it("drops the stop after a closing bracket, keeping the abbreviation inside", () => {
         expect(normalizeAgendaItemTitle("Κοπή ξηρών δένδρων (σχετ. η 332/2026 Α.Δ.Ε.).")).toBe("Κοπή ξηρών δένδρων (σχετ. η 332/2026 Α.Δ.Ε.)");
     });

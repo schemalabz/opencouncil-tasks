@@ -32,9 +32,13 @@ export const AGENDA_ITEM_TITLE_RULES = `ΚΑΝΟΝΕΣ ΓΙΑ ΤΟ agendaItemTit
 export function normalizeAgendaItemTitle(value: string | null | undefined): string | null {
     if (typeof value !== "string") return null;
     const collapsed = value.replace(/\s+/g, " ").trim();
-    const trimmed = ENDS_IN_ABBREVIATION.test(collapsed) ? collapsed : collapsed.replace(/\.$/, "").trimEnd();
+    // A source document can close an item with more than one stop. Drop the whole run,
+    // then put one back when the text under it ends in an abbreviation, as in «Τ.Α.Π.».
+    const trimmed = collapsed
+        .replace(/\.+$/u, run => (ENDS_IN_ABBREVIATION.test(collapsed.slice(0, -run.length)) ? "." : ""))
+        .trimEnd();
     return trimmed.length > 0 ? trimmed : null;
 }
 
-/** A final stop that closes an abbreviation: a letter between two stops, as in «Τ.Α.Π.» or «Α.Ε.». */
-const ENDS_IN_ABBREVIATION = /\.\p{L}\.$/u;
+/** Text that an abbreviation's own stop should close: a stop then a single letter, as in «Τ.Α.Π» or «Α.Ε». */
+const ENDS_IN_ABBREVIATION = /\.\p{L}$/u;
