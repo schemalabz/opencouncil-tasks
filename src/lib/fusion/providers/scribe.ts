@@ -86,8 +86,8 @@ export class ScribeProvider implements AsrProvider {
             // queued one must not start once the deadline has passed.
             const raw = await Promise.race([
                 this.transcriber.transcribeRaw(ctx.transport === "bytes"
-                    ? { audioPath: audio.path, label: ctx.label, language: this.language }
-                    : { audioUrl, label: ctx.label, language: this.language }),
+                    ? { audioPath: audio.path, label: ctx.label, language: this.language, signal: ctx.signal }
+                    : { audioUrl, label: ctx.label, language: this.language, signal: ctx.signal }),
                 abortRace(ctx.signal),
             ]);
             return toProviderResult(raw.response, this.language, Date.now() - startedAt, ctx.transport);

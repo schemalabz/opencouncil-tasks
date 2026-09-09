@@ -231,6 +231,8 @@ type TranscribeRequest = {
     audioPath?: string;
     label: string; // identifies the segment in logs (15 requests can be in flight at once)
     languageCode: string; // ISO-639-3 code sent to Scribe ("ell", "fra")
+    /** Abandoned by its caller while queued ⇒ never sent, never billed. */
+    signal?: AbortSignal;
     resolve: (result: ScribeRawResult) => void;
     reject: (error: Error) => void;
 }
@@ -263,7 +265,7 @@ export class ScribeTranscriber {
      * response. Used by the fusion provider, which needs Scribe's word stream
      * (and its logprobs) as one of three aligned inputs.
      */
-    async transcribeRaw(request: { audioUrl?: string; audioPath?: string; label?: string; language?: CityLanguage }): Promise<ScribeRawResult> {
+    async transcribeRaw(request: { audioUrl?: string; audioPath?: string; label?: string; language?: CityLanguage; signal?: AbortSignal }): Promise<ScribeRawResult> {
         if (!request.audioUrl && !request.audioPath) {
             throw new Error("transcribeRaw needs either audioUrl or audioPath");
         }
@@ -273,6 +275,7 @@ export class ScribeTranscriber {
                 audioPath: request.audioPath,
                 label: request.label ?? (request.audioUrl ?? request.audioPath ?? "").split('/').pop() ?? "audio",
                 languageCode: getLanguageConfig(request.language).scribeCode,
+                signal: request.signal,
                 resolve,
                 reject,
             });
@@ -285,8 +288,21 @@ export class ScribeTranscriber {
             return;
         }
 
-        this.activeTranscriptions++;
         const request = this.queue.shift()!;
+
+        // A caller that has already given up must not be sent to the vendor: a
+        // fusion segment past its deadline has stopped waiting for this answer,
+        // and starting it anyway would hold a concurrency slot and be billed
+        // for a result nobody reads. An in-flight request cannot be recalled;
+        // this is the last point where it is still free to drop.
+        if (request.signal?.aborted) {
+            console.log(`[Scribe] ${request.label}: dropped before starting, caller gave up`);
+            request.reject(request.signal.reason instanceof Error ? request.signal.reason : new Error("aborted"));
+            this.processQueue();
+            return;
+        }
+
+        this.activeTranscriptions++;
         console.log(`[Scribe] ${request.label}: starting (${this.activeTranscriptions}/${SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS} slots active, ${this.queue.length} queued)`);
 
         try {
