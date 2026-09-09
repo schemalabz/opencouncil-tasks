@@ -89,6 +89,27 @@ Recorded here so nobody re-derives it: the reason it looked necessary was
   it accepts a job rather than after it has billed three vendors.
   With `FUSION_MODE` unset or `off` — production's state on day one — the preflight
   probes nothing and the process starts exactly as it does today.
+- **The dev stack gets the same treatment**, because the meeting asked for "the
+  same in development and production". `Dockerfile.dev` had no Python either, and
+  `docker-compose.dev.yml` bind-mounts `./src` but not `./fusion`, while
+  `Dockerfile.dev` copies no source at all — so `/app/fusion` did not exist in
+  development at any point. Both fixed.
+
+### Two pre-existing defects found on the way, and fixed
+
+Neither is caused by anything above; both block shipping, so they are in this change.
+
+1. **The image could not be built.** `ScribeTranscriber` in
+   `src/lib/ScribeTranscribe.ts` was not exported, so with `declaration: true`
+   TypeScript could not name the type of the exported `scribeTranscriber`
+   instance and `npm run build` failed with seven `TS4094` errors — which is the
+   `RUN npm run build` step of the Dockerfile. `npm run typecheck` is
+   `tsc --noEmit`, and declaration emit is the only thing that needs the name, so
+   the typecheck passed the whole time. Reproduces at `94a91b6`:
+   `npx tsc --outDir /tmp/x`. Fixed by exporting the class.
+2. **`fusion/__pycache__` shipped inside the image.** `.dockerignore` patterns
+   match relative to the context root, so a bare `__pycache__` only excludes a
+   top-level one. Now `**/__pycache__`.
 
 ## 2. The three raw transcripts
 
