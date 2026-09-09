@@ -5,6 +5,7 @@ import path from "path";
 import { FusionTranscriber, PRODUCTION_CHUNKING } from "./FusionTranscriber.js";
 import { FusionCache } from "./cache.js";
 import { TraceWriter } from "./trace.js";
+import { RawTranscriptLog } from "./rawLog.js";
 import { loadFusionConfig } from "./config.js";
 import { scribeResponseToTranscript, type ScribeResponse } from "../ScribeTranscribe.js";
 import {
@@ -99,11 +100,15 @@ const fusionOutput = (overrides: Partial<FusionOutput> = {}): FusionOutput => ({
 let dir: string;
 let cache: FusionCache;
 let trace: TraceWriter;
+let rawLog: RawTranscriptLog;
+let rawDir: string;
 
 beforeEach(async () => {
     dir = await fsp.mkdtemp(path.join(os.tmpdir(), "fusion-transcriber-test-"));
     cache = new FusionCache(path.join(dir, "cache"));
     trace = new TraceWriter(path.join(dir, "traces"));
+    rawDir = path.join(dir, "raw");
+    rawLog = new RawTranscriptLog(rawDir);
     vi.spyOn(console, "log").mockImplementation(() => { });
     vi.spyOn(console, "warn").mockImplementation(() => { });
 });
@@ -130,6 +135,7 @@ function build(options: {
         providers: providers as unknown as ProviderSet,
         cache: options.cacheOverride ?? cache,
         trace,
+        rawLog,
         runFusion,
     });
     return { transcriber, providers, runFusion };
@@ -334,5 +340,100 @@ describe("component sharing across arms", () => {
         expect(providers.scribe.calls).toBe(1);
         expect(providers.soniox.calls).toBe(1);
         expect(providers.ours.calls).toBe(1);
+    });
+});
+
+/* ------------------------------------------------------------------ */
+/* The raw per-system streams (decision of 2026-09-09)                 */
+/* ------------------------------------------------------------------ */
+
+async function rawRecords(): Promise<any[]> {
+    const names = await fsp.readdir(rawDir).catch(() => [] as string[]);
+    const records = await Promise.all(
+        names.filter((n) => n.endsWith(".json"))
+            .map(async (n) => JSON.parse(await fsp.readFile(path.join(rawDir, n), "utf8"))),
+    );
+    return records;
+}
+
+describe("raw transcript log", () => {
+    it("keeps all three word streams for a fused segment, joinable to the trace", async () => {
+        const { transcriber } = build({ providers: {} });
+        const outcome = await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules", label: "segment 1/2 @ 0:00" });
+
+        const [record] = await rawRecords();
+        expect(record.schema).toBe("oc-fusion-raw/1");
+        // Same id as the trace, so the two join without a database.
+        expect(record.attemptId).toBe(outcome.requestId);
+        expect(record.audioSha256).toBe(AUDIO.sha256);
+        expect(record.outcome).toBe("fused");
+        expect(record.arm).toBe("rules");
+        expect(record.label).toBe("segment 1/2 @ 0:00");
+        expect(record.systems.map((s: any) => s.providerId)).toEqual(["scribe", "soniox", "ours"]);
+        expect(record.systems.every((s: any) => s.status === "ok")).toBe(true);
+        expect(record.systems[0].words.map((w: any) => w.raw)).toEqual(["Η", "επιτροπή", "συνεδριάζει."]);
+        expect(record.systems[2].words.map((w: any) => w.raw)).toEqual(["Η", "επιτροπή", "συνεδριάζει"]);
+    });
+
+    it("keeps the streams that were paid for even when the segment fell back to Scribe", async () => {
+        const { transcriber } = build({ providers: { ours: { error: new ProviderError("ours", "runpod down", "http_500") } } });
+        await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" });
+
+        const [record] = await rawRecords();
+        expect(record.outcome).toBe("scribe-fallback");
+        expect(record.fallbackReason).toBe("aux_ours_http_500");
+        const byId = Object.fromEntries(record.systems.map((s: any) => [s.providerId, s]));
+        expect(byId.scribe.status).toBe("ok");
+        expect(byId.soniox.words).toHaveLength(3);
+        expect(byId.ours.status).toBe("failed");
+        // A vendor error can carry a signed URL or a key; the trace records it,
+        // the raw log does not.
+        expect(JSON.stringify(record)).not.toContain("runpod down");
+    });
+
+    it("writes a record even when Scribe is unusable and the segment throws", async () => {
+        const { transcriber } = build({ providers: { scribe: { error: new ProviderError("scribe", "429", "rate_limited") } } });
+        await expect(transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" })).rejects.toThrow(ScribeUnavailableError);
+
+        const [record] = await rawRecords();
+        expect(record.outcome).toBe("failed");
+        expect(record.systems.find((s: any) => s.providerId === "scribe").status).toBe("failed");
+    });
+
+    it("writes nothing at all when the raw log is not configured", async () => {
+        const transcriber = new FusionTranscriber({
+            config: loadFusionConfig({ FUSION_MODE: "on", FUSION_DEADLINE_MS: "1000" }, dir),
+            providers: {
+                scribe: new StubProvider("scribe", { result: scribeResult() }),
+                soniox: new StubProvider("soniox", { result: result("soniox", [["Η", 0, 0.4]]) }),
+                ours: new StubProvider("ours", { result: result("ours", [["Η", 0, 0.4]]) }),
+            } as unknown as ProviderSet,
+            cache,
+            trace,
+            rawLog: new RawTranscriptLog(undefined),
+            runFusion: vi.fn(async () => ({ output: fusionOutput(), stderrTail: "", elapsedMs: 3 })),
+        });
+        await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" });
+        expect(await rawRecords()).toEqual([]);
+    });
+
+    it("keeps the segment alive when the raw log cannot be written", async () => {
+        const failing = new RawTranscriptLog(rawDir);
+        vi.spyOn(failing, "write").mockRejectedValue(new Error("disk full"));
+        const transcriber = new FusionTranscriber({
+            config: loadFusionConfig({ FUSION_MODE: "on", FUSION_DEADLINE_MS: "1000" }, dir),
+            providers: {
+                scribe: new StubProvider("scribe", { result: scribeResult() }),
+                soniox: new StubProvider("soniox", { result: result("soniox", [["Η", 0, 0.4]]) }),
+                ours: new StubProvider("ours", { result: result("ours", [["Η", 0, 0.4]]) }),
+            } as unknown as ProviderSet,
+            cache,
+            trace,
+            rawLog: failing,
+            runFusion: vi.fn(async () => ({ output: fusionOutput(), stderrTail: "", elapsedMs: 3 })),
+        });
+
+        const outcome = await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" });
+        expect(outcome.outcome).toBe("fused");
     });
 });

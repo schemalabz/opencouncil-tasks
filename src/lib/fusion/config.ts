@@ -37,6 +37,16 @@ export interface FusionConfig {
     audioTransport: "url" | "bytes" | "auto";
     /** When set, providers are served from a replay bundle and never hit the network. */
     replayDir?: string;
+    /**
+     * Where the three raw per-system word streams are kept (decision of
+     * 2026-09-09: keep them, but not in the database). Unset ⇒ not kept.
+     *
+     * A directory of verbatim council speech, so it must point at a mounted
+     * volume outside the checkout — never a path inside the repo.
+     */
+    rawLogDir?: string;
+    /** Size valve for one raw record. Default 32 MB; a 20-minute segment is ~0.6 MB. */
+    rawLogMaxBytes: number;
     /** Repo root; fuse.py is spawned with this as cwd. */
     repoRoot: string;
 }
@@ -85,6 +95,8 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
         ["url", "bytes", "auto"] as const, "auto");
     const deadlineMs = readInt(env, "FUSION_DEADLINE_MS", 240_000, 1_000, 3_600_000);
 
+    const rawLogMaxBytes = readInt(env, "FUSION_RAW_LOG_MAX_BYTES", 32 * 1024 * 1024, 4096, 1024 * 1024 * 1024);
+
     const replayDir = env.FUSION_REPLAY_DIR?.trim() || undefined;
 
     return {
@@ -98,6 +110,8 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
         traceDir: env.FUSION_TRACE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-traces"),
         deadlineMs,
         replayDir,
+        rawLogDir: env.FUSION_RAW_LOG_DIR?.trim() || undefined,
+        rawLogMaxBytes,
         repoRoot,
     };
 }

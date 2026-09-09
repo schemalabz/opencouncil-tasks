@@ -186,7 +186,7 @@ describe("diffTranscripts on meeting-sized input", () => {
     it("still gets the counts right when the two sides share no unique anchor", () => {
         // Every token repeats, so patience anchoring finds nothing and the
         // fallback split has to carry it.
-        const left = Array.from({ length: 3_000 }, (_v, i) => (i % 2 === 0 ? "ναι" : "όχι"));
+        const left: string[] = Array.from({ length: 3_000 }, (_v, i) => (i % 2 === 0 ? "ναι" : "όχι"));
         const right = left.slice();
         right[1_500] = "ίσως";
 

@@ -9,6 +9,7 @@ import { createDeadline } from "./deadline.js";
 import { runFusionPython, fusionEngineRevision } from "./fusePy.js";
 import { buildFusedTranscript } from "./toTranscript.js";
 import { TraceWriter, type TraceComponent } from "./trace.js";
+import { RawTranscriptLog, type RawProviderStream, type RawTranscriptAttempt } from "./rawLog.js";
 import type { ProviderSet } from "./providers/index.js";
 import {
     FusionEngineError, PROVIDER_IDS, ProviderError, ScribeUnavailableError,
@@ -77,6 +78,12 @@ export interface FusionTranscriberDeps {
     providers: ProviderSet;
     cache: FusionCache;
     trace: TraceWriter;
+    /**
+     * Keeps the three raw per-system word streams (decision of 2026-09-09).
+     * Optional and disabled by default, so an environment that has not been
+     * given a path keeps behaving exactly as it did.
+     */
+    rawLog?: RawTranscriptLog;
     runFusion?: typeof runFusionPython;
 }
 
@@ -104,10 +111,12 @@ export const PRODUCTION_CHUNKING = { max_tokens: 120, anchor_n: 3, search_radius
 export class FusionTranscriber {
     private readonly config: FusionConfig;
     private readonly runFusion: typeof runFusionPython;
+    private readonly rawLog: RawTranscriptLog;
 
     constructor(private readonly deps: FusionTranscriberDeps) {
         this.config = deps.config;
         this.runFusion = deps.runFusion ?? runFusionPython;
+        this.rawLog = deps.rawLog ?? new RawTranscriptLog(undefined);
     }
 
     /** The single entry point. Both the route and transcribe.ts come through here. */
@@ -130,8 +139,17 @@ export class FusionTranscriber {
         let pythonMs: number | undefined;
         let pythonStderrTail: string | undefined;
 
+        // The raw streams are recorded once, at the end, with the outcome that
+        // actually happened — so a Scribe fallback still keeps the two aux
+        // streams it already paid for, and a segment that throws still leaves
+        // evidence of what the three recognisers said.
+        let rawStreams: RawProviderStream[] = [];
+        let rawOutcome: RawTranscriptAttempt["outcome"] = "failed";
+        let rawFallbackReason: string | undefined;
+
         try {
             const results = await this.collectProviders(request, ctx, requestId, components);
+            rawStreams = results.rawStreams;
             const scribe = results.scribe;
 
             // --- Scribe validity decides whether there is anything at all ----
@@ -140,6 +158,7 @@ export class FusionTranscriber {
                     requestId, arm, audio: request.audio, components, startedAt,
                     outcome: "failed", fallbackReason: scribe.reason, pythonMs, pythonStderrTail, llm,
                 });
+                rawFallbackReason = scribe.reason;
                 throw new ScribeUnavailableError(`Scribe unusable for this segment: ${scribe.detail}`, scribe.reason);
             }
 
@@ -157,6 +176,8 @@ export class FusionTranscriber {
                     requestId, arm, audio: request.audio, components, startedAt,
                     outcome: "scribe-only", fallbackReason: "scribe_empty", pythonMs, pythonStderrTail, llm,
                 });
+                rawOutcome = "scribe-only";
+                rawFallbackReason = "scribe_empty";
                 return { transcript, outcome: "scribe-only", fallbackReason: "scribe_empty", requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
 
@@ -165,6 +186,7 @@ export class FusionTranscriber {
                 await this.writeTrace({
                     requestId, arm: "scribe", audio: request.audio, components, startedAt, outcome: "scribe-only", llm,
                 });
+                rawOutcome = "scribe-only";
                 return { transcript, outcome: "scribe-only", requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
 
@@ -176,6 +198,8 @@ export class FusionTranscriber {
                     requestId, arm, audio: request.audio, components, startedAt,
                     outcome: "scribe-fallback", fallbackReason: auxFailure, llm,
                 });
+                rawOutcome = "scribe-fallback";
+                rawFallbackReason = auxFailure;
                 return { transcript, outcome: "scribe-fallback", fallbackReason: auxFailure, requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
 
@@ -211,6 +235,7 @@ export class FusionTranscriber {
                     pythonMs, pythonStderrTail, timingEstimatedRate: transcript.metadata.timingEstimatedRate,
                     fusionConfig: output.config, llm,
                 });
+                rawOutcome = "fused";
                 return { transcript, outcome: "fused", requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             } catch (error) {
                 if (!(error instanceof FusionEngineError)) throw error;
@@ -221,10 +246,29 @@ export class FusionTranscriber {
                     fallbackDetail: error.message.slice(0, 400), pythonMs, pythonStderrTail, llm,
                 });
                 console.warn(`[fusion] ${request.label ?? request.audio.sha256.slice(0, 12)}: falling back to Scribe (${error.reason}): ${error.message}`);
+                rawOutcome = "scribe-fallback";
+                rawFallbackReason = error.reason;
                 return { transcript, outcome: "scribe-fallback", fallbackReason: error.reason, requestId, audioSha256: request.audio.sha256, scribeResult: scribe.result };
             }
         } finally {
             deadline.dispose();
+            // Awaited, like the trace: one small file, written to a temp name
+            // and renamed. Fire-and-forget would need a bounded queue and a
+            // shutdown drain, and would lose the last segment of every run.
+            if (this.rawLog.enabled) {
+                await this.rawLog.write({
+                    attemptId: requestId,
+                    audioSha256: request.audio.sha256,
+                    label: request.label,
+                    mode: this.config.mode,
+                    arm: request.model === "scribe" ? "scribe" : arm,
+                    engineRev: fusionEngineRevision(this.config.repoRoot),
+                    configSha: this.configSha(arm, llm),
+                    outcome: rawOutcome,
+                    fallbackReason: rawFallbackReason,
+                    systems: rawStreams,
+                }).catch(() => false);
+            }
         }
     }
 
@@ -265,6 +309,8 @@ export class FusionTranscriber {
         soniox?: ProviderResult;
         ours?: ProviderResult;
         auxFailure?: string;
+        /** Per-provider streams for the raw log, in contract order. */
+        rawStreams: RawProviderStream[];
     }> {
         const wanted: ProviderId[] = request.model === "scribe" ? ["scribe"] : [...PROVIDER_IDS];
 
@@ -286,11 +332,16 @@ export class FusionTranscriber {
         const byId = new Map<ProviderId, PromiseSettledResult<ProviderResult>>();
         wanted.forEach((id, index) => byId.set(id, settled[index]));
 
+        // Built from every provider that was asked, before any of the failure
+        // matrix runs: one provider's rejection must not remove another
+        // provider's answer from the record.
+        const rawStreams = wanted.map((id) => rawStream(id, byId.get(id)!));
+
         const scribeSettled = byId.get("scribe")!;
         if (scribeSettled.status === "rejected") {
             const reason = scribeSettled.reason instanceof ProviderError ? scribeSettled.reason.reason : "scribe_failed";
             components.push(errorComponent("scribe", String(scribeSettled.reason)));
-            return { scribe: { ok: false, reason, detail: String(scribeSettled.reason) } };
+            return { scribe: { ok: false, reason, detail: String(scribeSettled.reason) }, rawStreams };
         }
 
         const scribeResult = scribeSettled.value;
@@ -299,12 +350,12 @@ export class FusionTranscriber {
             // Text without a word stream is not a transcript we can time or
             // fuse — and it is the shape a truncated or schema-drifted response
             // takes, so it must fail loudly rather than fuse two systems.
-            return { scribe: { ok: false, reason: "scribe_no_word_stream", detail: "response has text but no word stream" } };
+            return { scribe: { ok: false, reason: "scribe_no_word_stream", detail: "response has text but no word stream" }, rawStreams };
         }
         const empty = scribeResult.words.length === 0;
 
         if (request.model === "scribe") {
-            return { scribe: { ok: true, result: scribeResult, empty } };
+            return { scribe: { ok: true, result: scribeResult, empty }, rawStreams };
         }
 
         let auxFailure: string | undefined;
@@ -324,7 +375,7 @@ export class FusionTranscriber {
             aux[id] = outcome.value;
         }
 
-        return { scribe: { ok: true, result: scribeResult, empty }, soniox: aux.soniox, ours: aux.ours, auxFailure };
+        return { scribe: { ok: true, result: scribeResult, empty }, soniox: aux.soniox, ours: aux.ours, auxFailure, rawStreams };
     }
 
     private async fuse(
@@ -481,6 +532,27 @@ function traceComponent(result: ProviderResult, cacheHit: boolean): TraceCompone
         wordCount: result.words.length,
         elapsedMs: result.elapsedMs,
         cacheHit,
+    };
+}
+
+/**
+ * One provider's contribution to the raw log. Only the identity fields and the
+ * word stream: a provider error can carry a signed URL or a key, and the trace
+ * is where errors belong.
+ */
+function rawStream(providerId: ProviderId, settled: PromiseSettledResult<ProviderResult>): RawProviderStream {
+    if (settled.status === "rejected") {
+        return { providerId, status: "failed" };
+    }
+    const value = settled.value;
+    return {
+        providerId,
+        status: value.words.length === 0 ? "empty" : "ok",
+        model: value.identity.model,
+        paramsSha: value.identity.paramsSha,
+        schemaRev: value.identity.schemaRev,
+        rawSha256: value.rawSha256,
+        words: value.words,
     };
 }
 

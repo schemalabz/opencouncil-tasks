@@ -6,6 +6,7 @@ import { createProviders, type ProviderSet } from "./providers/index.js";
 import { FusionTranscriber, type FuseSegmentResult, type FusionModel } from "./FusionTranscriber.js";
 import { ShadowFusionQueue } from "./shadow.js";
 import { TraceWriter } from "./trace.js";
+import { RawTranscriptLog } from "./rawLog.js";
 import { artifactFromUrl, artifactFromFile } from "./audio.js";
 import type { AudioArtifact } from "./types.js";
 
@@ -20,6 +21,8 @@ export interface FusionRuntime {
     config: FusionConfig;
     cache: FusionCache;
     trace: TraceWriter;
+    /** The three raw per-system word streams. Disabled unless configured. */
+    rawLog: RawTranscriptLog;
     shadowQueue: ShadowFusionQueue;
     transcriberFor(language: CityLanguage | undefined): FusionTranscriber;
     effectiveMode(): FusionMode;
@@ -31,6 +34,7 @@ let runtime: FusionRuntime | undefined;
 export function createFusionRuntime(config: FusionConfig): FusionRuntime {
     const cache = new FusionCache(config.cacheDir);
     const trace = new TraceWriter(config.traceDir);
+    const rawLog = new RawTranscriptLog(config.rawLogDir, { maxBytes: config.rawLogMaxBytes });
     const shadowQueue = new ShadowFusionQueue(trace);
 
     // One provider set per language, not one per segment. OcAsrProvider caches
@@ -51,12 +55,14 @@ export function createFusionRuntime(config: FusionConfig): FusionRuntime {
         config,
         cache,
         trace,
+        rawLog,
         shadowQueue,
         transcriberFor: (language) => new FusionTranscriber({
             config,
             providers: providersFor(language),
             cache,
             trace,
+            rawLog,
         }),
         effectiveMode: () => config.mode,
         effectiveCanaryPercent: () => config.canaryPercent,
