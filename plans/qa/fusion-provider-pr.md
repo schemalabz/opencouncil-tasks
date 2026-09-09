@@ -164,8 +164,9 @@ not new to this change.
   aux-provider timeout on a real meeting, and it cannot be measured without
   calling the real endpoint.
 - **Whether `/app/logs` has room for the raw log.** Gzipped, a 2.5-hour meeting
-  is about 0.75 MB, or 1.5 MB in shadow mode. Nothing deletes it yet, which is
-  the remaining half of open question 1.
+  is about 0.75 MB, or 1.5 MB in shadow mode, and records expire after
+  FUSION_RAW_LOG_RETENTION_DAYS (default 14). What has not been verified is the
+  sweep against a real volume over weeks, only against fixtures.
 - **Shadow mode writes two raw records per segment** (one for the Scribe-only
   answer, one for the background fusion), which doubles disk in that mode. It is
   deliberate — a record whose existence depends on the mode loses evidence — but

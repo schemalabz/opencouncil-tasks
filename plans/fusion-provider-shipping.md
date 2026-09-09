@@ -157,8 +157,14 @@ record is short. Measured at the rate the benchmark saw, 9,800 words per audio
 hour per system: a 2.5-hour meeting is 9.7 MB indented, 4.9 MB compact and
 0.75 MB gzipped, doubled in shadow mode because that writes a record for the
 Scribe answer and one for the background fusion. Read one with
-`gunzip -c <file> | jq`. Retention is still an ops question, but at 1.5 MB per
-long meeting it is a housekeeping job rather than a capacity problem.
+`gunzip -c <file> | jq`.
+
+Records expire after `FUSION_RAW_LOG_RETENTION_DAYS`, default 14 days. The
+default is finite on purpose: a deployment that sets the directory and forgets
+about it must not accumulate council speech indefinitely, and keeping it for
+good has to be asked for with `0`. The sweep runs after a successful write and
+at most once an hour, deletes only `.json.gz` files so a shared directory keeps
+its other logs, and fails silently, like the write path.
 
 ## 3. Staging first, and diffing against production
 
@@ -242,8 +248,9 @@ step in the QA doc. Quality acceptance is not re-litigated here — that is the
    volume, gzipped, about 1.5 MB per long meeting in shadow mode. Two things are
    still open: whether it should later move to DigitalOcean Spaces (the
    `DO_SPACES_*` credentials and an uploader already exist) so it survives the
-   droplet and can be pulled without SSH, and what deletes it, after how long.
-   Nothing deletes it today.
+   droplet and can be pulled without SSH, and whether 14 days is the right
+   window. Deletion itself is implemented: records expire after
+   `FUSION_RAW_LOG_RETENTION_DAYS`, default 14.
 2. **Staging credentials.** Does the staging `.env` already have `SONIOX_API_KEY`,
    `RUNPOD_API_KEY` and `OC_ASR_ENDPOINT_ID`, or do they need to be put there — and
    is the Soniox key the paid `stt-async-v5` account rather than the free realtime one?
