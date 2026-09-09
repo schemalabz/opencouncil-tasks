@@ -3,6 +3,7 @@ import { getLanguageConfig } from "../../language.js";
 import type { CityLanguage } from "../../../types.js";
 import { sha256OfValue, shortSha } from "../hash.js";
 import { throwIfAborted } from "../deadline.js";
+import { ensurePublicUrl, type PublicAudioHandle } from "../audio.js";
 import type { AsrProvider, AudioArtifact, AudioTransport, NormalizedWord, ProviderContext, ProviderIdentity, ProviderResult } from "../types.js";
 import { ProviderError } from "../types.js";
 
@@ -61,23 +62,40 @@ export class ScribeProvider implements AsrProvider {
 
     async transcribe(audio: AudioArtifact, ctx: ProviderContext): Promise<ProviderResult> {
         throwIfAborted(ctx.signal);
-        if (ctx.transport === "url" && !audio.canonicalUrl) {
-            throw new ProviderError("scribe", "Scribe needs a fetchable audio URL", "no_audio_url");
-        }
         if (ctx.transport === "bytes" && !audio.path) {
             throw new ProviderError("scribe", "byte transport needs a local audio path", "no_audio_path");
         }
+        if (ctx.transport === "url" && !audio.canonicalUrl && !audio.path) {
+            throw new ProviderError("scribe", "Scribe needs a fetchable audio URL", "no_audio_url");
+        }
+
         const startedAt = Date.now();
-        // The shared signal is honoured at the queue boundary: a request that is
-        // already in flight inside ScribeTranscriber cannot be recalled, but a
-        // queued one must not start once the deadline has passed.
-        const raw = await Promise.race([
-            this.transcriber.transcribeRaw(ctx.transport === "bytes"
-                ? { audioPath: audio.path, label: ctx.label, language: this.language }
-                : { audioUrl: audio.canonicalUrl, label: ctx.label, language: this.language }),
-            abortRace(ctx.signal),
-        ]);
-        return toProviderResult(raw.response, this.language, Date.now() - startedAt, ctx.transport);
+        // A segment that arrived as an upload has bytes and no URL, and Scribe
+        // cannot be handed a local file under URL transport. Publish it the way
+        // the other two providers already do, and take it down afterwards.
+        let published: PublicAudioHandle | undefined;
+        try {
+            let audioUrl = audio.canonicalUrl;
+            if (ctx.transport === "url" && !audioUrl) {
+                published = await ensurePublicUrl(audio, { signal: ctx.signal });
+                audioUrl = published.url;
+            }
+
+            // The shared signal is honoured at the queue boundary: a request that is
+            // already in flight inside ScribeTranscriber cannot be recalled, but a
+            // queued one must not start once the deadline has passed.
+            const raw = await Promise.race([
+                this.transcriber.transcribeRaw(ctx.transport === "bytes"
+                    ? { audioPath: audio.path, label: ctx.label, language: this.language }
+                    : { audioUrl, label: ctx.label, language: this.language }),
+                abortRace(ctx.signal),
+            ]);
+            return toProviderResult(raw.response, this.language, Date.now() - startedAt, ctx.transport);
+        } finally {
+            // Cost, not tidiness: a temp object per segment adds up, and nothing
+            // else knows this copy exists.
+            if (published) await published.release();
+        }
     }
 }
 
