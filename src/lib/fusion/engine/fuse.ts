@@ -70,6 +70,11 @@ interface ValidatedConfig {
     systems: InputSystem[];
 }
 
+/** Python renders a list of strings with single quotes and ", " between them. */
+function pyList(xs: readonly string[]): string {
+    return "[" + xs.map((x) => `'${x}'`).join(", ") + "]";
+}
+
 /** Python renders a string with single quotes in these messages; so does this. */
 function pyRepr(v: unknown): string {
     if (typeof v === "string") return `'${v.replace(/'/g, "\\'")}'`;
@@ -99,8 +104,8 @@ function validate(payload: unknown): ValidatedConfig {
         const sys = s as Record<string, unknown>;
         if (sys.id !== want) {
             throw new InputError(
-                `systems must be ordered ${JSON.stringify([...SYSTEM_IDS])
-                    .replace(/"/g, "'")}; got ${pyRepr(sys.id)} where ${pyRepr(want)} was expected`);
+                `systems must be ordered ${pyList([...SYSTEM_IDS])}; `
+                + `got ${pyRepr(sys.id)} where ${pyRepr(want)} was expected`);
         }
         const words = sys.words;
         if (!Array.isArray(words)) {
@@ -128,8 +133,7 @@ function validate(payload: unknown): ValidatedConfig {
     const arm = (c.arm ?? "rules") as Arm;
     if (!ARMS.includes(arm)) {
         throw new InputError(
-            `config.arm must be one of ${JSON.stringify([...ARMS]).replace(/"/g, "'")}, `
-            + `got ${pyRepr(c.arm)}`);
+            `config.arm must be one of ${pyList([...ARMS])}, got ${pyRepr(c.arm)}`);
     }
     const guard = c.guard ?? false;
     if (typeof guard !== "boolean") throw new InputError("config.guard must be a boolean");

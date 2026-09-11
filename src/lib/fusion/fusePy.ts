@@ -2,6 +2,7 @@ import { spawn } from "child_process";
 import fs from "fs";
 import path from "path";
 import { sha256Hex, shortSha } from "./hash.js";
+import type { FusionEngine } from "./config.js";
 import { FusionEngineError, type FusionInput, type FusionOutput } from "./types.js";
 
 /**
@@ -16,6 +17,8 @@ import { FusionEngineError, type FusionInput, type FusionOutput } from "./types.
  */
 
 export const FUSION_SCRIPT = "fusion/fuse.py";
+/** The TypeScript engine's entry point, in the built output that ships. */
+export const FUSION_NODE_SCRIPT = "dist/lib/fusion/engine/cli.js";
 const MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
 const STDERR_TAIL_BYTES = 4096;
 
@@ -30,22 +33,40 @@ const engineRevisions = new Map<string, string>();
  *
  * Memoized per repo root: this is on the path of every segment.
  */
-export function fusionEngineRevision(repoRoot: string): string {
-    const cached = engineRevisions.get(repoRoot);
+export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "python"): string {
+    const cacheKey = `${engine}:${repoRoot}`;
+    const cached = engineRevisions.get(cacheKey);
     if (cached) return cached;
 
-    const dir = path.join(repoRoot, "fusion");
+    // Hash what actually runs. For `node` that is the built engine, which is
+    // what the spawn points at, plus `fusion/*.json`: the TypeScript engine
+    // reads the same frozen `policy.json` rather than keeping a second copy.
+    const dirs = engine === "node"
+        ? [{ dir: path.join(repoRoot, "dist/lib/fusion/engine"), ext: [".js"] },
+           { dir: path.join(repoRoot, "fusion"), ext: [".json"] }]
+        : [{ dir: path.join(repoRoot, "fusion"), ext: [".py", ".json"] }];
+
     let revision: string;
     try {
-        const files = fs.readdirSync(dir)
-            .filter((name) => name.endsWith(".py") || name.endsWith(".json"))
-            .sort();
-        const parts = files.map((name) => `${name}:${sha256Hex(fs.readFileSync(path.join(dir, name)))}`);
-        revision = parts.length === 0 ? "absent" : shortSha(sha256Hex(parts.join("\n")));
+        const parts: string[] = [];
+        for (const { dir, ext } of dirs) {
+            const files = fs.readdirSync(dir)
+                .filter((name) => ext.some((e) => name.endsWith(e)))
+                .sort();
+            for (const name of files) {
+                parts.push(`${name}:${sha256Hex(fs.readFileSync(path.join(dir, name)))}`);
+            }
+        }
+        // The Python revision keeps its original form so every fused result
+        // already in the cache stays addressable. The TypeScript one is
+        // prefixed, which is the whole point: the two engines must never read
+        // each other's entries, even when their output is identical.
+        const digest = parts.length === 0 ? "absent" : shortSha(sha256Hex(parts.join("\n")));
+        revision = engine === "node" && digest !== "absent" ? `ts-${digest}` : digest;
     } catch {
         revision = "absent";
     }
-    engineRevisions.set(repoRoot, revision);
+    engineRevisions.set(cacheKey, revision);
     return revision;
 }
 
@@ -56,6 +77,8 @@ export function clearEngineRevisionCache(): void {
 
 export interface FusePyOptions {
     pythonBin: string;
+    /** Which implementation to spawn. Defaults to the Python. */
+    engine?: FusionEngine;
     repoRoot: string;
     signal: AbortSignal;
     deadlineAt: number;
@@ -70,14 +93,17 @@ export interface FusePyResult {
 
 export async function runFusionPython(input: FusionInput, options: FusePyOptions): Promise<FusePyResult> {
     const startedAt = Date.now();
-    const scriptPath = path.join(options.repoRoot, FUSION_SCRIPT);
+    const engine = options.engine ?? "python";
+    const [command, scriptPath] = engine === "node"
+        ? [process.execPath, path.join(options.repoRoot, FUSION_NODE_SCRIPT)]
+        : [options.pythonBin, path.join(options.repoRoot, FUSION_SCRIPT)];
     const maxOutput = options.maxOutputBytes ?? MAX_OUTPUT_BYTES;
 
     const { stdout, stderrTail, code, signalName, spawnError, overflowed } = await new Promise<{
         stdout: string; stderrTail: string; code: number | null; signalName: NodeJS.Signals | null;
         spawnError?: Error; overflowed: boolean;
     }>((resolve) => {
-        const child = spawn(options.pythonBin, [scriptPath], {
+        const child = spawn(command, [scriptPath], {
             cwd: options.repoRoot,
             stdio: ["pipe", "pipe", "pipe"],
         });

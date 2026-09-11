@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { FusionConfig } from "./config.js";
-import { FUSION_SCRIPT, fusionEngineRevision, runFusionPython } from "./fusePy.js";
+import { FUSION_NODE_SCRIPT, FUSION_SCRIPT, fusionEngineRevision, runFusionPython } from "./fusePy.js";
 import { createDeadline } from "./deadline.js";
 import type { FusionInput } from "./types.js";
 
@@ -82,22 +82,28 @@ export async function fusionPreflight(
         };
     }
 
+    const scriptName = config.engine === "node" ? FUSION_NODE_SCRIPT : FUSION_SCRIPT;
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const deadline = createDeadline(Date.now() + timeoutMs);
     const startedAt = Date.now();
     try {
         const { output } = await runFusionPython(probeInput(), {
             pythonBin: config.pythonBin,
+            // The probe has to run the engine that will serve traffic. Probing
+            // the Python while `node` is configured would pass on a deployment
+            // whose built engine is missing from the image, which is the exact
+            // packaging failure this check exists for.
+            engine: config.engine,
             repoRoot: config.repoRoot,
             signal: deadline.signal,
             deadlineAt: deadline.deadlineAt,
         });
         if (output.audio_sha256 !== PROBE_AUDIO_SHA) {
-            return { ...checked, ok: false, problem: `${FUSION_SCRIPT} answered for different audio than it was given` };
+            return { ...checked, ok: false, problem: `${scriptName} answered for different audio than it was given` };
         }
         return {
             ...checked,
-            engineRev: fusionEngineRevision(config.repoRoot),
+            engineRev: fusionEngineRevision(config.repoRoot, config.engine),
             elapsedMs: Date.now() - startedAt,
         };
     } catch (error) {

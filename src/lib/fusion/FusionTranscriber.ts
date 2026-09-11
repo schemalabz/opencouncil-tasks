@@ -262,7 +262,7 @@ export class FusionTranscriber {
                     label: request.label,
                     mode: this.config.mode,
                     arm: request.model === "scribe" ? "scribe" : arm,
-                    engineRev: fusionEngineRevision(this.config.repoRoot),
+                    engineRev: fusionEngineRevision(this.config.repoRoot, this.config.engine),
                     configSha: this.configSha(arm, llm),
                     outcome: rawOutcome,
                     fallbackReason: rawFallbackReason,
@@ -289,7 +289,7 @@ export class FusionTranscriber {
             guard: true,
             llm,
             chunking: PRODUCTION_CHUNKING,
-            engineRev: fusionEngineRevision(this.config.repoRoot),
+            engineRev: fusionEngineRevision(this.config.repoRoot, this.config.engine),
         });
     }
 
@@ -386,7 +386,7 @@ export class FusionTranscriber {
         ctx: ProviderContext,
         requestId: string,
     ): Promise<{ output: FusionOutput; elapsedMs: number; stderrTail: string }> {
-        const engineRev = fusionEngineRevision(this.config.repoRoot);
+        const engineRev = fusionEngineRevision(this.config.repoRoot, this.config.engine);
         const key = fusionCacheKey({
             wordListShas: {
                 scribe: hashWords(systems.scribe.words),
@@ -418,6 +418,7 @@ export class FusionTranscriber {
         const { value } = await this.deps.cache.getOrCreate<FusionOutput>("fusion", key, async () => {
             const result = await this.runFusion(input, {
                 pythonBin: this.config.pythonBin,
+                engine: this.config.engine,
                 repoRoot: this.config.repoRoot,
                 signal: ctx.signal,
                 deadlineAt: ctx.deadlineAt,

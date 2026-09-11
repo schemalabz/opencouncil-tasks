@@ -13,6 +13,7 @@ import { sha256OfValue, shortSha } from "./hash.js";
 
 export type FusionMode = "off" | "shadow" | "on";
 export type OnOff = "off" | "on";
+export type FusionEngine = "python" | "node";
 
 export interface FusionConfig {
     mode: FusionMode;
@@ -23,6 +24,15 @@ export interface FusionConfig {
     /** Percentage of meetings that get fusion while mode=on. 0 ⇒ nobody. */
     canaryPercent: number;
     pythonBin: string;
+    /**
+     * Which implementation of the fuse core runs. `python` spawns
+     * `fusion/fuse.py`; `node` spawns the TypeScript port, which is held to
+     * the Python's output on all 391 benchmark windows. Default `python`:
+     * the port is proved, not yet the thing in production, and the two are
+     * separate cache namespaces so a switch either way is a miss, never a
+     * silent substitution.
+     */
+    engine: FusionEngine;
     cacheDir: string;
     traceDir: string;
     deadlineMs: number;
@@ -91,6 +101,7 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
     const mode = readEnum(env, "FUSION_MODE", MODES, "off");
     const llm = readEnum(env, "FUSION_LLM", ["off", "on"] as const, "off");
     const openaiRoute = readEnum(env, "FUSION_OPENAI_ROUTE", ["off", "on"] as const, "off");
+    const engine = readEnum(env, "FUSION_ENGINE", ["python", "node"] as const, "python");
     const canaryPercent = readInt(env, "FUSION_CANARY_PERCENT", 0, 0, 100);
     const audioTransport = readEnum(env, "FUSION_AUDIO_TRANSPORT",
         ["url", "bytes", "auto"] as const, "auto");
@@ -110,6 +121,7 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
         canaryPercent,
         audioTransport,
         pythonBin: env.FUSION_PYTHON_BIN?.trim() || "python3",
+        engine,
         cacheDir: env.FUSION_CACHE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-cache"),
         traceDir: env.FUSION_TRACE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-traces"),
         deadlineMs,

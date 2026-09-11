@@ -56,19 +56,25 @@ function encodeNumber(n: number): string {
     return String(n);
 }
 
-export function pyJsonDumps(value: unknown): string {
+/**
+ * `sort_keys=True` is what `row_sha` needs. The engine's own stdout is written
+ * by a plain `json.dump`, which keeps insertion order, so the CLI asks for the
+ * other one and relies on building its objects in the Python's field order.
+ */
+export function pyJsonDumps(value: unknown, sortKeys = true): string {
     if (value === null || value === undefined) return "null";
     if (typeof value === "boolean") return value ? "true" : "false";
     if (typeof value === "number") return encodeNumber(value);
     if (typeof value === "string") return encodeString(value);
     if (Array.isArray(value)) {
-        return "[" + value.map(pyJsonDumps).join(", ") + "]";
+        return "[" + value.map((v) => pyJsonDumps(v, sortKeys)).join(", ") + "]";
     }
     if (typeof value === "object") {
         const obj = value as Record<string, unknown>;
-        const keys = Object.keys(obj).sort(byCodePoint);
+        const keys = Object.keys(obj);
+        if (sortKeys) keys.sort(byCodePoint);
         return "{" + keys
-            .map((k) => encodeString(k) + ": " + pyJsonDumps(obj[k]))
+            .map((k) => encodeString(k) + ": " + pyJsonDumps(obj[k], sortKeys))
             .join(", ") + "}";
     }
     throw new TypeError(`cannot serialize ${typeof value}`);
