@@ -12,11 +12,10 @@
  *
  * Two things it does that the shared server does not:
  *
- *   - It sizes the HTTP timeouts from the fusion deadline. Node kills any
- *     request at five minutes by default, and a segment given a longer
- *     `FUSION_DEADLINE_MS` -- which the runbook recommends when our own
- *     endpoint is cold -- would be cut off by the HTTP layer while the engine
- *     was still working, after all three providers had been paid.
+ *   - It raises the upload clock. Node gives a client five minutes to finish
+ *     sending a request, and 200 MB of audio over a 5 Mbps link needs 336
+ *     seconds. A municipality uploading a meeting from an office connection
+ *     would lose the upload before the fusion ever started.
  *   - It refuses to start with the route off, because a fusion server with no
  *     fusion route is a process that answers health checks and nothing else.
  */
@@ -26,8 +25,24 @@ import { getFusionRuntime } from "./lib/fusion/index.js";
 import { assertFusionRuntimeUsable } from "./lib/fusion/preflight.js";
 import { mountOpenAiCompatRoute } from "./routes/openaiCompat.js";
 
-/** Headroom over the fusion's own deadline, for upload and response time. */
-const HTTP_SLACK_MS = 120_000;
+/**
+ * How long a client has to finish sending a request.
+ *
+ * This bounds the UPLOAD, not the work. Node's `server.timeout` is 0 by
+ * default, so processing time is already unbounded and nothing here changes
+ * that; `requestTimeout` is the clock on receiving the bytes, which was
+ * measured rather than assumed.
+ *
+ * The cap on an audio upload is 200 MB. At 5 Mbps that takes 336 seconds and
+ * the 300-second default cuts it off mid-upload; at 2 Mbps, fourteen minutes.
+ * A municipality uploading a meeting from an office connection is exactly the
+ * case that loses. The figure below is 200 MB at 1 Mbps, which is the slowest
+ * link worth serving, plus a minute.
+ *
+ * It is deliberately not derived from FUSION_DEADLINE_MS: how long the fusion
+ * is allowed to think has nothing to do with how long the file takes to arrive.
+ */
+const UPLOAD_TIMEOUT_MS = 30 * 60_000;
 
 export async function main(): Promise<void> {
     const config = loadFusionConfig();
@@ -66,14 +81,10 @@ export async function main(): Promise<void> {
         console.log(`   mode=${config.mode} deadline=${config.deadlineMs}ms`);
     });
 
-    // A 15-minute segment is a long request by design, and the caller is
-    // expected to wait for it. Node's defaults are not.
-    server.requestTimeout = config.deadlineMs + HTTP_SLACK_MS;
-    server.headersTimeout = 120_000;
-    server.keepAliveTimeout = 120_000;
-    // No overall socket deadline: the request timeout is the one that should
-    // decide, and it already knows what the fusion was promised.
-    server.setTimeout(0);
+    // Only the upload clock is raised. Processing is unbounded by default and
+    // is left that way on purpose: a fused segment takes as long as it takes,
+    // and the fusion's own deadline is what stops it, not the HTTP layer.
+    server.requestTimeout = UPLOAD_TIMEOUT_MS;
 
     const stop = (signal: string) => {
         console.log(`${signal}: draining`);

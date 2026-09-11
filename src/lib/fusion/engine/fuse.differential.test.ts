@@ -30,6 +30,12 @@ const ARM_CONFIG: Record<string, { arm: string; guard: boolean }> = {
     rules_on: { arm: "rules", guard: true },
 };
 const SINGLE_CHUNK = { max_tokens: 100000, anchor_n: 3, search_radius: 200 };
+/** Mirrors PRODUCTION_CHUNKING in FusionTranscriber.ts. */
+const PRODUCTION_CHUNKING = { max_tokens: 120, anchor_n: 3, search_radius: 200 };
+const CHUNKING: Record<string, typeof SINGLE_CHUNK> = {
+    single: SINGLE_CHUNK,
+    production: PRODUCTION_CHUNKING,
+};
 const SYSTEM_IDS = ["scribe", "soniox", "ours"] as const;
 
 /** Mirrors `helpers.as_words`: fixture tokens with synthetic times. */
@@ -37,11 +43,12 @@ function asWords(tokens: readonly string[]) {
     return tokens.map((t, i) => ({ raw: t, start: i * 0.5, end: i * 0.5 + 0.4, conf: 0.9 }));
 }
 
-function payloadFor(hyps: readonly (readonly string[])[], arm: string) {
+function payloadFor(hyps: readonly (readonly string[])[], arm: string, chunking: string) {
     // Spreading a missing entry would leave `validate` to fall back to its
-    // defaults, so the harness would quietly compare a different arm against
-    // the oracle and pass.
+    // defaults, so the harness would quietly compare a different configuration
+    // against the oracle and pass.
     if (!ARM_CONFIG[arm]) throw new Error(`no ARM_CONFIG entry for arm ${arm}`);
+    if (!CHUNKING[chunking]) throw new Error(`no chunking config named ${chunking}`);
     return {
         schema: "oc-fusion-in/1",
         audio_sha256: "0".repeat(64),
@@ -50,24 +57,23 @@ function payloadFor(hyps: readonly (readonly string[])[], arm: string) {
             params_sha: `sha-${SYSTEM_IDS[k]}`,
             words: asWords(hyps[k]),
         })),
-        config: { ...ARM_CONFIG[arm], llm: null, chunking: { ...SINGLE_CHUNK } },
+        config: { ...ARM_CONFIG[arm], llm: null, chunking: { ...CHUNKING[chunking] } },
     };
 }
 
-function oracleFile(): { file: string; arm: string } | null {
-    const candidates: { file: string; arm: string; n: number }[] = [];
-    for (const dir of [BUNDLE, "/tmp"]) {
-        if (!fs.existsSync(dir)) continue;
-        for (const f of fs.readdirSync(dir)) {
-            const m = /^oracle_(\w+?)_(\d+)\.json$/.exec(f);
-            if (m) candidates.push({ file: path.join(dir, f), arm: m[1], n: Number(m[2]) });
-            else if (/^oracle_seed\d+\.json$/.test(f)) {
-                candidates.push({ file: path.join(dir, f), arm: "rules_off", n: 391 });
-            }
-        }
-    }
-    candidates.sort((a, b) => b.n - a.n);
-    return candidates.length ? { file: candidates[0].file, arm: candidates[0].arm } : null;
+/**
+ * Every dumped oracle in the bundle, not the largest one. The chunking config
+ * is the point: the conformance totals were measured at one chunk per window,
+ * and production sends `max_tokens=120`, which is a different path through the
+ * chunker. Comparing only the first would leave the path that actually runs
+ * unchecked.
+ */
+function oracleFiles(): { file: string; label: string }[] {
+    if (!fs.existsSync(BUNDLE)) return [];
+    return fs.readdirSync(BUNDLE)
+        .filter((f) => /^oracle_.*_\d+\.json$/.test(f))
+        .sort()
+        .map((f) => ({ file: path.join(BUNDLE, f), label: f.replace(/^oracle_|_\d+\.json$/g, "") }));
 }
 
 /**
@@ -98,16 +104,17 @@ function deepEqual(a: unknown, b: unknown): boolean {
     return false;
 }
 
-const oracle = oracleFile();
+const oracles = oracleFiles();
 const inputsPath = path.join(BUNDLE, "fixture_inputs_391.json");
-const ready = oracle !== null && fs.existsSync(inputsPath);
+const ready = oracles.length > 0 && fs.existsSync(inputsPath);
 const suite = ready ? describe : describe.skip;
 
-suite("the TypeScript engine reproduces the Python output", () => {
-    const dump = JSON.parse(fs.readFileSync(oracle!.file, "utf8"));
+suite.each(ready ? oracles : [])("$label: the engine reproduces the Python output", ({ file }) => {
+    const dump = JSON.parse(fs.readFileSync(file, "utf8"));
     const inputs = JSON.parse(fs.readFileSync(inputsPath, "utf8"));
     const policy = loadPolicy(ENGINE_DIR);
-    const arm = dump.arm ?? oracle!.arm;
+    const arm = dump.arm as string;
+    const chunking = (dump.chunking as string) ?? "single";
 
     const byId = new Map<string, { id: string; hyps: string[][] }>(
         inputs.windows.map((w: { id: string; hyps: string[][] }) => [w.id, w]),
@@ -150,7 +157,7 @@ suite("the TypeScript engine reproduces the Python output", () => {
                     mismatched.push(`${id}: no fixture window`);
                     continue;
                 }
-                if (!deepEqual(fuse(payloadFor(win.hyps, arm), policy), dump.outputs[id])) {
+                if (!deepEqual(fuse(payloadFor(win.hyps, arm, chunking), policy), dump.outputs[id])) {
                     mismatched.push(id);
                     break;
                 }
@@ -166,7 +173,7 @@ suite("the TypeScript engine reproduces the Python output", () => {
                 const first = byId.get(mismatched[0]);
                 const want = dump.outputs[mismatched[0]];
                 if (first && want) {
-                    expect(fuse(payloadFor(first.hyps, arm), policy)).toEqual(want);
+                    expect(fuse(payloadFor(first.hyps, arm, chunking), policy)).toEqual(want);
                 }
             }
             expect(mismatched).toEqual([]);

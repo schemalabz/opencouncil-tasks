@@ -284,13 +284,14 @@ process.on('SIGTERM', async () => {
     }
 });
 
-// A fused segment is a long request by design and the caller is expected to
-// wait for it. Node is not: it cuts every request at five minutes, and the
-// runbook already recommends raising FUSION_DEADLINE_MS when our own endpoint
-// is cold. The HTTP layer would then kill a segment mid-fusion, after all three
-// providers had been paid, and the caller would see a dropped connection rather
-// than the failure matrix's exact Scribe fallback.
-const HTTP_SLACK_MS = 120_000;
+// Node gives a client five minutes to finish SENDING a request. Processing is
+// unbounded already (`server.timeout` is 0), so nothing here protects a long
+// fusion -- that was never at risk. What is at risk is the upload: the cap is
+// 200 MB, which needs 336 seconds at 5 Mbps and fourteen minutes at 2. This is
+// 200 MB at 1 Mbps plus a minute, and it is deliberately not derived from
+// FUSION_DEADLINE_MS, because how long the fusion may think says nothing about
+// how long the file takes to arrive.
+const UPLOAD_TIMEOUT_MS = 30 * 60_000;
 
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
@@ -307,8 +308,7 @@ const server = app.listen(port, () => {
     console.log();
 });
 
-server.requestTimeout = fusionConfig.deadlineMs + HTTP_SLACK_MS;
-server.setTimeout(0);
+server.requestTimeout = UPLOAD_TIMEOUT_MS;
 
 if (process.argv.includes('--console')) {
     setInterval(() => taskManager.printTaskUpdates(), 5000);
