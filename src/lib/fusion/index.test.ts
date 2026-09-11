@@ -40,6 +40,25 @@ describe("createFusionRuntime", () => {
         expect(rt.rawLog.enabled).toBe(false);
     });
 
+    // The mode transcribe.ts acts on comes from the startup config and nothing
+    // else. A second source of truth for "is fusion on" is how a deployment ends
+    // up in a mode nobody configured.
+    it("reports the startup mode and canary percent as the effective ones", () => {
+        const rt = createFusionRuntime(loadFusionConfig({
+            FUSION_MODE: "shadow",
+            FUSION_CANARY_PERCENT: "25",
+        }, dir));
+
+        expect(rt.effectiveMode()).toBe("shadow");
+        expect(rt.effectiveCanaryPercent()).toBe(25);
+    });
+
+    it("is off with nothing configured", () => {
+        const rt = createFusionRuntime(loadFusionConfig({}, dir));
+        expect(rt.effectiveMode()).toBe("off");
+        expect(rt.effectiveCanaryPercent()).toBe(0);
+    });
+
     it("hands the same log to every transcriber it builds", () => {
         const rt = createFusionRuntime(loadFusionConfig({
             FUSION_MODE: "on",
