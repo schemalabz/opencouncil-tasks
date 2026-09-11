@@ -284,6 +284,14 @@ process.on('SIGTERM', async () => {
     }
 });
 
+// A fused segment is a long request by design and the caller is expected to
+// wait for it. Node is not: it cuts every request at five minutes, and the
+// runbook already recommends raising FUSION_DEADLINE_MS when our own endpoint
+// is cold. The HTTP layer would then kill a segment mid-fusion, after all three
+// providers had been paid, and the caller would see a dropped connection rather
+// than the failure matrix's exact Scribe fallback.
+const HTTP_SLACK_MS = 120_000;
+
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
@@ -298,6 +306,9 @@ const server = app.listen(port, () => {
     });
     console.log();
 });
+
+server.requestTimeout = fusionConfig.deadlineMs + HTTP_SLACK_MS;
+server.setTimeout(0);
 
 if (process.argv.includes('--console')) {
     setInterval(() => taskManager.printTaskUpdates(), 5000);
