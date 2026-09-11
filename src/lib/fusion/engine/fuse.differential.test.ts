@@ -38,6 +38,10 @@ function asWords(tokens: readonly string[]) {
 }
 
 function payloadFor(hyps: readonly (readonly string[])[], arm: string) {
+    // Spreading a missing entry would leave `validate` to fall back to its
+    // defaults, so the harness would quietly compare a different arm against
+    // the oracle and pass.
+    if (!ARM_CONFIG[arm]) throw new Error(`no ARM_CONFIG entry for arm ${arm}`);
     return {
         schema: "oc-fusion-in/1",
         audio_sha256: "0".repeat(64),

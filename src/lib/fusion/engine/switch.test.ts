@@ -11,6 +11,8 @@
  */
 import { describe, it, expect } from "vitest";
 import fs from "fs";
+import fsp from "fs/promises";
+import os from "os";
 import path from "path";
 import { loadFusionConfig } from "../config.js";
 import { createDeadline } from "../deadline.js";
@@ -60,6 +62,28 @@ suite("the fusion engine switch", () => {
 
         expect(fromNode.output).toEqual(fromPython.output);
         deadline.dispose?.();
+    }, 120_000);
+
+    it("fails preflight when the configured engine is missing from the build", async () => {
+        // This is the packaging failure preflight exists for, and it is engine
+        // specific: a deployment can have `fusion/` and no built engine. The
+        // check looked for the Python's script whichever engine was configured,
+        // so `node` passed on an image with no engine in it at all and then
+        // failed to spawn on every segment.
+        const empty = await fsp.mkdtemp(path.join(os.tmpdir(), "fusion-no-engine-"));
+        try {
+            await fsp.mkdir(path.join(empty, "fusion"), { recursive: true });
+            await fsp.copyFile(path.join(REPO, "fusion/fuse.py"), path.join(empty, "fusion/fuse.py"));
+
+            const config = loadFusionConfig({ FUSION_MODE: "on", FUSION_ENGINE: "node" }, empty);
+            const result = await fusionPreflight(config);
+
+            expect(result.ok).toBe(false);
+            expect(result.problem).toContain(FUSION_NODE_SCRIPT);
+            expect(result.problem).not.toContain("fusion/fuse.py");
+        } finally {
+            await fsp.rm(empty, { recursive: true, force: true });
+        }
     }, 120_000);
 
     it("preflights the engine that will actually serve traffic", async () => {

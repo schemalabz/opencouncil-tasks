@@ -73,16 +73,19 @@ export async function fusionPreflight(
 
     // Checked before spawning only so the message names the real cause: a
     // missing script and a broken interpreter both surface as ENOENT otherwise.
-    const script = path.join(config.repoRoot, FUSION_SCRIPT);
+    // It has to be the configured engine's script. Checking the Python's while
+    // `node` is configured passes on a deployment that has `fusion/` and no
+    // built engine, and then every segment fails to spawn: the silent
+    // degradation this whole check exists to prevent.
+    const scriptName = config.engine === "node" ? FUSION_NODE_SCRIPT : FUSION_SCRIPT;
+    const script = path.join(config.repoRoot, scriptName);
     if (!fs.existsSync(script)) {
         return {
             ...checked,
             ok: false,
-            problem: `${FUSION_SCRIPT} is not present at ${script} — the fusion engine was not packaged with this build`,
+            problem: `${scriptName} is not present at ${script} — the fusion engine was not packaged with this build`,
         };
     }
-
-    const scriptName = config.engine === "node" ? FUSION_NODE_SCRIPT : FUSION_SCRIPT;
     const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     const deadline = createDeadline(Date.now() + timeoutMs);
     const startedAt = Date.now();
