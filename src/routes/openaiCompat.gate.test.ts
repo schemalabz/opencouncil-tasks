@@ -6,8 +6,7 @@ import fsp from "fs/promises";
 import os from "os";
 import path from "path";
 import crypto from "crypto";
-import { execFile } from "child_process";
-import { promisify } from "util";
+import { scoreRouteGate, type GateReport, type GateRow, type GateSources } from "./openaiCompat.gate.score.js";
 import { createAuthMiddleware } from "../lib/auth.js";
 import { createFusionRuntime, FusionTranscriber, artifactFromFile, type FusionRuntime } from "../lib/fusion/index.js";
 import { loadFusionConfig } from "../lib/fusion/config.js";
@@ -52,7 +51,6 @@ import { mountOpenAiCompatRoute } from "./openaiCompat.js";
  * Run: npm run test:fusion-route-gate
  */
 
-const execFileAsync = promisify(execFile);
 
 // `../lib/auth.js` builds its middleware at module scope, so API_TOKENS must
 // exist before that import is evaluated. vi.hoisted runs ahead of imports.
@@ -64,8 +62,33 @@ const TOKEN = vi.hoisted(() => {
 
 const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..");
 const COMMITTED_MANIFEST = path.join(REPO_ROOT, "tests", "fusion", "fixtures", "MANIFEST.json");
-const SCORER = path.join(REPO_ROOT, "tests", "fusion", "route_gate_score.py");
-const PYTHON = process.env.FUSION_PYTHON_BIN?.trim() || "python3";
+/**
+ * Scoring used to shell out to `tests/fusion/route_gate_score.py`. That scorer
+ * is in the archive tag now; this is its port, called in process, with its
+ * oracle read from the dumped Python output instead of re-fused live.
+ */
+function score(resultsFile: string): GateReport {
+    const rows = fs.readFileSync(resultsFile, "utf8")
+        .split("\n").map((l) => l.trim()).filter(Boolean)
+        .map((l) => JSON.parse(l) as GateRow);
+    return scoreRouteGate(rows, gateSources());
+}
+
+/** The frozen answers the gate checks against, loaded once. */
+function gateSources() {
+    const read = (name: string) => JSON.parse(fs.readFileSync(path.join(bundle.dir, name), "utf8"));
+    const oracleDump = read("oracle_rules_on_production_391.json");
+    const oracle: Record<string, string[]> = {};
+    for (const [id, out] of Object.entries(oracleDump.outputs as Record<string, { tokens: { norm: string }[] }>)) {
+        oracle[id] = out.tokens.map((t) => t.norm);
+    }
+    return {
+        inputs: Object.fromEntries(read("fixture_inputs_391.json").windows.map((w: { id: string }) => [w.id, w])),
+        expected: Object.fromEntries(read("fixture_rules_on_391.json").windows.map((w: { id: string }) => [w.id, w])),
+        manifest: bundle.manifest as unknown as GateSources["manifest"],
+        oracle,
+    } as GateSources;
+}
 
 /** Fixture `trio` names, in the fixed contract order, mapped to provider ids. */
 const TRIO = ["scribe", "soniox", "oc-cleanpack-cont-s47-b"] as const;
@@ -334,8 +357,13 @@ const tokensSha = (tokens: string[]) =>
 /* ================================================================== */
 
 const bundle = loadBundle();
-const HAS_PYTHON = fs.existsSync(path.join(REPO_ROOT, "fusion", "fuse.py"));
-if (!HAS_PYTHON) fail("fusion/fuse.py is absent — there is nothing to gate");
+// The gate checks the HTTP path against what the Python produced at the
+// production chunking. Without that dump there is no independent answer to
+// check against, and a gate with no oracle is a gate that always passes.
+const ORACLE_DUMP = path.join(bundle.dir, "oracle_rules_on_production_391.json");
+if (!fs.existsSync(ORACLE_DUMP)) {
+    fail(`${ORACLE_DUMP} is absent — see docs/fusion-python-archive.md`);
+}
 
 describe("route gate: 391 benchmark windows through POST /v1/audio/transcriptions", () => {
     let workDir: string;
@@ -344,7 +372,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
     let server: http.Server;
     let baseUrl: string;
     let resultsPath: string;
-    let cleanSummary: { chunking_divergences?: { id: string }[] } | undefined;
+    let cleanSummary: GateReport | undefined;
     const audioShas = new Map<string, string>();
 
     beforeAll(async () => {
@@ -423,13 +451,8 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
         console.info(`[gate] ${differedFromFrozen} of ${bundle.manifest.n_windows} windows differ from the unchunked frozen text`);
     });
 
-    it("matches fuse.py exactly, and keeps chunking inside its declared budget", async () => {
-        const { stdout } = await execFileAsync(PYTHON, [SCORER, resultsPath], {
-            cwd: REPO_ROOT,
-            env: { ...process.env, FUSION_FIXTURES_DIR: bundle.dir },
-            maxBuffer: 8 * 1024 * 1024,
-        });
-        const summary = JSON.parse(stdout.trim().split("\n").pop()!);
+    it("matches the frozen engine exactly, and keeps chunking inside its declared budget", async () => {
+        const summary = score(resultsPath);
         cleanSummary = summary;
         console.info(`[gate] ${JSON.stringify(summary)}`);
 
@@ -438,7 +461,8 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
         // produces for the same input and config. No tolerance on this one.
         expect(summary.n_hard_mismatches).toBe(0);
         // The chunking claim, priced separately and pre-declared.
-        expect(Math.abs(summary.delta_wer)).toBeLessThanOrEqual(summary.delta_gate);
+        expect(summary.delta_wer, "no delta means no windows were scored").not.toBeNull();
+        expect(Math.abs(summary.delta_wer as number)).toBeLessThanOrEqual(summary.delta_gate);
         expect(summary.frozen_sidn).toEqual(bundle.manifest.totals.rules_on);
         expect(summary.ok).toBe(true);
     });
@@ -453,14 +477,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
         lines[0] = JSON.stringify({ ...first, text: `${first.text} παρεμβολη` });
         fs.writeFileSync(altered, `${lines.join("\n")}\n`);
 
-        const failure = await execFileAsync(PYTHON, [SCORER, altered], {
-            cwd: REPO_ROOT,
-            env: { ...process.env, FUSION_FIXTURES_DIR: bundle.dir },
-            maxBuffer: 8 * 1024 * 1024,
-        }).catch((error) => error as { code: number; stdout: string });
-
-        expect((failure as { code: number }).code).toBe(1);
-        const summary = JSON.parse((failure as { stdout: string }).stdout.trim().split("\n").pop()!);
+        const summary = score(altered);
         expect(summary.ok).toBe(false);
         // An altered result is not a chunking divergence: fuse.py will not
         // reproduce it, so it must land in the hard bucket.
@@ -494,14 +511,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
             });
         fs.writeFileSync(control, `${lines.join("\n")}\n`);
 
-        const failure = await execFileAsync(PYTHON, [SCORER, control], {
-            cwd: REPO_ROOT,
-            env: { ...process.env, FUSION_FIXTURES_DIR: bundle.dir },
-            maxBuffer: 8 * 1024 * 1024,
-        }).catch((error) => error as { code: number; stdout: string });
-
-        expect((failure as { code: number }).code).toBe(1);
-        const summary = JSON.parse((failure as { stdout: string }).stdout.trim().split("\n").pop()!);
+        const summary = score(control);
         expect(summary.ok).toBe(false);
         expect(summary.n_hard_mismatches).toBe(1);
         expect(summary.hard_mismatches[0].id).toBe(divergent);
@@ -517,14 +527,7 @@ describe("route gate: 391 benchmark windows through POST /v1/audio/transcription
         lines[lines.length - 1] = JSON.stringify(first);
         fs.writeFileSync(control, `${lines.join("\n")}\n`);
 
-        const failure = await execFileAsync(PYTHON, [SCORER, control], {
-            cwd: REPO_ROOT,
-            env: { ...process.env, FUSION_FIXTURES_DIR: bundle.dir },
-            maxBuffer: 8 * 1024 * 1024,
-        }).catch((error) => error as { code: number; stdout: string });
-
-        expect((failure as { code: number }).code).toBe(1);
-        const summary = JSON.parse((failure as { stdout: string }).stdout.trim().split("\n").pop()!);
+        const summary = score(control);
         expect(summary.ok).toBe(false);
         expect(summary.duplicate_ids).toContain(first.id);
         expect(summary.missing_ids.length).toBe(1);

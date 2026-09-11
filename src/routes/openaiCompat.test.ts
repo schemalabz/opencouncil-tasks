@@ -25,7 +25,8 @@ const TOKEN = vi.hoisted(() => {
     return t;
 });
 const REPO_ROOT = path.resolve(import.meta.dirname, "..", "..");
-const HAS_PYTHON_FUSION = fs.existsSync(path.join(REPO_ROOT, "fusion", "fuse.py"));
+// The end-to-end test spawns the real engine, which is the built output.
+const HAS_ENGINE = fs.existsSync(path.join(REPO_ROOT, "dist/lib/fusion/engine/cli.js"));
 
 const AUDIO_BYTES = Buffer.from("RIFFfake-greek-council-audio-for-tests");
 
@@ -217,7 +218,7 @@ describe("POST /v1/audio/transcriptions", () => {
     });
 });
 
-describe.skipIf(!HAS_PYTHON_FUSION)("multipart end to end, through the real fuse.py", () => {
+describe.skipIf(!HAS_ENGINE)("multipart end to end, through the real engine", () => {
     it("fuses a replayed segment and returns text", async () => {
         const response = await post(`${baseUrl}/v1/audio/transcriptions`, { model: "fusion-rules", language: "el" });
         const body = await response.json() as any;
@@ -230,8 +231,8 @@ describe.skipIf(!HAS_PYTHON_FUSION)("multipart end to end, through the real fuse
     }, 30_000);
 });
 
-if (!HAS_PYTHON_FUSION) {
-    // Not a silent skip: the gate that matters is "real Express + real Python",
-    // and a run without fusion/fuse.py has not tested it.
-    console.warn("[fusion] fusion/fuse.py is absent — the end-to-end fusion test was skipped");
+if (!HAS_ENGINE) {
+    // Not a silent skip: the case that matters is real Express spawning the
+    // real engine, and a run without a build has not tested it.
+    console.warn("[fusion] dist/ is absent — the end-to-end fusion test was skipped; run npm run build");
 }

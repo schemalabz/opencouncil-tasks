@@ -50,6 +50,24 @@ export function toksSha(tokens: readonly string[]): string {
     return crypto.createHash("sha256").update(pyJsonDumps(tokens, false), "utf8").digest("hex").slice(0, 16);
 }
 
+export interface HardMismatch {
+    id: string;
+    want_sha: string | null;
+    got_sha: string;
+    want_n: number | null;
+    got_n: number;
+    equals_frozen: boolean;
+}
+
+export interface ChunkingDivergence {
+    id: string;
+    frozen_n: number;
+    produced_n: number;
+    frozen_sha: string;
+    produced_sha: string;
+    extra_errors: number;
+}
+
 export interface GateReport {
     ok: boolean;
     n_results: number;
@@ -61,9 +79,9 @@ export interface GateReport {
     delta_wer: number | null;
     delta_gate: number;
     n_hard_mismatches: number;
-    hard_mismatches: Record<string, unknown>[];
+    hard_mismatches: HardMismatch[];
     n_chunking_divergences: number;
-    chunking_divergences: Record<string, unknown>[];
+    chunking_divergences: ChunkingDivergence[];
     total_extra_errors: number;
     largest_window_share_of_net_delta: number | null;
     missing_ids: string[];
@@ -79,8 +97,8 @@ const round3 = (x: number) => Math.round(x * 1e3) / 1e3;
 export function scoreRouteGate(results: readonly GateRow[], src: GateSources): GateReport {
     const { inputs, expected, manifest, oracle } = src;
 
-    const hardMismatches: Record<string, unknown>[] = [];
-    const chunkingDivergences: Record<string, unknown>[] = [];
+    const hardMismatches: HardMismatch[] = [];
+    const chunkingDivergences: ChunkingDivergence[] = [];
     let total: [number, number, number, number] = [0, 0, 0, 0];
     let frozenTotal: [number, number, number, number] = [0, 0, 0, 0];
 
@@ -145,7 +163,7 @@ export function scoreRouteGate(results: readonly GateRow[], src: GateSources): G
 
     // One window supplying the whole delta is a different finding from the same
     // delta spread over 391, and this project has been burned by not looking.
-    const extra = chunkingDivergences.map((d) => d.extra_errors as number);
+    const extra = chunkingDivergences.map((d) => d.extra_errors);
     const totalExtra = extra.reduce((a, b) => a + b, 0);
     const dominance = totalExtra ? round3(Math.max(...extra) / totalExtra) : null;
 

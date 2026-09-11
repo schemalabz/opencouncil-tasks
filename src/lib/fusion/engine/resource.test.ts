@@ -23,8 +23,23 @@ const CLI = path.join(REPO, "dist/lib/fusion/engine/cli.js");
 const policy = loadPolicy(path.join(REPO, "fusion"));
 
 const TARGET_TOKENS = 2500;
-const WALL_GATE_MS = 60_000;
-const HEAP_GATE_BYTES = 1 << 30;
+
+/**
+ * Ten times the measured cost, not the Python's old budget.
+ *
+ * The 60-second gate this inherited was measured for CPython, where this input
+ * took 20.1 s. In Node it takes about 700 ms, so that gate would have let the
+ * engine get ninety times slower without saying anything: a gate that cannot
+ * fail is a comment with a stack trace attached.
+ *
+ * Ten times leaves room for a loaded CI machine and still catches an order of
+ * magnitude, which is what a cubic algorithm regresses by when a bound moves.
+ * Raise it only with the measurement that justifies it.
+ */
+const WALL_GATE_MS = 10_000;
+
+/** Measured at +12 MB. This is room to be wrong, not room to leak. */
+const HEAP_GATE_BYTES = 256 * 1024 * 1024;
 
 /** Mirrors PRODUCTION_CHUNKING in FusionTranscriber.ts. Frozen 2026-09-04. */
 const PRODUCTION_CHUNKING = { max_tokens: 120, anchor_n: 3, search_radius: 200 };

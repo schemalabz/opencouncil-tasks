@@ -11,6 +11,7 @@ regenerated from this repository any more.
 |---|---|
 | Commit | `7c47040e058c5b182c5edecda9779a88aa52ecdb` |
 | Tag | `python-engine-last-known-good` |
+| Verified | a clean clone of the tag reproduced all 391 windows byte for byte, and the normalizer baselines to the same sha256, on 2026-09-11 |
 | Branch | `backup/fusion-python-engine` |
 | Remote | `https://github.com/angelospk/opencouncil-tasks` |
 
@@ -45,6 +46,8 @@ From a checkout of the tag, with the bundle present:
 
 ```bash
 python3 tests/fusion/oracle_dump.py            # -> oracle_rules_off_391.json
+python3 tests/fusion/oracle_dump.py --chunking production
+python3 tests/fusion/oracle_dump.py --arm rules_on --chunking production
 python3 tests/fusion/msa_vectors.py            # -> msa_vectors_391.json
 python3 tests/fusion/normalize_vectors.py      # -> normalize_vectors.json
 python3 tests/fusion/normalize_edge_vectors.py > src/lib/fusion/engine/normalize.vectors.json
