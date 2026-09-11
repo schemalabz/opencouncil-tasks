@@ -5,9 +5,9 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./src:/app/src
-      # The fuse core, spawned as a subprocess by src/lib/fusion/fusePy.ts.
-      # Dockerfile.dev copies no source at all, so without this mount
-      # FUSION_MODE=on has nothing to run.
+      # The frozen policy the engine reads and hash-checks. Dockerfile.dev
+      # copies no source at all, so without this mount FUSION_MODE=on refuses
+      # to start. The engine itself is TypeScript and comes with ./src.
       - ./fusion:/app/fusion
       - ./.env:/app/.env
       - ./tsconfig.json:/app/tsconfig.json
@@ -30,6 +30,41 @@ services:
       minio-init:
         condition: service_completed_successfully
   
+  # The fusion on its own port, speaking the OpenAI transcription API, for
+  # anything that wants to use it as a provider without going through the task
+  # runner. Same image, same engine, same frozen policy: only the entrypoint
+  # differs, so there is no second copy of anything to drift.
+  #
+  #   docker compose -f docker-compose.dev.yml up fusion
+  #   curl -H "Authorization: Bearer $API_TOKEN" -F file=@a.wav \
+  #        -F model=fusion-rules http://localhost:3100/v1/audio/transcriptions
+  #
+  # Off unless asked for by name: `up` without arguments does not start it.
+  fusion:
+    profiles: ["fusion"]
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: ["npm", "run", "start:fusion"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./src:/app/src
+      - ./fusion:/app/fusion
+      - ./.env:/app/.env
+      - ./tsconfig.json:/app/tsconfig.json
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - NODE_ENV=development
+      - PORT=3100
+      - FUSION_MODE=on
+      - FUSION_OPENAI_ROUTE=on
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - opencouncil-net
+
   minio:
     image: minio/minio:latest
     ports:
