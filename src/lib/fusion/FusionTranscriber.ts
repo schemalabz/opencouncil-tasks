@@ -41,7 +41,13 @@ import {
 
 export type FusionModel = "scribe" | "fusion-rules" | "fusion-policy-opus" | "fusion-policy-sonnet";
 
-export const FUSION_MODELS: FusionModel[] = ["scribe", "fusion-rules", "fusion-policy-opus", "fusion-policy-sonnet"];
+/**
+ * The models the route will serve. The two `fusion-policy-*` names were the LLM
+ * arbiter and are gone: an explicit request for one now gets the ordinary
+ * unknown-model 400 rather than a special case explaining a feature that no
+ * longer exists.
+ */
+export const FUSION_MODELS: FusionModel[] = ["scribe", "fusion-rules"];
 
 const POLICY_LLM_MODELS: Record<string, string> = {
     "fusion-policy-opus": "claude-opus-4-1",

@@ -30,6 +30,9 @@ sys.path.insert(0, str(REPO / "tests" / "fusion"))
 
 import conftest  # noqa: E402
 from helpers import payload_for  # noqa: E402
+
+# Mirrors PRODUCTION_CHUNKING in src/lib/fusion/FusionTranscriber.ts.
+PRODUCTION_CHUNKING = {"max_tokens": 120, "anchor_n": 3, "search_radius": 200}
 from fusion.fuse import fuse  # noqa: E402
 
 
@@ -52,6 +55,11 @@ def canonical(value) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--arm", default="rules_off")
+    ap.add_argument("--chunking", choices=("single", "production"), default="single",
+                    help="single = one chunk per window (what the conformance "
+                         "totals were measured under). production = the frozen "
+                         "max_tokens=120 the service actually sends, which is a "
+                         "different code path through the chunker.")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
@@ -64,16 +72,18 @@ def main() -> int:
         (conftest.bundle_dir() / "fixture_inputs_391.json").read_text(encoding="utf-8"))
     windows = inputs["windows"][: args.limit] if args.limit else inputs["windows"]
 
+    chunking = PRODUCTION_CHUNKING if args.chunking == "production" else None
     records = {}
     for win in windows:
-        out = fuse(payload_for(win["hyps"], args.arm))
+        out = fuse(payload_for(win["hyps"], args.arm, chunking))
         records[win["id"]] = out
 
     out_path = Path(args.out) if args.out else (
-        conftest.bundle_dir() / f"oracle_{args.arm}_{len(records)}.json")
+        conftest.bundle_dir() / f"oracle_{args.arm}_{args.chunking}_{len(records)}.json")
     payload = {
         "schema": "oc-fusion-oracle/1",
         "arm": args.arm,
+        "chunking": args.chunking,
         "engine_revision": engine_revision(),
         "python": platform.python_version(),
         "unicodedata": unicodedata.unidata_version,
@@ -87,6 +97,7 @@ def main() -> int:
     index = {
         "schema": "oc-fusion-oracle-index/1",
         "arm": args.arm,
+        "chunking": args.chunking,
         "windows": len(records),
         "engine_revision": payload["engine_revision"],
         "python": payload["python"],
@@ -98,7 +109,8 @@ def main() -> int:
             for wid, o in sorted(records.items())
         },
     }
-    index_path = REPO / "tests" / "fusion" / f"ORACLE_{args.arm}.json"
+    suffix = "" if args.chunking == "single" else f"_{args.chunking}"
+    index_path = REPO / "tests" / "fusion" / f"ORACLE_{args.arm}{suffix}.json"
     index_path.write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n",
                           encoding="utf-8")
 

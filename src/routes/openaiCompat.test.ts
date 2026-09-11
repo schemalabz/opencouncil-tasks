@@ -161,11 +161,17 @@ describe("POST /v1/audio/transcriptions", () => {
         expect((await response.json() as any).error.param).toBe("model");
     });
 
-    it("rejects the policy models with a stable error while FUSION_LLM=off", async () => {
+    it("does not offer the retired arbiter models at all", async () => {
+        // They were the LLM arm, which went with the Python engine. There is no
+        // special case left explaining a disabled feature: they are simply not
+        // models this service has, and they get the ordinary unknown-model 400.
         for (const model of ["fusion-policy-opus", "fusion-policy-sonnet"]) {
             const response = await post(`${baseUrl}/v1/audio/transcriptions`, { model });
             expect(response.status).toBe(400);
-            expect((await response.json() as any).error.type).toBe("model_disabled");
+            const body = await response.json() as any;
+            expect(body.error.type).toBe("invalid_request_error");
+            expect(body.error.param).toBe("model");
+            expect(body.error.message).not.toContain(model);
         }
     });
 

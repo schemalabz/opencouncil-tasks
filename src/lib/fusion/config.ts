@@ -99,7 +99,19 @@ function readInt(env: Env, name: string, fallback: number, min: number, max: num
 
 export function loadFusionConfig(env: Env = process.env, repoRoot: string = process.cwd()): FusionConfig {
     const mode = readEnum(env, "FUSION_MODE", MODES, "off");
+    // The LLM arbiter was retired with the Python engine. It contributed to no
+    // measured result, it never passed the listening test its deletion rate
+    // demanded, and an external model's answers cannot be part of a
+    // deterministic equivalence proof. An environment that still asks for it is
+    // asking for something this build cannot do, so it is a startup error
+    // rather than a silent downgrade to the rules arm.
     const llm = readEnum(env, "FUSION_LLM", ["off", "on"] as const, "off");
+    if (llm === "on") {
+        throw new FusionConfigError(
+            "FUSION_LLM=on is no longer supported: the LLM arbiter was removed "
+            + "with the Python engine. Unset FUSION_LLM to run the rules arm. "
+            + "See docs/fusion-python-archive.md.");
+    }
     const openaiRoute = readEnum(env, "FUSION_OPENAI_ROUTE", ["off", "on"] as const, "off");
     const engine = readEnum(env, "FUSION_ENGINE", ["python", "node"] as const, "python");
     const canaryPercent = readInt(env, "FUSION_CANARY_PERCENT", 0, 0, 100);

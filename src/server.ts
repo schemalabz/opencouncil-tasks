@@ -241,7 +241,7 @@ await assertFusionRuntimeUsable(fusionConfig);
 if (fusionConfig.openaiRoute === 'on') {
     const { mountOpenAiCompatRoute } = await import('./routes/openaiCompat.js');
     mountOpenAiCompatRoute(app);
-    console.log(`🔀 Fusion openai-compatible route mounted at /v1/audio/transcriptions (mode=${fusionConfig.mode}, llm=${fusionConfig.llm})`);
+    console.log(`🔀 Fusion openai-compatible route mounted at /v1/audio/transcriptions (mode=${fusionConfig.mode}, engine=${fusionConfig.engine})`);
 } else if (fusionConfig.mode !== 'off') {
     console.log(`🔀 Fusion enabled (mode=${fusionConfig.mode}, canary=${fusionConfig.canaryPercent}%), openai-compatible route disabled`);
 }
