@@ -16,7 +16,8 @@
     "test:upload": "curl -X POST http://localhost:3005/dev/test-upload",
     "smoke": "npm run build && node dist/cli.js smoke",
     "test:fusion-live": "vitest run --config vitest.live.config.ts",
-    "test:fusion-live-replay": "vitest run --config vitest.livereplay.config.ts"
+    "test:fusion-live-replay": "vitest run --config vitest.livereplay.config.ts",
+    "test:fusion-engine": "vitest run --config vitest.engine.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
