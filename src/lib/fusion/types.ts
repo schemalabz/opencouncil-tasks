@@ -1,12 +1,12 @@
 /**
  * Shared types for the three-system ASR fusion provider.
  *
- * The Python boundary (fusion/fuse.py, contract in fusion/CONTRACT.md) owns
+ * The engine boundary (contract in fusion/CONTRACT.md) owns
  * alignment and island rules. Everything in src/lib/fusion owns provider
  * orchestration, timing, and transcript assembly.
  */
 
-/** The three recognisers, in the order fuse.py requires them. */
+/** The three recognisers, in the order the engine requires them. */
 export const PROVIDER_IDS = ["scribe", "soniox", "ours"] as const;
 export type ProviderId = (typeof PROVIDER_IDS)[number];
 
@@ -28,7 +28,7 @@ export interface AudioArtifact {
     durationSec?: number;
 }
 
-/** One provider-native word, normalized to the shape fuse.py consumes. */
+/** One provider-native word, normalized to the shape the engine consumes. */
 export interface NormalizedWord {
     raw: string;
     start: number | null;
@@ -91,7 +91,7 @@ export interface AsrProvider {
 }
 
 /* ------------------------------------------------------------------ */
-/* fuse.py boundary (oc-fusion-in/1 → oc-fusion/1)                      */
+/* engine boundary (oc-fusion-in/1 → oc-fusion/1)                       */
 /* ------------------------------------------------------------------ */
 
 export interface FusionInputSystem {

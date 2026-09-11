@@ -1394,7 +1394,7 @@ program
 
 program
     .command('fusion-preflight')
-    .description('Check whether this environment can actually run the fusion engine (python3 + fusion/)')
+    .description('Check whether this environment can actually run the fusion engine (built engine + fusion/*.json)')
     .action(async () => {
         try {
             const config = loadFusionConfig();

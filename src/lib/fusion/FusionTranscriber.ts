@@ -423,7 +423,6 @@ export class FusionTranscriber {
         let stderrTail = "";
         const { value } = await this.deps.cache.getOrCreate<FusionOutput>("fusion", key, async () => {
             const result = await this.runFusion(input, {
-                pythonBin: this.config.pythonBin,
                 engine: this.config.engine,
                 repoRoot: this.config.repoRoot,
                 signal: ctx.signal,

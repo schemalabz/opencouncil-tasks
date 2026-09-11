@@ -6,9 +6,9 @@ import type { FusionEngine } from "./config.js";
 import { FusionEngineError, type FusionInput, type FusionOutput } from "./types.js";
 
 /**
- * The one subprocess call across the Python boundary (fusion/CONTRACT.md):
+ * The one subprocess call across the engine boundary (fusion/CONTRACT.md):
  *
- *   python3 fusion/fuse.py   stdin oc-fusion-in/1  →  stdout oc-fusion/1
+ *   node dist/lib/fusion/engine/cli.js   stdin oc-fusion-in/1  →  stdout oc-fusion/1
  *
  * Everything that can go wrong here resolves to the same thing — a
  * FusionEngineError, which the caller turns into an exact Scribe fallback.
@@ -16,7 +16,6 @@ import { FusionEngineError, type FusionInput, type FusionOutput } from "./types.
  * response would be a new, unevaluated system.
  */
 
-export const FUSION_SCRIPT = "fusion/fuse.py";
 /** The TypeScript engine's entry point, in the built output that ships. */
 export const FUSION_NODE_SCRIPT = "dist/lib/fusion/engine/cli.js";
 const MAX_OUTPUT_BYTES = 64 * 1024 * 1024;
@@ -33,7 +32,7 @@ const engineRevisions = new Map<string, string>();
  *
  * Memoized per repo root: this is on the path of every segment.
  */
-export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "python"): string {
+export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "node"): string {
     const cacheKey = `${engine}:${repoRoot}`;
     const cached = engineRevisions.get(cacheKey);
     if (cached) return cached;
@@ -41,10 +40,14 @@ export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "p
     // Hash what actually runs. For `node` that is the built engine, which is
     // what the spawn points at, plus `fusion/*.json`: the TypeScript engine
     // reads the same frozen `policy.json` rather than keeping a second copy.
-    const dirs = engine === "node"
-        ? [{ dir: path.join(repoRoot, "dist/lib/fusion/engine"), ext: [".js"] },
-           { dir: path.join(repoRoot, "fusion"), ext: [".json"] }]
-        : [{ dir: path.join(repoRoot, "fusion"), ext: [".py", ".json"] }];
+    // Hash what actually runs: the built engine, plus the frozen policy assets
+    // it reads. A change to either has to change the revision, or the cache
+    // would serve yesterday's fusion for today's rules.
+    void engine;
+    const dirs = [
+        { dir: path.join(repoRoot, "dist/lib/fusion/engine"), ext: [".js"] },
+        { dir: path.join(repoRoot, "fusion"), ext: [".json"] },
+    ];
 
     let revision: string;
     try {
@@ -62,7 +65,10 @@ export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "p
         // prefixed, which is the whole point: the two engines must never read
         // each other's entries, even when their output is identical.
         const digest = parts.length === 0 ? "absent" : shortSha(sha256Hex(parts.join("\n")));
-        revision = engine === "node" && digest !== "absent" ? `ts-${digest}` : digest;
+        // The prefix is permanent. It is in every cache key already written,
+        // and it is what keeps the Python era's entries unreadable rather than
+        // merely unlikely to be asked for.
+        revision = digest === "absent" ? digest : `ts-${digest}`;
     } catch {
         revision = "absent";
     }
@@ -76,8 +82,7 @@ export function clearEngineRevisionCache(): void {
 }
 
 export interface FusePyOptions {
-    pythonBin: string;
-    /** Which implementation to spawn. Defaults to the Python. */
+    /** Retained so the one call site stays explicit; there is one engine. */
     engine?: FusionEngine;
     repoRoot: string;
     signal: AbortSignal;
@@ -93,10 +98,10 @@ export interface FusePyResult {
 
 export async function runFusionPython(input: FusionInput, options: FusePyOptions): Promise<FusePyResult> {
     const startedAt = Date.now();
-    const engine = options.engine ?? "python";
-    const [command, scriptPath] = engine === "node"
-        ? [process.execPath, path.join(options.repoRoot, FUSION_NODE_SCRIPT)]
-        : [options.pythonBin, path.join(options.repoRoot, FUSION_SCRIPT)];
+    // `process.execPath` rather than a `node` found on PATH: the child must be
+    // this runtime, not whatever a shell would have resolved.
+    const command = process.execPath;
+    const scriptPath = path.join(options.repoRoot, FUSION_NODE_SCRIPT);
     const maxOutput = options.maxOutputBytes ?? MAX_OUTPUT_BYTES;
 
     const { stdout, stderrTail, code, signalName, spawnError, overflowed } = await new Promise<{
@@ -166,7 +171,7 @@ export async function runFusionPython(input: FusionInput, options: FusePyOptions
     });
 
     if (spawnError) {
-        throw new FusionEngineError(`could not run ${options.pythonBin} ${FUSION_SCRIPT}: ${spawnError.message}`, "python_spawn_failed");
+        throw new FusionEngineError(`could not run ${FUSION_NODE_SCRIPT}: ${spawnError.message}`, "python_spawn_failed");
     }
     if (overflowed) {
         throw new FusionEngineError(`fuse.py wrote more than ${maxOutput} bytes to stdout`, "python_output_too_large");

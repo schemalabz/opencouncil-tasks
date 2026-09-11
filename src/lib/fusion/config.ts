@@ -13,7 +13,12 @@ import { sha256OfValue, shortSha } from "./hash.js";
 
 export type FusionMode = "off" | "shadow" | "on";
 export type OnOff = "off" | "on";
-export type FusionEngine = "python" | "node";
+/**
+ * One value, kept as a named type because the engine revision and the cache
+ * namespace still distinguish the TypeScript engine from the Python era whose
+ * entries are still on disk.
+ */
+export type FusionEngine = "node";
 
 export interface FusionConfig {
     mode: FusionMode;
@@ -23,14 +28,11 @@ export interface FusionConfig {
     openaiRoute: OnOff;
     /** Percentage of meetings that get fusion while mode=on. 0 ⇒ nobody. */
     canaryPercent: number;
-    pythonBin: string;
     /**
      * Which implementation of the fuse core runs. `python` spawns
-     * `fusion/fuse.py`; `node` spawns the TypeScript port, which is held to
-     * the Python's output on all 391 benchmark windows. Default `python`:
-     * the port is proved, not yet the thing in production, and the two are
-     * separate cache namespaces so a switch either way is a miss, never a
-     * silent substitution.
+     * Which implementation of the fuse core runs. There is one, and the field
+     * survives because the engine revision and the cache namespace still have
+     * to distinguish it from the Python era whose entries are still on disk.
      */
     engine: FusionEngine;
     cacheDir: string;
@@ -58,7 +60,7 @@ export interface FusionConfig {
     /** Size valve for one raw record. Default 32 MB; a 20-minute segment is ~0.6 MB. */
     rawLogMaxBytes: number;
     rawLogRetentionDays: number;
-    /** Repo root; fuse.py is spawned with this as cwd. */
+    /** Repo root; the engine is spawned with this as cwd. */
     repoRoot: string;
 }
 
@@ -113,7 +115,35 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
             + "See docs/fusion-python-archive.md.");
     }
     const openaiRoute = readEnum(env, "FUSION_OPENAI_ROUTE", ["off", "on"] as const, "off");
-    const engine = readEnum(env, "FUSION_ENGINE", ["python", "node"] as const, "python");
+    // FUSION_ENGINE is retired. There is one engine now, so the variable can
+    // only say something wrong.
+    //
+    // An explicit `python` fails rather than falling through. It is a statement
+    // about which implementation and which cache namespace the operator wants,
+    // and quietly giving them the other one changes both -- which is exactly
+    // what separate namespaces exist to prevent. The preflight already holds
+    // the line that fusion enabled and unusable means do not start.
+    const requestedEngine = env.FUSION_ENGINE?.trim();
+    if (requestedEngine === "python") {
+        throw new FusionConfigError(
+            "FUSION_ENGINE=python is no longer supported: the Python engine was "
+            + "removed. Unset FUSION_ENGINE to use the TypeScript engine, or roll "
+            + "back to a Python-capable image. See docs/fusion-python-archive.md.");
+    }
+    if (requestedEngine !== undefined && requestedEngine !== "" && requestedEngine !== "node") {
+        throw new FusionConfigError(
+            `FUSION_ENGINE must be unset (got ${JSON.stringify(requestedEngine)}); `
+            + "the variable is retired and there is one engine.");
+    }
+    if (requestedEngine === "node") {
+        console.warn("[fusion] FUSION_ENGINE=node is redundant and will stop being "
+            + "read; there is one engine. Remove it from the environment.");
+    }
+    if (env.FUSION_PYTHON_BIN?.trim()) {
+        console.warn("[fusion] FUSION_PYTHON_BIN is ignored: the engine is no longer "
+            + "Python. Remove it from the environment.");
+    }
+    const engine: FusionEngine = "node";
     const canaryPercent = readInt(env, "FUSION_CANARY_PERCENT", 0, 0, 100);
     const audioTransport = readEnum(env, "FUSION_AUDIO_TRANSPORT",
         ["url", "bytes", "auto"] as const, "auto");
@@ -132,7 +162,6 @@ export function loadFusionConfig(env: Env = process.env, repoRoot: string = proc
         openaiRoute,
         canaryPercent,
         audioTransport,
-        pythonBin: env.FUSION_PYTHON_BIN?.trim() || "python3",
         engine,
         cacheDir: env.FUSION_CACHE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-cache"),
         traceDir: env.FUSION_TRACE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-traces"),

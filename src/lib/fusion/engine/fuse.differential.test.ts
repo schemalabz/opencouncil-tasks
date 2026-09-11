@@ -8,8 +8,8 @@
  * budget would let a port change words and still pass; this does not let it
  * change anything.
  *
- * The expected side is frozen by `python3 tests/fusion/oracle_dump.py`, which
- * runs the real `fusion/fuse.py`. The outputs hold council speech and are not
+ * The expected side is frozen by `tests/fusion/oracle_dump.py` at the
+ * `python-engine-last-known-good` tag; see `docs/fusion-python-archive.md`. The outputs hold council speech and are not
  * in git, so without them this skips.
  */
 import { describe, it, expect } from "vitest";

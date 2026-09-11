@@ -1,0 +1,602 @@
+{
+ "cases": {
+  "__invalid_json__": {
+   "code": 2,
+   "stderr": "{\"error\": \"invalid JSON on stdin\", \"detail\": \"Expecting property name enclosed in double quotes: line 1 column 2 (char 1)\"}\n",
+   "stdout": null
+  },
+  "empty_systems": {
+   "code": 0,
+   "stderr": "",
+   "stdout": {
+    "audio_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "config": {
+     "arm": "rules",
+     "chunking": {
+      "anchor_n": 3,
+      "forced_cuts": 0,
+      "max_tokens": 800,
+      "min_pause_fallback": null,
+      "n_chunks": 0,
+      "rev": "chunk/1",
+      "seams": [],
+      "search_radius": 200
+     },
+     "code_rev": "fusion/1",
+     "components": {
+      "ours": "p-ours",
+      "scribe": "p-scribe",
+      "soniox": "p-soniox"
+     },
+     "guard": false,
+     "llm_envelope_sha": null,
+     "normalizer_rev": "wtoks/1",
+     "policy_sha": "3e5676d982078979"
+    },
+    "dropped": [],
+    "islands": [],
+    "schema": "oc-fusion/1",
+    "stats": {
+     "by_category": {},
+     "by_stage": {
+      "agree": 0,
+      "llm": 0,
+      "rule": 0
+     },
+     "guard_fired": 0,
+     "n_islands": 0,
+     "n_tokens": 0
+    },
+    "tokens": []
+   }
+  },
+  "guard_island": {
+   "code": 0,
+   "stderr": "",
+   "stdout": {
+    "audio_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "config": {
+     "arm": "rules",
+     "chunking": {
+      "anchor_n": 3,
+      "forced_cuts": 0,
+      "max_tokens": 800,
+      "min_pause_fallback": null,
+      "n_chunks": 1,
+      "rev": "chunk/1",
+      "seams": [],
+      "search_radius": 200
+     },
+     "code_rev": "fusion/1",
+     "components": {
+      "ours": "p-ours",
+      "scribe": "p-scribe",
+      "soniox": "p-soniox"
+     },
+     "guard": true,
+     "llm_envelope_sha": null,
+     "normalizer_rev": "wtoks/1",
+     "policy_sha": "3e5676d982078979"
+    },
+    "dropped": [],
+    "islands": [
+     {
+      "candidates": {
+       "ours": [],
+       "r12": [],
+       "scribe": [],
+       "soniox": [
+        "δεν"
+       ],
+       "vote": []
+      },
+      "category": "SOLO_soniox",
+      "chosen_src": "soniox",
+      "cols": [
+       2,
+       2
+      ],
+      "guard_fired": true,
+      "id": "isl_0",
+      "llm": null,
+      "rule": "R1+R2",
+      "stage": "rule"
+     }
+    ],
+    "schema": "oc-fusion/1",
+    "stats": {
+     "by_category": {
+      "SOLO_soniox": 1
+     },
+     "by_stage": {
+      "agree": 5,
+      "llm": 0,
+      "rule": 1
+     },
+     "guard_fired": 1,
+     "n_islands": 1,
+     "n_tokens": 6
+    },
+    "tokens": [
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 0,
+      "i": 0,
+      "island": null,
+      "norm": "αλφα",
+      "src": "scribe",
+      "src_word": 0,
+      "stage": "agree",
+      "text": "αλφα"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 1,
+      "i": 1,
+      "island": null,
+      "norm": "βητα",
+      "src": "scribe",
+      "src_word": 1,
+      "stage": "agree",
+      "text": "βητα"
+     },
+     {
+      "agreement": 0.33,
+      "alternatives": [
+       {
+        "conf": null,
+        "norm": [],
+        "src": "scribe",
+        "text": ""
+       },
+       {
+        "conf": 0.9,
+        "norm": [
+         "δεν"
+        ],
+        "src": "soniox",
+        "text": "δεν"
+       },
+       {
+        "conf": null,
+        "norm": [],
+        "src": "ours",
+        "text": ""
+       }
+      ],
+      "col": 2,
+      "i": 2,
+      "island": "isl_0",
+      "norm": "δεν",
+      "src": "soniox",
+      "src_word": 2,
+      "stage": "rule",
+      "text": "δεν"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 3,
+      "i": 3,
+      "island": null,
+      "norm": "ζητα",
+      "src": "scribe",
+      "src_word": 2,
+      "stage": "agree",
+      "text": "ζητα"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 4,
+      "i": 4,
+      "island": null,
+      "norm": "θητα",
+      "src": "scribe",
+      "src_word": 3,
+      "stage": "agree",
+      "text": "θητα"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 5,
+      "i": 5,
+      "island": null,
+      "norm": "ιωτα",
+      "src": "scribe",
+      "src_word": 4,
+      "stage": "agree",
+      "text": "ιωτα"
+     }
+    ]
+   }
+  },
+  "malformed_bad_order": {
+   "code": 2,
+   "stderr": "{\"error\": \"malformed oc-fusion-in/1\", \"detail\": \"systems must be ordered ['scribe', 'soniox', 'ours']; got 'soniox' where 'scribe' was expected\"}\n",
+   "stdout": null
+  },
+  "malformed_bad_schema": {
+   "code": 2,
+   "stderr": "{\"error\": \"malformed oc-fusion-in/1\", \"detail\": \"schema must be 'oc-fusion-in/1', got 'oc-fusion-in/999'\"}\n",
+   "stdout": null
+  },
+  "malformed_missing_system": {
+   "code": 2,
+   "stderr": "{\"error\": \"malformed oc-fusion-in/1\", \"detail\": \"systems must be a list of exactly 3 entries\"}\n",
+   "stdout": null
+  },
+  "one_empty": {
+   "code": 0,
+   "stderr": "",
+   "stdout": {
+    "audio_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "config": {
+     "arm": "rules",
+     "chunking": {
+      "anchor_n": 3,
+      "forced_cuts": 0,
+      "max_tokens": 800,
+      "min_pause_fallback": null,
+      "n_chunks": 1,
+      "rev": "chunk/1",
+      "seams": [],
+      "search_radius": 200
+     },
+     "code_rev": "fusion/1",
+     "components": {
+      "ours": "p-ours",
+      "scribe": "p-scribe",
+      "soniox": "p-soniox"
+     },
+     "guard": false,
+     "llm_envelope_sha": null,
+     "normalizer_rev": "wtoks/1",
+     "policy_sha": "3e5676d982078979"
+    },
+    "dropped": [],
+    "islands": [
+     {
+      "candidates": {
+       "ours": [],
+       "r12": [
+        "αλφα",
+        "βητα",
+        "γαμμα"
+       ],
+       "scribe": [
+        "αλφα",
+        "βητα",
+        "γαμμα"
+       ],
+       "soniox": [
+        "αλφα",
+        "βητα",
+        "γαμμα"
+       ],
+       "vote": [
+        "αλφα",
+        "βητα",
+        "γαμμα"
+       ]
+      },
+      "category": "PAIRE_scribe+soniox",
+      "chosen_src": "scribe",
+      "cols": [
+       0,
+       2
+      ],
+      "guard_fired": false,
+      "id": "isl_0",
+      "llm": null,
+      "rule": "R1+R2",
+      "stage": "rule"
+     }
+    ],
+    "schema": "oc-fusion/1",
+    "stats": {
+     "by_category": {
+      "PAIRE_scribe+soniox": 1
+     },
+     "by_stage": {
+      "agree": 0,
+      "llm": 0,
+      "rule": 3
+     },
+     "guard_fired": 0,
+     "n_islands": 1,
+     "n_tokens": 3
+    },
+    "tokens": [
+     {
+      "agreement": 0.67,
+      "alternatives": [
+       {
+        "conf": 0.9,
+        "norm": [
+         "αλφα",
+         "βητα",
+         "γαμμα"
+        ],
+        "src": "scribe",
+        "text": "αλφα βητα γαμμα"
+       },
+       {
+        "conf": 0.9,
+        "norm": [
+         "αλφα",
+         "βητα",
+         "γαμμα"
+        ],
+        "src": "soniox",
+        "text": "αλφα βητα γαμμα"
+       },
+       {
+        "conf": null,
+        "norm": [],
+        "src": "ours",
+        "text": ""
+       }
+      ],
+      "col": 0,
+      "i": 0,
+      "island": "isl_0",
+      "norm": "αλφα",
+      "src": "scribe",
+      "src_word": 0,
+      "stage": "rule",
+      "text": "αλφα"
+     },
+     {
+      "agreement": 0.67,
+      "alternatives": [
+       {
+        "conf": 0.9,
+        "norm": [
+         "αλφα",
+         "βητα",
+         "γαμμα"
+        ],
+        "src": "scribe",
+        "text": "αλφα βητα γαμμα"
+       },
+       {
+        "conf": 0.9,
+        "norm": [
+         "αλφα",
+         "βητα",
+         "γαμμα"
+        ],
+        "src": "soniox",
+        "text": "αλφα βητα γαμμα"
+       },
+       {
+        "conf": null,
+        "norm": [],
+        "src": "ours",
+        "text": ""
+       }
+      ],
+      "col": 1,
+      "i": 1,
+      "island": "isl_0",
+      "norm": "βητα",
+      "src": "scribe",
+      "src_word": 1,
+      "stage": "rule",
+      "text": "βητα"
+     },
+     {
+      "agreement": 0.67,
+      "alternatives": [
+       {
+        "conf": 0.9,
+        "norm": [
+         "αλφα",
+         "βητα",
+         "γαμμα"
+        ],
+        "src": "scribe",
+        "text": "αλφα βητα γαμμα"
+       },
+       {
+        "conf": 0.9,
+        "norm": [
+         "αλφα",
+         "βητα",
+         "γαμμα"
+        ],
+        "src": "soniox",
+        "text": "αλφα βητα γαμμα"
+       },
+       {
+        "conf": null,
+        "norm": [],
+        "src": "ours",
+        "text": ""
+       }
+      ],
+      "col": 2,
+      "i": 2,
+      "island": "isl_0",
+      "norm": "γαμμα",
+      "src": "scribe",
+      "src_word": 2,
+      "stage": "rule",
+      "text": "γαμμα"
+     }
+    ]
+   }
+  },
+  "tiny_valid": {
+   "code": 0,
+   "stderr": "",
+   "stdout": {
+    "audio_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "config": {
+     "arm": "rules",
+     "chunking": {
+      "anchor_n": 3,
+      "forced_cuts": 0,
+      "max_tokens": 800,
+      "min_pause_fallback": null,
+      "n_chunks": 1,
+      "rev": "chunk/1",
+      "seams": [],
+      "search_radius": 200
+     },
+     "code_rev": "fusion/1",
+     "components": {
+      "ours": "p-ours",
+      "scribe": "p-scribe",
+      "soniox": "p-soniox"
+     },
+     "guard": false,
+     "llm_envelope_sha": null,
+     "normalizer_rev": "wtoks/1",
+     "policy_sha": "3e5676d982078979"
+    },
+    "dropped": [],
+    "islands": [
+     {
+      "candidates": {
+       "ours": [
+        "γαμμα"
+       ],
+       "r12": [
+        "γαμμα"
+       ],
+       "scribe": [
+        "γαμμα"
+       ],
+       "soniox": [
+        "γαμα"
+       ],
+       "vote": [
+        "γαμμα"
+       ]
+      },
+      "category": "PAIR_scribe+ours|ATOMIC",
+      "chosen_src": "scribe",
+      "cols": [
+       2,
+       2
+      ],
+      "guard_fired": false,
+      "id": "isl_0",
+      "llm": null,
+      "rule": "R1+R2",
+      "stage": "rule"
+     }
+    ],
+    "schema": "oc-fusion/1",
+    "stats": {
+     "by_category": {
+      "PAIR_scribe+ours|ATOMIC": 1
+     },
+     "by_stage": {
+      "agree": 4,
+      "llm": 0,
+      "rule": 1
+     },
+     "guard_fired": 0,
+     "n_islands": 1,
+     "n_tokens": 5
+    },
+    "tokens": [
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 0,
+      "i": 0,
+      "island": null,
+      "norm": "αλφα",
+      "src": "scribe",
+      "src_word": 0,
+      "stage": "agree",
+      "text": "Αλφα,"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 1,
+      "i": 1,
+      "island": null,
+      "norm": "βητα",
+      "src": "scribe",
+      "src_word": 1,
+      "stage": "agree",
+      "text": "βητα"
+     },
+     {
+      "agreement": 0.67,
+      "alternatives": [
+       {
+        "conf": 0.9,
+        "norm": [
+         "γαμμα"
+        ],
+        "src": "scribe",
+        "text": "γαμμα"
+       },
+       {
+        "conf": 0.9,
+        "norm": [
+         "γαμα"
+        ],
+        "src": "soniox",
+        "text": "γαμα"
+       },
+       {
+        "conf": 0.9,
+        "norm": [
+         "γαμμα"
+        ],
+        "src": "ours",
+        "text": "γαμμα"
+       }
+      ],
+      "col": 2,
+      "i": 2,
+      "island": "isl_0",
+      "norm": "γαμμα",
+      "src": "scribe",
+      "src_word": 2,
+      "stage": "rule",
+      "text": "γαμμα"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 3,
+      "i": 3,
+      "island": null,
+      "norm": "δελτα",
+      "src": "scribe",
+      "src_word": 3,
+      "stage": "agree",
+      "text": "δελτα"
+     },
+     {
+      "agreement": 1.0,
+      "alternatives": null,
+      "col": 4,
+      "i": 4,
+      "island": null,
+      "norm": "επσιλον",
+      "src": "scribe",
+      "src_word": 4,
+      "stage": "agree",
+      "text": "επσιλον"
+     }
+    ]
+   }
+  }
+ },
+ "note": "what fusion/fuse.py answered, pinned before it was deleted",
+ "python": "3.14.6",
+ "schema": "oc-fusion-cli-expected/1"
+}

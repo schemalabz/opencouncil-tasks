@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { FusionConfig } from "./config.js";
-import { FUSION_NODE_SCRIPT, FUSION_SCRIPT, fusionEngineRevision, runFusionPython } from "./fusePy.js";
+import { FUSION_NODE_SCRIPT, fusionEngineRevision, runFusionPython } from "./fusePy.js";
 import { createDeadline } from "./deadline.js";
 import type { FusionInput } from "./types.js";
 
@@ -16,9 +16,9 @@ import type { FusionInput } from "./types.js";
  * completely normal. Nothing in the output says the fusion never ran.
  *
  * So the probe is the real thing, not an existence check: the same
- * `runFusionPython`, the same `pythonBin`, the same `repoRoot`, on a synthetic
+ * `runFusionPython`, the same script, the same `repoRoot`, on a synthetic
  * three-word payload. An existence check passes on a Python that is too old
- * (the engine needs >= 3.11), on a script the runtime user cannot read, and on
+ * on a script the runtime user cannot read, and on
  * a `fusion/` that is missing one module — all three of which are exactly what
  * a packaging mistake produces.
  *
@@ -52,7 +52,6 @@ export interface FusionPreflightResult {
     ok: boolean;
     /** One line, safe to log: the interpreter, the script, or the engine's stderr. */
     problem?: string;
-    pythonBin: string;
     repoRoot: string;
     engineRev?: string;
     elapsedMs?: number;
@@ -66,7 +65,7 @@ export async function fusionPreflight(
     config: FusionConfig,
     options: FusionPreflightOptions = {},
 ): Promise<FusionPreflightResult> {
-    const base: FusionPreflightResult = { checked: false, ok: true, pythonBin: config.pythonBin, repoRoot: config.repoRoot };
+    const base: FusionPreflightResult = { checked: false, ok: true, repoRoot: config.repoRoot };
     if (config.mode === "off") return base;
 
     const checked = { ...base, checked: true };
@@ -77,7 +76,7 @@ export async function fusionPreflight(
     // `node` is configured passes on a deployment that has `fusion/` and no
     // built engine, and then every segment fails to spawn: the silent
     // degradation this whole check exists to prevent.
-    const scriptName = config.engine === "node" ? FUSION_NODE_SCRIPT : FUSION_SCRIPT;
+    const scriptName = FUSION_NODE_SCRIPT;
     const script = path.join(config.repoRoot, scriptName);
     if (!fs.existsSync(script)) {
         return {
@@ -91,7 +90,6 @@ export async function fusionPreflight(
     const startedAt = Date.now();
     try {
         const { output } = await runFusionPython(probeInput(), {
-            pythonBin: config.pythonBin,
             // The probe has to run the engine that will serve traffic. Probing
             // the Python while `node` is configured would pass on a deployment
             // whose built engine is missing from the image, which is the exact
@@ -135,14 +133,14 @@ export async function assertFusionRuntimeUsable(
     if (!result.ok) {
         throw new Error(
             `[fusion] FUSION_MODE=${config.mode} but the fusion engine cannot run: ${result.problem}\n`
-            + `  interpreter: ${result.pythonBin}\n`
+            + `  engine: ${FUSION_NODE_SCRIPT}\n`
             + `  repo root:   ${result.repoRoot}\n`
-            + "  Fusion needs python3 >= 3.11 and the fusion/ directory present in the image.\n"
+            + "  Fusion needs dist/lib/fusion/engine/ and fusion/*.json present in the image.\n"
             + "  Set FUSION_MODE=off to run the Scribe-only path.",
         );
     }
     console.log(
-        `🔀 Fusion engine preflight passed (${result.pythonBin}, engine ${result.engineRev}, ${result.elapsedMs} ms)`,
+        `🔀 Fusion engine preflight passed (${FUSION_NODE_SCRIPT}, engine ${result.engineRev}, ${result.elapsedMs} ms)`,
     );
 }
 

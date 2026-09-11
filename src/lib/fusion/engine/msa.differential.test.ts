@@ -6,7 +6,7 @@
  * that through, so this compares the columns themselves, the pivot, every
  * per-column vote decision and the index map.
  *
- * Regenerate with `python3 tests/fusion/msa_vectors.py [--limit N]`; the
+ * Regenerate with `tests/fusion/msa_vectors.py [--limit N]` at the `python-engine-last-known-good` tag; the
  * vectors hold transcript text and are not in git, so this skips without them.
  */
 import { describe, it, expect } from "vitest";

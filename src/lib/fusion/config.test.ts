@@ -11,7 +11,6 @@ describe("loadFusionConfig", () => {
         expect(config.openaiRoute).toBe("off");
         expect(config.canaryPercent).toBe(0);
         expect(config.deadlineMs).toBe(240_000);
-        expect(config.pythonBin).toBe("python3");
     });
 
     it("throws on an invalid FUSION_MODE instead of silently meaning off", () => {
