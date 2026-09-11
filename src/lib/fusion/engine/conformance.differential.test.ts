@@ -13,17 +13,13 @@
  * Needs the fixture bundle, so it skips without one. Regenerate nothing to
  * make it pass; the numbers are the specification.
  */
-import { describe, it, expect } from "vitest";
-import fs from "fs";
-import os from "os";
+import { describe, it, expect, beforeAll } from "vitest";
 import path from "path";
 import { fuse } from "./fuse.js";
 import { loadPolicy } from "./policy.js";
 import { sdi, wtoks } from "./normalize.js";
+import { CORPUS_WINDOWS, INPUTS_FILE, type FixtureWindow, gateFor, loadInputs } from "./fixtures.js";
 
-const BUNDLE = process.env.FUSION_FIXTURES_DIR
-    ?? path.join(os.homedir(), ".cache/oc-public/chooser-2026-08-25");
-const INPUTS = path.join(BUNDLE, "fixture_inputs_391.json");
 const ENGINE_DIR = path.resolve(__dirname, "../../../../fusion");
 
 const ARMS = ["W", "rules_off", "rules_on"] as const;
@@ -44,8 +40,6 @@ const CONTRACT_TOTALS: Record<Arm, [number, number, number, number]> = {
     rules_on: [5036, 1848, 5519, 110694],
 };
 
-interface Window { id: string; ref: string | string[]; hyps: string[][] }
-
 function payloadFor(hyps: readonly (readonly string[])[], arm: Arm) {
     return {
         schema: "oc-fusion-in/1",
@@ -59,16 +53,22 @@ function payloadFor(hyps: readonly (readonly string[])[], arm: Arm) {
     };
 }
 
-const ready = fs.existsSync(INPUTS);
-const suite = ready ? describe : describe.skip;
+const gate = gateFor([INPUTS_FILE]);
+const suite = gate.ready ? describe : describe.skip;
 
 suite("the frozen contract totals", () => {
-    const inputs = JSON.parse(fs.readFileSync(INPUTS, "utf8"));
-    const windows: Window[] = inputs.windows;
-    const policy = loadPolicy(ENGINE_DIR);
+    // Loaded in a hook, not here: `describe.skip` still runs this callback, so a
+    // read at suite scope crashed collection instead of skipping.
+    let windows: FixtureWindow[];
+    let policy: ReturnType<typeof loadPolicy>;
+
+    beforeAll(() => {
+        windows = loadInputs();
+        policy = loadPolicy(ENGINE_DIR);
+    });
 
     it("has all 391 windows", () => {
-        expect(windows.length).toBe(391);
+        expect(windows.length).toBe(CORPUS_WINDOWS);
     });
 
     it("holds fixture tokens that are already atomic", () => {

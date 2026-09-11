@@ -9,26 +9,20 @@
  * Regenerate with `tests/fusion/msa_vectors.py [--limit N]` at the `python-engine-last-known-good` tag; the
  * vectors hold transcript text and are not in git, so this skips without them.
  */
-import { describe, it, expect } from "vitest";
-import fs from "fs";
-import os from "os";
-import path from "path";
+import { describe, it, expect, beforeAll } from "vitest";
+import { CORPUS_WINDOWS, gateFor, read, verifyAgainstIndex } from "./fixtures.js";
 import {
     align3, bandFor, columnIndices, columnsCost, compose, consensusPivot,
     type Column,
 } from "./msa.js";
 
-const BUNDLE = process.env.FUSION_FIXTURES_DIR
-    ?? path.join(os.homedir(), ".cache/oc-public/chooser-2026-08-25");
-
-/** Prefer the largest bundle present, so a full run supersedes a subset. */
-function vectorsPath(): string | null {
-    if (!fs.existsSync(BUNDLE)) return null;
-    const files = fs.readdirSync(BUNDLE)
-        .filter((f) => /^msa_vectors_\d+\.json$/.test(f))
-        .sort((a, b) => Number(b.match(/\d+/)![0]) - Number(a.match(/\d+/)![0]));
-    return files.length ? path.join(BUNDLE, files[0]) : null;
-}
+/**
+ * The vectors for the whole corpus, named rather than globbed. Taking whichever
+ * `msa_vectors_*.json` happened to be largest meant a bundle carrying a subset
+ * still passed, having checked fewer windows than it reported.
+ */
+const VECTORS = "msa_vectors_391.json";
+const INDEX = "MSA_VECTORS_391.json";
 
 interface WindowRecord {
     id: string;
@@ -42,8 +36,8 @@ interface WindowRecord {
     decisions: { col: number; token: string | null; reason: string }[];
 }
 
-const file = vectorsPath();
-const suite = file ? describe : describe.skip;
+const gate = gateFor([VECTORS]);
+const suite = gate.ready ? describe : describe.skip;
 
 /** Exact three-way DP is not cheap. Align each window once, assert many times. */
 const TIMEOUT_MS = 15 * 60 * 1000;
@@ -57,8 +51,14 @@ const TIMEOUT_MS = 15 * 60 * 1000;
 const breathe = () => new Promise<void>((resolve) => setImmediate(resolve));
 
 suite("align3 matches the Python engine on real windows", () => {
-    const vectors: { windows: number; records: WindowRecord[] } =
-        JSON.parse(fs.readFileSync(file!, "utf8"));
+    // Loaded in a hook, not here: `describe.skip` still runs this callback, so a
+    // read at suite scope crashed collection instead of skipping.
+    let vectors: { windows: number; records: WindowRecord[] };
+
+    beforeAll(() => {
+        verifyAgainstIndex(VECTORS, INDEX);
+        vectors = read(VECTORS);
+    });
 
     const aligned = new Map<string, Column[]>();
     const columnsOf = (r: WindowRecord): Column[] => {
@@ -70,8 +70,9 @@ suite("align3 matches the Python engine on real windows", () => {
         return cols;
     };
 
-    it("has vectors to check against", () => {
-        expect(vectors.records.length).toBeGreaterThan(0);
+    it("has the whole corpus to check against", () => {
+        expect(vectors.windows).toBe(CORPUS_WINDOWS);
+        expect(vectors.records.length).toBe(CORPUS_WINDOWS);
     });
 
     it("sizes the band identically", () => {

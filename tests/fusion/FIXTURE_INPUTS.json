@@ -1,0 +1,10 @@
+{
+  "schema": "oc-fusion-fixture-inputs-index/1",
+  "file": "fixture_inputs_391.json",
+  "sha256": "d391f91ed2d64cd2761fa2121800450d135e04844308d14b70c9b68013612e84",
+  "bytes": 6584387,
+  "windows": 391,
+  "python": "3.14.6",
+  "unicodedata": "16.0.0",
+  "report_sha256": "e33d5617fc2b1c3088a9f4a137780158a303a49237ca574aed07e0b39400ca85"
+}

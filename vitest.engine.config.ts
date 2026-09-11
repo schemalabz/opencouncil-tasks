@@ -10,7 +10,13 @@ import { defineConfig } from 'vitest/config';
  *   npm run test:fusion-engine
  *
  * Regenerate the expected side with `python3 tests/fusion/oracle_dump.py`,
- * `msa_vectors.py` and `normalize_vectors.py`. Without the bundle these skip.
+ * `msa_vectors.py` and `normalize_vectors.py`, from the
+ * `python-engine-last-known-good` tag.
+ *
+ * This is the command cited as proof that the port is correct, so it may not
+ * prove it by running nothing. A missing or incomplete bundle fails the run;
+ * `FUSION_FIXTURES=optional` skips instead, for someone who knowingly has no
+ * bundle and wants the rest of their run to finish.
  */
 export default defineConfig({
   test: {

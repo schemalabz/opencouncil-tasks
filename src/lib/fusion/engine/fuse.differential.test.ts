@@ -12,15 +12,15 @@
  * `python-engine-last-known-good` tag; see `docs/fusion-python-archive.md`. The outputs hold council speech and are not
  * in git, so without them this skips.
  */
-import { describe, it, expect } from "vitest";
-import fs from "fs";
-import os from "os";
+import { describe, it, expect, beforeAll } from "vitest";
 import path from "path";
 import { fuse } from "./fuse.js";
 import { loadPolicy } from "./policy.js";
+import {
+    CORPUS_WINDOWS, INPUTS_FILE, ORACLES, type FixtureWindow,
+    gateFor, loadInputs, read, readIndex, verifyAgainstIndex,
+} from "./fixtures.js";
 
-const BUNDLE = process.env.FUSION_FIXTURES_DIR
-    ?? path.join(os.homedir(), ".cache/oc-public/chooser-2026-08-25");
 const ENGINE_DIR = path.join(__dirname, "../../../../fusion");
 
 /** Mirrors `ARM_CONFIG` and `SINGLE_CHUNK` in `tests/fusion/helpers.py`. */
@@ -62,21 +62,6 @@ function payloadFor(hyps: readonly (readonly string[])[], arm: string, chunking:
 }
 
 /**
- * Every dumped oracle in the bundle, not the largest one. The chunking config
- * is the point: the conformance totals were measured at one chunk per window,
- * and production sends `max_tokens=120`, which is a different path through the
- * chunker. Comparing only the first would leave the path that actually runs
- * unchecked.
- */
-function oracleFiles(): { file: string; label: string }[] {
-    if (!fs.existsSync(BUNDLE)) return [];
-    return fs.readdirSync(BUNDLE)
-        .filter((f) => /^oracle_.*_\d+\.json$/.test(f))
-        .sort()
-        .map((f) => ({ file: path.join(BUNDLE, f), label: f.replace(/^oracle_|_\d+\.json$/g, "") }));
-}
-
-/**
  * Structural equality with Python's semantics for the values this output can
  * hold: `null` is a value, key order does not matter, array order does.
  */
@@ -104,25 +89,63 @@ function deepEqual(a: unknown, b: unknown): boolean {
     return false;
 }
 
-const oracles = oracleFiles();
-const inputsPath = path.join(BUNDLE, "fixture_inputs_391.json");
-const ready = oracles.length > 0 && fs.existsSync(inputsPath);
-const suite = ready ? describe : describe.skip;
+interface OracleIndex {
+    arm: string;
+    chunking?: string;
+    windows: number;
+    engine_revision: string;
+    per_window_sha256: Record<string, string>;
+}
 
-suite.each(ready ? oracles : [])("$label: the engine reproduces the Python output", ({ file }) => {
-    const dump = JSON.parse(fs.readFileSync(file, "utf8"));
-    const inputs = JSON.parse(fs.readFileSync(inputsPath, "utf8"));
-    const policy = loadPolicy(ENGINE_DIR);
-    const arm = dump.arm as string;
-    const chunking = (dump.chunking as string) ?? "single";
+interface OracleDump {
+    arm: string;
+    chunking?: string;
+    engine_revision: string;
+    outputs: Record<string, unknown>;
+}
 
-    const byId = new Map<string, { id: string; hyps: string[][] }>(
-        inputs.windows.map((w: { id: string; hyps: string[][] }) => [w.id, w]),
-    );
+/**
+ * Every oracle the migration was accepted against, named rather than globbed.
+ * The chunking config is the point: the conformance totals were measured at one
+ * chunk per window, and production sends `max_tokens=120`, which is a different
+ * path through the chunker. Globbing the bundle meant a bundle holding only the
+ * single-chunk dump still passed — it just stopped checking the path that runs.
+ */
+const gate = gateFor([INPUTS_FILE, ...ORACLES.map((o) => o.file)]);
+const suite = gate.ready ? describe : describe.skip;
 
-    it("was frozen by the engine revision in the repo", () => {
-        expect(typeof dump.engine_revision).toBe("string");
-        expect(Object.keys(dump.outputs).length).toBeGreaterThan(0);
+suite.each([...ORACLES])("$label: the engine reproduces the Python output", ({ file, index }) => {
+    // The window list comes from the committed index, not from the dump. Read
+    // off the dump, a short dump tested only the windows it happened to carry
+    // and still reported success. The index is in git and cannot drift without
+    // someone editing it in a diff.
+    const idx = readIndex<OracleIndex>(index);
+    const ALL_IDS = Object.keys(idx.per_window_sha256);
+    const arm = idx.arm;
+    const chunking = idx.chunking ?? "single";
+
+    let dump: OracleDump;
+    let byId: Map<string, FixtureWindow>;
+    let policy: ReturnType<typeof loadPolicy>;
+
+    beforeAll(() => {
+        verifyAgainstIndex(file, index);
+        dump = read<OracleDump>(file);
+        byId = new Map(loadInputs().map((w) => [w.id, w]));
+        policy = loadPolicy(ENGINE_DIR);
+    });
+
+    it("covers the corpus its index pins, at the configuration it names", () => {
+        expect(idx.windows).toBe(CORPUS_WINDOWS);
+        expect(new Set(ALL_IDS).size).toBe(CORPUS_WINDOWS);
+        // The dump has to agree with the index about what it is. Otherwise the
+        // comparison below runs the engine in one configuration and checks it
+        // against output frozen in another.
+        expect(dump.arm).toBe(arm);
+        expect(dump.chunking ?? "single").toBe(chunking);
+        expect(dump.engine_revision).toBe(idx.engine_revision);
+        expect(Object.keys(dump.outputs).sort()).toEqual([...ALL_IDS].sort());
+        expect(ALL_IDS.filter((id) => !byId.has(id))).toEqual([]);
     });
 
     // Split into batches for two reasons. One test that runs the whole corpus
@@ -130,7 +153,6 @@ suite.each(ready ? oracles : [])("$label: the engine reproduces the Python outpu
     // stops answering the reporter and vitest reports an RPC timeout that has
     // nothing to do with the comparison. And a failure names a batch instead of
     // the whole corpus.
-    const ALL_IDS = Object.keys(dump.outputs);
     const BATCH = 40;
     const batches: string[][] = [];
     for (let i = 0; i < ALL_IDS.length; i += BATCH) batches.push(ALL_IDS.slice(i, i + BATCH));

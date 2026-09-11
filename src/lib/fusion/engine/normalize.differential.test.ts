@@ -1,7 +1,7 @@
 /**
  * The normalizer against the Python, over every word the corpus contains.
  *
- * 50,721 distinct raw words, 3,303 full texts and 3,128 reference/hypothesis
+ * 50,721 distinct raw words, 3,239 full texts and 3,128 reference/hypothesis
  * pairs, taken from the 391-window benchmark report and frozen by
  * `tests/fusion/normalize_vectors.py`. Hand-written examples test what someone
  * thought of; this tests what Greek council speech actually contains.
@@ -9,16 +9,12 @@
  * The vectors hold transcript text and are not in git. Regenerate with
  * `python3 tests/fusion/normalize_vectors.py`; without them this skips.
  */
-import { describe, it, expect } from "vitest";
-import fs from "fs";
-import os from "os";
-import path from "path";
+import { describe, it, expect, beforeAll } from "vitest";
+import { gateFor, read, readIndex, verifyAgainstIndex } from "./fixtures.js";
 import { norm, wtoks, sdi } from "./normalize.js";
 
-const BUNDLE = process.env.FUSION_FIXTURES_DIR
-    ?? path.join(os.homedir(), ".cache/oc-public/chooser-2026-08-25");
-const VECTORS = path.join(BUNDLE, "normalize_vectors.json");
-const INDEX = path.join(__dirname, "../../../../tests/fusion/NORMALIZE_VECTORS.json");
+const VECTORS = "normalize_vectors.json";
+const INDEX = "NORMALIZE_VECTORS.json";
 
 interface Vectors {
     python: string;
@@ -29,15 +25,29 @@ interface Vectors {
     sdi: [number, number, number, number, number, number][];
 }
 
-const present = fs.existsSync(VECTORS);
-const suite = present ? describe : describe.skip;
+const gate = gateFor([VECTORS]);
+const suite = gate.ready ? describe : describe.skip;
 
 suite("normalize matches the Python engine on the real corpus", () => {
-    const vectors: Vectors = JSON.parse(fs.readFileSync(VECTORS, "utf8"));
+    // Loaded in a hook, not here: `describe.skip` still runs this callback, so a
+    // read at suite scope crashed collection instead of skipping.
+    let vectors: Vectors;
+
+    beforeAll(() => {
+        verifyAgainstIndex(VECTORS, INDEX);
+        vectors = read<Vectors>(VECTORS);
+    });
 
     it("agrees with the index committed in the repo", () => {
-        const index = JSON.parse(fs.readFileSync(INDEX, "utf8"));
+        const index = readIndex<{
+            python: string;
+            unicodedata: string;
+            distinct_words: number;
+            texts: number;
+            sdi_pairs: number;
+        }>(INDEX);
         expect(vectors.python).toBe(index.python);
+        expect(vectors.unicodedata).toBe(index.unicodedata);
         expect(Object.keys(vectors.words).length).toBe(index.distinct_words);
         expect(vectors.texts.length).toBe(index.texts);
         expect(vectors.sdi.length).toBe(index.sdi_pairs);
