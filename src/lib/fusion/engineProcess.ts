@@ -24,11 +24,12 @@ const STDERR_TAIL_BYTES = 4096;
 const engineRevisions = new Map<string, string>();
 
 /**
- * Content revision of the Python side: the sha of every `fusion/*.py` and
- * `fusion/*.json` file. It stands in for `normalizer_rev`, `chunking_rev` and
- * `policy_sha` in the *cache key*, which has to be computed before fuse.py runs
- * — those three are only reported in its output, and a key that cannot see a
- * rule change would serve yesterday's fusion for today's rules.
+ * Content revision of what will run: the sha of the built engine and of the
+ * frozen `fusion/*.json` it reads. It stands in for `normalizer_rev`,
+ * `chunking_rev` and `policy_sha` in the *cache key*, which has to be computed
+ * before the engine runs — those three are only reported in its output, and a
+ * key that cannot see a rule change would serve yesterday's fusion for today's
+ * rules.
  *
  * Memoized per repo root: this is on the path of every segment.
  */
@@ -37,9 +38,6 @@ export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "n
     const cached = engineRevisions.get(cacheKey);
     if (cached) return cached;
 
-    // Hash what actually runs. For `node` that is the built engine, which is
-    // what the spawn points at, plus `fusion/*.json`: the TypeScript engine
-    // reads the same frozen `policy.json` rather than keeping a second copy.
     // Hash what actually runs: the built engine, plus the frozen policy assets
     // it reads. A change to either has to change the revision, or the cache
     // would serve yesterday's fusion for today's rules.
@@ -96,7 +94,7 @@ export interface FusePyResult {
     elapsedMs: number;
 }
 
-export async function runFusionPython(input: FusionInput, options: FusePyOptions): Promise<FusePyResult> {
+export async function runFusionEngine(input: FusionInput, options: FusePyOptions): Promise<FusePyResult> {
     const startedAt = Date.now();
     // `process.execPath` rather than a `node` found on PATH: the child must be
     // this runtime, not whatever a shell would have resolved.
@@ -179,14 +177,14 @@ export async function runFusionPython(input: FusionInput, options: FusePyOptions
         throw new FusionEngineError(`could not run ${FUSION_NODE_SCRIPT}: ${spawnError.message}`, "python_spawn_failed");
     }
     if (overflowed) {
-        throw new FusionEngineError(`fuse.py wrote more than ${maxOutput} bytes to stdout`, "python_output_too_large");
+        throw new FusionEngineError(`${FUSION_NODE_SCRIPT} wrote more than ${maxOutput} bytes to stdout`, "python_output_too_large");
     }
     if (options.signal.aborted || Date.now() >= options.deadlineAt) {
-        throw new FusionEngineError("fuse.py was killed at the deadline", "python_deadline");
+        throw new FusionEngineError("the fusion engine was killed at the deadline", "python_deadline");
     }
     if (code !== 0) {
         throw new FusionEngineError(
-            `fuse.py exited with ${code ?? `signal ${signalName}`}: ${stderrTail.slice(-500)}`,
+            `the fusion engine exited with ${code ?? `signal ${signalName}`}: ${stderrTail.slice(-500)}`,
             "python_nonzero_exit",
         );
     }
@@ -195,20 +193,20 @@ export async function runFusionPython(input: FusionInput, options: FusePyOptions
     try {
         parsed = JSON.parse(stdout) as FusionOutput;
     } catch (error) {
-        throw new FusionEngineError(`fuse.py stdout is not JSON: ${error}`, "python_invalid_json");
+        throw new FusionEngineError(`the fusion engine wrote stdout that is not JSON: ${error}`, "python_invalid_json");
     }
 
     if (parsed?.schema !== "oc-fusion/1") {
-        throw new FusionEngineError(`fuse.py returned schema ${JSON.stringify(parsed?.schema)}, expected oc-fusion/1`, "python_bad_schema");
+        throw new FusionEngineError(`the fusion engine returned schema ${JSON.stringify(parsed?.schema)}, expected oc-fusion/1`, "python_bad_schema");
     }
     if (!Array.isArray(parsed.tokens)) {
-        throw new FusionEngineError("fuse.py returned no tokens array", "python_bad_schema");
+        throw new FusionEngineError("the fusion engine returned no tokens array", "python_bad_schema");
     }
     if (parsed.audio_sha256 !== input.audio_sha256) {
         // A result for different audio is the worst possible silent failure:
         // a correct-looking transcript of somebody else's meeting.
         throw new FusionEngineError(
-            `fuse.py returned audio_sha256 ${parsed.audio_sha256}, expected ${input.audio_sha256}`,
+            `the fusion engine returned audio_sha256 ${parsed.audio_sha256}, expected ${input.audio_sha256}`,
             "python_audio_mismatch",
         );
     }

@@ -29,7 +29,6 @@ export interface FusionConfig {
     /** Percentage of meetings that get fusion while mode=on. 0 ⇒ nobody. */
     canaryPercent: number;
     /**
-     * Which implementation of the fuse core runs. `python` spawns
      * Which implementation of the fuse core runs. There is one, and the field
      * survives because the engine revision and the cache namespace still have
      * to distinguish it from the Python era whose entries are still on disk.

@@ -12,7 +12,7 @@ import { createFusionRuntime, FusionTranscriber, artifactFromFile, type FusionRu
 import { loadFusionConfig } from "../lib/fusion/config.js";
 import { createProviders } from "../lib/fusion/providers/index.js";
 import { PRODUCTION_CHUNKING } from "../lib/fusion/FusionTranscriber.js";
-import { runFusionPython } from "../lib/fusion/fusePy.js";
+import { runFusionEngine } from "../lib/fusion/engineProcess.js";
 import type { FusionInput } from "../lib/fusion/types.js";
 import { mountOpenAiCompatRoute } from "./openaiCompat.js";
 
@@ -638,7 +638,7 @@ describe("route gate: the Transcript behind the text", () => {
             trace: rt.trace,
             runFusion: (input, options) => {
                 seen.push(input);
-                return runFusionPython(input, options);
+                return runFusionEngine(input, options);
             },
         });
 

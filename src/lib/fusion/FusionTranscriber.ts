@@ -6,7 +6,7 @@ import { FusionCache, componentCacheKey, fusionCacheKey } from "./cache.js";
 import { sha256OfValue } from "./hash.js";
 import { resolveAudioTransport } from "./audio.js";
 import { createDeadline } from "./deadline.js";
-import { runFusionPython, fusionEngineRevision } from "./fusePy.js";
+import { runFusionEngine, fusionEngineRevision } from "./engineProcess.js";
 import { buildFusedTranscript } from "./toTranscript.js";
 import { TraceWriter, type TraceComponent } from "./trace.js";
 import { RawTranscriptLog, type RawProviderStream, type RawTranscriptAttempt } from "./rawLog.js";
@@ -90,7 +90,7 @@ export interface FusionTranscriberDeps {
      * given a path keeps behaving exactly as it did.
      */
     rawLog?: RawTranscriptLog;
-    runFusion?: typeof runFusionPython;
+    runFusion?: typeof runFusionEngine;
 }
 
 /**
@@ -116,12 +116,12 @@ export const PRODUCTION_CHUNKING = { max_tokens: 120, anchor_n: 3, search_radius
 
 export class FusionTranscriber {
     private readonly config: FusionConfig;
-    private readonly runFusion: typeof runFusionPython;
+    private readonly runFusion: typeof runFusionEngine;
     private readonly rawLog: RawTranscriptLog;
 
     constructor(private readonly deps: FusionTranscriberDeps) {
         this.config = deps.config;
-        this.runFusion = deps.runFusion ?? runFusionPython;
+        this.runFusion = deps.runFusion ?? runFusionEngine;
         this.rawLog = deps.rawLog ?? new RawTranscriptLog(undefined);
     }
 

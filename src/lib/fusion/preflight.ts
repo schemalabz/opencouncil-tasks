@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { FusionConfig } from "./config.js";
-import { FUSION_NODE_SCRIPT, fusionEngineRevision, runFusionPython } from "./fusePy.js";
+import { FUSION_NODE_SCRIPT, fusionEngineRevision, runFusionEngine } from "./engineProcess.js";
 import { createDeadline } from "./deadline.js";
 import type { FusionInput } from "./types.js";
 
@@ -16,7 +16,7 @@ import type { FusionInput } from "./types.js";
  * completely normal. Nothing in the output says the fusion never ran.
  *
  * So the probe is the real thing, not an existence check: the same
- * `runFusionPython`, the same script, the same `repoRoot`, on a synthetic
+ * `runFusionEngine`, the same script, the same `repoRoot`, on a synthetic
  * three-word payload. An existence check passes on a Python that is too old
  * on a script the runtime user cannot read, and on
  * a `fusion/` that is missing one module — all three of which are exactly what
@@ -89,7 +89,7 @@ export async function fusionPreflight(
     const deadline = createDeadline(Date.now() + timeoutMs);
     const startedAt = Date.now();
     try {
-        const { output } = await runFusionPython(probeInput(), {
+        const { output } = await runFusionEngine(probeInput(), {
             // The probe has to run the engine that will serve traffic. Probing
             // the Python while `node` is configured would pass on a deployment
             // whose built engine is missing from the image, which is the exact
