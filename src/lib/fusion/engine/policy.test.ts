@@ -86,4 +86,18 @@ describe("the frozen policy", () => {
             fs.rmSync(dir, { recursive: true, force: true });
         }
     });
+
+    it("reports an unparseable envelope as a policy error too", () => {
+        // Present but not JSON is the same failure as absent, from the caller's
+        // side: the frozen policy cannot be loaded. Wrapping only the read left
+        // this one throwing SyntaxError.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fusion-policy-envelope-bad-"));
+        try {
+            fs.copyFileSync(path.join(ENGINE_DIR, "policy.json"), path.join(dir, "policy.json"));
+            fs.writeFileSync(path.join(dir, "llm_envelope.json"), "{ truncated");
+            expect(() => loadPolicy(dir)).toThrow(PolicyError);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
 });

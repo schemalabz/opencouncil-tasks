@@ -83,9 +83,13 @@ export function loadPolicy(engineDir: string): LoadedPolicy {
     // Read the same way policy.json is. Both files are the frozen policy, and a
     // caller that catches PolicyError for one cannot act on a bare ENOENT from
     // the other.
+    let envelope: Record<string, unknown>;
     let envelopeBlob: Buffer;
     try {
         envelopeBlob = fs.readFileSync(envelopePath);
+        // Parsed here too: present but not JSON is the same failure as absent
+        // from the caller's side — the frozen policy cannot be loaded.
+        envelope = JSON.parse(envelopeBlob.toString("utf8")) as Record<string, unknown>;
     } catch (e) {
         throw new PolicyError(`llm_envelope.json unreadable: ${e}`);
     }
@@ -93,7 +97,7 @@ export function loadPolicy(engineDir: string): LoadedPolicy {
         freeze,
         policy,
         llmCategories,
-        envelope: JSON.parse(envelopeBlob.toString("utf8")) as Record<string, unknown>,
+        envelope,
         envelopeSha16: sha16(envelopeBlob),
     };
 }

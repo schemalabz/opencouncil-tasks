@@ -51,8 +51,12 @@ export async function artifactFromUrl(
     url: string,
     options: { signal?: AbortSignal; tmpDir?: string; durationSec?: number } = {},
 ): Promise<AudioArtifact & { cleanup: () => Promise<void> }> {
-    const dir = await fsp.mkdtemp(path.join(options.tmpDir ?? os.tmpdir(), "oc-fusion-audio-"));
+    // Parsed before the directory exists, not after. `new URL` throws on a
+    // malformed url, and it used to throw between the mkdtemp and the `try`
+    // that removes it — leaking a directory that nothing would ever clean up,
+    // because nothing retries a malformed url.
     const ext = path.extname(new URL(url).pathname) || ".bin";
+    const dir = await fsp.mkdtemp(path.join(options.tmpDir ?? os.tmpdir(), "oc-fusion-audio-"));
     const file = path.join(dir, `audio${ext}`);
     const cleanup = async () => {
         await fsp.rm(dir, { recursive: true, force: true }).catch(() => { });
