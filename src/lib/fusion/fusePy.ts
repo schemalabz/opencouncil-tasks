@@ -125,8 +125,13 @@ export async function runFusionPython(input: FusionInput, options: FusePyOptions
             setTimeout(() => child.killed || child.kill("SIGKILL"), 2_000).unref?.();
         };
 
+        // An already-aborted signal never dispatches `abort`, so a listener
+        // alone let the child run to the deadline for a caller that had already
+        // given up. The result was still right — the check after the await sees
+        // `aborted` — it was the work that carried on.
         const onAbort = () => kill();
-        options.signal.addEventListener("abort", onAbort, { once: true });
+        if (options.signal.aborted) kill();
+        else options.signal.addEventListener("abort", onAbort, { once: true });
         const remaining = options.deadlineAt - Date.now();
         const timer = setTimeout(kill, Math.max(0, remaining));
         timer.unref?.();

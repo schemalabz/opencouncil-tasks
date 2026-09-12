@@ -202,6 +202,15 @@ function alignBlock(
     // No anchor and too big for one table: split both sides proportionally at
     // the midpoint. Deterministic, and it can only over-report changes near the
     // cut — it never invents a change in the wrong direction.
+    // A one-word side cannot be halved: `n >> 1` is 0, so `aMid` lands back on
+    // `aFrom` and the second call repeats this exact block for ever. Reaching it
+    // takes a block of one word against two million, which no transcript
+    // produces, but the recursion has no other floor and the table for a
+    // one-word side is two rows wide.
+    if (n === 1 || m === 1) {
+        exactAlign(a, aFrom, aTo, b, bFrom, bTo, acc);
+        return;
+    }
     const aMid = aFrom + (n >> 1);
     const bMid = bFrom + Math.round((m * (aMid - aFrom)) / n);
     alignBlock(a, aFrom, aMid, b, bFrom, bMid, acc, depth + 1);
