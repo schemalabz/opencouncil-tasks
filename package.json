@@ -18,6 +18,9 @@
     "test:fusion-live": "vitest run --config vitest.live.config.ts",
     "test:fusion-live-replay": "vitest run --config vitest.livereplay.config.ts",
     "test:fusion-engine": "vitest run --config vitest.engine.config.ts",
+    "test:fusion-conformance": "vitest run --config vitest.engine.config.ts src/lib/fusion/engine/conformance.differential.test.ts",
+    "fixtures:fusion": "node scripts/fetch-fusion-fixtures.mjs",
+    "fixtures:fusion:all": "node scripts/fetch-fusion-fixtures.mjs --all",
     "start:fusion": "node dist/fusionServer.js"
   },
   "dependencies": {

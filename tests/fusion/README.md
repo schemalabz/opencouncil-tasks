@@ -18,9 +18,39 @@ lives in `~/.cache/oc-public/`, never in git.
 | `fixtures/MANIFEST.json` | the fixture bundle's own hashes and frozen totals |
 | `fixtures_synthetic/EXPECTED_python.json` | what the Python CLI answered for each synthetic fixture |
 
-To rebuild any of them, check out `python-engine-last-known-good` and follow
-`docs/fusion-python-archive.md`. Do not rebuild them from the TypeScript
-engine's output: that proves the code equals itself.
+Do not rebuild them from the TypeScript engine's output: that proves the code
+equals itself.
+
+## Getting them
+
+```bash
+npm run fixtures:fusion          # the conformance tier: one file, 0.5 MB gzipped
+npm run fixtures:fusion:all      # every artifact: 14.5 MB gzipped, ~4 seconds
+```
+
+The artifacts are attached to a release of `angelospk/s47-window-vectors`,
+gzipped. The fetcher verifies each one's sha256 against the index here and
+refuses to write a file that does not match, because a wrong artifact on disk is
+worse than none: the suite would compare against it and pass.
+
+They used to exist in exactly one place, a `~/.cache` directory on one laptop,
+reproducible only from `python-engine-last-known-good` with CPython 3.14.6
+exactly — `sum()` became compensated in 3.12, so an older interpreter
+regenerates different numbers and the comparison stops meaning anything. That
+route still works and `docs/fusion-python-archive.md` documents it, but it is
+now the fallback rather than the only copy.
+
+## The tiers, and what each one buys
+
+| Tier | Size | Buys |
+|---|---|---|
+| none | 0 | `contract`, `chunking`, `policy`, `resource` — these run in `npm test` already |
+| conformance | 0.5 MB | the four integers per arm in `fusion/CONTRACT.md`, which move if anything reaches the transcript |
+| all | 14.5 MB | every field of every window, plus alignment columns and normalization, against the Python |
+
+The conformance suite reads no oracle: it recomputes the totals from the inputs
+and checks them against constants in the test file. That makes it the cheapest
+useful gate — `npm run test:fusion-conformance`, one artifact, about 95 seconds.
 
 ## Running against them
 

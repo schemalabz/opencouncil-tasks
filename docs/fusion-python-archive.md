@@ -35,10 +35,15 @@ dependency lock to preserve.
 | Artifact | Hash | Where |
 |---|---|---|
 | Benchmark report | `e33d5617fc2b1c3088a9f4a137780158a303a49237ca574aed07e0b39400ca85` | `~/.cache/oc-public/bench_2026-08-22-post-june-held-out-test-clean-pack-cont-.json` |
-| Fixture bundle | see `tests/fusion/fixtures/MANIFEST.json` | `~/.cache/oc-public/chooser-2026-08-25/` |
+| Fixture bundle | see `tests/fusion/fixtures/MANIFEST.json` | release `v1` of `angelospk/s47-window-vectors`, or `~/.cache/oc-public/chooser-2026-08-25/` |
 
 Both hold verbatim council speech and are not in git, on the same reasoning as
 the 2026-07-21 history purge. `FUSION_FIXTURES_DIR` overrides the bundle path.
+
+The artifacts no longer live only on one laptop: `npm run fixtures:fusion:all`
+pulls them from the release and verifies each sha256 against the indexes in
+`tests/fusion/`. Regenerating from this tag is the fallback for when that copy
+is gone too, and it is the only route that needs the exact interpreter below.
 
 ## Regenerating
 

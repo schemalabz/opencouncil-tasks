@@ -2,10 +2,10 @@
  * The fixture gate the differential suites open before they assert anything.
  *
  * Those suites compare against artifacts frozen from `fusion/*.py` before it
- * was deleted. The artifacts hold council speech, so they are too large and too
- * private for git and live in a local bundle instead. Every suite therefore has
- * to answer the same two questions first: is the artifact here, and is it the
- * one the committed index was pinned against?
+ * was deleted. The artifacts hold verbatim council speech, so they are not in
+ * git; `npm run fixtures:fusion:all` pulls them and the indexes in
+ * `tests/fusion/` pin them. Every suite therefore has to answer the same two
+ * questions first: is the artifact here, and is it the one the index pinned?
  *
  * Answering them per suite went wrong in both directions. A bundle holding one
  * oracle instead of three still produced a green run — it just stopped checking
@@ -94,19 +94,21 @@ export interface Gate {
 /**
  * Open the gate for a suite that needs `names`.
  *
- * Under `FUSION_FIXTURES=required` this throws at module scope, which vitest
- * reports as a failed file. That is the point: the command cited as proof of
- * migration correctness must not be able to prove it by running nothing.
+ * A missing artifact throws at module scope, which vitest reports as a failed
+ * file. That is the point: the command cited as proof of migration correctness
+ * must not be able to prove it by running nothing. `FUSION_FIXTURES=optional`
+ * is the way to ask for a skip, and it has to be typed.
  */
 export function gateFor(names: readonly string[]): Gate {
     const missing = names.filter((n) => !fs.existsSync(bundleFile(n)));
     if (missing.length && fixturesRequired()) {
         throw new Error(
-            `fixture bundle incomplete: ${missing.join(", ")} not under ${BUNDLE}. ` +
+            `fixture bundle incomplete: ${missing.join(", ")} not under ${BUNDLE}.\n` +
+                `Fetch them:  npm run fixtures:fusion:all\n` +
                 `These suites are the acceptance evidence for the port, so a missing ` +
-                `artifact fails rather than skips; run with FUSION_FIXTURES=optional to ` +
-                `skip anyway. See docs/fusion-python-archive.md for what produced these ` +
-                `and tests/fusion/README.md for where to get them.`,
+                `artifact fails rather than skips. FUSION_FIXTURES=optional skips anyway. ` +
+                `tests/fusion/README.md explains the tiers; docs/fusion-python-archive.md ` +
+                `explains what produced them.`,
         );
     }
     return { ready: missing.length === 0, missing };
