@@ -66,11 +66,16 @@ export interface OcAsrOutput {
 }
 
 export function normalizeOcAsrWords(output: OcAsrOutput): NormalizedWord[] {
-    const words = output.words
-        ?? (output.transcription?.utterances ?? []).flatMap((utterance) => utterance.words ?? [])
-        ?? [];
-    const fallback = words.length > 0 ? words : (output.segments ?? []).flatMap((segment) => segment.words ?? []);
-    return fallback
+    // The three shapes are alternatives, and `??` was the wrong way to choose
+    // between them: an empty array is not nullish, so a response carrying
+    // `words: []` kept it and never looked at the utterances — the shape this
+    // endpoint actually returns. Take the first candidate that holds anything.
+    const candidates: OcAsrWord[][] = [
+        output.words ?? [],
+        (output.transcription?.utterances ?? []).flatMap((utterance) => utterance.words ?? []),
+        (output.segments ?? []).flatMap((segment) => segment.words ?? []),
+    ];
+    return (candidates.find((c) => c.length > 0) ?? [])
         .map((word) => ({
             raw: (word.word ?? word.text ?? "").trim(),
             start: word.start ?? null,
