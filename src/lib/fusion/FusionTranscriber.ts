@@ -230,7 +230,7 @@ export class FusionTranscriber {
                     fusion: output,
                     words,
                     language,
-                    audioDurationSec: request.audio.durationSec ?? (scribe.result.raw as ScribeResponse).audio_duration_secs ?? undefined,
+                    audioDurationSec: request.audio.durationSec ?? (scribe.result.raw as ScribeResponse)?.audio_duration_secs ?? undefined,
                     transcriptionTimeSeconds: (Date.now() - startedAt) / 1000,
                     provider: providerLabel(request.model),
                     fusionConfigSha: this.configSha(arm, llm),
@@ -262,18 +262,29 @@ export class FusionTranscriber {
             // and renamed. Fire-and-forget would need a bounded queue and a
             // shutdown drain, and would lose the last segment of every run.
             if (this.rawLog.enabled) {
-                await this.rawLog.write({
-                    attemptId: requestId,
-                    audioSha256: request.audio.sha256,
-                    label: request.label,
-                    mode: this.config.mode,
-                    arm: request.model === "scribe" ? "scribe" : arm,
-                    engineRev: fusionEngineRevision(this.config.repoRoot, this.config.engine),
-                    configSha: this.configSha(arm, llm),
-                    outcome: rawOutcome,
-                    fallbackReason: rawFallbackReason,
-                    systems: rawStreams,
-                }).catch(() => false);
+                // The whole block, not just the write. This runs inside
+                // `finally`, so anything that throws here replaces what the try
+                // block was doing — including a ScribeUnavailableError on its
+                // way out. A `.catch` on the promise did not cover that: the
+                // arguments are evaluated first, and `fusionEngineRevision`
+                // hashes files off disk. The raw log is evidence about a
+                // segment, never a condition for returning one.
+                try {
+                    await this.rawLog.write({
+                        attemptId: requestId,
+                        audioSha256: request.audio.sha256,
+                        label: request.label,
+                        mode: this.config.mode,
+                        arm: request.model === "scribe" ? "scribe" : arm,
+                        engineRev: fusionEngineRevision(this.config.repoRoot, this.config.engine),
+                        configSha: this.configSha(arm, llm),
+                        outcome: rawOutcome,
+                        fallbackReason: rawFallbackReason,
+                        systems: rawStreams,
+                    });
+                } catch {
+                    /* evidence, not a dependency */
+                }
             }
         }
     }

@@ -441,4 +441,31 @@ describe("raw transcript log", () => {
         const outcome = await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" });
         expect(outcome.outcome).toBe("fused");
     });
+
+    it("keeps the segment alive when the raw log throws before returning a promise", async () => {
+        // The `.catch` covered a rejected promise and nothing else. The write's
+        // arguments are evaluated first -- `fusionEngineRevision` hashes files
+        // off disk -- and the whole block sits in a `finally`, so anything
+        // thrown synchronously here replaces the segment's own result on the
+        // way out, or the error the segment was already failing with.
+        const failing = new RawTranscriptLog(rawDir);
+        vi.spyOn(failing, "write").mockImplementation((() => {
+            throw new Error("engine revision unreadable");
+        }) as never);
+        const transcriber = new FusionTranscriber({
+            config: loadFusionConfig({ FUSION_MODE: "on", FUSION_DEADLINE_MS: "1000" }, dir),
+            providers: {
+                scribe: new StubProvider("scribe", { result: scribeResult() }),
+                soniox: new StubProvider("soniox", { result: result("soniox", [["\u0397", 0, 0.4]]) }),
+                ours: new StubProvider("ours", { result: result("ours", [["\u0397", 0, 0.4]]) }),
+            } as unknown as ProviderSet,
+            cache,
+            trace,
+            rawLog: failing,
+            runFusion: vi.fn(async () => ({ output: fusionOutput(), stderrTail: "", elapsedMs: 3 })),
+        });
+
+        const outcome = await transcriber.fuseSegment({ audio: AUDIO, model: "fusion-rules" });
+        expect(outcome.outcome).toBe("fused");
+    });
 });
