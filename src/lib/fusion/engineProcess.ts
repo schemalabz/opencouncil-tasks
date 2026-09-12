@@ -47,12 +47,18 @@ export function fusionEngineRevision(repoRoot: string, engine: FusionEngine = "n
         { dir: path.join(repoRoot, "fusion"), ext: [".json"] },
     ];
 
+    // `tsc` emits `src/**/*.test.ts` beside the engine it tests, and a filter of
+    // every `.js` picked those up too — so the production cache key moved
+    // whenever an assertion did, throwing away fused segments that cost minutes
+    // each to produce. Tests cannot change what the engine outputs.
+    const isTest = (name: string) => /\.test\.js$/.test(name);
+
     let revision: string;
     try {
         const parts: string[] = [];
         for (const { dir, ext } of dirs) {
             const files = fs.readdirSync(dir)
-                .filter((name) => ext.some((e) => name.endsWith(e)))
+                .filter((name) => ext.some((e) => name.endsWith(e)) && !isTest(name))
                 .sort();
             for (const name of files) {
                 parts.push(`${name}:${sha256Hex(fs.readFileSync(path.join(dir, name)))}`);
