@@ -72,4 +72,18 @@ describe("the frozen policy", () => {
             fs.rmSync(dir, { recursive: true, force: true });
         }
     });
+
+    it("reports a missing envelope the same way the missing policy is reported", () => {
+        // The envelope is read after the policy has already passed its sha
+        // check, so it was the one read left to throw a bare ENOENT at whoever
+        // called loadPolicy. Both files are the frozen policy; a caller cannot
+        // act on one failure differently from the other.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fusion-policy-envelope-"));
+        try {
+            fs.copyFileSync(path.join(ENGINE_DIR, "policy.json"), path.join(dir, "policy.json"));
+            expect(() => loadPolicy(dir)).toThrow(PolicyError);
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
 });

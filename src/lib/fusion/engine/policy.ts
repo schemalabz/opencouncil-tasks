@@ -80,7 +80,15 @@ export function loadPolicy(engineDir: string): LoadedPolicy {
         .filter((k) => policy[k].mode === "llm")
         .sort(byCodePoint);
 
-    const envelopeBlob = fs.readFileSync(envelopePath);
+    // Read the same way policy.json is. Both files are the frozen policy, and a
+    // caller that catches PolicyError for one cannot act on a bare ENOENT from
+    // the other.
+    let envelopeBlob: Buffer;
+    try {
+        envelopeBlob = fs.readFileSync(envelopePath);
+    } catch (e) {
+        throw new PolicyError(`llm_envelope.json unreadable: ${e}`);
+    }
     return {
         freeze,
         policy,
