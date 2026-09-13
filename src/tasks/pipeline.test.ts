@@ -103,6 +103,16 @@ describe("createPipeline", () => {
         expect(spacePaths).not.toContain("council-meeting-videos");
     });
 
+    it("gives the transcribe task a stable meeting key, so the fusion canary can select", async () => {
+        const deps = createStubDeps();
+        await createPipeline(deps)(baseRequest, vi.fn());
+
+        // Without a key, isCanarySelected() is false for every meeting and the
+        // fusion never runs, whatever FUSION_CANARY_PERCENT says.
+        const args = (deps.transcribe as any).mock.calls[0][0];
+        expect(args.meetingKey).toBe(baseRequest.youtubeUrl);
+    });
+
     it("Spaces URL + normalized audio — overwrites the original object, Mux uses the overwrite's returned URL", async () => {
         const OVERWRITTEN = "https://spaces.example.com/uploads/combined.mp4?after=normalize";
         const deps = createStubDeps({

@@ -25,3 +25,17 @@ squid.conf
 
 # Debug output (CLI intermediates)
 .debug/
+
+# Python bytecode (fusion package)
+__pycache__/
+*.py[cod]
+
+# Fixture bundle holds verbatim council speech; never commit it
+tests/fusion/fixtures/fixture_*.json
+
+# Raw per-system transcripts and fusion traces. Same PII category as the fixture
+# bundle: runtime artifacts on a mounted volume, never in a commit. .dockerignore
+# keeps things out of an image and has never kept anything out of a commit.
+fusion-raw/
+fusion-traces/
+*.oc-fusion-raw.json

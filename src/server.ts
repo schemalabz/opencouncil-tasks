@@ -20,6 +20,7 @@ import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { devSlowTask } from './tasks/devSlowTask.js';
+import { loadFusionConfig } from './lib/fusion/config.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
@@ -226,6 +227,26 @@ import('./lib/swaggerConfig.js').then(({ swaggerSpec }) => {
 app.use('/upload-video', uploadRouter);
 
 // ============================================================================
+// FUSION PROVIDER (openai-compatible route)
+// ============================================================================
+// Validated here, at startup, so an invalid FUSION_* value stops the process
+// instead of quietly meaning "off" — which is indistinguishable from an outage.
+const fusionConfig = loadFusionConfig();
+// And the engine itself is probed here, before app.listen: with fusion enabled
+// but no Python in the image, every segment bills ElevenLabs, Soniox and RunPod,
+// discards two of the three, and returns a Scribe transcript that looks normal.
+// Failing to start is the cheap failure.
+const { assertFusionRuntimeUsable } = await import('./lib/fusion/preflight.js');
+await assertFusionRuntimeUsable(fusionConfig);
+if (fusionConfig.openaiRoute === 'on') {
+    const { mountOpenAiCompatRoute } = await import('./routes/openaiCompat.js');
+    mountOpenAiCompatRoute(app);
+    console.log(`🔀 Fusion openai-compatible route mounted at /v1/audio/transcriptions (mode=${fusionConfig.mode}, engine=${fusionConfig.engine})`);
+} else if (fusionConfig.mode !== 'off') {
+    console.log(`🔀 Fusion enabled (mode=${fusionConfig.mode}, canary=${fusionConfig.canaryPercent}%), openai-compatible route disabled`);
+}
+
+// ============================================================================
 // DEVELOPMENT ROUTES
 // ============================================================================
 
@@ -263,6 +284,15 @@ process.on('SIGTERM', async () => {
     }
 });
 
+// Node gives a client five minutes to finish SENDING a request. Processing is
+// unbounded already (`server.timeout` is 0), so nothing here protects a long
+// fusion -- that was never at risk. What is at risk is the upload: the cap is
+// 200 MB, which needs 336 seconds at 5 Mbps and fourteen minutes at 2. This is
+// 200 MB at 1 Mbps plus a minute, and it is deliberately not derived from
+// FUSION_DEADLINE_MS, because how long the fusion may think says nothing about
+// how long the file takes to arrive.
+const UPLOAD_TIMEOUT_MS = 30 * 60_000;
+
 const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
@@ -277,6 +307,8 @@ const server = app.listen(port, () => {
     });
     console.log();
 });
+
+server.requestTimeout = UPLOAD_TIMEOUT_MS;
 
 if (process.argv.includes('--console')) {
     setInterval(() => taskManager.printTaskUpdates(), 5000);

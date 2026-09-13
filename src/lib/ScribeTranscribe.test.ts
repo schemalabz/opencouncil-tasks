@@ -251,3 +251,24 @@ describe("pyannote merge over Scribe word timestamps", () => {
         vi.restoreAllMocks();
     });
 });
+
+describe("ScribeTranscriber queue", () => {
+    it("drops a request whose caller gave up, instead of sending it", async () => {
+        const { ScribeTranscriber } = await import("./ScribeTranscribe.js");
+        const fetchSpy = vi.spyOn(globalThis, "fetch");
+        const transcriber = new ScribeTranscriber();
+
+        const controller = new AbortController();
+        controller.abort(new Error("fusion deadline exceeded"));
+
+        await expect(transcriber.transcribeRaw({
+            audioUrl: "https://cdn.example.com/audio-0.wav",
+            label: "segment 1/1",
+            signal: controller.signal,
+        })).rejects.toThrow("fusion deadline exceeded");
+
+        // The point of the drop: no vendor call, so no charge and no slot held.
+        expect(fetchSpy).not.toHaveBeenCalled();
+        fetchSpy.mockRestore();
+    });
+});

@@ -24,6 +24,9 @@ RUN --mount=type=cache,target=/root/.npm \
     npm run build
 
 FROM node:20.11.1 AS runner
+# No python3. The fuse core is TypeScript and ships inside dist/; it is still
+# spawned as a child process, but of this same Node runtime. An image that
+# installed an interpreter nobody calls would be inviting someone to call it.
 RUN apt-get update \
     && apt-get install -y tini ffmpeg curl gosu unzip \
     && rm -rf /var/lib/apt/lists/* \
@@ -44,6 +47,15 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/VERSION ./VERSION
 COPY --from=builder /app/assets ./assets
+
+# The frozen policy the engine reads and hash-checks at load. The engine itself
+# is in dist/, but these are data and `npm run build` does not emit them.
+# Without them FUSION_MODE=on refuses to start, which is the intended outcome:
+# the alternative is paying all three providers and falling back to Scribe on
+# every segment. Copied by name so a stray file cannot arrive with them.
+COPY --from=builder /app/fusion/policy.json ./fusion/policy.json
+COPY --from=builder /app/fusion/llm_envelope.json ./fusion/llm_envelope.json
+COPY --from=builder /app/fusion/CONTRACT.md ./fusion/CONTRACT.md
 
 # Download latest yt-dlp binary. Own the whole /app/bin DIRECTORY (not just the
 # file) by apify: yt-dlp's `--update-to` self-update writes a new binary into the

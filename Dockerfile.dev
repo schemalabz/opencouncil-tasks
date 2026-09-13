@@ -10,6 +10,9 @@ COPY package.json package-lock.json ./
 # Install all dependencies (including dev dependencies)
 # Using cache mount for faster builds - this persists npm cache across builds
 # See: https://docs.docker.com/build/cache/
+# No python3, same as the production image. The fuse core is TypeScript now and
+# runs on the Node that is already here. Dev and production must not differ in
+# what the fusion can execute, which is the whole reason this line existed.
 RUN --mount=type=cache,target=/root/.npm \
     npm ci && \
     apk add --no-cache ffmpeg

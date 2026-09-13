@@ -1,0 +1,11 @@
+{
+ "schema": "oc-fusion-normalize-vectors-index/1",
+ "file": "normalize_vectors.json",
+ "sha256": "a369c5df2bf405d5a753a533e73b44ab82bbd0fdcda33effc3945f5c7805d205",
+ "distinct_words": 50721,
+ "texts": 3239,
+ "sdi_pairs": 3128,
+ "python": "3.14.6",
+ "unicodedata": "16.0.0",
+ "report_sha256": "e33d5617fc2b1c3088a9f4a137780158a303a49237ca574aed07e0b39400ca85"
+}

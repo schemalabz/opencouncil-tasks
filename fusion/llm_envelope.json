@@ -1,0 +1,13 @@
+{
+ "rev": "llm-envelope/1",
+ "endpoint": "https://api.anthropic.com/v1/messages",
+ "anthropic_version": "2023-06-01",
+ "model": "claude-opus-5",
+ "max_tokens": 16000,
+ "batch": 15,
+ "thinking": {"type": "adaptive"},
+ "temperature": null,
+ "timeout_sec": 900,
+ "frozen_think_budget": 4000,
+ "note": "policy.json (freeze.json) declares model=opus, think=4000. Claude Opus 5 rejects both thinking.budget_tokens and temperature with a 400, so the wire request uses adaptive thinking and omits temperature; frozen_think_budget records the original declaration and is not sent."
+}
