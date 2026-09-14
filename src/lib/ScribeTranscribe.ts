@@ -1,6 +1,8 @@
 import dotenv from 'dotenv';
 import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 import { fetch, Agent, FormData } from "undici";
+import { readFile } from "fs/promises";
+import path from "path";
 import { CityLanguage, Transcript, Utterance, Word } from "../types.js";
 import { getLanguageConfig } from "./language.js";
 
@@ -69,8 +71,8 @@ export interface ScribeResponse {
 // assign speakers downstream by merging pyannote diarization), so we segment
 // it into utterances at sentence-final punctuation and pauses. Utterances must
 // stay short enough that "one speaker per utterance" holds for that merge.
-const UTTERANCE_PAUSE_SECONDS = 1;
-const UTTERANCE_MAX_DURATION_SECONDS = 30;
+export const UTTERANCE_PAUSE_SECONDS = 1;
+export const UTTERANCE_MAX_DURATION_SECONDS = 30;
 
 // A trailing '.' ends the sentence unless the token looks like an abbreviation:
 // short forms (κ., αρ., οδ.), dotted acronyms (Κ.Κ.Ε., π.χ.), or the known
@@ -78,7 +80,7 @@ const UTTERANCE_MAX_DURATION_SECONDS = 30;
 // utterance split, but κ. is everywhere in roll-calls, so the common cases matter.
 const KNOWN_ABBREVIATIONS = new Set(["δηλ", "βλ", "σελ", "αριθ", "κεφ", "λεωφ", "τηλ"]);
 
-function endsSentence(text: string): boolean {
+export function endsSentence(text: string): boolean {
     // '…' is excluded: Scribe emits it when a speaker trails off mid-thought
     // and continues; the pause rule splits the genuine stops.
     if (/[!?;;]$/.test(text)) { // ';' and U+037E, the Greek question mark
@@ -177,7 +179,7 @@ export function scribeWordsToUtterances(words: ScribeWord[], language: string, l
     return utterances;
 }
 
-function logprobToConfidence(logprob: number | null | undefined): number {
+export function logprobToConfidence(logprob: number | null | undefined): number {
     if (logprob === null || logprob === undefined) {
         return 1;
     }
@@ -212,15 +214,38 @@ export function scribeResponseToTranscript(response: ScribeResponse, transcripti
     };
 }
 
+/**
+ * The unconverted Scribe response plus how long the call took. Fusion consumes
+ * the raw word stream (logprobs, spacing tokens) that `scribeResponseToTranscript`
+ * folds away, so it needs this rather than a Transcript.
+ */
+export interface ScribeRawResult {
+    response: ScribeResponse;
+    elapsedSeconds: number;
+}
+
 type TranscribeRequest = {
+    /** Either a fetchable URL for `source_url`, or "" when audioPath is set. */
     audioUrl: string;
+    /** Local file uploaded as multipart `file`, for callers with no bucket. */
+    audioPath?: string;
     label: string; // identifies the segment in logs (15 requests can be in flight at once)
     languageCode: string; // ISO-639-3 code sent to Scribe ("ell", "fra")
-    resolve: (transcript: Transcript) => void;
+    /** Abandoned by its caller while queued ⇒ never sent, never billed. */
+    signal?: AbortSignal;
+    resolve: (result: ScribeRawResult) => void;
     reject: (error: Error) => void;
 }
 
-class ScribeTranscriber {
+/**
+ * Exported for its *type*, not to be instantiated twice: `scribeTranscriber`
+ * below is the one instance, and its in-process concurrency cap only means
+ * anything while there is exactly one. It has to be exported because
+ * `declaration: true` cannot emit a `.d.ts` for an exported value whose class
+ * it is not allowed to name — which failed the image build (TS4094), not the
+ * `tsc --noEmit` typecheck, since only declaration emit needs the name.
+ */
+export class ScribeTranscriber {
     private queue: TranscribeRequest[] = [];
     private activeTranscriptions = 0;
     // When ElevenLabs reports account saturation (429), every request holds
@@ -228,11 +253,29 @@ class ScribeTranscriber {
     private pausedUntil = 0;
 
     async transcribe(request: { audioUrl: string; label?: string; language?: CityLanguage }): Promise<Transcript> {
+        const label = request.label ?? request.audioUrl.split('/').pop() ?? request.audioUrl;
+        const { response, elapsedSeconds } = await this.transcribeRaw(request);
+        const transcript = scribeResponseToTranscript(response, elapsedSeconds, label);
+        console.log(`[Scribe] ${label}: transcribed ${(transcript.metadata.audio_duration / 60).toFixed(1)}min of audio in ${Math.round(elapsedSeconds)}s`);
+        return transcript;
+    }
+
+    /**
+     * Same queue, same retries, same concurrency cap — but returns the raw
+     * response. Used by the fusion provider, which needs Scribe's word stream
+     * (and its logprobs) as one of three aligned inputs.
+     */
+    async transcribeRaw(request: { audioUrl?: string; audioPath?: string; label?: string; language?: CityLanguage; signal?: AbortSignal }): Promise<ScribeRawResult> {
+        if (!request.audioUrl && !request.audioPath) {
+            throw new Error("transcribeRaw needs either audioUrl or audioPath");
+        }
         return new Promise((resolve, reject) => {
             this.queue.push({
-                audioUrl: request.audioUrl,
-                label: request.label ?? request.audioUrl.split('/').pop() ?? request.audioUrl,
+                audioUrl: request.audioUrl ?? "",
+                audioPath: request.audioPath,
+                label: request.label ?? (request.audioUrl ?? request.audioPath ?? "").split('/').pop() ?? "audio",
                 languageCode: getLanguageConfig(request.language).scribeCode,
+                signal: request.signal,
                 resolve,
                 reject,
             });
@@ -245,13 +288,25 @@ class ScribeTranscriber {
             return;
         }
 
-        this.activeTranscriptions++;
         const request = this.queue.shift()!;
+
+        // A caller that has already given up must not be sent to the vendor: a
+        // fusion segment past its deadline has stopped waiting for this answer,
+        // and starting it anyway would hold a concurrency slot and be billed
+        // for a result nobody reads. An in-flight request cannot be recalled;
+        // this is the last point where it is still free to drop.
+        if (request.signal?.aborted) {
+            console.log(`[Scribe] ${request.label}: dropped before starting, caller gave up`);
+            request.reject(request.signal.reason instanceof Error ? request.signal.reason : new Error("aborted"));
+            this.processQueue();
+            return;
+        }
+
+        this.activeTranscriptions++;
         console.log(`[Scribe] ${request.label}: starting (${this.activeTranscriptions}/${SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS} slots active, ${this.queue.length} queued)`);
 
         try {
-            const transcript = await this.transcribeSegment(request.audioUrl, request.label, request.languageCode);
-            request.resolve(transcript);
+            request.resolve(await this.transcribeSegment(request.audioUrl, request.label, request.languageCode, request.audioPath));
         } catch (error) {
             console.log(`[Scribe] ${request.label}: FAILED: ${error}`);
             request.reject(error as Error);
@@ -261,16 +316,13 @@ class ScribeTranscriber {
         }
     }
 
-    private async transcribeSegment(audioUrl: string, label: string, languageCode: string): Promise<Transcript> {
+    private async transcribeSegment(audioUrl: string, label: string, languageCode: string, audioPath?: string): Promise<ScribeRawResult> {
         const startedAt = Date.now();
-        const response = await this.requestWithRetries(audioUrl, label, languageCode);
-        const elapsedSeconds = (Date.now() - startedAt) / 1000;
-        const transcript = scribeResponseToTranscript(response, elapsedSeconds, label);
-        console.log(`[Scribe] ${label}: transcribed ${(transcript.metadata.audio_duration / 60).toFixed(1)}min of audio in ${Math.round(elapsedSeconds)}s`);
-        return transcript;
+        const response = await this.requestWithRetries(audioUrl, label, languageCode, audioPath);
+        return { response, elapsedSeconds: (Date.now() - startedAt) / 1000 };
     }
 
-    private async requestWithRetries(audioUrl: string, label: string, languageCode: string): Promise<ScribeResponse> {
+    private async requestWithRetries(audioUrl: string, label: string, languageCode: string, audioPath?: string): Promise<ScribeResponse> {
         let failures = 0;
         let saturationWaitMs = 0;
         let rateLimitStreak = 0;
@@ -284,7 +336,7 @@ class ScribeTranscriber {
                 throwIfCancelled();
             }
 
-            const result = await this.attemptRequest(audioUrl, languageCode);
+            const result = await this.attemptRequest(audioUrl, languageCode, audioPath);
             if (result.ok) {
                 return result.response;
             }
@@ -321,7 +373,7 @@ class ScribeTranscriber {
         }
     }
 
-    private async attemptRequest(audioUrl: string, languageCode: string): Promise<
+    private async attemptRequest(audioUrl: string, languageCode: string, audioPath?: string): Promise<
         { ok: true; response: ScribeResponse } |
         { ok: false; retryable: boolean; rateLimited?: boolean; retryAfterMs?: number; error: Error }
     > {
@@ -336,7 +388,15 @@ class ScribeTranscriber {
         form.append("timestamps_granularity", "word");
         // Speakers are assigned downstream by merging pyannote diarization (applyDiarization)
         form.append("diarize", "false");
-        form.append("source_url", audioUrl);
+        if (audioPath) {
+            // Uploading the bytes is the same request with a different audio
+            // field: no bucket, no temporary public object, and nothing about
+            // the decode changes. Read per attempt, so a retry sends the same
+            // file rather than an exhausted stream.
+            form.append("file", new Blob([await readFile(audioPath)]), path.basename(audioPath));
+        } else {
+            form.append("source_url", audioUrl);
+        }
 
         try {
             const response = await fetch(SCRIBE_API_URL, {
