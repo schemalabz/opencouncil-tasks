@@ -1,0 +1,31 @@
+{
+ "schema": "oc-fusion-in/1",
+ "audio_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ "systems": [
+  {
+   "id": "scribe",
+   "params_sha": "p-scribe",
+   "words": []
+  },
+  {
+   "id": "soniox",
+   "params_sha": "p-soniox",
+   "words": []
+  },
+  {
+   "id": "ours",
+   "params_sha": "p-ours",
+   "words": []
+  }
+ ],
+ "config": {
+  "arm": "rules",
+  "guard": false,
+  "llm": null,
+  "chunking": {
+   "max_tokens": 800,
+   "anchor_n": 3,
+   "search_radius": 200
+  }
+ }
+}
