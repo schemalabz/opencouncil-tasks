@@ -21,6 +21,12 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      # The fusion preflight spawns the built engine and the server refuses to
+      # start without it, so two tests need dist/ to exist. The Dockerfile
+      # builds; this job did not, and tested a tree that could never run.
+      - name: Build
+        run: npm run build
+
       - name: Unit tests
         run: npm test
 

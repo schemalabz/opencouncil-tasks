@@ -25,3 +25,11 @@ squid.conf
 
 # Debug output (CLI intermediates)
 .debug/
+
+# Raw per-system transcripts and fusion traces. They hold verbatim council
+# speech: runtime artifacts on a mounted volume, never in a commit.
+# .dockerignore keeps things out of an image and has never kept anything out of
+# a commit.
+fusion-raw/
+fusion-traces/
+*.oc-fusion-raw.json
