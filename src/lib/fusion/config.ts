@@ -1,0 +1,145 @@
+import path from "path";
+import os from "os";
+import { sha256OfValue, shortSha } from "./hash.js";
+
+/**
+ * Typed fusion configuration, read once at the composition root.
+ *
+ * Every knob is off by default: an environment that has never heard of fusion
+ * must behave exactly as it does today. An *invalid* value throws at startup
+ * rather than degrading silently — a typo'd FUSION_MODE that quietly means
+ * "off" is indistinguishable from a fusion outage.
+ */
+
+export type FusionMode = "off" | "shadow" | "on";
+export type OnOff = "off" | "on";
+/** One value. Kept as a named type because it names the cache namespace. */
+export type FusionEngine = "node";
+
+export interface FusionConfig {
+    mode: FusionMode;
+    /** LLM chooser (policy arms). Can only ever be granted at startup. */
+    llm: OnOff;
+    /** Whether the openai-compatible route is mounted at all. */
+    openaiRoute: OnOff;
+    /** Percentage of meetings that get fusion while mode=on. 0 ⇒ nobody. */
+    canaryPercent: number;
+    /**
+     * Which implementation of the fuse core runs. There is one; the field
+     * survives because the engine revision and the cache namespace are keyed
+     * on it, so a second implementation could never read the first's entries.
+     */
+    engine: FusionEngine;
+    cacheDir: string;
+    traceDir: string;
+    deadlineMs: number;
+    /**
+     * How audio reaches the two providers that fetch it out of process.
+     * `url` publishes one temporary public object and hands all three the same
+     * link. `bytes` uploads the file to each vendor instead, which is what a
+     * deployment with no bucket has to do. `auto` picks `url` when the caller
+     * already has a canonical URL or a bucket is configured, and `bytes`
+     * otherwise -- so a missing bucket degrades the transport, never the result.
+     */
+    audioTransport: "url" | "bytes" | "auto";
+    /** When set, providers are served from a replay bundle and never hit the network. */
+    replayDir?: string;
+    /**
+     * Where the three raw per-system word streams are kept (decision of
+     * 2026-09-09: keep them, but not in the database). Unset ⇒ not kept.
+     *
+     * A directory of verbatim council speech, so it must point at a mounted
+     * volume outside the checkout — never a path inside the repo.
+     */
+    rawLogDir?: string;
+    /** Size valve for one raw record. Default 32 MB; a 20-minute segment is ~0.6 MB. */
+    rawLogMaxBytes: number;
+    rawLogRetentionDays: number;
+    /** Repo root; the engine is spawned with this as cwd. */
+    repoRoot: string;
+}
+
+const MODES: FusionMode[] = ["off", "shadow", "on"];
+
+export class FusionConfigError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "FusionConfigError";
+    }
+}
+
+type Env = Record<string, string | undefined>;
+
+function readEnum<T extends string>(env: Env, name: string, allowed: readonly T[], fallback: T): T {
+    const raw = env[name];
+    if (raw === undefined || raw === "") {
+        return fallback;
+    }
+    const value = raw.trim();
+    if (!(allowed as readonly string[]).includes(value)) {
+        throw new FusionConfigError(`${name} must be one of ${allowed.join("|")} (got ${JSON.stringify(raw)})`);
+    }
+    return value as T;
+}
+
+function readInt(env: Env, name: string, fallback: number, min: number, max: number): number {
+    const raw = env[name];
+    if (raw === undefined || raw === "") {
+        return fallback;
+    }
+    const value = Number(raw);
+    if (!Number.isInteger(value) || value < min || value > max) {
+        throw new FusionConfigError(`${name} must be an integer in [${min}, ${max}] (got ${JSON.stringify(raw)})`);
+    }
+    return value;
+}
+
+export function loadFusionConfig(env: Env = process.env, repoRoot: string = process.cwd()): FusionConfig {
+    const mode = readEnum(env, "FUSION_MODE", MODES, "off");
+    // The LLM arbiter was evaluated and rejected: it deleted 2.6x as much
+    // speech as Scribe, and only a listening test could say whether that
+    // destroyed real speech. An environment that still asks for it is asking
+    // for something this build cannot do, so it is a startup error rather than
+    // a silent downgrade to the rules arm.
+    const llm = readEnum(env, "FUSION_LLM", ["off", "on"] as const, "off");
+    if (llm === "on") {
+        throw new FusionConfigError(
+            "FUSION_LLM=on is not supported: the LLM arbiter is not part of this "
+            + "service. Unset FUSION_LLM to run the rules arm.");
+    }
+    const openaiRoute = readEnum(env, "FUSION_OPENAI_ROUTE", ["off", "on"] as const, "off");
+    const engine: FusionEngine = "node";
+    const canaryPercent = readInt(env, "FUSION_CANARY_PERCENT", 0, 0, 100);
+    const audioTransport = readEnum(env, "FUSION_AUDIO_TRANSPORT",
+        ["url", "bytes", "auto"] as const, "auto");
+    const deadlineMs = readInt(env, "FUSION_DEADLINE_MS", 240_000, 1_000, 3_600_000);
+
+    const rawLogMaxBytes = readInt(env, "FUSION_RAW_LOG_MAX_BYTES", 32 * 1024 * 1024, 4096, 1024 * 1024 * 1024);
+    // Records are council speech. The default expires them; 0 keeps them for
+    // good and has to be typed out on purpose.
+    const rawLogRetentionDays = readInt(env, "FUSION_RAW_LOG_RETENTION_DAYS", 14, 0, 3650);
+
+    const replayDir = env.FUSION_REPLAY_DIR?.trim() || undefined;
+
+    return {
+        mode,
+        llm,
+        openaiRoute,
+        canaryPercent,
+        audioTransport,
+        engine,
+        cacheDir: env.FUSION_CACHE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-cache"),
+        traceDir: env.FUSION_TRACE_DIR?.trim() || path.join(os.tmpdir(), "oc-fusion-traces"),
+        deadlineMs,
+        replayDir,
+        rawLogDir: env.FUSION_RAW_LOG_DIR?.trim() || undefined,
+        rawLogMaxBytes,
+        rawLogRetentionDays,
+        repoRoot,
+    };
+}
+
+/** Identity of the knobs that change the *output*, for the trace and cache key. */
+export function fusionConfigSha(config: Pick<FusionConfig, "llm">, extra: Record<string, unknown> = {}): string {
+    return shortSha(sha256OfValue({ llm: config.llm, ...extra }));
+}
