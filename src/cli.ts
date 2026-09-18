@@ -9,7 +9,9 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
-import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
+import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, readCache, writeCache } from './tasks/utils/decisionPdfExtraction.js';
+import { identifySpeakers, chunkSegments, buildSystemPrompt, buildUserPrompt, DEFAULT_IDENTIFICATION_MODEL, DEFAULT_CHUNK_CHARS, type SpeakerIdentification } from './lib/speakerIdentification.js';
+import { buildBacktestInput, scoreBacktest, formatBacktestReport, formatMeetingTable, formatThresholdSweep, thresholdSweep, estimateCostUsd, aggregateSummaries, type AnchorMode, type MeetingApiData, type BacktestSummary, type ScoredSpeaker } from './tasks/utils/speakerBacktest.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
 import { partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
 import { sameDecisionNumber } from './tasks/utils/decisionNumberCompare.js';
@@ -1210,6 +1212,134 @@ program
         }
 
         server.close();
+    });
+
+program
+    .command('backtest-speaker-identification <meetings...>')
+    .description("Identify each meeting's speakers from the transcript text alone and score the verdicts against the stored assignments (voiceprint matches and reviewer edits). Each meeting is cityId/meetingId on opencouncil, or a path to a saved meeting JSON. See docs/speaker-identification-backtest.md")
+    .option('--base-url <url>', 'opencouncil base URL', 'https://opencouncil.gr')
+    .option('--anchor <mode>', "'none' hides every stored identity (the no-voiceprint case); 'voiceprint' hands voiceprint-matched speakers to the model as known", 'none')
+    .option('--min-confidence <n>', 'verdicts below this confidence count as abstentions', '80')
+    .option('--model <model>', 'model id', DEFAULT_IDENTIFICATION_MODEL)
+    .option('--chunk-chars <n>', 'transcript characters per model call', String(DEFAULT_CHUNK_CHARS))
+    .option('--skip-cache', 'ignore cached verdicts and call the model again')
+    .option('--dry-run', 'print the prompts that would be sent and exit without calling the model')
+    .option('--summary-only', "skip each meeting's per-speaker table")
+    .option('-O, --output-file <file>', 'write the scored speakers and raw verdicts of every meeting as JSON')
+    .action(async (meetingRefs: string[], options: { baseUrl: string; anchor: string; minConfidence: string; model: string; chunkChars: string; skipCache?: boolean; dryRun?: boolean; summaryOnly?: boolean; outputFile?: string }) => {
+        try {
+            if (options.anchor !== 'none' && options.anchor !== 'voiceprint') throw new Error("--anchor must be 'none' or 'voiceprint'");
+            const anchor: AnchorMode = options.anchor;
+            const minConfidence = parseInt(options.minConfidence, 10);
+            const chunkChars = parseInt(options.chunkChars, 10);
+            if (!Number.isFinite(minConfidence) || !Number.isFinite(chunkChars)) throw new Error('--min-confidence and --chunk-chars must be integers');
+
+            const CACHE_PREFIX = 'speaker-id-v3-';
+            type Cached = { identifications: SpeakerIdentification[]; usage: ReturnType<typeof addUsage> };
+            const results: { meeting: string; source: string; cityName: string; body: string | null; meetingDate: string; language: string; summary: BacktestSummary; speakers: ScoredSpeaker[]; identifications: SpeakerIdentification[]; usage: Cached['usage'] }[] = [];
+            const failures: { meeting: string; error: string }[] = [];
+            let freshUsage = NO_USAGE;
+
+            for (const meetingRef of meetingRefs) {
+                console.log(`\n===== ${meetingRef} =====`);
+                try {
+                    let data: MeetingApiData;
+                    let source: string;
+                    if (fs.existsSync(meetingRef)) {
+                        source = path.resolve(meetingRef);
+                        data = JSON.parse(fs.readFileSync(meetingRef, 'utf-8')) as MeetingApiData;
+                    } else {
+                        const match = meetingRef.match(/^([^/]+)\/([^/]+)$/);
+                        if (!match) throw new Error(`Expected cityId/meetingId or a file path, got "${meetingRef}"`);
+                        source = `${options.baseUrl.replace(/\/$/, '')}/api/cities/${encodeURIComponent(match[1])}/meetings/${encodeURIComponent(match[2])}`;
+                        console.log(`Fetching ${source}`);
+                        const response = await fetch(source);
+                        if (!response.ok) throw new Error(`${source} responded ${response.status}`);
+                        data = await response.json() as MeetingApiData;
+                        if ((data as { transcriptHiddenForReview?: boolean }).transcriptHiddenForReview) throw new Error('The transcript of this meeting is hidden for review; the public endpoint returns it empty');
+                    }
+
+                    const input = buildBacktestInput(data, { anchor });
+                    if (input.segments.length === 0) throw new Error('The meeting has no transcript');
+                    const count = (s: string) => input.speakers.filter(x => x.source === s).length;
+                    const chars = input.segments.reduce((n, s) => n + s.text.length, 0);
+                    console.log(`${input.cityName}, ${input.administrativeBodyName ?? 'unknown body'}, ${input.meetingDate} (${input.language}): ${input.speakers.length} speakers — ${count('voiceprint') + count('voiceprintCorrected') + count('voiceprintRemoved')} voiceprint-matched (${count('voiceprintCorrected') + count('voiceprintRemoved')} later corrected by a reviewer), ${count('review')} reviewer-linked, ${count('offRoster')} off-roster, ${count('none')} unlabelled; ${input.segments.length} segments, ${chars} characters; roster of ${input.roster.length}`);
+                    if (anchor === 'voiceprint') console.log(`Anchoring ${input.knownSpeakers.length} voiceprint-matched speakers as known`);
+
+                    if (options.dryRun) {
+                        const chunks = chunkSegments(input.segments, chunkChars);
+                        console.log(`\n${chunks.length} chunk(s): ${chunks.map(c => `${c.length} segments / ${c.reduce((n, x) => n + x.text.length, 0)} chars`).join(', ')}`);
+                        console.log(`\n===== SYSTEM PROMPT =====\n${buildSystemPrompt(input.language)}`);
+                        chunks.forEach((chunk, i) => {
+                            console.log(`\n===== USER PROMPT ${i + 1}/${chunks.length} =====`);
+                            console.log(buildUserPrompt({ cityName: input.cityName, meetingDate: input.meetingDate, administrativeBodyName: input.administrativeBodyName, roster: input.roster, knownSpeakers: input.knownSpeakers, chunkIndex: i, chunkCount: chunks.length, segments: chunk }));
+                        });
+                        continue;
+                    }
+
+                    const cacheKey = `speaker-identification|${source}|${anchor}|${options.model}|${chunkChars}`;
+                    let cached = options.skipCache ? null : readCache<Cached>(cacheKey, CACHE_PREFIX);
+                    if (!cached) {
+                        const run = await identifySpeakers({
+                            cityName: input.cityName,
+                            language: input.language,
+                            meetingDate: input.meetingDate,
+                            administrativeBodyName: input.administrativeBodyName,
+                            roster: input.roster,
+                            segments: input.segments,
+                            knownSpeakers: input.knownSpeakers,
+                            model: options.model,
+                            chunkChars,
+                            onChunkDone: (done, total) => console.log(`chunk ${done}/${total} done`),
+                        });
+                        cached = { identifications: run.result, usage: run.usage };
+                        writeCache(cacheKey, cached, CACHE_PREFIX);
+                        freshUsage = addUsage(freshUsage, run.usage);
+                        console.log(`Model usage: ${formatUsage(run.usage)}`);
+                    } else {
+                        console.log('Using cached verdicts (pass --skip-cache to call the model again)');
+                    }
+
+                    const { scored, summary } = scoreBacktest(input.speakers, cached.identifications, minConfidence);
+                    console.log('');
+                    console.log(formatBacktestReport(scored, summary, input.roster, minConfidence, { includeSpeakers: !options.summaryOnly }));
+                    results.push({ meeting: meetingRef, source, cityName: input.cityName, body: input.administrativeBodyName, meetingDate: input.meetingDate, language: input.language, summary, speakers: scored, identifications: cached.identifications, usage: cached.usage });
+                } catch (e) {
+                    const error = e instanceof Error ? e.message : String(e);
+                    console.error(`${meetingRef}: ${error}`);
+                    failures.push({ meeting: meetingRef, error });
+                }
+            }
+
+            if (options.dryRun) return;
+
+            const aggregate = aggregateSummaries(results.map(r => r.summary));
+            if (results.length > 1) {
+                console.log('\n===== ALL MEETINGS =====');
+                console.log(formatMeetingTable(results.map(r => ({ meeting: r.meeting, body: r.body, summary: r.summary, costUsd: estimateCostUsd(options.model, r.usage) })), aggregate));
+            }
+            const sweep = thresholdSweep(results);
+            if (results.length > 0) {
+                console.log(`\n===== CONFIDENCE THRESHOLDS (${results.length === 1 ? results[0].meeting : 'all meetings'}) =====`);
+                console.log(formatThresholdSweep(sweep, minConfidence));
+            }
+            if (freshUsage.input_tokens > 0) console.log(`\nModel usage of this run (cached meetings excluded): ${formatUsage(freshUsage)}`);
+            if (failures.length > 0) {
+                console.error(`\n${failures.length} meeting(s) failed:`);
+                for (const f of failures) console.error(`  ${f.meeting}: ${f.error}`);
+                process.exitCode = 1;
+            }
+
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify({ anchor, model: options.model, chunkChars, minConfidence, aggregate, sweep, meetings: results, failures }, null, 2));
+                console.log(`\nScored speakers -> ${options.outputFile}`);
+            }
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
     });
 
 program
