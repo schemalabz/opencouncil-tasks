@@ -298,6 +298,9 @@ export interface RequestOnTranscript extends TaskRequest {
         speakerRole: string | null;
         speakerId: string | null;  // personId from voiceprint matching
         speakerSegmentId: string;
+        // The diarization speaker this segment belongs to. Every segment of one
+        // voice shares it, whether or not that voice has been matched to a person.
+        speakerTagId?: string;
         text: string;
         utterances: {
             text: string;
@@ -324,10 +327,66 @@ export interface RequestOnTranscript extends TaskRequest {
  * Fix Transcript
  */
 
+/** One of a meeting's people: someone who may speak at it, and so someone a speaker can be identified as. */
+export interface RosterPerson {
+    id: string;
+    name: string;
+    /** Roles held on the meeting date, the ones in the meeting's body first. */
+    role: string | null;
+    /** The party's name on the meeting date. */
+    party: string | null;
+    /** Leads that party: "the head of the party" is a common way to give the floor. */
+    partyHead?: boolean;
+    /** Holds an active role in the administrative body that is meeting. */
+    memberOfMeetingBody?: boolean;
+}
+
+/**
+ * The kind of cue a transcript identification rests on, strongest first.
+ * - named:          the speaker is given the floor by name, right before they speak
+ * - rollCall:       a name is read out and the speaker answers
+ * - selfIntroduced: the speaker states their own name or role
+ * - addressed:      others address the speaker by name or role title
+ * - roleBehaviour:  only what the speaker does (chairs, answers as the
+ *                   executive); no name or title is spoken
+ */
+export type SpeakerEvidenceKind = "named" | "rollCall" | "selfIntroduced" | "addressed" | "roleBehaviour";
+
+/**
+ * Who a diarization speaker is, judged from the transcript text alone (the
+ * chair giving the floor by name, roll calls, self-introductions). Independent
+ * of voiceprint matching: the caller reconciles the two.
+ */
+export interface SpeakerHint {
+    speakerTagId: string;
+    personId: string;
+    /**
+     * Whether the task would act on this identification by itself. The task
+     * decides, next to the prompt that produces the evidence, as it decides
+     * whether a voiceprint matched: the caller compares identities and never
+     * thresholds a number. A hint that is not actionable is a suggestion for a
+     * reviewer and nothing more.
+     */
+    actionable: boolean;
+    /** The strongest kind of evidence behind the identification; null when the model named none. */
+    evidenceKind: SpeakerEvidenceKind | null;
+    /** 0–100, the model's own number. For a reviewer to read, not a contract. */
+    confidence: number;
+    /** The decisive transcript line(s) with their timestamp, for a reviewer to check the name. */
+    evidence: string;
+}
+
 export interface FixTranscriptRequest extends RequestOnTranscript {
     // Agenda/subject titles of the meeting — a source for street, project, and
     // entity names that the party roster doesn't cover
     agendaItems?: { name: string }[];
+    /**
+     * Every person of the city. When present, and segments carry speakerTagId,
+     * the task also identifies speakers from the transcript text and returns
+     * speakerHints. The whole city rather than the meeting's body: councillors
+     * and officials from outside the body attend and speak.
+     */
+    roster?: RosterPerson[];
 }
 
 export interface FixTranscriptResult {
@@ -336,6 +395,8 @@ export interface FixTranscriptResult {
         markUncertain: boolean;
         text: string;
     }[];
+    /** One entry per speaker the transcript identifies. Absent when the request had no roster. */
+    speakerHints?: SpeakerHint[];
 }
 
 /*
