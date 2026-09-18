@@ -8,7 +8,7 @@ The server supports the following processing tasks:
 
 ### Content Processing
 - [`processAgenda`](src/tasks/processAgenda.ts) - Extracts and structures agenda information from documents (PDF, or `.docx` converted to HTML first)
-- [`fixTranscript`](src/tasks/fixTranscript.ts) - Cleans and corrects transcription output for improved accuracy
+- [`fixTranscript`](src/tasks/fixTranscript.ts) - Cleans and corrects transcription output for improved accuracy. Given the city's roster, it also returns speaker hints: who each diarization speaker is, read from the transcript text alone and independent of voiceprint matching
 - [`summarize`](src/tasks/summarize.ts) - Generates comprehensive content summaries with subject extraction
 
 ### Media Processing
@@ -27,6 +27,7 @@ The server supports the following processing tasks:
 ### Diavgeia Integration
 - [`pollDecisions`](src/tasks/pollDecisions.ts) - Fetches decisions from the Diavgeia (Greek Government Transparency) API and matches them to meeting agenda subjects using text similarity and LLM fallback
 - [**Decision reading evaluation**](docs/decision-reading-eval.md) - Golden fixture and `evaluate-decision-reading` command that score how the reader extracts the session date, decision number and administrative body from decision PDFs
+- [**Speaker identification backtest**](docs/speaker-identification-backtest.md) - `backtest-speaker-identification` command that identifies speakers from the transcript text alone and scores, across one or more meetings, how accurately it names the people on each city's roster
 
 ### Data Synchronization
 - [**PGSync**](docs/pgsync-setup.md) - Real-time change data capture that continuously syncs PostgreSQL to Elasticsearch
