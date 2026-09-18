@@ -3,6 +3,7 @@ import { FixTranscriptRequest } from "../types.js";
 import { Task } from "../tasks/pipeline.js";
 import { addUsage, aiChat, NO_USAGE, ResultWithUsage } from "../lib/ai.js";
 import { getLanguageConfig } from "../lib/language.js";
+import { identifyTranscriptSpeakers } from "./utils/speakerHints.js";
 
 const MAX_PARALLEL_API_CALLS = 20;
 // Attempts per segment: the numbered-line structure is validated
@@ -22,9 +23,30 @@ OUTPUT: the same numbered lines, same count, each line corrected. No explanation
 ${config.fixTranscriptNotes}`;
 }
 
+/** The names the correction is checked against, as the prompt lists them: one line per party. */
+export type PartyNames = { name: string; people: { name: string }[] }[];
+
+const NO_PARTY = "No party";
+
+/**
+ * The meeting's people by party, in the order the parties first appear. People
+ * with no party (the general secretary, staff) come last, on a line of their own.
+ */
+export function groupPeopleByParty(people: NonNullable<FixTranscriptRequest['people']>): PartyNames {
+    const byParty = new Map<string, { name: string }[]>();
+    for (const person of people.filter(p => p.party)) {
+        byParty.set(person.party!, [...(byParty.get(person.party!) ?? []), { name: person.name }]);
+    }
+    const withoutParty = people.filter(p => !p.party).map(p => ({ name: p.name }));
+    return [
+        ...[...byParty].map(([name, members]) => ({ name, people: members })),
+        ...(withoutParty.length > 0 ? [{ name: NO_PARTY, people: withoutParty }] : []),
+    ];
+}
+
 export function buildUserPrompt(
     cityName: string,
-    parties: FixTranscriptRequest['partiesWithPeople'],
+    parties: PartyNames,
     agenda: { name: string }[],
     personName: string,
     utterances: string[]
@@ -77,23 +99,32 @@ export function parseNumberedUtterances(text: string, expectedCount: number): st
 }
 
 export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
-    const { transcript, partiesWithPeople, cityName, cityLanguage, agendaItems } = request;
+    const { transcript, cityName, cityLanguage, agendaItems } = request;
+    // A caller that predates `people` still sends them grouped by party.
+    const partiesWithPeople = request.people ? groupPeopleByParty(request.people) : request.partiesWithPeople ?? [];
     console.log(`Fixing transcript for ${cityName} (${cityLanguage}) with ${transcript.length} segments`);
     const inputUtterances = transcript.flatMap(s => s.utterances.map(u => u.text)).length;
 
-    const allResults = await fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress);
+    // Correcting the text and identifying the speakers read the same transcript
+    // and don't depend on each other, so they run side by side.
+    const [allResults, speakerHints] = await Promise.all([
+        fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress),
+        identifyTranscriptSpeakers(request),
+    ]);
+    const usage = addUsage(allResults.usage, speakerHints.usage);
     const markedUncertain = allResults.result.filter(r => r.markUncertain).length;
     console.log(`Proposing ${allResults.result.length} updates (${allResults.result.length / inputUtterances * 100}%), ${markedUncertain} marked uncertain`);
-    console.log(`Total usage: ${allResults.usage.input_tokens} input tokens, ${allResults.usage.output_tokens} output tokens`);
+    console.log(speakerHints.result ? `Identified ${speakerHints.result.length} speakers from the transcript` : "No speaker identification: the request has no people or speaker tag ids, or the pass failed");
+    console.log(`Total usage: ${usage.input_tokens} input tokens, ${usage.output_tokens} output tokens`);
 
-    return { updateUtterances: allResults.result, usage: allResults.usage };
+    return { updateUtterances: allResults.result, speakerHints: speakerHints.result, usage };
 };
 
 async function processSpeakerSegment(
     segment: FixTranscriptRequest['transcript'][0],
     cityName: string,
     cityLanguage: CityLanguage,
-    partiesWithPeople: FixTranscriptRequest['partiesWithPeople'],
+    partiesWithPeople: PartyNames,
     agendaItems: { name: string }[]
 ): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
     if (segment.utterances.length === 0) {
@@ -156,7 +187,7 @@ async function fixSpeakerSegments(
     speakerSegments: FixTranscriptRequest['transcript'],
     cityName: string,
     cityLanguage: CityLanguage,
-    partiesWithPeople: FixTranscriptRequest['partiesWithPeople'],
+    partiesWithPeople: PartyNames,
     agendaItems: { name: string }[],
     onProgress: (stage: string, progress: number) => void
 ): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {

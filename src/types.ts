@@ -313,7 +313,18 @@ export interface RequestOnTranscript extends TaskRequest {
     cityName: string;
     cityLanguage: CityLanguage;
     administrativeBodyName: string;  // e.g., "Δημοτικό Συμβούλιο"
-    partiesWithPeople: {
+    /**
+     * The people who may speak at the meeting: the one list of people the
+     * transcript tasks get. fixTranscript corrects names against it, and
+     * identifies speakers from it when segments carry speakerTagId.
+     */
+    people?: RosterPerson[];
+    /**
+     * @deprecated The meeting's people grouped by party, from a caller that
+     * predates `people`. Read only when `people` is absent. Remove it once
+     * every caller sends `people`.
+     */
+    partiesWithPeople?: {
         name: string;
         people: {
             name: string;
@@ -378,15 +389,8 @@ export interface SpeakerHint {
 
 export interface FixTranscriptRequest extends RequestOnTranscript {
     // Agenda/subject titles of the meeting — a source for street, project, and
-    // entity names that the party roster doesn't cover
+    // entity names that the meeting's people don't cover
     agendaItems?: { name: string }[];
-    /**
-     * Every person of the city. When present, and segments carry speakerTagId,
-     * the task also identifies speakers from the transcript text and returns
-     * speakerHints. The whole city rather than the meeting's body: councillors
-     * and officials from outside the body attend and speak.
-     */
-    roster?: RosterPerson[];
 }
 
 export interface FixTranscriptResult {
@@ -395,7 +399,7 @@ export interface FixTranscriptResult {
         markUncertain: boolean;
         text: string;
     }[];
-    /** One entry per speaker the transcript identifies. Absent when the request had no roster. */
+    /** One entry per speaker the transcript identifies. Absent when the request had no `people` or no speaker tag ids. */
     speakerHints?: SpeakerHint[];
 }
 
