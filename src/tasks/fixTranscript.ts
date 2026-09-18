@@ -3,6 +3,7 @@ import { FixTranscriptRequest } from "../types.js";
 import { Task } from "../tasks/pipeline.js";
 import { addUsage, aiChat, NO_USAGE, ResultWithUsage } from "../lib/ai.js";
 import { getLanguageConfig } from "../lib/language.js";
+import { identifyTranscriptSpeakers } from "./utils/speakerHints.js";
 
 const MAX_PARALLEL_API_CALLS = 20;
 // Attempts per segment: the numbered-line structure is validated
@@ -81,12 +82,19 @@ export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = as
     console.log(`Fixing transcript for ${cityName} (${cityLanguage}) with ${transcript.length} segments`);
     const inputUtterances = transcript.flatMap(s => s.utterances.map(u => u.text)).length;
 
-    const allResults = await fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress);
+    // Correcting the text and identifying the speakers read the same transcript
+    // and don't depend on each other, so they run side by side.
+    const [allResults, speakerHints] = await Promise.all([
+        fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress),
+        identifyTranscriptSpeakers(request),
+    ]);
+    const usage = addUsage(allResults.usage, speakerHints.usage);
     const markedUncertain = allResults.result.filter(r => r.markUncertain).length;
     console.log(`Proposing ${allResults.result.length} updates (${allResults.result.length / inputUtterances * 100}%), ${markedUncertain} marked uncertain`);
-    console.log(`Total usage: ${allResults.usage.input_tokens} input tokens, ${allResults.usage.output_tokens} output tokens`);
+    console.log(speakerHints.result ? `Identified ${speakerHints.result.length} speakers from the transcript` : "No speaker identification: the request has no roster or speaker tag ids, or the pass failed");
+    console.log(`Total usage: ${usage.input_tokens} input tokens, ${usage.output_tokens} output tokens`);
 
-    return { updateUtterances: allResults.result, usage: allResults.usage };
+    return { updateUtterances: allResults.result, speakerHints: speakerHints.result, usage };
 };
 
 async function processSpeakerSegment(
