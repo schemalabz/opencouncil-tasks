@@ -800,6 +800,47 @@ describe("pollDecisions - extraction gate", () => {
         expect(mockExtractDecisions).toHaveBeenCalledTimes(1);
         expect(result.extractions).not.toBeNull();
     });
+
+    it("skips extraction but still links decisions when the request sends extract: false", async () => {
+        primeOneMatch();
+        const request = matchedRequest();
+        request.extract = false;
+        request.subjects.push({
+            subjectId: "subB",
+            name: "Linked earlier",
+            agendaItemIndex: 2,
+            existingDecision: { ada: "ADA-OLD", decisionTitle: "Old", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-OLD", needsExtraction: true },
+        });
+
+        const result = await pollDecisions(request, noopProgress);
+
+        expect(mockExtractDecisions).not.toHaveBeenCalled();
+        expect(result.extractions).toBeNull();
+        expect(result.matches).toEqual([expect.objectContaining({ subjectId: "subA", ada: "ADA-D1" })]);
+        expect(result.decisions).toEqual([expect.objectContaining({ ada: "ADA-D1", subjectId: "subA" })]);
+    });
+
+    it("extracts when the request leaves extract out", async () => {
+        primeOneMatch();
+        const request = matchedRequest();
+        expect(request.extract).toBeUndefined();
+
+        const result = await pollDecisions(request, noopProgress);
+
+        expect(mockExtractDecisions).toHaveBeenCalledTimes(1);
+        expect(result.extractions).not.toBeNull();
+    });
+
+    it("keeps extraction off when the environment is off, even with extract: true", async () => {
+        vi.stubEnv('DECISION_EXTRACTION_ENABLED', '');
+        primeOneMatch();
+
+        const result = await pollDecisions(makeRequest({ ...matchedRequest(), extract: true }), noopProgress);
+
+        expect(result.matches).toHaveLength(1);
+        expect(mockExtractDecisions).not.toHaveBeenCalled();
+        expect(result.extractions).toBeNull();
+    });
 });
 
 describe("pollDecisions - unit and signer scoping", () => {

@@ -637,11 +637,16 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     // trusted: matching results land regardless, while attendance, votes and
     // excerpts wait. Skipped decisions stay excerpt-less, so re-enabling the
     // flag lets later polls pick them up through the normal needsExtraction
-    // path.
-    const extractionEnabled = process.env.DECISION_EXTRACTION_ENABLED === 'true';
+    // path. The request can also turn extraction off (`extract: false`); the
+    // app does that for a body with no conventions record, and the same
+    // needsExtraction path reads those decisions once the body has one.
+    const envExtractionEnabled = process.env.DECISION_EXTRACTION_ENABLED === 'true';
+    const extractionEnabled = envExtractionEnabled && request.extract !== false;
 
-    if (!extractionEnabled && allExtractionSubjects.length > 0) {
+    if (!envExtractionEnabled && allExtractionSubjects.length > 0) {
         log(`\nSkipping extraction of ${allExtractionSubjects.length} decision PDFs: DECISION_EXTRACTION_ENABLED is not set.`);
+    } else if (!extractionEnabled && allExtractionSubjects.length > 0) {
+        log(`\nSkipping extraction of ${allExtractionSubjects.length} decision PDFs: the request asks for none (the body has no conventions record).`);
     }
 
     if (extractionEnabled && allExtractionSubjects.length > 0 && request.people?.length > 0) {

@@ -633,6 +633,13 @@ export interface PollDecisionsRequest extends TaskRequest {
     diavgeiaUnitIds?: string[];
     mayorId?: string; // Person ID of the city mayor, for presence extraction
     forceExtract?: boolean; // Skip extraction cache and reprocess all PDFs
+    /**
+     * Missing = extract, as before. `false` = find and link decisions only: the
+     * poll makes no extraction call and returns `extractions: null`. The page-1
+     * reading for matching still runs. The app sends `false` for a body with no
+     * conventions record, so no body is extracted without its conventions.
+     */
+    extract?: boolean;
     people: { id: string; name: string }[];
     subjects: Array<{
         subjectId: string;
