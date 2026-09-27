@@ -10,7 +10,9 @@ import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
 import { extractAgendaSubjects, processAgenda } from './tasks/processAgenda.js';
-import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
+import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
+import { scoreDocument, tallyScores, FIELDS, type ExtractionLabel, type DocumentScore } from './tasks/utils/extractionScoring.js';
+import { parseBodyHints } from './tasks/utils/bodyHints.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
 import { partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
 import { sameDecisionNumber } from './tasks/utils/decisionNumberCompare.js';
@@ -1017,6 +1019,116 @@ program
             console.log(`\nPer-subject results -> ${options.outputFile}`);
         }
 
+        server.close();
+    });
+
+program
+    .command('evaluate-decision-extraction <file>')
+    .description('Score the production extractor against the extraction fixture (fixtures/extraction-golden.json): one outcome per field per document. See docs/decision-extraction-eval.md')
+    .option('-c, --concurrency <n>', 'parallel extractions', '4')
+    .option('-l, --limit <n>', 'only extract the first N documents (cost control)')
+    .option('--skip-cache', 'ignore cached extractions and call the model again')
+    .option('--hints-file <file>', 'per-body conventions text, as opencouncil\'s `scripts/conventions-text.ts --all` prints it. Production always sends it; without this the cold reader is scored')
+    .option('-O, --output-file <file>', 'write per-document scores as JSON')
+    .action(async (file: string, options: { concurrency: string; limit?: string; skipCache?: boolean; hintsFile?: string; outputFile?: string }) => {
+        type Row = { ada: string; pdfUrl: string; city: string; body: string; label: ExtractionLabel };
+        const fixture = JSON.parse(fs.readFileSync(file, 'utf-8')) as {
+            version: number;
+            cities: Array<{ cityId: string; bodies: Array<{ name: string; documents: Array<{ ada: string; pdfUrl: string; extraction: ExtractionLabel }> }> }>;
+        };
+        let rows: Row[] = fixture.cities.flatMap((c) => c.bodies.flatMap((b) =>
+            b.documents.map((d) => ({ ada: d.ada, pdfUrl: d.pdfUrl, city: c.cityId, body: b.name, label: d.extraction }))));
+        const totalAvailable = rows.length;
+        const limit = options.limit ? parseInt(options.limit, 10) : undefined;
+        if (limit) rows = rows.slice(0, limit);
+        const concurrency = Math.max(1, parseInt(options.concurrency, 10) || 4);
+
+        // pollDecisions always passes conventionsText, so a run without hints
+        // scores a reader production never uses. The hints are per body, and a
+        // body the file does not cover is named rather than quietly read cold.
+        const bodyKey = (city: string, body: string) => `${city}/${body}`;
+        const hints = options.hintsFile ? parseBodyHints(fs.readFileSync(options.hintsFile, 'utf-8')) : new Map<string, string>();
+        if (options.hintsFile) {
+            const bodies = [...new Set(rows.map((r) => bodyKey(r.city, r.body)))];
+            const uncovered = bodies.filter((k) => !hints.has(k));
+            console.log(`Hints: ${bodies.length - uncovered.length}/${bodies.length} bodies covered`);
+            if (uncovered.length) console.log(`  read cold: ${uncovered.join(', ')}`);
+        } else {
+            console.log('No --hints-file: scoring the cold reader, which production never runs.');
+        }
+
+        type Result = Row & { score: DocumentScore; fromCache: boolean; error?: string };
+        const results: Result[] = [];
+        let totalUsage = { ...NO_USAGE };
+        let cursor = 0;
+        const worker = async () => {
+            while (cursor < rows.length) {
+                const r = rows[cursor++];
+                let got: RawExtractedDecision | null = null;
+                let fromCache = false;
+                let error: string | undefined;
+                try {
+                    // Keyed by the canonical URL, whatever form the fixture spells the ADA in.
+                    // The scorer passes no mayor name, and pollDecisions does, so the two keep
+                    // separate entries: a scored reading is the scorer's own.
+                    const out = await extractDecisionFromPdf(adaToPdfUrl(r.ada), undefined, options.skipCache, hints.get(bodyKey(r.city, r.body)));
+                    got = out.result;
+                    fromCache = out.fromCache;
+                    totalUsage = addUsage(totalUsage, out.usage);
+                } catch (e) {
+                    error = e instanceof Error ? e.message : String(e);
+                    console.warn(`  ${r.ada}: ${error}`);
+                }
+                results.push({ ...r, score: scoreDocument(r.label, got), fromCache, error });
+                if (results.length % 25 === 0) console.log(`  ${results.length}/${rows.length}`);
+            }
+        };
+        await Promise.all(Array.from({ length: concurrency }, worker));
+
+        const pct = (n: number, total: number) => (total ? `${((n / total) * 100).toFixed(1)}%` : '—');
+        const tally = tallyScores(results.map((r) => r.score));
+        console.log(`\nextraction fixture v${fixture.version} — ${results.length} documents${limit ? ` (of ${totalAvailable}, --limit ${limit})` : ''}`);
+        console.log(`  ${'field'.padEnd(18)} ${'agree'.padStart(6)} ${'disagree'.padStart(9)} ${'missing'.padStart(8)} ${'contested'.padStart(10)} ${'unresolv.'.padStart(10)}   agree of scored`);
+        for (const f of FIELDS) {
+            const t = tally[f];
+            const scored = t.agree + t.disagree + t.missing;
+            console.log(`  ${f.padEnd(18)} ${String(t.agree).padStart(6)} ${String(t.disagree).padStart(9)} ${String(t.missing).padStart(8)} ${String(t.contested).padStart(10)} ${String(t.unlabelled).padStart(10)}   ${pct(t.agree, scored)}`);
+        }
+        console.log(`  from cache:        ${results.filter((r) => r.fromCache).length}`);
+        console.log(`  failed:            ${results.filter((r) => r.error).length}`);
+        console.log(`  model usage:       ${formatUsage(totalUsage)}`);
+
+        const groups = new Map<string, Result[]>();
+        for (const r of results) {
+            const k = `${r.city} / ${r.body}`;
+            groups.set(k, [...(groups.get(k) ?? []), r]);
+        }
+        if (groups.size > 1) {
+            console.log(`\nPer body — fields not agreeing (disagree+missing) / scored:`);
+            for (const [k, rs] of [...groups.entries()].sort()) {
+                const cells = FIELDS.map((f) => {
+                    const t = tallyScores(rs.map((r) => r.score))[f];
+                    return `${f.slice(0, 4)} ${t.disagree + t.missing}/${t.agree + t.disagree + t.missing}`;
+                });
+                console.log(`  ${k.padEnd(40)} ${cells.join('  ')}  (${rs.length})`);
+            }
+        }
+
+        const bad = results.flatMap((r) => FIELDS
+            .filter((f) => r.score[f].outcome === 'disagree' || r.score[f].outcome === 'missing')
+            .map((f) => ({ r, f })));
+        if (bad.length) {
+            console.log(`\nNot agreeing — read the page before changing either side:`);
+            for (const { r, f } of bad.slice(0, 40)) {
+                console.log(`  ${r.ada}  ${f.padEnd(17)} ${r.score[f].outcome.padEnd(8)} ${r.score[f].detail}  (${r.city} / ${r.body})`);
+            }
+            if (bad.length > 40) console.log(`  … ${bad.length - 40} more; use -O for the full list`);
+        }
+
+        if (options.outputFile) {
+            fs.writeFileSync(options.outputFile, JSON.stringify({ source: file, tally, results: results.map(({ label: _label, ...rest }) => rest) }, null, 2));
+            console.log(`\nPer-document scores -> ${options.outputFile}`);
+        }
         server.close();
     });
 
