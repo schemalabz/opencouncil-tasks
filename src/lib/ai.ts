@@ -205,6 +205,28 @@ export class BatchPromotedError extends Error {
     }
 }
 
+/**
+ * The Batch endpoint refused the request itself (`invalid_request_error`), not a
+ * transient failure: the same request can still be served by streaming, which is
+ * how a 35-page document that the batch rejected on every run gets read.
+ *
+ * Both rejection paths raise this: the 400 that `batches.create` throws (how an
+ * oversized request presents) and the `errored` result an accepted batch ends
+ * with. A rejection the streaming endpoint shares — a bad schema, a bad model id
+ * — is not filtered out here: the batch and the streaming endpoints run separate
+ * validators, so nothing outside them can tell a batch-only limit from a
+ * permanent one without re-reading error text. A 400 is refused before any token
+ * is billed, so the retry costs one round trip, and the streaming call then
+ * raises its own `invalid_request_error`, which no retry path treats as
+ * transient. A permanent rejection therefore still surfaces once, as itself.
+ */
+export class BatchRejectedError extends Error {
+    constructor(message: string, options?: { cause?: unknown }) {
+        super(message, options);
+        this.name = 'BatchRejectedError';
+    }
+}
+
 export async function executeBatch(
     requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming,
     requestOptions: Anthropic.RequestOptions,
@@ -215,12 +237,7 @@ export async function executeBatch(
     const promoteSignal = control?.promote.signal;
     const wakeSignal = cancelSignal && promoteSignal ? AbortSignal.any([cancelSignal, promoteSignal]) : undefined;
 
-    const batch = await client.messages.batches.create({
-        requests: [{
-            custom_id: 'request-1',
-            params: requestParams,
-        }],
-    }, requestOptions);
+    const batch = await createBatchOrThrowRejection(client, requestParams, requestOptions);
 
     console.log(`Batch created: ${batch.id}, polling for result...`);
 
@@ -247,7 +264,12 @@ export async function executeBatch(
                         return result.result.message;
                     }
                     if (result.result.type === 'errored') {
-                        throw new Error(`Batch request errored: ${JSON.stringify(result.result.error)}`);
+                        const error = result.result.error;
+                        const message = `Batch request errored: ${JSON.stringify(error)}`;
+                        if (error.error.type === 'invalid_request_error') {
+                            throw new BatchRejectedError(message);
+                        }
+                        throw new Error(message);
                     }
                     if (result.result.type === 'expired') {
                         throw new Error(`Batch request expired (exceeded Anthropic's 24h processing window)`);
@@ -257,6 +279,32 @@ export async function executeBatch(
             }
             throw new Error('Batch completed but no result found for request-1');
         }
+    }
+}
+
+/**
+ * Creating the batch can be refused outright — the path an oversized or malformed
+ * request takes, where nothing is ever queued. The SDK carries the response
+ * body's `error.type` on the error object, so the rejection is read from that
+ * field rather than from the message text.
+ */
+async function createBatchOrThrowRejection(
+    client: Anthropic,
+    requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming,
+    requestOptions: Anthropic.RequestOptions,
+): Promise<Anthropic.Messages.Batches.MessageBatch> {
+    try {
+        return await client.messages.batches.create({
+            requests: [{
+                custom_id: 'request-1',
+                params: requestParams,
+            }],
+        }, requestOptions);
+    } catch (e) {
+        if (e instanceof Anthropic.APIError && e.type === 'invalid_request_error') {
+            throw new BatchRejectedError(`Batch creation rejected the request: ${e.message}`, { cause: e });
+        }
+        throw e;
     }
 }
 
@@ -424,13 +472,22 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         // A promotion landing mid-batch is an expected outcome, not a failure, and
         // both call sites below can be the one holding the batch — so the re-issue
         // lives here rather than at either of them.
-        const runBatch = async (): Promise<{ message: Anthropic.Messages.Message; promoted: boolean }> => {
+        // Why this call left the batch queue. An operator's promotion is a
+        // scheduling decision; a rejection is the endpoint refusing the request.
+        // Both end in streaming, so the flag alone cannot tell them apart.
+        const runBatch = async (): Promise<{ message: Anthropic.Messages.Message; promoted: boolean; promotedReason?: 'operator' | 'batch_rejected' }> => {
             try {
                 return { message: await executeBatch(requestParams, requestOptions), promoted: false };
             } catch (e) {
-                if (!(e instanceof BatchPromotedError)) throw e;
-                console.log(`Batch promoted: re-issuing request via streaming...`);
-                return { message: await streamOnce(), promoted: true };
+                if (e instanceof BatchPromotedError) {
+                    console.log(`Batch promoted: re-issuing request via streaming...`);
+                    return { message: await streamOnce(), promoted: true, promotedReason: 'operator' };
+                }
+                if (e instanceof BatchRejectedError) {
+                    console.log(`The Batch endpoint rejected the request; retrying via streaming...`);
+                    return { message: await streamOnce(), promoted: true, promotedReason: 'batch_rejected' };
+                }
+                throw e;
             }
         };
 
@@ -439,11 +496,13 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         // Distinguishes "promoted out of batch mid-call" from an ordinary
         // streaming call (both end with batchMode:false) in the Langfuse trace.
         let promoted = false;
+        let promotedReason: 'operator' | 'batch_rejected' | undefined;
         if (useBatch) {
             const outcome = await runBatch();
             response = outcome.message;
             usedBatch = !outcome.promoted;
             promoted = outcome.promoted;
+            promotedReason = outcome.promotedReason;
         } else {
             try {
                 response = await streamOnce();
@@ -457,6 +516,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                     response = outcome.message;
                     usedBatch = !outcome.promoted;
                     promoted = outcome.promoted;
+                    promotedReason = outcome.promotedReason;
                 } else {
                     throw e;
                 }
@@ -507,7 +567,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         generation.end({
             output: responseText,
             usage: response.usage,
-            metadata: { batchMode: usedBatch, ...(promoted && { promoted: true }), stopReason: response.stop_reason },
+            metadata: { batchMode: usedBatch, ...(promoted && { promoted: true, promotedReason }), stopReason: response.stop_reason },
         });
 
         if (response.stop_reason === "max_tokens") {

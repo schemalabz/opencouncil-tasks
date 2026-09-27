@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, executeBatch } from './ai.js';
+import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, BatchRejectedError, executeBatch } from './ai.js';
 import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // ===========================================================================
@@ -223,19 +223,33 @@ describe('request shape at the wire', () => {
     const SCHEMA = { type: 'object', properties: { name: { type: 'string' } } } as const;
     const FORMAT = { type: 'json_schema', schema: SCHEMA } as const;
 
-    const errorResponse = (status: number, message: string) => new Response(
-        JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message } }),
+    // The body's error.type decides how aiChat routes the failure, so each probe
+    // states its own: an `invalid_request_error` is a rejection the batch path
+    // re-issues by streaming, while `api_error` is transient and retried.
+    const errorResponse = (status: number, type: string, message: string) => new Response(
+        JSON.stringify({ type: 'error', error: { type, message } }),
         { status, headers: { 'content-type': 'application/json' } },
     );
     /** 400 is non-transient per classifyTransientError, so aiChat fails fast. */
-    const probeResponse = () => errorResponse(400, 'wire probe');
+    const probeResponse = () => errorResponse(400, 'invalid_request_error', 'wire probe');
 
     /** Fails by naming the actual problem — no request was made — rather than
      *  dereferencing undefined inside whichever assertion happens to run first. */
     function lastRequest(): Captured {
         const call = fetchMock.mock.calls.at(-1);
         if (!call) throw new Error('aiChat made no request');
-        const [url, init] = call as [string, RequestInit];
+        return captured(call as [string, RequestInit]);
+    }
+
+    /** A rejected batch is now re-issued by streaming, so one aiChat call can
+     *  leave two requests behind and the batch one is no longer the last. */
+    function lastRequestTo(fragment: string): Captured {
+        const call = fetchMock.mock.calls.filter(([url]) => String(url).includes(fragment)).at(-1);
+        if (!call) throw new Error(`aiChat made no request to ${fragment}`);
+        return captured(call as [string, RequestInit]);
+    }
+
+    function captured([url, init]: [string, RequestInit]): Captured {
         return {
             url: String(url),
             headers: Object.fromEntries(new Headers(init.headers).entries()),
@@ -244,7 +258,10 @@ describe('request shape at the wire', () => {
     }
 
     beforeAll(async () => {
-        fetchMock = vi.fn().mockResolvedValue(probeResponse());
+        // A fresh Response per call: a Response body can only be read once, so a
+        // single shared instance leaves the second request's error body empty and
+        // the SDK cannot parse a type or message out of it.
+        fetchMock = vi.fn().mockImplementation(async () => probeResponse());
         vi.stubGlobal('fetch', fetchMock);
 
         // The stub never checks credentials, but the SDK refuses to build a request
@@ -265,7 +282,7 @@ describe('request shape at the wire', () => {
 
     beforeEach(() => {
         fetchMock.mockClear();
-        fetchMock.mockResolvedValue(probeResponse());
+        fetchMock.mockImplementation(async () => probeResponse());
     });
 
     afterAll(() => {
@@ -293,8 +310,9 @@ describe('request shape at the wire', () => {
         await expect(aiChat({ systemPrompt: 'sys', userPrompt: 'usr', batchFirst: true, outputFormat: FORMAT }))
             .rejects.toThrow(/wire probe/);
 
-        expect(lastRequest().body.requests[0].params.output_config).toEqual({ format: FORMAT });
-        expect(lastRequest().headers['anthropic-beta']).toBeUndefined();
+        const batch = lastRequestTo('/v1/messages/batches');
+        expect(batch.body.requests[0].params.output_config).toEqual({ format: FORMAT });
+        expect(batch.headers['anthropic-beta']).toBeUndefined();
     });
 
     it('omits output_config entirely when no schema is requested', async () => {
@@ -309,7 +327,7 @@ describe('request shape at the wire', () => {
         // streaming exhausts its retries. It is a separate call site from batchFirst
         // above, and nothing else covers it. 500 is a `server` transient error, so
         // this costs two backoffs (30s then 60s) that fake timers collapse.
-        fetchMock.mockResolvedValue(errorResponse(500, 'upstream boom'));
+        fetchMock.mockImplementation(async () => errorResponse(500, 'api_error', 'upstream boom'));
         vi.useFakeTimers();
         try {
             const assertion = expect(
@@ -350,6 +368,82 @@ function fakeBatchClient(overrides: Partial<Record<'create' | 'retrieve' | 'canc
     };
     return { client: { messages: { batches } } as any, batches };
 }
+
+// ===========================================================================
+// BatchRejectedError — the two ways the Batch endpoint refuses a request
+//
+// Both are driven through executeBatch, and the creation-path error comes from
+// the SDK's own factory, so neither assertion can pass against a hand-written
+// message that the production path never produces. aiChat only falls back to
+// streaming for this class, so a rejection it fails to raise is a hard failure
+// on exactly the request streaming could have served.
+// ===========================================================================
+
+describe('executeBatch rejection', () => {
+
+    /** Drives executeBatch past its first poll, and returns what it threw. */
+    const runToError = async (client: any): Promise<unknown> => {
+        vi.useFakeTimers();
+        try {
+            const pending = executeBatch(FAKE_PARAMS, {}, client).then(
+                () => { throw new Error('executeBatch resolved; expected it to throw'); },
+                (e: unknown) => e);
+            await vi.advanceTimersByTimeAsync(60_000);
+            return await pending;
+        } finally {
+            vi.useRealTimers();
+        }
+    };
+
+    /** An ended batch whose single request came back errored. */
+    const erroredResultClient = (error: unknown) => fakeBatchClient({
+        retrieve: vi.fn(async () => ({
+            id: 'msgbatch_test', processing_status: 'ended', created_at: new Date().toISOString(),
+            request_counts: { processing: 0, succeeded: 0, errored: 1, canceled: 0, expired: 0 },
+        })),
+        results: vi.fn(async () => (async function* () {
+            yield { custom_id: 'request-1', result: { type: 'errored', error } };
+        })()),
+    }).client;
+
+    it('an errored result of type invalid_request_error is a rejection', async () => {
+        const e = await runToError(erroredResultClient(
+            { type: 'error', request_id: null, error: { details: null, type: 'invalid_request_error', message: 'Invalid request data' } }));
+
+        expect(e).toBeInstanceOf(BatchRejectedError);
+        expect((e as Error).message).toContain('invalid_request_error');
+    });
+
+    it('an errored result of any other type is not a rejection', async () => {
+        const e = await runToError(erroredResultClient(
+            { type: 'error', request_id: null, error: { type: 'overloaded_error', message: 'Overloaded' } }));
+
+        expect(e).toBeInstanceOf(Error);
+        expect(e).not.toBeInstanceOf(BatchRejectedError);
+    });
+
+    it('a 400 from batch creation is a rejection, so nothing queued still falls back', async () => {
+        const rejected = makeApiError(400, 'invalid_request_error', 'messages.0: request too large');
+        const client = fakeBatchClient({ create: vi.fn(async () => { throw rejected; }) }).client;
+
+        // Guard the premise: the SDK must read error.type off the body, or the
+        // production check has nothing to read.
+        expect(rejected.type).toBe('invalid_request_error');
+
+        const e = await executeBatch(FAKE_PARAMS, {}, client).then(
+            () => { throw new Error('executeBatch resolved; expected it to throw'); },
+            (err: unknown) => err);
+        expect(e).toBeInstanceOf(BatchRejectedError);
+        expect((e as Error).cause).toBe(rejected);
+    });
+
+    it('a rate limit on batch creation propagates unchanged', async () => {
+        const limited = makeApiError(429, 'rate_limit_error', 'Too many requests');
+        const client = fakeBatchClient({ create: vi.fn(async () => { throw limited; }) }).client;
+
+        await expect(executeBatch(FAKE_PARAMS, {}, client)).rejects.toBe(limited);
+    });
+});
 
 describe('executeBatch cancellation & promotion', () => {
 
