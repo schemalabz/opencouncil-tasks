@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import dotenv from 'dotenv';
 import path from 'path';
 import { promises as fs } from 'fs';
+import type { TaskTokenUsage } from '../types.js';
 import { observeGeneration, GenerationHandle } from './observability.js';
 import { TaskCancelledError, abortableSleep, getTaskControl, isCancellation, throwIfCancelled } from './taskControl.js';
 
@@ -52,6 +53,20 @@ export const addUsage = (usage: Anthropic.Messages.Usage, otherUsage: Anthropic.
         }
         : null
 });
+
+/**
+ * The SDK's usage flattened to the four counters a task result carries. The
+ * cache counters are nullable on the SDK type and never null on the wire, and
+ * every task did that `?? 0` itself.
+ */
+export function toTaskTokenUsage(usage: Anthropic.Messages.Usage): TaskTokenUsage {
+    return {
+        input_tokens: usage.input_tokens,
+        output_tokens: usage.output_tokens,
+        cache_creation_input_tokens: usage.cache_creation_input_tokens ?? 0,
+        cache_read_input_tokens: usage.cache_read_input_tokens ?? 0,
+    };
+}
 
 export function formatUsage(usage: Anthropic.Messages.Usage): string {
     const parts = [`${usage.input_tokens.toLocaleString()} in, ${usage.output_tokens.toLocaleString()} out`];

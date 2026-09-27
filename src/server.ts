@@ -189,7 +189,11 @@ app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
 app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   summary: 'Poll and extract decisions from Diavgeia',
   description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs',
-  version: 3,
+  // 4: per-document facts only (roll call as printed, named votes, changes with anchors), no replayed snapshots; per-vote absence as an event pair (2026-09-17)
+  //    + actingSecretary and subjectHeading, both additive (2026-09-22); v4 has not shipped, so no bump
+  //    C1 (2026-09-25): the three meeting-level fields left the result and each page gained `nameMatches`. Both precede the first deploy of version 4, so the version stays 4.
+  //    C5 (2026-09-26): `absent_for_vote` is on the wire again, one entry with the anchor the page states (no departure/arrival pair), and the anchor gained `decisionNumberTo` for a range. Also before the first deploy of version 4.
+  version: 4,
 }));
 
 // Matches the gate on the other dev routes below: NODE_ENV is unset in the

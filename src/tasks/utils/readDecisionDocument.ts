@@ -124,7 +124,7 @@ export async function readDecisionDocument(
 
     for (const attempt of PAGE_ATTEMPTS) {
         const pages = Math.min(attempt, totalPages);
-        const base64 = await extractPdfPages(pdfBuffer, 0, pages);
+        const base64 = await extractPdfPages(srcDoc, 0, pages);
 
         const { result: raw, usage } = await aiChat<{
             meetingDate: string | null;

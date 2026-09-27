@@ -17,7 +17,6 @@ import { sameDecisionNumber } from './tasks/utils/decisionNumberCompare.js';
 import { decisionPdfUrl } from './tasks/utils/resolverMatchDecisions.js';
 import { Diavgeia } from '@schemalabs/diavgeia-cli';
 import type { Decision as DiavgeiaDecision } from '@schemalabs/diavgeia-cli';
-import { processRawExtraction } from './tasks/utils/effectiveAttendance.js';
 import { validateRawExtraction, validateProcessedDecision } from './tasks/utils/decisionValidation.js';
 import { aiChat, formatUsage, HAIKU_MODEL, addUsage, NO_USAGE } from './lib/ai.js';
 import { taskManager } from './lib/TaskManager.js';
@@ -646,7 +645,8 @@ program
     .description('Extract decision data from a Diavgeia ADA, PDF URL, or local file path')
     .option('-O, --output-file <file>', 'Save result to file (otherwise prints to stdout)')
     .option('--skip-cache', 'Skip the on-disk extraction cache and re-extract from the PDF')
-    .action(async (source: string, options: { outputFile?: string; skipCache?: boolean }) => {
+    .option('--hints-file <file>', "The body's conventions text, as the poll request carries it (opencouncil: scripts/conventions-text.ts); without it the page is read cold")
+    .action(async (source: string, options: { outputFile?: string; skipCache?: boolean; hintsFile?: string }) => {
         try {
             // Resolve source: local file, URL, or ADA
             let pdfUrl: string;
@@ -661,7 +661,8 @@ program
                 console.log(`Extracting decision data for ADA: ${source}`);
                 console.log(`PDF URL: ${pdfUrl}`);
             }
-            const { result, usage } = await extractDecisionFromPdf(pdfUrl, undefined, options.skipCache);
+            const hints = options.hintsFile ? fs.readFileSync(options.hintsFile, 'utf-8').trim() : undefined;
+            const { result, usage, warnings: readWarnings = [] } = await extractDecisionFromPdf(pdfUrl, undefined, options.skipCache, hints);
 
             // Display summary
             const totalTokens = usage.input_tokens + usage.output_tokens + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0);
@@ -686,23 +687,17 @@ program
             if (result.voteResult) parts.push(`vote: ${result.voteResult}`);
             console.log(parts.join(' | '));
 
-            // Compute effective attendance and infer votes (same logic as the pipeline)
-            const processed = processRawExtraction(result);
-
-            if (result.subjectInfo) {
-                console.log(`Effective attendance at #${result.subjectInfo.agendaItemIndex}${result.subjectInfo.nonAgendaReason ? ' (OA)' : ''}: ${processed.effectivePresent.length} present, ${processed.effectiveAbsent.length} absent`);
-            }
-            if (processed.inferredVoteCount > 0) {
-                console.log(`Inferred ${processed.inferredVoteCount} FOR votes from effective present members`);
-            }
+            if (result.presidedBy) console.log(`Presided by: ${result.presidedBy.name}`);
+            const tally = Object.entries(result.voteTally).filter(([, v]) => v != null).map(([k, v]) => `${k} ${v}`).join(', ');
+            if (tally) console.log(`Tally: ${tally}`);
 
             // Validate and display warnings
             const rawWarnings = validateRawExtraction(result);
             const processedWarnings = validateProcessedDecision({
                 voteResult: result.voteResult,
-                voteDetails: processed.voteDetails.map(v => ({ vote: v.vote })),
+                voteDetails: result.voteDetails.map(v => ({ vote: v.vote })),
             });
-            const allWarnings = [...rawWarnings, ...processedWarnings];
+            const allWarnings = [...readWarnings, ...rawWarnings, ...processedWarnings];
             if (allWarnings.length > 0) {
                 console.log(`\nWarnings (${allWarnings.length}):`);
                 for (const w of allWarnings) {
@@ -712,9 +707,6 @@ program
 
             const output = {
                 ...result,
-                effectivePresent: processed.effectivePresent,
-                effectiveAbsent: processed.effectiveAbsent,
-                voteDetails: processed.voteDetails,
                 warnings: allWarnings,
             };
             const json = JSON.stringify(output, null, 2);
