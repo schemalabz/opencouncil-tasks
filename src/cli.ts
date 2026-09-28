@@ -11,6 +11,7 @@ import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
 import { extractAgendaSubjects, processAgenda } from './tasks/processAgenda.js';
 import { readAttendanceSheetWith } from './tasks/readAttendanceSheet.js';
+import { readTranscriptFacts } from './tasks/utils/transcriptFacts.js';
 import { isSheetMediaType, mediaTypeFromExtension } from './tasks/utils/attendanceSheetReading.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, readCache, writeCache, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
 import { scoreDocument, tallyScores, FIELDS, type ExtractionLabel, type DocumentScore } from './tasks/utils/extractionScoring.js';
@@ -36,7 +37,7 @@ import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials, extractMeetingId } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
-import { CityLanguage, DiarizeResult, MeetingAgendaItem, RosterPerson } from './types.js';
+import { CityLanguage, DiarizeResult, MeetingAgendaItem, ReadTranscriptFactsRequest, RosterPerson } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
@@ -1533,6 +1534,29 @@ program
             console.error(total > 0 ? `Tokens: ${usage.input_tokens.toLocaleString()} in, ${usage.output_tokens.toLocaleString()} out` : '(cached — no API call)');
         } catch (error) {
             console.error('Error reading attendance sheet:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('read-transcript-facts <requestJson>')
+    .description('Read the roll call, the stated arrivals and departures, the votes and who presided from a transcript. Input: a saved request body file (ReadTranscriptFactsRequest; callbackUrl ignored)')
+    .action(async (requestJson: string) => {
+        try {
+            const request = JSON.parse(fs.readFileSync(requestJson, 'utf-8')) as ReadTranscriptFactsRequest;
+            if (!Array.isArray(request.transcript) || !Array.isArray(request.people)) {
+                throw new Error(`${requestJson} does not carry a transcript and the meeting's people`);
+            }
+            const { result, usage } = await readTranscriptFacts(
+                { ...request, people: request.people, callbackUrl: '' },
+                (stage, percent) => console.error(`  [${percent.toFixed(0)}%] ${stage}`),
+            );
+            console.log(JSON.stringify(result, null, 2));
+            console.error(`Tokens: ${formatUsage(usage)}`);
+        } catch (error) {
+            console.error('Error reading transcript facts:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();

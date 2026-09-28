@@ -20,6 +20,7 @@ import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { readAttendanceSheet } from './tasks/readAttendanceSheet.js';
+import { readTranscriptFacts } from './tasks/readTranscriptFacts.js';
 import { devSlowTask } from './tasks/devSlowTask.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
@@ -166,7 +167,10 @@ app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   // v3: with the meeting's people in the request, the result carries speakerHints — who each
   // diarization speaker is, judged from the transcript text alone, each marked
   // with the kind of evidence and whether the task would act on it
-  version: 3,
+  // v4: with the meeting's people in the request, the result carries meetingFacts — the roll
+  // call, the stated arrivals and departures, the votes and who presides, as the
+  // transcript states them (schemalabz/opencouncil#807)
+  version: 4,
 }));
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
@@ -203,6 +207,12 @@ app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
 app.post('/readAttendanceSheet', taskManager.registerTask(readAttendanceSheet, {
   summary: 'Read an attendance sheet',
   description: 'Read the roll call, the arrivals and departures, the per-item votes when the sheet records them, and who presided from the sheet the back office keeps during a meeting (a photo or a PDF), and match the names to the roster',
+  version: 1,
+}));
+
+app.post('/readTranscriptFacts', taskManager.registerTask(readTranscriptFacts, {
+  summary: 'Read meeting facts from a transcript',
+  description: 'Read the roll call, the stated arrivals and departures, the votes as stated and who presided from the transcript text, and match the names to the roster. The same pass fixTranscript runs, on its own for a rerun after review',
   version: 1,
 }));
 
