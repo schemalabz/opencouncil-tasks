@@ -19,6 +19,7 @@ import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
+import { readAttendanceSheet } from './tasks/readAttendanceSheet.js';
 import { devSlowTask } from './tasks/devSlowTask.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
@@ -196,6 +197,12 @@ app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   //    C1 (2026-09-25): the three meeting-level fields left the result and each page gained `nameMatches`. Both precede the first deploy of version 4, so the version stays 4.
   //    C5 (2026-09-26): `absent_for_vote` is on the wire again, one entry with the anchor the page states (no departure/arrival pair), and the anchor gained `decisionNumberTo` for a range. Also before the first deploy of version 4.
   version: 4,
+}));
+
+app.post('/readAttendanceSheet', taskManager.registerTask(readAttendanceSheet, {
+  summary: 'Read an attendance sheet',
+  description: 'Read the roll call, the arrivals and departures, the per-item votes when the sheet records them, and who presided from the sheet the back office keeps during a meeting (a photo or a PDF), and match the names to the roster',
+  version: 1,
 }));
 
 // Matches the gate on the other dev routes below: NODE_ENV is unset in the
