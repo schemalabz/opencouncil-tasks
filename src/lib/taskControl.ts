@@ -19,6 +19,11 @@ export class TaskCancelledError extends Error {
 
 export type LlmMode = 'batch' | 'streaming';
 
+/** The Batch API halves token cost but queues for minutes to hours, so it is off unless BATCH_FIRST=true. */
+export function batchFirstEnabled(): boolean {
+    return process.env.BATCH_FIRST === 'true';
+}
+
 export type TaskControl = {
     taskId: string;
     /** Aborted when the task is cancelled — terminal. */

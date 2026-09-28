@@ -102,6 +102,6 @@ Runs a dummy task through the real TaskManager → trace → phase span → one 
 ## Notes
 
 - Trace propagation uses `AsyncLocalStorage`, so `aiChat()` finds the active trace without parameter threading. Code paths that run outside a task (CLI commands, tests) simply produce no traces.
-- Batch API calls (`batchFirst`) appear as a single generation spanning submission to result retrieval; `metadata.batchMode` marks them.
+- Batch API calls (`batchFirst`, only with `BATCH_FIRST=true`) appear as a single generation spanning submission to result retrieval; `metadata.batchMode` marks them.
 - The `max_tokens` continuation path produces an additional generation per continuation, labeled `<label>:continuation`.
 - Traces are flushed at the end of each task run; a flush failure is logged but never fails the task.

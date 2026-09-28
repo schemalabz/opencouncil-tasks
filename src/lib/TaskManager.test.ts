@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import { DuplicateTaskIdError, TaskManager, taskManager } from './TaskManager.js';
 import { Task } from '../tasks/pipeline.js';
@@ -205,6 +205,7 @@ describe('TaskManager cancellation', () => {
 describe('TaskManager cancellation (proposed)', () => {
 
     beforeEach(() => vi.unstubAllGlobals());
+    afterEach(() => vi.unstubAllEnvs());
 
     it('a cancel landing during the initial callback stops the task before its body runs', async () => {
         const manager = new TaskManager(2);
@@ -262,6 +263,7 @@ describe('TaskManager cancellation (proposed)', () => {
 
     it('promotion is visible on the /tasks view, not just inside the task', async () => {
         stubCallbacks();
+        vi.stubEnv('BATCH_FIRST', 'true');
         const manager = new TaskManager(2);
         const probe: Task<{}, string> = async () => {
             await abortableSleep(5_000, getTaskControl()?.promote.signal);

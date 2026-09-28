@@ -4,7 +4,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { abortableSleep, getTaskControl, throwIfCancelled } from '../../lib/taskControl.js';
+import { abortableSleep, batchFirstEnabled, getTaskControl, throwIfCancelled } from '../../lib/taskControl.js';
 import { CityLanguage, DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile, type UsageStats } from "../../lib/ai.js";
@@ -604,11 +604,10 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
             })), null, 2)}
 `;
 
-    const useBatchFirst = process.env.BATCH_FIRST_PHASE1 === 'true';
     const response = await aiChat<BatchProcessingResult>({
         model: "claude-opus-4-7",
         maxTokens: 128000,
-        batchFirst: useBatchFirst,
+        batchFirst: batchFirstEnabled(),
         label: `batch-processing:${batchIndex + 1}/${totalBatches}`,
         systemPrompt,
         userPrompt,

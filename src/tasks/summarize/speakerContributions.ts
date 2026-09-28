@@ -7,6 +7,7 @@
 import { CityLanguage, DiscussionStatus, SpeakerContribution } from "../../types.js";
 import { IdCompressor, formatTime, formatTokenCount } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
+import { batchFirstEnabled } from "../../lib/taskControl.js";
 import { getLanguageConfig } from "../../lib/language.js";
 import { getSpeakerContributionsSystemPrompt } from "./prompts.js";
 import { CompressedTranscript, SubjectInProgress, ExtractedUtterances, UtteranceStatus } from "./types.js";
@@ -371,7 +372,7 @@ ${fullDiscussion}
     try {
         const result = await aiChat<{ speakerContributions: SpeakerContribution[] }>({
             model: "claude-opus-4-6",
-            batchFirst: true,
+            batchFirst: batchFirstEnabled(),
             // Well above real need, so a runaway generation is cut off early instead
             // of burning the 64K default. Across 1,081 successful calls the largest
             // used 6,997 output tokens (p50 291, p99 5,043); 8K truncates none of them.

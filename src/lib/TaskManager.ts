@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
 import { validateUrl, extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
 import { postCallback, deliverTerminalCallback } from './callbackDelivery.js';
-import { LlmMode, TaskCancelledError, TaskControl, isCancellation, newTaskControl, runWithTaskControl } from './taskControl.js';
+import { LlmMode, TaskCancelledError, TaskControl, batchFirstEnabled, isCancellation, newTaskControl, runWithTaskControl } from './taskControl.js';
 
 // Per-process prefix so generated task IDs never collide across server restarts.
 const INSTANCE_ID = randomUUID().slice(0, 8);
@@ -84,7 +84,9 @@ export class TaskManager {
     public getTaskUpdates(): (RunningTask & { llmMode: LlmMode })[] {
         return Array.from(this.runningTasks.entries()).map(([taskId, task]) => ({
             ...task,
-            llmMode: this.taskControls.get(taskId)?.llmMode ?? 'batch',
+            // A task starts in 'batch' mode, meaning "not promoted"; with batch-first off
+            // its calls stream regardless, and the view should say so.
+            llmMode: batchFirstEnabled() ? this.taskControls.get(taskId)?.llmMode ?? 'batch' : 'streaming',
         }));
     }
 
