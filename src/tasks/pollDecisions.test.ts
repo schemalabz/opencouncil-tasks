@@ -13,23 +13,18 @@ vi.mock('@schemalabs/diavgeia-cli', () => ({
 }));
 
 // Mock aiChat + usage helpers
-vi.mock("../lib/ai.js", () => ({
+// Only the model call is replaced. The usage helpers are pure, and a copy of
+// them here would drift from the ones the task actually runs.
+vi.mock("../lib/ai.js", async (importOriginal) => ({
+    ...await importOriginal<typeof import("../lib/ai.js")>(),
     aiChat: vi.fn(async () => ({ result: { matches: [], reassignments: [], unmatched: [] }, usage: NO_USAGE_MOCK })),
     NO_USAGE: NO_USAGE_MOCK,
-    addUsage: (a: Record<string, number>, b: Record<string, number>) => ({
-        input_tokens: a.input_tokens + b.input_tokens,
-        output_tokens: a.output_tokens + b.output_tokens,
-        cache_creation_input_tokens: (a.cache_creation_input_tokens || 0) + (b.cache_creation_input_tokens || 0),
-        cache_read_input_tokens: (a.cache_read_input_tokens || 0) + (b.cache_read_input_tokens || 0),
-    }),
 }));
 
 // Mock extractionPipeline (extraction is tested separately)
 vi.mock("./utils/extractionPipeline.js", () => ({
     extractDecisionsFromPdfs: vi.fn(async () => ({
         decisions: [], warnings: [], usage: NO_USAGE_MOCK,
-        initialAttendance: [], unmatchedInitialAttendance: [],
-        nonDecisionSubjectAttendance: [], allSubjectAttendance: [],
     })),
 }));
 
@@ -368,20 +363,20 @@ describe("pollDecisions - subjectInfo warnings", () => {
                 subjectId: "subA",
                 excerpt: "test",
                 references: "",
-                presentMemberIds: [],
-                absentMemberIds: [],
+                incomplete: false,
+                rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] },
+                mayorPresent: null,
+                presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
+                attendanceChanges: [],
+                voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
                 voteResult: null,
                 voteDetails: [],
-                unmatchedMembers: [],
+                unmatchedMembers: [], nameMatches: [],
                 subjectInfo: { number: 5, isOutOfAgenda: false },
                 warnings: [],
             }],
             warnings: [],
             usage: noUsage,
-            initialAttendance: [],
-            unmatchedInitialAttendance: [],
-            nonDecisionSubjectAttendance: [],
-            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -426,20 +421,20 @@ describe("pollDecisions - subjectInfo warnings", () => {
                 subjectId: "subA",
                 excerpt: "test",
                 references: "",
-                presentMemberIds: [],
-                absentMemberIds: [],
+                incomplete: false,
+                rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] },
+                mayorPresent: null,
+                presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
+                attendanceChanges: [],
+                voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
                 voteResult: null,
                 voteDetails: [],
-                unmatchedMembers: [],
+                unmatchedMembers: [], nameMatches: [],
                 subjectInfo: { number: 5, isOutOfAgenda: false },
                 warnings: [],
             }],
             warnings: [],
             usage: noUsage,
-            initialAttendance: [],
-            unmatchedInitialAttendance: [],
-            nonDecisionSubjectAttendance: [],
-            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -480,20 +475,20 @@ describe("pollDecisions - subjectInfo warnings", () => {
                 subjectId: "subA",
                 excerpt: "test",
                 references: "",
-                presentMemberIds: [],
-                absentMemberIds: [],
+                incomplete: false,
+                rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] },
+                mayorPresent: null,
+                presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
+                attendanceChanges: [],
+                voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
                 voteResult: null,
                 voteDetails: [],
-                unmatchedMembers: [],
+                unmatchedMembers: [], nameMatches: [],
                 subjectInfo: { number: 2, isOutOfAgenda: true },
                 warnings: [],
             }],
             warnings: [],
             usage: noUsage,
-            initialAttendance: [],
-            unmatchedInitialAttendance: [],
-            nonDecisionSubjectAttendance: [],
-            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -535,20 +530,20 @@ describe("pollDecisions - subjectInfo warnings", () => {
                 subjectId: "subA",
                 excerpt: "test",
                 references: "",
-                presentMemberIds: [],
-                absentMemberIds: [],
+                incomplete: false,
+                rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] },
+                mayorPresent: null,
+                presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
+                attendanceChanges: [],
+                voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
                 voteResult: null,
                 voteDetails: [],
-                unmatchedMembers: [],
+                unmatchedMembers: [], nameMatches: [],
                 subjectInfo: { number: 3, isOutOfAgenda: false },
                 warnings: [],
             }],
             warnings: [],
             usage: noUsage,
-            initialAttendance: [],
-            unmatchedInitialAttendance: [],
-            nonDecisionSubjectAttendance: [],
-            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -590,20 +585,20 @@ describe("pollDecisions - subjectInfo warnings", () => {
                 subjectId: "subA",
                 excerpt: "test",
                 references: "",
-                presentMemberIds: [],
-                absentMemberIds: [],
+                incomplete: false,
+                rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] },
+                mayorPresent: null,
+                presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
+                attendanceChanges: [],
+                voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
                 voteResult: null,
                 voteDetails: [],
-                unmatchedMembers: [],
+                unmatchedMembers: [], nameMatches: [],
                 subjectInfo: { number: 1, isOutOfAgenda: true },
                 warnings: [],
             }],
             warnings: [],
             usage: noUsage,
-            initialAttendance: [],
-            unmatchedInitialAttendance: [],
-            nonDecisionSubjectAttendance: [],
-            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -649,29 +644,28 @@ describe("pollDecisions - subjectInfo warnings", () => {
             decisions: [
                 {
                     subjectId: "sub6", excerpt: "", references: "",
-                    presentMemberIds: [], absentMemberIds: [],
-                    voteResult: null, voteDetails: [], unmatchedMembers: [],
+                    incomplete: false, rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] }, mayorPresent: null, presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null, attendanceChanges: [],
+                    voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
+                    voteResult: null, voteDetails: [], unmatchedMembers: [], nameMatches: [],
                     subjectInfo: { number: 7, isOutOfAgenda: false }, warnings: [],
                 },
                 {
                     subjectId: "sub7", excerpt: "", references: "",
-                    presentMemberIds: [], absentMemberIds: [],
-                    voteResult: null, voteDetails: [], unmatchedMembers: [],
+                    incomplete: false, rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] }, mayorPresent: null, presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null, attendanceChanges: [],
+                    voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
+                    voteResult: null, voteDetails: [], unmatchedMembers: [], nameMatches: [],
                     subjectInfo: { number: 8, isOutOfAgenda: false }, warnings: [],
                 },
                 {
                     subjectId: "sub8", excerpt: "", references: "",
-                    presentMemberIds: [], absentMemberIds: [],
-                    voteResult: null, voteDetails: [], unmatchedMembers: [],
+                    incomplete: false, rollCall: { layout: 'present_and_absent' as const, composition: [], present: [], absent: [], presentIds: [], absentIds: [] }, mayorPresent: null, presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null, attendanceChanges: [],
+                    voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
+                    voteResult: null, voteDetails: [], unmatchedMembers: [], nameMatches: [],
                     subjectInfo: { number: 9, isOutOfAgenda: false }, warnings: [],
                 },
             ],
             warnings: [],
             usage: noUsage,
-            initialAttendance: [],
-            unmatchedInitialAttendance: [],
-            nonDecisionSubjectAttendance: [],
-            allSubjectAttendance: [],
         });
 
         const result = await pollDecisions(
@@ -805,6 +799,47 @@ describe("pollDecisions - extraction gate", () => {
 
         expect(mockExtractDecisions).toHaveBeenCalledTimes(1);
         expect(result.extractions).not.toBeNull();
+    });
+
+    it("skips extraction but still links decisions when the request sends extract: false", async () => {
+        primeOneMatch();
+        const request = matchedRequest();
+        request.extract = false;
+        request.subjects.push({
+            subjectId: "subB",
+            name: "Linked earlier",
+            agendaItemIndex: 2,
+            existingDecision: { ada: "ADA-OLD", decisionTitle: "Old", pdfUrl: "https://diavgeia.gov.gr/doc/ADA-OLD", needsExtraction: true },
+        });
+
+        const result = await pollDecisions(request, noopProgress);
+
+        expect(mockExtractDecisions).not.toHaveBeenCalled();
+        expect(result.extractions).toBeNull();
+        expect(result.matches).toEqual([expect.objectContaining({ subjectId: "subA", ada: "ADA-D1" })]);
+        expect(result.decisions).toEqual([expect.objectContaining({ ada: "ADA-D1", subjectId: "subA" })]);
+    });
+
+    it("extracts when the request leaves extract out", async () => {
+        primeOneMatch();
+        const request = matchedRequest();
+        expect(request.extract).toBeUndefined();
+
+        const result = await pollDecisions(request, noopProgress);
+
+        expect(mockExtractDecisions).toHaveBeenCalledTimes(1);
+        expect(result.extractions).not.toBeNull();
+    });
+
+    it("keeps extraction off when the environment is off, even with extract: true", async () => {
+        vi.stubEnv('DECISION_EXTRACTION_ENABLED', '');
+        primeOneMatch();
+
+        const result = await pollDecisions(makeRequest({ ...matchedRequest(), extract: true }), noopProgress);
+
+        expect(result.matches).toHaveLength(1);
+        expect(mockExtractDecisions).not.toHaveBeenCalled();
+        expect(result.extractions).toBeNull();
     });
 });
 

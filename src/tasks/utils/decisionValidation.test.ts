@@ -16,6 +16,11 @@ function makeRaw(overrides: Partial<RawExtractedDecision> = {}): RawExtractedDec
         discussionOrder: null,
         subjectInfo: { agendaItemIndex: 1, nonAgendaReason: null },
         incomplete: false,
+        attendanceFormat: 'explicit_present_absent',
+        compositionMembers: null,
+        presidedBy: null, actingSecretary: null, subjectHeading: '',
+        decisionAttendance: null,
+        voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
         ...overrides,
     };
 }

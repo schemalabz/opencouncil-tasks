@@ -1,4 +1,5 @@
 import { SummarizeResult } from '../../types.js';
+import { thinToSample } from '../../tasks/utils/evenSample.js';
 import {
     ComparisonData, MatchedSubject, RunWithResult, SegmentSample,
     SideStats, SubjectVerdict, SubjectView,
@@ -177,16 +178,9 @@ function collectSegmentSamples(from: SummarizeResult, to: SummarizeResult): Segm
         else procedural.push(sample);
     });
 
-    const pickEvenly = (samples: SegmentSample[], count: number): SegmentSample[] => {
-        if (samples.length <= count) return samples;
-        if (count === 1) return [samples[0]];
-        const step = (samples.length - 1) / (count - 1);
-        return Array.from({ length: count }, (_, i) => samples[Math.round(i * step)]);
-    };
-
-    const picked = pickEvenly(substantive, MAX_SEGMENT_SAMPLES);
+    const picked = thinToSample(substantive, MAX_SEGMENT_SAMPLES);
     if (picked.length < MAX_SEGMENT_SAMPLES) {
-        picked.push(...pickEvenly(procedural, MAX_SEGMENT_SAMPLES - picked.length));
+        picked.push(...thinToSample(procedural, MAX_SEGMENT_SAMPLES - picked.length));
     }
     return picked.sort((a, b) => a.index - b.index);
 }

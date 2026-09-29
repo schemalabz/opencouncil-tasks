@@ -25,3 +25,6 @@ squid.conf
 
 # Debug output (CLI intermediates)
 .debug/
+
+# Local work directory of the 2026-09-13 body survey: large, not versioned
+.extraction-survey/

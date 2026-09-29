@@ -2,6 +2,20 @@
  * Generic task types
  */
 
+/**
+ * What a task's model calls cost, as a result carries it: four counters, always
+ * numbers. `UsageStats` in lib/ai.ts does not fit — it wraps the SDK's own
+ * `Usage`, whose cache counters are nullable and which carries fields no
+ * consumer of a task result reads. A wire contract also should not be a
+ * re-export of a vendored type that an SDK upgrade can change.
+ */
+export interface TaskTokenUsage {
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens: number;
+    cache_read_input_tokens: number;
+}
+
 export interface TaskUpdate<T> {
     status: "processing" | "success" | "error" | "cancelled";
     stage: string;
@@ -479,25 +493,55 @@ export interface TaskWarning<TCode extends string = string> {
 /** Per-decision warning. See DecisionWarningCode in decisionValidation.ts for the full list of codes. */
 export type DecisionWarning = TaskWarning;
 
+export type VoteValue = 'FOR' | 'AGAINST' | 'ABSTAIN' | 'PRESENT' | 'DID_NOT_VOTE';
+
+/** The roll call as printed on one page, with the ids the names resolved to. */
+export interface DocumentRollCall {
+    layout: 'composition_and_absent' | 'present_and_absent';
+    composition: string[];
+    present: string[];
+    absent: string[];
+    presentIds: string[];
+    absentIds: string[];
+}
+
+/** What one document states, matched to ids. Nothing here is computed across documents. */
 export interface ExtractedDecisionResult {
     subjectId: string;
     excerpt: string;
     references: string;
-    presentMemberIds: string[];
-    absentMemberIds: string[];
-    mayorPresent?: boolean;
-    voteResult: string | null;
-    voteDetails: { personId: string; vote: 'FOR' | 'AGAINST' | 'ABSTAIN' | 'PRESENT' | 'DID_NOT_VOTE' }[];
-    unmatchedMembers: string[];
-    subjectInfo: { number: number; isOutOfAgenda: boolean } | null;
-    fromCache?: boolean;
-    warnings: DecisionWarning[];
     /**
      * The decision's own number (Αρ. Απόφασης / Πράξη), extracted from the document.
      * Never Diavgeia's protocol number — that field is municipality-defined and is
      * mirrored separately at match time.
      */
     decisionNumber?: string | null;
+    subjectInfo: { number: number; isOutOfAgenda: boolean } | null;
+    /** The extractor did not reach ΑΠΟΦΑΣΙΖΕΙ. */
+    incomplete: boolean;
+    /** Always present: every page states some form of roll call, and an empty one is reported as NO_ATTENDANCE rather than as a missing record. */
+    rollCall: DocumentRollCall;
+    mayorPresent: StatedPresence | null;
+    /** Who presided when the page says someone did in the mayor's or president's place. */
+    presidedBy: ResolvedStatedName | null;
+    /** Who kept the minutes in the secretary's place, when the page says so; bodies whose ΤΑ ΜΕΛΗ leaves the secretary out leave the acting one out too. */
+    actingSecretary: ResolvedStatedName | null;
+    /** The item heading as printed; "" when the page prints none, and then subjectInfo is null. */
+    subjectHeading: string;
+    /** The page's own list of who was present for THIS decision (ΤΑ ΜΕΛΗ after the decision text; an ΑΠΟΧΩΡΗΣΑΝΤΕΣ column is departures, never this), with ids; null when the page prints none. Never the opening roll call. */
+    decisionAttendance: ResolvedStatedPresentList | null;
+    voteResult: string | null;
+    /** Counts printed in the phrase, per vote value; null when not printed. */
+    voteTally: Record<VoteValue, number | null>;
+    /** Named votes only, as printed; never an inferred FOR. One row per person — a name printed twice keeps its first vote. */
+    voteDetails: { personId: string; name: string; vote: VoteValue }[];
+    /** The changes this document states, as it states them; a per-vote absence is one `absent_for_vote` entry, and opencouncil combines the entries across pages. */
+    attendanceChanges: AttendanceEvent[];
+    unmatchedMembers: string[];
+    /** How each name this page states was matched: by token-sort, by the model, or not at all. */
+    nameMatches: { name: string; personId: string | null; method: 'token' | 'llm' | null }[];
+    fromCache?: boolean;
+    warnings: DecisionWarning[];
     /** Metadata fetched from Diavgeia API for needsExtraction subjects */
     diavgeiaTitle?: string;
     diavgeiaPublishDate?: string; // ISO date
@@ -506,8 +550,76 @@ export interface ExtractedDecisionResult {
 }
 
 /*
+ * What a document states, with the sentence it states it in
+ *
+ * A reading is only auditable beside the words it was read from, so every fact
+ * the reader takes from a sentence carries that sentence. These three shapes
+ * were repeated inline at thirteen sites, and two of them differed only in
+ * whether the value was a name or a flag.
+ */
+
+/** A name the page prints, with the sentence it prints it in. `name` is "" when the page says nobody. */
+export interface StatedName {
+    name: string;
+    rawText: string;
+}
+
+/** A name the page prints, resolved to a person; `personId` is null when the name matched nobody. */
+export interface ResolvedStatedName extends StatedName {
+    personId: string | null;
+}
+
+/** Something the page states as present or not, with the sentence it states it in. */
+export interface StatedPresence {
+    present: boolean;
+    rawText: string;
+}
+
+/** A list of names the page prints as present, with the line that heads them. */
+export interface StatedPresentList {
+    present: string[];
+    rawText: string;
+}
+
+/** A stated present list resolved to people; ids the roster did not match are left out. */
+export interface ResolvedStatedPresentList extends StatedPresentList {
+    presentIds: string[];
+}
+
+/*
  * Task: Poll Decisions (Diavgeia) — includes extraction
  */
+
+export type AttendanceAnchorKind = 'agenda_item' | 'decision_number' | 'subject' | 'phase' | 'session_start' | 'session_end';
+export type AttendancePhase = 'pre_agenda' | 'out_of_agenda';
+
+/**
+ * One arrival, departure or per-vote absence as a document states it. `subjectId`
+ * is set for kind `subject` (the document's own). An `absent_for_vote` is out
+ * for the decisions its anchor names: its own subject, or decisions
+ * `decisionNumber`–`decisionNumberTo`.
+ */
+export interface AttendanceEvent {
+    /** Resolved person, or null when the name matched nobody in the roster. */
+    personId: string | null;
+    name: string;
+    type: 'arrival' | 'departure' | 'absent_for_vote';
+    anchor: {
+        kind: AttendanceAnchorKind;
+        agendaItemIndex: number | null;
+        nonAgendaReason: 'outOfAgenda' | null;
+        decisionNumber: string | null;
+        /** The last decision of a stated range («στις με αρ. 31 – 40» → "40"); null otherwise. */
+        decisionNumberTo?: string | null;
+        subjectId: string | null;
+        phase: AttendancePhase | null;
+        timing: 'before' | 'during' | 'after' | null;
+    };
+    rawText: string;
+    /** How many of the session's documents stated it. */
+    reportingPdfCount: number;
+    totalPdfCount: number;
+}
 
 export interface PollDecisionsRequest extends TaskRequest {
     meetingDate: string; // ISO date of the meeting
@@ -521,6 +633,13 @@ export interface PollDecisionsRequest extends TaskRequest {
     diavgeiaUnitIds?: string[];
     mayorId?: string; // Person ID of the city mayor, for presence extraction
     forceExtract?: boolean; // Skip extraction cache and reprocess all PDFs
+    /**
+     * Missing = extract, as before. `false` = find and link decisions only: the
+     * poll makes no extraction call and returns `extractions: null`. The page-1
+     * reading for matching still runs. The app sends `false` for a body with no
+     * conventions record, so no body is extracted without its conventions.
+     */
+    extract?: boolean;
     people: { id: string; name: string }[];
     subjects: Array<{
         subjectId: string;
@@ -536,6 +655,8 @@ export interface PollDecisionsRequest extends TaskRequest {
     }>;
     /** The polled meeting's administrative-body name, for the (body, date) partition. Absent = date-only partitioning. */
     administrativeBodyName?: string | null;
+    /** The body's conventions rendered as sentences for the prompt; opencouncil owns the glossary. */
+    conventionsText?: string | null;
     /** Fetch window derived by the app from publication-lag history. Absent = legacy 45-day window. */
     window?: { fromDate: string; toDate: string };
     /** Reading-cache handshake, window-scoped. Presence + readStatus decide whether to read again. */
@@ -599,23 +720,8 @@ export interface PollDecisionsResult {
     extractions: {
         decisions: ExtractedDecisionResult[];
         warnings: string[];
-        /** Initial roll call — who was present/absent at session start (meeting-level, not per-subject) */
-        initialAttendance: { personId: string; status: 'PRESENT' | 'ABSENT' }[];
-        /** Names from the initial roll call that couldn't be matched to any person in the database */
-        unmatchedInitialAttendance: string[];
-        /** Effective attendance for subjects WITHOUT linked decisions — computed using the complete discussion order and aggregated attendance changes from all PDFs */
-        nonDecisionSubjectAttendance?: Array<{
-            subjectId: string;
-            presentMemberIds: string[];
-            absentMemberIds: string[];
-        }>;
     } | null;
-    costs: {
-        input_tokens: number;
-        output_tokens: number;
-        cache_creation_input_tokens: number;
-        cache_read_input_tokens: number;
-    };
+    usage: TaskTokenUsage;
     metadata?: {
         diavgeiaUid: string;
         query: object;
