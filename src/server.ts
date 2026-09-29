@@ -162,7 +162,9 @@ app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
 app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   summary: 'Fix transcript formatting',
   description: 'Cleans and corrects transcription output for improved accuracy',
-  version: 2,
+  // v3: with a roster in the request, the result carries speakerHints — who each
+  // diarization speaker is, judged from the transcript text alone
+  version: 3,
 }));
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
