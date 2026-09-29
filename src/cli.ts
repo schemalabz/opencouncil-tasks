@@ -453,7 +453,7 @@ program
                     diavgeiaUid: orgUid,
                     diavgeiaUnitIds: unitIds,
                     people: [], // CLI: no people for extraction
-                    subjects: subjects.map((s: { subjectId: string; name: string; agendaItemIndex?: number | null; existingDecision?: { ada: string; decisionTitle: string; pdfUrl: string } }) => ({
+                    subjects: subjects.map((s: { subjectId: string; name: string; agendaItemIndex?: number | null; existingDecision?: { ada?: string; decisionTitle: string; pdfUrl: string } }) => ({
                         ...s,
                         agendaItemIndex: s.agendaItemIndex ?? null,
                     })),

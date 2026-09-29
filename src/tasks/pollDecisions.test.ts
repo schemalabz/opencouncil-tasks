@@ -1019,3 +1019,49 @@ describe("pollDecisions - ΑΔΑ lookups", () => {
         expect(result.decisions?.map(d => d.ada)).toEqual(["ΑΑΑ1-ΒΒ1"]);
     });
 });
+
+describe("pollDecisions - linked decision without an ΑΔΑ", () => {
+    it("sends the PDF to extraction and skips the Diavgeia metadata fetch", async () => {
+        const result = await pollDecisions(
+            makeRequest({
+                people: [{ id: "p1", name: "Person" }],
+                subjects: [{
+                    subjectId: "s1",
+                    name: "Manual subject",
+                    agendaItemIndex: 1,
+                    existingDecision: {
+                        decisionTitle: "",
+                        pdfUrl: "https://files.example/decision.pdf",
+                        needsExtraction: true,
+                    },
+                }],
+            }),
+            noopProgress,
+        );
+
+        const [subjects] = mockExtractDecisions.mock.calls[0];
+        expect(subjects).toEqual([expect.objectContaining({
+            subjectId: "s1",
+            decision: { pdfUrl: "https://files.example/decision.pdf", ada: null, protocolNumber: null },
+        })]);
+        expect(mockDecision).not.toHaveBeenCalled();
+        expect(result.extractions).not.toBeNull();
+    });
+
+    it("leaves a decision without an ΑΔΑ out of the resolver's linked context", async () => {
+        mockSearchAll.mockReturnValue(asyncIter([makeDecision({ ada: "ΑΑΑ1-ΒΒ1", subject: "Some decision" })]));
+
+        await pollDecisions(
+            makeRequest({
+                subjects: [
+                    { subjectId: "s1", name: "Manual", agendaItemIndex: 1, existingDecision: { decisionTitle: "", pdfUrl: "https://files.example/a.pdf" } },
+                    { subjectId: "s2", name: "Open", agendaItemIndex: 2 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        const prompt = JSON.stringify(mockAiChat.mock.calls[0]);
+        expect(prompt).not.toContain("ADA: undefined");
+    });
+});

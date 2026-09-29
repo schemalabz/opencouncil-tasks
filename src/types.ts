@@ -647,7 +647,8 @@ export interface PollDecisionsRequest extends TaskRequest {
         agendaItemIndex: number | null;
         nonAgendaReason?: string | null;
         existingDecision?: {
-            ada: string;
+            /** Absent for a decision that is not on Diavgeia (an uploaded or external PDF). */
+            ada?: string;
             decisionTitle: string;
             pdfUrl: string;
             needsExtraction?: boolean;

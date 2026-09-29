@@ -263,19 +263,22 @@ export async function resolveMeetingDecisions(input: ResolveInput): Promise<Reso
         declaredAdas,
     });
 
-    // Build linked decisions context for resolver
+    // Build linked decisions context for resolver.
+    // A linked decision with no ΑΔΑ is not on Diavgeia, so it can never be a
+    // candidate — the resolver needs no reminder that it is taken.
+    const withAda = (s: typeof subjects[number]) => Boolean(s.existingDecision?.ada);
     const linkedDecisions = [
-        ...linkedSubjects.filter(s => s.existingDecision && !s.existingDecision.needsExtraction).map(s => ({
+        ...linkedSubjects.filter(s => withAda(s) && !s.existingDecision!.needsExtraction).map(s => ({
             subjectId: s.subjectId,
             subjectName: s.name,
-            ada: s.existingDecision!.ada,
+            ada: s.existingDecision!.ada!,
             decisionTitle: s.existingDecision!.decisionTitle,
             isReExtraction: false,
         })),
-        ...subjects.filter(s => s.existingDecision?.needsExtraction).map(s => ({
+        ...subjects.filter(s => withAda(s) && s.existingDecision!.needsExtraction).map(s => ({
             subjectId: s.subjectId,
             subjectName: s.name,
-            ada: s.existingDecision!.ada,
+            ada: s.existingDecision!.ada!,
             decisionTitle: s.existingDecision!.decisionTitle,
             isReExtraction: true,
         })),
@@ -528,7 +531,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
                 }
                 const organizationLabel = d.organizationId === request.diavgeiaUid
                     ? null
-                    : await client.organization(d.organizationId).then(o => o.label, (e) => {
+                    : await client.organization(d.organizationId).then(o => o.label, () => {
                         log(`  lookup ${d.ada}: organization ${d.organizationId} name lookup failed`);
                         return d.organizationId;
                     });
@@ -640,7 +643,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
             agendaItemIndex: s.agendaItemIndex,
             decision: {
                 pdfUrl: s.existingDecision!.pdfUrl,
-                ada: s.existingDecision!.ada,
+                ada: s.existingDecision!.ada ?? null,
                 protocolNumber: null,
             },
         }));
