@@ -10,9 +10,14 @@ import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
 import { extractAgendaSubjects, processAgenda } from './tasks/processAgenda.js';
-import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
+import { readAttendanceSheetWith } from './tasks/readAttendanceSheet.js';
+import { readTranscriptFacts } from './tasks/utils/transcriptFacts.js';
+import { isSheetMediaType, mediaTypeFromExtension } from './tasks/utils/attendanceSheetReading.js';
+import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, readCache, writeCache, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
 import { scoreDocument, tallyScores, FIELDS, type ExtractionLabel, type DocumentScore } from './tasks/utils/extractionScoring.js';
 import { parseBodyHints } from './tasks/utils/bodyHints.js';
+import { identifySpeakers, chunkSegments, buildSystemPrompt, buildUserPrompt, DEFAULT_IDENTIFICATION_MODEL, DEFAULT_CHUNK_CHARS, type SpeakerIdentification } from './lib/speakerIdentification.js';
+import { buildBacktestInput, scoreBacktest, formatBacktestReport, formatMeetingTable, formatThresholdSweep, thresholdSweep, estimateCostUsd, aggregateSummaries, type AnchorMode, type MeetingApiData, type BacktestSummary, type ScoredSpeaker } from './tasks/utils/speakerBacktest.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
 import { partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
 import { sameDecisionNumber } from './tasks/utils/decisionNumberCompare.js';
@@ -32,7 +37,7 @@ import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials, extractMeetingId } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
-import { CityLanguage, DiarizeResult } from './types.js';
+import { CityLanguage, DiarizeResult, MeetingAgendaItem, ReadTranscriptFactsRequest, RosterPerson } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
@@ -1318,6 +1323,134 @@ program
     });
 
 program
+    .command('backtest-speaker-identification <meetings...>')
+    .description("Identify each meeting's speakers from the transcript text alone and score the verdicts against the stored assignments (voiceprint matches and reviewer edits). Each meeting is cityId/meetingId on opencouncil, or a path to a saved meeting JSON. See docs/speaker-identification-backtest.md")
+    .option('--base-url <url>', 'opencouncil base URL', 'https://opencouncil.gr')
+    .option('--anchor <mode>', "'none' hides every stored identity (the no-voiceprint case); 'voiceprint' hands voiceprint-matched speakers to the model as known", 'none')
+    .option('--min-confidence <n>', 'verdicts below this confidence count as abstentions', '80')
+    .option('--model <model>', 'model id', DEFAULT_IDENTIFICATION_MODEL)
+    .option('--chunk-chars <n>', 'transcript characters per model call', String(DEFAULT_CHUNK_CHARS))
+    .option('--skip-cache', 'ignore cached verdicts and call the model again')
+    .option('--dry-run', 'print the prompts that would be sent and exit without calling the model')
+    .option('--summary-only', "skip each meeting's per-speaker table")
+    .option('-O, --output-file <file>', 'write the scored speakers and raw verdicts of every meeting as JSON')
+    .action(async (meetingRefs: string[], options: { baseUrl: string; anchor: string; minConfidence: string; model: string; chunkChars: string; skipCache?: boolean; dryRun?: boolean; summaryOnly?: boolean; outputFile?: string }) => {
+        try {
+            if (options.anchor !== 'none' && options.anchor !== 'voiceprint') throw new Error("--anchor must be 'none' or 'voiceprint'");
+            const anchor: AnchorMode = options.anchor;
+            const minConfidence = parseInt(options.minConfidence, 10);
+            const chunkChars = parseInt(options.chunkChars, 10);
+            if (!Number.isFinite(minConfidence) || !Number.isFinite(chunkChars)) throw new Error('--min-confidence and --chunk-chars must be integers');
+
+            const CACHE_PREFIX = 'speaker-id-v3-';
+            type Cached = { identifications: SpeakerIdentification[]; usage: ReturnType<typeof addUsage> };
+            const results: { meeting: string; source: string; cityName: string; body: string | null; meetingDate: string; language: string; summary: BacktestSummary; speakers: ScoredSpeaker[]; identifications: SpeakerIdentification[]; usage: Cached['usage'] }[] = [];
+            const failures: { meeting: string; error: string }[] = [];
+            let freshUsage = NO_USAGE;
+
+            for (const meetingRef of meetingRefs) {
+                console.log(`\n===== ${meetingRef} =====`);
+                try {
+                    let data: MeetingApiData;
+                    let source: string;
+                    if (fs.existsSync(meetingRef)) {
+                        source = path.resolve(meetingRef);
+                        data = JSON.parse(fs.readFileSync(meetingRef, 'utf-8')) as MeetingApiData;
+                    } else {
+                        const match = meetingRef.match(/^([^/]+)\/([^/]+)$/);
+                        if (!match) throw new Error(`Expected cityId/meetingId or a file path, got "${meetingRef}"`);
+                        source = `${options.baseUrl.replace(/\/$/, '')}/api/cities/${encodeURIComponent(match[1])}/meetings/${encodeURIComponent(match[2])}`;
+                        console.log(`Fetching ${source}`);
+                        const response = await fetch(source);
+                        if (!response.ok) throw new Error(`${source} responded ${response.status}`);
+                        data = await response.json() as MeetingApiData;
+                        if ((data as { transcriptHiddenForReview?: boolean }).transcriptHiddenForReview) throw new Error('The transcript of this meeting is hidden for review; the public endpoint returns it empty');
+                    }
+
+                    const input = buildBacktestInput(data, { anchor });
+                    if (input.segments.length === 0) throw new Error('The meeting has no transcript');
+                    const count = (s: string) => input.speakers.filter(x => x.source === s).length;
+                    const chars = input.segments.reduce((n, s) => n + s.text.length, 0);
+                    console.log(`${input.cityName}, ${input.administrativeBodyName ?? 'unknown body'}, ${input.meetingDate} (${input.language}): ${input.speakers.length} speakers — ${count('voiceprint') + count('voiceprintCorrected') + count('voiceprintRemoved')} voiceprint-matched (${count('voiceprintCorrected') + count('voiceprintRemoved')} later corrected by a reviewer), ${count('review')} reviewer-linked, ${count('offRoster')} off-roster, ${count('none')} unlabelled; ${input.segments.length} segments, ${chars} characters; roster of ${input.roster.length}`);
+                    if (anchor === 'voiceprint') console.log(`Anchoring ${input.knownSpeakers.length} voiceprint-matched speakers as known`);
+
+                    if (options.dryRun) {
+                        const chunks = chunkSegments(input.segments, chunkChars);
+                        console.log(`\n${chunks.length} chunk(s): ${chunks.map(c => `${c.length} segments / ${c.reduce((n, x) => n + x.text.length, 0)} chars`).join(', ')}`);
+                        console.log(`\n===== SYSTEM PROMPT =====\n${buildSystemPrompt(input.language)}`);
+                        chunks.forEach((chunk, i) => {
+                            console.log(`\n===== USER PROMPT ${i + 1}/${chunks.length} =====`);
+                            console.log(buildUserPrompt({ cityName: input.cityName, meetingDate: input.meetingDate, administrativeBodyName: input.administrativeBodyName, roster: input.roster, knownSpeakers: input.knownSpeakers, chunkIndex: i, chunkCount: chunks.length, segments: chunk }));
+                        });
+                        continue;
+                    }
+
+                    const cacheKey = `speaker-identification|${source}|${anchor}|${options.model}|${chunkChars}`;
+                    let cached = options.skipCache ? null : readCache<Cached>(cacheKey, CACHE_PREFIX);
+                    if (!cached) {
+                        const run = await identifySpeakers({
+                            cityName: input.cityName,
+                            language: input.language,
+                            meetingDate: input.meetingDate,
+                            administrativeBodyName: input.administrativeBodyName,
+                            roster: input.roster,
+                            segments: input.segments,
+                            knownSpeakers: input.knownSpeakers,
+                            model: options.model,
+                            chunkChars,
+                            onChunkDone: (done, total) => console.log(`chunk ${done}/${total} done`),
+                        });
+                        cached = { identifications: run.result, usage: run.usage };
+                        writeCache(cacheKey, cached, CACHE_PREFIX);
+                        freshUsage = addUsage(freshUsage, run.usage);
+                        console.log(`Model usage: ${formatUsage(run.usage)}`);
+                    } else {
+                        console.log('Using cached verdicts (pass --skip-cache to call the model again)');
+                    }
+
+                    const { scored, summary } = scoreBacktest(input.speakers, cached.identifications, minConfidence);
+                    console.log('');
+                    console.log(formatBacktestReport(scored, summary, input.roster, minConfidence, { includeSpeakers: !options.summaryOnly }));
+                    results.push({ meeting: meetingRef, source, cityName: input.cityName, body: input.administrativeBodyName, meetingDate: input.meetingDate, language: input.language, summary, speakers: scored, identifications: cached.identifications, usage: cached.usage });
+                } catch (e) {
+                    const error = e instanceof Error ? e.message : String(e);
+                    console.error(`${meetingRef}: ${error}`);
+                    failures.push({ meeting: meetingRef, error });
+                }
+            }
+
+            if (options.dryRun) return;
+
+            const aggregate = aggregateSummaries(results.map(r => r.summary));
+            if (results.length > 1) {
+                console.log('\n===== ALL MEETINGS =====');
+                console.log(formatMeetingTable(results.map(r => ({ meeting: r.meeting, body: r.body, summary: r.summary, costUsd: estimateCostUsd(options.model, r.usage) })), aggregate));
+            }
+            const sweep = thresholdSweep(results);
+            if (results.length > 0) {
+                console.log(`\n===== CONFIDENCE THRESHOLDS (${results.length === 1 ? results[0].meeting : 'all meetings'}) =====`);
+                console.log(formatThresholdSweep(sweep, minConfidence));
+            }
+            if (freshUsage.input_tokens > 0) console.log(`\nModel usage of this run (cached meetings excluded): ${formatUsage(freshUsage)}`);
+            if (failures.length > 0) {
+                console.error(`\n${failures.length} meeting(s) failed:`);
+                for (const f of failures) console.error(`  ${f.meeting}: ${f.error}`);
+                process.exitCode = 1;
+            }
+
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify({ anchor, model: options.model, chunkChars, minConfidence, aggregate, sweep, meetings: results, failures }, null, 2));
+                console.log(`\nScored speakers -> ${options.outputFile}`);
+            }
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
     .command('read-decision <source>')
     .description('Read the session date, session number and decision number a document states about itself. Source: ADA, PDF URL, or local file path')
     .option('--skip-cache', 'ignore the cached reading and call the model again')
@@ -1329,6 +1462,80 @@ program
         console.log(JSON.stringify(result, null, 2));
         console.log(fromCache ? '(cached — no API call)' : `Tokens: ${formatUsage(usage)}`);
         server.close();
+    });
+
+program
+    .command('read-attendance-sheet <fileOrUrl>')
+    .description('Read the roll call, the arrivals and departures, the per-item votes and who presided from an attendance sheet (a photo or a PDF). Source: URL or local file path')
+    .requiredOption('--roster <json>', 'JSON file with the roster (RosterPerson[])')
+    .requiredOption('--agenda <json>', 'JSON file with the agenda items (MeetingAgendaItem[])')
+    .option('--layout-notes <text>', "How this body's sheet is laid out, in a person's words")
+    .option('--city <name>', 'city name', 'Δήμος')
+    .option('--body <name>', 'administrative body name')
+    .option('--date <date>', 'meeting date (YYYY-MM-DD)', new Date().toISOString().slice(0, 10))
+    .option('--mayor-id <id>', 'person id of the mayor in the roster')
+    .option('--media-type <type>', 'media type when the extension does not tell it (application/pdf, image/jpeg, image/png, image/webp, image/gif)')
+    .option('--skip-cache', 'ignore the cached reading and call the model again')
+    .action(async (fileOrUrl: string, options: { roster: string; agenda: string; layoutNotes?: string; city: string; body?: string; date: string; mayorId?: string; mediaType?: string; skipCache?: boolean }) => {
+        try {
+            const isUrl = fileOrUrl.startsWith('http://') || fileOrUrl.startsWith('https://');
+            if (options.mediaType !== undefined && !isSheetMediaType(options.mediaType)) {
+                throw new Error(`Unsupported media type ${options.mediaType}`);
+            }
+            const mediaType = options.mediaType ?? mediaTypeFromExtension(isUrl ? new URL(fileOrUrl).pathname : fileOrUrl);
+            if (!mediaType) {
+                throw new Error(`Cannot tell the media type of ${fileOrUrl} from its extension; pass --media-type`);
+            }
+            const roster = JSON.parse(fs.readFileSync(options.roster, 'utf-8')) as RosterPerson[];
+            const agendaItems = JSON.parse(fs.readFileSync(options.agenda, 'utf-8')) as MeetingAgendaItem[];
+            const { reading, usage } = await readAttendanceSheetWith({
+                callbackUrl: '',
+                fileUrl: fileOrUrl,
+                mediaType,
+                cityName: options.city,
+                cityLanguage: 'el',
+                administrativeBodyName: options.body ?? null,
+                date: options.date,
+                roster,
+                agendaItems,
+                mayorId: options.mayorId,
+                layoutNotes: options.layoutNotes ?? null,
+            }, (stage, percent) => console.error(`  [${percent.toFixed(0)}%] ${stage}`), {
+                skipCache: options.skipCache,
+                download: isUrl ? undefined : async (p: string) => fs.readFileSync(p),
+            });
+            console.log(JSON.stringify(reading, null, 2));
+            const total = usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens + usage.cache_read_input_tokens;
+            console.error(total > 0 ? `Tokens: ${usage.input_tokens.toLocaleString()} in, ${usage.output_tokens.toLocaleString()} out` : '(cached — no API call)');
+        } catch (error) {
+            console.error('Error reading attendance sheet:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('read-transcript-facts <requestJson>')
+    .description('Read the roll call, the stated arrivals and departures, the votes and who presided from a transcript. Input: a saved request body file (ReadTranscriptFactsRequest; callbackUrl ignored)')
+    .action(async (requestJson: string) => {
+        try {
+            const request = JSON.parse(fs.readFileSync(requestJson, 'utf-8')) as ReadTranscriptFactsRequest;
+            if (!Array.isArray(request.transcript) || !Array.isArray(request.roster)) {
+                throw new Error(`${requestJson} does not carry a transcript and a roster`);
+            }
+            const { result, usage } = await readTranscriptFacts(
+                { ...request, callbackUrl: '' },
+                (stage, percent) => console.error(`  [${percent.toFixed(0)}%] ${stage}`),
+            );
+            console.log(JSON.stringify(result, null, 2));
+            console.error(`Tokens: ${formatUsage(usage)}`);
+        } catch (error) {
+            console.error('Error reading transcript facts:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
     });
 
 const callbacksCommand = program

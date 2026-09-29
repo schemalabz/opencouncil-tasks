@@ -19,6 +19,8 @@ import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
+import { readAttendanceSheet } from './tasks/readAttendanceSheet.js';
+import { readTranscriptFacts } from './tasks/readTranscriptFacts.js';
 import { devSlowTask } from './tasks/devSlowTask.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
@@ -162,7 +164,12 @@ app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
 app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   summary: 'Fix transcript formatting',
   description: 'Cleans and corrects transcription output for improved accuracy',
-  version: 2,
+  // v3: with a roster in the request, the result carries speakerHints — who each
+  // diarization speaker is, judged from the transcript text alone
+  // v4: with a roster in the request, the result carries meetingFacts — the roll
+  // call, the stated arrivals and departures, the votes and who presides, as the
+  // transcript states them (schemalabz/opencouncil#807)
+  version: 4,
 }));
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
@@ -194,6 +201,18 @@ app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   //    C1 (2026-09-25): the three meeting-level fields left the result and each page gained `nameMatches`. Both precede the first deploy of version 4, so the version stays 4.
   //    C5 (2026-09-26): `absent_for_vote` is on the wire again, one entry with the anchor the page states (no departure/arrival pair), and the anchor gained `decisionNumberTo` for a range. Also before the first deploy of version 4.
   version: 4,
+}));
+
+app.post('/readAttendanceSheet', taskManager.registerTask(readAttendanceSheet, {
+  summary: 'Read an attendance sheet',
+  description: 'Read the roll call, the arrivals and departures, the per-item votes when the sheet records them, and who presided from the sheet the back office keeps during a meeting (a photo or a PDF), and match the names to the roster',
+  version: 1,
+}));
+
+app.post('/readTranscriptFacts', taskManager.registerTask(readTranscriptFacts, {
+  summary: 'Read meeting facts from a transcript',
+  description: 'Read the roll call, the stated arrivals and departures, the votes as stated and who presided from the transcript text, and match the names to the roster. The same pass fixTranscript runs, on its own for a rerun after review',
+  version: 1,
 }));
 
 // Matches the gate on the other dev routes below: NODE_ENV is unset in the

@@ -92,9 +92,15 @@ export async function logToFile(message: string, data?: any) {
     }
 }
 
+/** An image sent before the prompt, as the model accepts it. */
+export type ImageMediaType = 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gif';
+export interface ImageInput { base64: string; mediaType: ImageMediaType }
+
 type AiChatOptions = {
     model?: string;
     documentBase64?: string;
+    /** A photographed page, for a reader whose source is a picture rather than a PDF. */
+    image?: ImageInput;
     systemPrompt: string;
     userPrompt: string;
     // WARNING: trailing-assistant prefill returns 400 on Claude 4.6+ models
@@ -392,7 +398,7 @@ export function continuationPrompt(partial: string): string {
 }
 
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, image, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     let generation: GenerationHandle | undefined;
     const control = getTaskControl();
@@ -413,6 +419,12 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                         },
                     }
                 ]
+            });
+        }
+        if (image) {
+            messages.push({
+                role: "user",
+                content: [{ type: "image", source: { type: "base64", media_type: image.mediaType, data: image.base64 } }],
             });
         }
         messages.push({ "role": "user", "content": userPrompt });
@@ -464,7 +476,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 ...(prefillSystemResponse && !outputFormat ? [{ role: 'assistant', content: prefillSystemResponse }] : []),
             ],
             systemPrompt,
-            metadata: { batchFirst, cacheSystemPrompt, maxTokens, hasTools: Boolean(tools), hasDocument: Boolean(documentBase64) },
+            metadata: { batchFirst, cacheSystemPrompt, maxTokens, hasTools: Boolean(tools), hasDocument: Boolean(documentBase64), hasImage: Boolean(image) },
         });
 
         // Carries the cancel signal into the SDK call itself, so an abort lands
@@ -607,6 +619,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 model,
                 systemPrompt,
                 documentBase64,
+                image,
                 userPrompt,
                 continueFromPartial: partialSoFar,
                 prependToResponse: partialSoFar,
