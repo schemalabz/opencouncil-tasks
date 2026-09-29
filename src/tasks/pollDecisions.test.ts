@@ -3,12 +3,21 @@ import type { Decision } from '@schemalabs/diavgeia-cli';
 import type { PollDecisionsRequest } from "../types.js";
 
 // Mock diavgeia-cli
-const { mockSearchAll, NO_USAGE_MOCK } = vi.hoisted(() => ({
-    mockSearchAll: vi.fn(),
-    NO_USAGE_MOCK: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
-}));
+const { mockSearchAll, mockDecision, mockOrganization, MockDiavgeiaError, NO_USAGE_MOCK } = vi.hoisted(() => {
+    class MockDiavgeiaError extends Error {
+        constructor(public readonly status: number) { super(`HTTP ${status}`); }
+    }
+    return {
+        mockSearchAll: vi.fn(),
+        mockDecision: vi.fn(),
+        mockOrganization: vi.fn(),
+        MockDiavgeiaError,
+        NO_USAGE_MOCK: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
+    };
+});
 vi.mock('@schemalabs/diavgeia-cli', () => ({
-    Diavgeia: vi.fn(() => ({ searchAll: mockSearchAll })),
+    Diavgeia: vi.fn(() => ({ searchAll: mockSearchAll, decision: mockDecision, organization: mockOrganization })),
+    DiavgeiaError: MockDiavgeiaError,
     msToISODate: (ms: number) => new Date(ms).toISOString().split('T')[0],
 }));
 
@@ -921,5 +930,138 @@ describe("pollDecisions - unit and signer scoping", () => {
             unitIds: ["81689", "84655:129415"],
             scopes: ["81689", "84655:129415"],
         });
+    });
+});
+
+describe("pollDecisions - ΑΔΑ lookups", () => {
+    it("adds a found ΑΔΑ outside the search scope to the documents it reads", async () => {
+        const inScope = makeDecision({ ada: "ΑΑΑ1-ΒΒ1", subject: "In scope" });
+        const outside = makeDecision({ ada: "9ΩΡΤΩΞ1-0ΥΣ", subject: "Other unit", organizationId: "6104" });
+        mockSearchAll.mockReturnValue(asyncIter([inScope]));
+        mockDecision.mockResolvedValue(outside);
+
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["9ΩPTΩΞ1-0YΣ"] }), noopProgress);
+
+        expect(mockDecision).toHaveBeenCalledWith("9ΩΡΤΩΞ1-0ΥΣ");
+        expect(result.decisions?.map(d => d.ada)).toEqual(["ΑΑΑ1-ΒΒ1", "9ΩΡΤΩΞ1-0ΥΣ"]);
+        expect(result.lookups).toEqual([
+            { ada: "9ΩΡΤΩΞ1-0ΥΣ", outcome: "found", organizationId: "6104", organizationLabel: null },
+        ]);
+        expect(mockOrganization).not.toHaveBeenCalled();
+    });
+
+    it("does not read a looked-up ΑΔΑ twice when the search already has it", async () => {
+        const d = makeDecision({ ada: "ΑΑΑ1-ΒΒ1", subject: "Both" });
+        mockSearchAll.mockReturnValue(asyncIter([d]));
+        mockDecision.mockResolvedValue(d);
+
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["ΑΑΑ1-ΒΒ1"] }), noopProgress);
+
+        expect(result.decisions).toHaveLength(1);
+        expect(result.lookups?.[0].outcome).toBe("found");
+    });
+
+    it("names the organization when the document belongs to another one", async () => {
+        mockDecision.mockResolvedValue(makeDecision({ ada: "ΑΑΑ1-ΒΒ1", subject: "Elsewhere", organizationId: "9999" }));
+        mockOrganization.mockResolvedValue({ uid: "9999", label: "ΔΗΜΟΣ ΑΛΛΟΣ" });
+
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["ΑΑΑ1-ΒΒ1"] }), noopProgress);
+
+        expect(result.lookups).toEqual([
+            { ada: "ΑΑΑ1-ΒΒ1", outcome: "found", organizationId: "9999", organizationLabel: "ΔΗΜΟΣ ΑΛΛΟΣ" },
+        ]);
+        expect(result.decisions?.map(d => d.ada)).toEqual(["ΑΑΑ1-ΒΒ1"]);
+    });
+
+    it("reports not_found for a 404 and for a document that is not published", async () => {
+        mockDecision
+            .mockRejectedValueOnce(new MockDiavgeiaError(404))
+            .mockResolvedValueOnce(makeDecision({ ada: "ΓΓΓ1-ΔΔ1", subject: "Revoked", status: "REVOKED" }));
+
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["ΑΑΑ1-ΒΒ1", "ΓΓΓ1-ΔΔ1"] }), noopProgress);
+
+        expect(result.lookups?.map(l => [l.ada, l.outcome])).toEqual([
+            ["ΑΑΑ1-ΒΒ1", "not_found"],
+            ["ΓΓΓ1-ΔΔ1", "not_found"],
+        ]);
+        expect(result.decisions).toEqual([]);
+    });
+
+    it("reports error for any other failure and still finishes the poll", async () => {
+        mockDecision.mockRejectedValue(new MockDiavgeiaError(503));
+
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["ΑΑΑ1-ΒΒ1"] }), noopProgress);
+
+        expect(result.lookups).toEqual([{ ada: "ΑΑΑ1-ΒΒ1", outcome: "error", organizationId: null, organizationLabel: null }]);
+    });
+
+    it("reports not_found for a value that is not an ΑΔΑ, without calling Diavgeia", async () => {
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["hello"] }), noopProgress);
+
+        expect(mockDecision).not.toHaveBeenCalled();
+        expect(result.lookups).toEqual([{ ada: "hello", outcome: "not_found", organizationId: null, organizationLabel: null }]);
+    });
+
+    it("returns no lookups field when the request has none", async () => {
+        const result = await pollDecisions(makeRequest(), noopProgress);
+        expect(result.lookups).toBeUndefined();
+    });
+
+    it("falls back to organization id when organization name lookup fails", async () => {
+        mockDecision.mockResolvedValue(makeDecision({ ada: "ΑΑΑ1-ΒΒ1", subject: "Elsewhere", organizationId: "9999" }));
+        mockOrganization.mockRejectedValue(new Error("down"));
+
+        const result = await pollDecisions(makeRequest({ lookupAdas: ["ΑΑΑ1-ΒΒ1"] }), noopProgress);
+
+        expect(result.lookups).toEqual([
+            { ada: "ΑΑΑ1-ΒΒ1", outcome: "found", organizationId: "9999", organizationLabel: "9999" },
+        ]);
+        expect(result.decisions?.map(d => d.ada)).toEqual(["ΑΑΑ1-ΒΒ1"]);
+    });
+});
+
+describe("pollDecisions - linked decision without an ΑΔΑ", () => {
+    it("sends the PDF to extraction and skips the Diavgeia metadata fetch", async () => {
+        const result = await pollDecisions(
+            makeRequest({
+                people: [{ id: "p1", name: "Person" }],
+                subjects: [{
+                    subjectId: "s1",
+                    name: "Manual subject",
+                    agendaItemIndex: 1,
+                    existingDecision: {
+                        decisionTitle: "",
+                        pdfUrl: "https://files.example/decision.pdf",
+                        needsExtraction: true,
+                    },
+                }],
+            }),
+            noopProgress,
+        );
+
+        const [subjects] = mockExtractDecisions.mock.calls[0];
+        expect(subjects).toEqual([expect.objectContaining({
+            subjectId: "s1",
+            decision: { pdfUrl: "https://files.example/decision.pdf", ada: null, protocolNumber: null },
+        })]);
+        expect(mockDecision).not.toHaveBeenCalled();
+        expect(result.extractions).not.toBeNull();
+    });
+
+    it("leaves a decision without an ΑΔΑ out of the resolver's linked context", async () => {
+        mockSearchAll.mockReturnValue(asyncIter([makeDecision({ ada: "ΑΑΑ1-ΒΒ1", subject: "Some decision" })]));
+
+        await pollDecisions(
+            makeRequest({
+                subjects: [
+                    { subjectId: "s1", name: "Manual", agendaItemIndex: 1, existingDecision: { decisionTitle: "", pdfUrl: "https://files.example/a.pdf" } },
+                    { subjectId: "s2", name: "Open", agendaItemIndex: 2 },
+                ],
+            }),
+            noopProgress,
+        );
+
+        const prompt = JSON.stringify(mockAiChat.mock.calls[0]);
+        expect(prompt).not.toContain("ADA: undefined");
     });
 });
