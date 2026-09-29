@@ -40,7 +40,7 @@ flowchart TD
 ### Key Concepts
 
 #### ID Compression
-Long UUIDs are compressed to short IDs before any LLM interaction to reduce token count. `IdCompressor` maintains a bidirectional mapping. New subjects created by the LLM get deterministic UUIDs via `generateSubjectUUID`. All IDs — including `REF:TYPE:id` references in markdown — are decompressed in the final output.
+Long UUIDs are compressed to short IDs before any LLM interaction to reduce token count. `IdCompressor` maintains a bidirectional mapping. New subjects created by the LLM get deterministic UUIDs via `generateSubjectUUID`. An existing subject keeps the database id that the app sends in `existingSubjects` (issue 366). The compressor hashes an id only when an older app sends none. All IDs — including `REF:TYPE:id` references in markdown — are decompressed in the final output.
 
 #### Conversation State Between Batches
 Each batch receives the current subject list and a `meetingProgressSummary` (Greek text) from the previous batch. This gives the LLM continuity: whether the meeting is in pre-agenda items, which agenda item is active, whether a topic continues from the prior batch.

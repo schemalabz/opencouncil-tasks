@@ -103,4 +103,37 @@ describe("enrichSubjectData", () => {
 
         expect("agendaItemTitle" in result).toBe(false);
     });
+
+    it("passes agendaSection through when the input defines it", async () => {
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(
+            input({ agendaSection: { index: 2, title: "ΠΑΡΑΤΑΣΕΙΣ ΩΡΑΡΙΟΥ ΜΟΥΣΙΚΗΣ" } }),
+            "abc123",
+            { cityName: "Αθήνα", date: "2026-09-05" }
+        );
+
+        expect(result.agendaSection).toEqual({ index: 2, title: "ΠΑΡΑΤΑΣΕΙΣ ΩΡΑΡΙΟΥ ΜΟΥΣΙΚΗΣ" });
+    });
+
+    it("passes an explicit null agendaSection through", async () => {
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(
+            input({ agendaSection: null }),
+            "abc123",
+            { cityName: "Αθήνα", date: "2026-09-05" }
+        );
+
+        expect(result.agendaSection).toBeNull();
+    });
+
+    it("omits agendaSection when the input does not define it", async () => {
+        // summarize never sets the field; the app keeps the stored section when it is absent.
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(input(), "abc123", { cityName: "Αθήνα", date: "2026-09-05" });
+
+        expect("agendaSection" in result).toBe(false);
+    });
 });

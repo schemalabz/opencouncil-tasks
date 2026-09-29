@@ -6,7 +6,12 @@ import { fetchAgendaDocument, type AgendaDocument } from "../lib/documentConvers
 import { AGENDA_ITEM_TITLE_RULES, normalizeAgendaItemTitle } from "../lib/agendaItemTitle.js";
 import { CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
-export type AgendaWarningCode = 'MISSING_AGENDA_ITEM_INDEX' | 'MISSING_AGENDA_ITEM_TITLE';
+export type AgendaWarningCode =
+    | 'MISSING_AGENDA_ITEM_INDEX'
+    | 'MISSING_AGENDA_ITEM_TITLE'
+    | 'INCONSISTENT_AGENDA_SECTION'
+    | 'PARTIAL_AGENDA_SECTIONS'
+    | 'DUPLICATE_AGENDA_ITEM_INDEX';
 import { formatTopicLabels } from "../lib/promptUtils.js";
 import { Task } from "./pipeline.js";
 import { generateSubjectUUID, extractMeetingId } from "../utils.js";
@@ -21,31 +26,30 @@ export const AGENDA_EXTRACTION_SCHEMA = {
             description: { type: "string" },
             agendaItemTitle: { type: ["string", "null"] },
             agendaItemIndex: { type: ["number", "null"] },
+            agendaSectionIndex: { type: ["number", "null"] },
+            agendaSectionTitle: { type: ["string", "null"] },
             locationText: { type: ["string", "null"] },
             introducedByPersonId: { type: ["string", "null"] },
             topicLabel: { type: ["string", "null"] },
             topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
             proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
         },
-        required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance"],
+        required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "agendaSectionIndex", "agendaSectionTitle", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance"],
         additionalProperties: false
     }
 };
 
-export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
-    const meetingId = extractMeetingId(request.callbackUrl);
+export type AgendaExtraction = {
+    extracted: ExtractedSubject[];
+    warnings: TaskWarning<AgendaWarningCode>[];
+    extraction: UsageStats;
+};
 
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log(`🚀 PROCESS AGENDA STARTED [${meetingId}]`);
-    console.log('═══════════════════════════════════════════════════════════');
-    console.log(`📊 Request Details:`);
-    console.log(`   • City: ${request.cityName}`);
-    console.log(`   • Date: ${request.date}`);
-    console.log(`   • Agenda: ${request.agendaUrl}`);
-    console.log(`   • People: ${request.people.length}`);
-    console.log(`   • Topic labels: ${request.topicLabels.length}`);
-    console.log('───────────────────────────────────────────────────────────');
-
+/** Phases 1 and 2: the document and the model's reading of it, normalized. No enrichment. */
+export const extractAgendaSubjects = async (
+    request: Omit<ProcessAgendaRequest, 'callbackUrl'>,
+    onProgress: (stage: string, progressPercent: number) => void
+): Promise<AgendaExtraction> => {
     if (!request.agendaUrl) {
         throw new Error("Agenda is required");
     }
@@ -72,10 +76,12 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
 
     onProgress("extraction", 1);
 
-    const extracted = result.result;
-    const extractionModel = result.resolvedModel;
-    const extractionBatch = result.batchMode;
-    const warnings = fillMissingAgendaIndices(extracted);
+    const extracted: ExtractedSubject[] = result.result.map(s => ({ ...s, speakerContributions: [] }));
+    // Sections first: a filled number depends on its section, and the
+    // duplicate check depends on both.
+    const warnings = normalizeExtractedSections(extracted);
+    warnings.push(...fillMissingAgendaIndices(extracted));
+    warnings.push(...warnDuplicateAgendaPositions(extracted));
     warnings.push(...normalizeExtractedTitles(extracted));
 
     const importanceDist = { doNotNotify: 0, normal: 0, high: 0 };
@@ -83,13 +89,16 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     let topicCount = 0;
     let locationTextCount = 0;
     let titledCount = 0;
+    let sectionedCount = 0;
     for (const s of extracted) {
         importanceDist[s.topicImportance]++;
         if (s.introducedByPersonId) introducerCount++;
         if (s.topicLabel) topicCount++;
         if (s.locationText) locationTextCount++;
         if (s.agendaItemTitle !== null) titledCount++;
+        if (s.agendaSectionIndex !== null) sectionedCount++;
     }
+    const sectionCount = new Set(extracted.map(s => s.agendaSectionIndex).filter(i => i !== null)).size;
 
     console.log(`   Extracted ${extracted.length} subjects`);
     console.log(`   Importance: ${importanceDist.high} high, ${importanceDist.normal} normal, ${importanceDist.doNotNotify} doNotNotify`);
@@ -97,9 +106,34 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     console.log(`   Topics assigned: ${topicCount}/${extracted.length}`);
     console.log(`   Locations found: ${locationTextCount}/${extracted.length}`);
     console.log(`   Agenda item titles kept: ${titledCount}/${extracted.length}`);
+    console.log(`   Sections: ${sectionCount} (${sectionedCount}/${extracted.length} subjects sectioned)`);
+
+    return {
+        extracted,
+        warnings,
+        extraction: { usage: result.usage, resolvedModel: result.resolvedModel, batchMode: result.batchMode },
+    };
+};
+
+export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
+    const meetingId = extractMeetingId(request.callbackUrl);
+
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`🚀 PROCESS AGENDA STARTED [${meetingId}]`);
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log(`📊 Request Details:`);
+    console.log(`   • City: ${request.cityName}`);
+    console.log(`   • Date: ${request.date}`);
+    console.log(`   • Agenda: ${request.agendaUrl}`);
+    console.log(`   • People: ${request.people.length}`);
+    console.log(`   • Topic labels: ${request.topicLabels.length}`);
+    console.log('───────────────────────────────────────────────────────────');
+
+    const { extracted, warnings, extraction } = await extractAgendaSubjects(request, onProgress);
+    const locationTextCount = extracted.filter(s => s.locationText).length;
 
     const usagePhases: ({ label: string } & UsageStats)[] = [
-        { label: 'Phase 2 (Extraction)', usage: result.usage, resolvedModel: extractionModel, batchMode: extractionBatch }
+        { label: 'Phase 2 (Extraction)', ...extraction }
     ];
 
     console.log('');
@@ -111,7 +145,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     let enrichmentBatchMode: boolean | undefined;
     const enrichmentResults = await Promise.all(
         extracted.map((s, i) => extractedSubjectToApiSubject(
-            { ...s, speakerContributions: [] },
+            s,
             request.cityName,
             request.cityLanguage,
             request.country,
@@ -170,6 +204,9 @@ export const extractedSubjectToApiSubject = async (
         proximityImportance: subject.proximityImportance,
         topicLabel: subject.topicLabel,
         agendaItemIndex: subject.agendaItemIndex!,
+        agendaSection: subject.agendaSectionIndex !== null && subject.agendaSectionTitle !== null
+            ? { index: subject.agendaSectionIndex, title: subject.agendaSectionTitle }
+            : null,
         introducedByPersonId: subject.introducedByPersonId,
         speakerContributions: subject.speakerContributions,
         discussedIn: null  // Agenda items are always independent initially
@@ -183,23 +220,194 @@ export const extractedSubjectToApiSubject = async (
     });
 }
 
-export function fillMissingAgendaIndices(subjects: Array<{ agendaItemIndex: number | null }>): TaskWarning<AgendaWarningCode>[] {
+export function fillMissingAgendaIndices(
+    subjects: Array<{ agendaItemIndex: number | null; agendaSectionIndex?: number | null }>
+): TaskWarning<AgendaWarningCode>[] {
     const nullCount = subjects.filter(s => s.agendaItemIndex === null).length;
     if (nullCount === 0) return [];
 
-    const maxIndex = subjects.reduce((max, s) =>
-        typeof s.agendaItemIndex === 'number' ? Math.max(max, s.agendaItemIndex) : max, 0);
-    let nextIndex = maxIndex + 1;
+    // A gap is filled after the last number of its own section, so section 2
+    // never borrows a number from section 1's range.
+    const lastBySection = new Map<number | null, number>();
     for (const s of subjects) {
-        if (s.agendaItemIndex === null) {
-            s.agendaItemIndex = nextIndex++;
-        }
+        if (typeof s.agendaItemIndex !== 'number') continue;
+        const section = s.agendaSectionIndex ?? null;
+        lastBySection.set(section, Math.max(lastBySection.get(section) ?? 0, s.agendaItemIndex));
+    }
+    for (const s of subjects) {
+        if (s.agendaItemIndex !== null) continue;
+        const section = s.agendaSectionIndex ?? null;
+        const next = (lastBySection.get(section) ?? 0) + 1;
+        s.agendaItemIndex = next;
+        lastBySection.set(section, next);
     }
     console.warn(`   ⚠️  ${nullCount} subject(s) missing agenda item number — assigning sequential indices`);
     return [{
         code: 'MISSING_AGENDA_ITEM_INDEX',
         severity: 'warning',
         message: `${nullCount} subject(s) had no agenda item number in the agenda document — assigned sequential indices`,
+    }];
+}
+
+type SectionedSubject = {
+    name: string;
+    /** The printed number, when the item has one. The collapse rule reads it so
+     *  that dropping the sections cannot merge two numbering domains into one. */
+    agendaItemIndex?: number | null;
+    agendaSectionIndex: number | null;
+    agendaSectionTitle: string | null;
+};
+
+/**
+ * Normalizes the sections in place. A section's identity is the printed index
+ * alone. Titles are folded (whitespace, trailing stop, case) for comparison
+ * only, so a stray stop or a casing variant never splits a section; each item
+ * keeps the title the model returned. A half-filled section is dropped, a
+ * single section shared by the whole agenda means the agenda has one list, and
+ * the sections are renumbered 1..K in the order of the model's own indices, not
+ * the order the items arrived in. Reports what it dropped, what it left uneven,
+ * and any index the model gave more than one title; it never guesses a section
+ * for an item.
+ *
+ * One index carrying two titles stays ONE section. Splitting it would shift the
+ * index of every later section, and the app matches an agenda item by its
+ * (section, number) position, so a shift makes it prune and recreate rows under
+ * new public ids.
+ */
+export function normalizeExtractedSections(subjects: SectionedSubject[]): TaskWarning<AgendaWarningCode>[] {
+    const warnings: TaskWarning<AgendaWarningCode>[] = [];
+
+    const inconsistent: string[] = [];
+    for (const s of subjects) {
+        const title = s.agendaSectionTitle?.trim().replace(/\s+/g, ' ') || null;
+        const index = typeof s.agendaSectionIndex === 'number' ? s.agendaSectionIndex : null;
+        if ((title === null) !== (index === null)) {
+            inconsistent.push(s.name);
+            s.agendaSectionIndex = null;
+            s.agendaSectionTitle = null;
+        } else {
+            s.agendaSectionIndex = index;
+            s.agendaSectionTitle = title;
+        }
+    }
+    if (inconsistent.length > 0) {
+        console.warn(`   ⚠️  ${inconsistent.length} subject(s) came back with half a section: ${inconsistent.join(' | ')}`);
+        warnings.push({
+            code: 'INCONSISTENT_AGENDA_SECTION',
+            severity: 'warning',
+            message: `${inconsistent.length} subject(s) came back with a section index but no title, or a title but no index, and were treated as unsectioned: ${inconsistent.join(' | ')}`,
+        });
+    }
+
+    const sectioned = subjects.filter(s => s.agendaSectionIndex !== null);
+    if (sectioned.length === 0) return warnings;
+
+    if (sectioned.length < subjects.length) {
+        const unsectioned = subjects.filter(s => s.agendaSectionIndex === null).map(s => s.name);
+        console.warn(`   ⚠️  ${unsectioned.length} subject(s) have no section while ${sectioned.length} do: ${unsectioned.join(' | ')}`);
+        warnings.push({
+            code: 'PARTIAL_AGENDA_SECTIONS',
+            severity: 'warning',
+            message: `${unsectioned.length} subject(s) have no section while ${sectioned.length} do: ${unsectioned.join(' | ')}`,
+        });
+    }
+
+    // The distinct titles the model wrote under each index, keyed by the folded
+    // form and valued by the first verbatim spelling, which is what a person reads.
+    const titlesByIndex = new Map<number, Map<string, string>>();
+    for (const s of sectioned) {
+        const titles = titlesByIndex.get(s.agendaSectionIndex!) ?? new Map<string, string>();
+        const folded = foldSectionTitle(s.agendaSectionTitle);
+        if (!titles.has(folded)) titles.set(folded, s.agendaSectionTitle!);
+        titlesByIndex.set(s.agendaSectionIndex!, titles);
+    }
+
+    // The same printed index with more than one title means the model was inconsistent.
+    // The items stay in one section; a person is told to look at the document.
+    let ambiguous = false;
+    for (const [index, titles] of titlesByIndex) {
+        if (titles.size <= 1) continue;
+        ambiguous = true;
+        const titleList = [...titles.values()].join(' | ');
+        console.warn(`   ⚠️  section index ${index} carries more than one title: ${titleList}`);
+        warnings.push({
+            code: 'INCONSISTENT_AGENDA_SECTION',
+            severity: 'warning',
+            message: `Section index ${index} carries more than one title, and was kept as one section: ${titleList}`,
+        });
+    }
+
+    // One section for the whole agenda is no section at all: the agenda has one
+    // list. Unless dropping it would put two items on the same printed number —
+    // then the section is the only thing telling them apart and it stays.
+    const indices = [...titlesByIndex.keys()].sort((a, b) => a - b);
+    if (indices.length === 1 && !ambiguous && !collapseWouldRepeatANumber(subjects)) {
+        for (const s of subjects) {
+            s.agendaSectionIndex = null;
+            s.agendaSectionTitle = null;
+        }
+        return warnings;
+    }
+
+    const renumbered = new Map(indices.map((index, position) => [index, position + 1]));
+    for (const s of sectioned) s.agendaSectionIndex = renumbered.get(s.agendaSectionIndex!)!;
+
+    return warnings;
+}
+
+/**
+ * The section title as it is compared: the agenda item rules (whitespace, trailing
+ * stop, blank to null), then case, accents and the final sigma folded away. Greek
+ * headings are printed in capitals, which carry no accents, so «ΓΕΝΙΚΑ ΘΕΜΑΤΑ» and
+ * «Γενικά Θέματα» are the same heading and must fold to the same string. An
+ * item keeps its verbatim title; only the comparison sees this form.
+ */
+function foldSectionTitle(title: string | null): string {
+    const lowered = normalizeAgendaItemTitle(title)?.toLocaleLowerCase('el');
+    if (!lowered) return '';
+    return lowered.normalize('NFD').replace(/\p{M}/gu, '').replace(/\u03c2/g, '\u03c3');
+}
+
+/**
+ * Whether dropping every section would leave two items sharing one printed
+ * number. An item with no number cannot collide: fillMissingAgendaIndices gives
+ * it a free one within its section afterwards.
+ */
+function collapseWouldRepeatANumber(subjects: SectionedSubject[]): boolean {
+    const seen = new Set<number>();
+    for (const s of subjects) {
+        if (typeof s.agendaItemIndex !== 'number') continue;
+        if (seen.has(s.agendaItemIndex)) return true;
+        seen.add(s.agendaItemIndex);
+    }
+    return false;
+}
+
+/**
+ * Reports every (section, number) pair that more than one subject carries. The
+ * subjects are returned as they are: the app matches by name before position,
+ * and the warning is the signal that the document needs a look.
+ */
+export function warnDuplicateAgendaPositions(
+    subjects: Array<{ name: string; agendaItemIndex: number | null; agendaSectionIndex: number | null }>
+): TaskWarning<AgendaWarningCode>[] {
+    const byPosition = new Map<string, string[]>();
+    const labelByKey = new Map<string, string>();
+    for (const s of subjects) {
+        if (s.agendaItemIndex === null) continue;
+        const key = `${s.agendaSectionIndex ?? '-'}:${s.agendaItemIndex}`;
+        byPosition.set(key, [...(byPosition.get(key) ?? []), s.name]);
+        labelByKey.set(key, s.agendaSectionIndex === null ? `#${s.agendaItemIndex}` : `${s.agendaSectionIndex}:${s.agendaItemIndex}`);
+    }
+    const duplicates = [...byPosition].filter(([, names]) => names.length > 1);
+    if (duplicates.length === 0) return [];
+
+    const detail = duplicates.map(([key, names]) => `${labelByKey.get(key)}: ${names.join(' / ')}`).join(' | ');
+    console.warn(`   ⚠️  ${duplicates.length} agenda position(s) carry more than one subject: ${detail}`);
+    return [{
+        code: 'DUPLICATE_AGENDA_ITEM_INDEX',
+        severity: 'warning',
+        message: `${duplicates.length} agenda position(s) (section:number) carry more than one subject — ${detail}`,
     }];
 }
 
@@ -224,6 +432,8 @@ export type ExtractedSubject = {
     description: string;
     agendaItemTitle: string | null;
     agendaItemIndex: number | null;
+    agendaSectionIndex: number | null;
+    agendaSectionTitle: string | null;
     introducedByPersonId: string | null;
     speakerContributions: {
         speakerId: string | null;
@@ -248,7 +458,9 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
                           // ✗ Λάθος: "Συζητούνται...", "Εγκρίνεται...", "Παρουσιάζεται..."
     agendaItemTitle: string | null; // Ο τίτλος του θέματος ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένος στην ημερήσια διάταξη — βλ. τους κανόνες παρακάτω. null μόνο αν το κείμενο δεν διαβάζεται.
                           // Οι κανόνες για το πεδίο, μαζί με την εξαίρεση γλώσσας, είναι παρακάτω.
-    agendaItemIndex: number | null; // Ο αριθμός που συνοδεύει το θέμα στο έγγραφο της ημερήσιας διάταξης, αν υπάρχει
+    agendaItemIndex: number | null; // Ο αριθμός που συνοδεύει το θέμα στο έγγραφο της ημερήσιας διάταξης, αν υπάρχει — βλ. τους κανόνες για τις ενότητες παρακάτω
+    agendaSectionIndex: number | null; // Η σειρά της ενότητας στην οποία ανήκει το θέμα (1 για την πρώτη ενότητα του εγγράφου). null όταν το έγγραφο έχει μία μόνο αριθμημένη λίστα.
+    agendaSectionTitle: string | null; // Η επικεφαλίδα της ενότητας ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένη, σε μία γραμμή. null όταν το agendaSectionIndex είναι null.
     locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος.
                           // Γράψε ΜΟΝΟ το τοπωνύμιο· ΜΗΝ προσθέτεις πόλη, περιοχή ή χώρα — μπαίνουν αυτόματα αργότερα.
                           // ΕΞΑΙΡΕΣΗ ΓΛΩΣΣΑΣ (ισχύει ΜΟΝΟ για το locationText και το agendaItemTitle, όχι για τα υπόλοιπα πεδία): κράτα το τοπωνύμιο στη γλώσσα και το αλφάβητο που χρησιμοποιεί το έγγραφο — ΜΗΝ μεταφράζεις και ΜΗΝ μεταγράφεις μεταξύ αλφαβήτων.
@@ -262,6 +474,12 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
 ${IMPORTANCE_GUIDELINES}
 
 ${AGENDA_ITEM_TITLE_RULES}
+
+ΚΑΝΟΝΕΣ ΓΙΑ ΤΗΝ ΑΡΙΘΜΗΣΗ ΚΑΙ ΤΙΣ ΕΝΟΤΗΤΕΣ:
+- Το agendaItemIndex είναι ο αριθμός που είναι τυπωμένος δίπλα στο θέμα. ΜΗΝ αλλάζεις την αρίθμηση και ΜΗΝ συνεχίζεις την αρίθμηση από τη μία ενότητα στην επόμενη. Αν δύο ενότητες ξεκινούν και οι δύο από το 1, τα δύο πρώτα θέματά τους παίρνουν και τα δύο agendaItemIndex 1.
+- Ενότητα είναι μια επικεφαλίδα που ομαδοποιεί αριθμημένα θέματα και κάτω από την οποία η αρίθμηση ξεκινά ξανά, ή που αλλάζει το νόημα των θεμάτων που ακολουθούν. Παραδείγματα: «ΓΕΝΙΚΑ ΘΕΜΑΤΑ» και «ΠΑΡΑΤΑΣΕΙΣ ΩΡΑΡΙΟΥ ΜΟΥΣΙΚΗΣ»· «Α. Θέματα σύμφωνα με την παρ.2» και «Β. Τακτικά θέματα»· μια δεύτερη ΠΡΟΣΚΛΗΣΗ μέσα στο ίδιο έγγραφο με δικά της ΘΕΜΑΤΑ.
+- Το agendaSectionIndex είναι η σειρά της ενότητας μέσα στο έγγραφο, ξεκινώντας από το 1. Το agendaSectionTitle είναι η επικεφαλίδα ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένη στο έγγραφο, σε μία γραμμή, αντιγραμμένη αυτούσια. ΜΗΝ συνθέτεις δικό σου τίτλο, ΜΗΝ συνδυάζεις δύο γραμμές και ΜΗΝ προσθέτεις αριθμό πρόσκλησης, ώρα ή άλλα στοιχεία που δεν βρίσκονται στη γραμμή της επικεφαλίδας. Όταν το έγγραφο περιέχει περισσότερες από μία προσκλήσεις, χρησιμοποίησε τη γραμμή που ονομάζει το όργανο της κάθε πρόσκλησης, π.χ. «ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ».
+- Όταν το έγγραφο έχει μία μόνο αριθμημένη λίστα θεμάτων, βάλε null και στα δύο πεδία σε ΟΛΑ τα θέματα. ΜΗΝ επινοείς ενότητα.
 
 Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.${languageDirectiveSuffix(cityLanguage)}`;
 }

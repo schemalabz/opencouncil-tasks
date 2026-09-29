@@ -128,7 +128,7 @@ describe('compressIds', () => {
     const request = {
       transcript: [],
       existingSubjects: [{
-        id: 'will-be-regenerated',
+        id: 'cmexisting0000000000000001',
         name: 'Budget',
         description: 'Annual budget discussion',
         agendaItemIndex: 1,
@@ -155,6 +155,75 @@ describe('compressIds', () => {
 
     expect(result.existingSubjects[0].id).toHaveLength(8);
     expect(result.existingSubjects[0].introducedByPersonId).toHaveLength(8);
+  });
+
+  it('keeps a given existing subject id as the long id behind the short one', () => {
+    const idCompressor = new IdCompressor();
+    const request = {
+      transcript: [],
+      existingSubjects: [{
+        id: 'cmpaw45vv0zbp32lsom8jtjjt',
+        name: 'Ψήφισμα για ΙΔΟΧ προσωπικό',
+        description: 'Ψήφισμα.',
+        agendaItemIndex: 1,
+        introducedByPersonId: null,
+        speakerContributions: [],
+        topicImportance: 'normal' as const,
+        proximityImportance: 'none' as const,
+        location: null,
+        topicLabel: null,
+        context: null,
+        discussedIn: null
+      }],
+      cityName: 'Vrilissia',
+      cityLanguage: 'el' as const,
+      date: '2026-04-29',
+      topicLabels: [],
+      administrativeBodyName: 'Council',
+      partiesWithPeople: [],
+      requestedSubjects: [],
+      callbackUrl: 'http://example.com'
+    };
+
+    const compressed = compressIds(request, idCompressor);
+    const shortId = compressed.existingSubjects[0].id;
+
+    expect(shortId).toHaveLength(8);
+    expect(idCompressor.getLongId(shortId)).toBe('cmpaw45vv0zbp32lsom8jtjjt');
+  });
+
+  it('hashes an id for an existing subject that has none', () => {
+    const idCompressor = new IdCompressor();
+    const request = {
+      transcript: [],
+      // An app older than issue 366 sends no id; the compressor hashes one.
+      existingSubjects: [{
+        name: 'Budget',
+        description: 'Annual budget discussion',
+        agendaItemIndex: 1,
+        introducedByPersonId: null,
+        speakerContributions: [],
+        topicImportance: 'normal' as const,
+        proximityImportance: 'none' as const,
+        location: null,
+        topicLabel: null,
+        context: null,
+        discussedIn: null
+      }],
+      cityName: 'Athens',
+      cityLanguage: 'el' as const,
+      date: '2024-01-01',
+      topicLabels: [],
+      administrativeBodyName: 'Council',
+      partiesWithPeople: [],
+      requestedSubjects: [],
+      callbackUrl: 'http://example.com'
+    };
+
+    const compressed = compressIds(request, idCompressor);
+    const longId = idCompressor.getLongId(compressed.existingSubjects[0].id);
+
+    expect(longId).toHaveLength(64);
   });
 });
 

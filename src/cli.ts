@@ -9,6 +9,7 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
+import { extractAgendaSubjects, processAgenda } from './tasks/processAgenda.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
 import { partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
@@ -1359,6 +1360,88 @@ tasksCommand
             console.log(`${result.taskId}: llmMode=${result.llmMode}`);
         } catch (e) {
             console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('process-agenda <agendaUrl>')
+    .description('Run the agenda extraction on one document (PDF or .docx URL) and print the subjects, section by section')
+    .option('--city <name>', 'City name given to the model', 'Δήμος')
+    .option('--date <date>', 'Meeting date given to the model (YYYY-MM-DD)', new Date().toISOString().slice(0, 10))
+    .option('--language <el|fr|sr>', 'City language', parseLanguageOption, 'el')
+    .option('--enrich', 'Also run the enrichment phase (geocoding, web context). Default: extraction only')
+    .option('-O, --output-file <file>', 'Save the result JSON (the ProcessAgendaResult shape when --enrich, else the extracted subjects and warnings)')
+    .action(async (agendaUrl: string, options: { city: string; date: string; language: CityLanguage; enrich?: boolean; outputFile?: string }) => {
+        try {
+            const request = {
+                agendaUrl,
+                people: [],
+                topicLabels: [],
+                cityName: options.city,
+                cityLanguage: options.language,
+                date: options.date,
+            };
+            const onProgress = () => { };
+
+            let rows: Array<{ agendaSection: { index: number; title: string } | null; agendaItemIndex: number | null; name: string; agendaItemTitle: string | null }>;
+            let warnings: { code: string; severity: string; message: string }[];
+            let output: unknown;
+
+            if (options.enrich) {
+                const result = await processAgenda({ ...request, callbackUrl: 'http://localhost/cli/process-agenda' }, onProgress);
+                rows = result.subjects.map(s => ({
+                    agendaSection: s.agendaSection ?? null,
+                    agendaItemIndex: typeof s.agendaItemIndex === 'number' ? s.agendaItemIndex : null,
+                    name: s.name,
+                    agendaItemTitle: s.agendaItemTitle ?? null,
+                }));
+                warnings = result.warnings;
+                output = result;
+            } else {
+                const result = await extractAgendaSubjects(request, onProgress);
+                rows = result.extracted.map(s => ({
+                    agendaSection: s.agendaSectionIndex !== null && s.agendaSectionTitle !== null
+                        ? { index: s.agendaSectionIndex, title: s.agendaSectionTitle }
+                        : null,
+                    agendaItemIndex: s.agendaItemIndex,
+                    name: s.name,
+                    agendaItemTitle: s.agendaItemTitle,
+                }));
+                warnings = result.warnings;
+                output = { subjects: result.extracted, warnings: result.warnings };
+                console.log(`\nTokens: ${formatUsage(result.extraction.usage)}`);
+            }
+
+            // One block per section, in document order; an unsectioned agenda is one block.
+            console.log('');
+            let currentSection: number | null | undefined = undefined;
+            for (const row of rows) {
+                const section = row.agendaSection?.index ?? null;
+                if (section !== currentSection) {
+                    currentSection = section;
+                    console.log(row.agendaSection ? `── Section ${row.agendaSection.index}: ${row.agendaSection.title}` : '── (no section)');
+                }
+                const number = row.agendaItemIndex === null ? '  -' : String(row.agendaItemIndex).padStart(3);
+                console.log(`${number}  ${row.name}`);
+                if (row.agendaItemTitle) console.log(`       ${row.agendaItemTitle}`);
+            }
+
+            if (warnings.length > 0) {
+                console.log(`\nWarnings (${warnings.length}):`);
+                for (const w of warnings) console.log(`  [${w.severity}] ${w.code}: ${w.message}`);
+            } else {
+                console.log('\nNo warnings.');
+            }
+
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify(output, null, 2));
+                console.log(`\nResult saved to ${options.outputFile}`);
+            }
+        } catch (error) {
+            console.error('Error processing agenda:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();

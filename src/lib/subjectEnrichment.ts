@@ -12,6 +12,8 @@ export interface EnrichmentInput {
     description: string;
     /** Present only for agenda extraction; see Subject.agendaItemTitle. */
     agendaItemTitle?: string | null;
+    /** Present only for agenda extraction; see Subject.agendaSection. */
+    agendaSection?: { index: number; title: string } | null;
     locationText: string | null;
     topicImportance: 'doNotNotify' | 'normal' | 'high';
     proximityImportance: 'none' | 'near' | 'wide';
@@ -92,6 +94,7 @@ export async function enrichSubjectData(
             name: input.name,
             description: input.description,
             ...(input.agendaItemTitle !== undefined ? { agendaItemTitle: input.agendaItemTitle } : {}),
+            ...(input.agendaSection !== undefined ? { agendaSection: input.agendaSection } : {}),
             agendaItemIndex: input.agendaItemIndex,
             introducedByPersonId: input.introducedByPersonId,
             speakerContributions: input.speakerContributions,

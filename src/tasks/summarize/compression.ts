@@ -18,7 +18,9 @@ export const compressIds = (request: SummarizeRequest, idCompressor: IdCompresso
 
     // Compress existing subject IDs
     const existingSubjects = request.existingSubjects.map(subj => {
-        const uuid = generateSubjectUUID(subj);
+        // The app sends the database id so the result can name the row it
+        // updates (issue 366). Older apps send none; the hash keeps them working.
+        const uuid = subj.id ?? generateSubjectUUID(subj);
         const compressedId = idCompressor.addLongId(uuid);
         return {
             id: compressedId,

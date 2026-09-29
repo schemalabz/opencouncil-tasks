@@ -170,7 +170,8 @@ app.post('/processAgenda', taskManager.registerTask(processAgenda, {
   description: 'Extracts and structures agenda information from documents',
   // v4: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
   // v5: agendaItemTitle, the item as written on the agenda (schemalabz/opencouncil#616)
-  version: 5,
+  // v6: agendaSection per item, and agendaItemIndex is now the printed number, which repeats across sections (schemalabz/opencouncil#366)
+  version: 6,
 }));
 
 app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
