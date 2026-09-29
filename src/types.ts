@@ -661,6 +661,12 @@ export interface PollDecisionsRequest extends TaskRequest {
     window?: { fromDate: string; toDate: string };
     /** Reading-cache handshake, window-scoped. Presence + readStatus decide whether to read again. */
     knownDecisions?: Array<{ ada: string; meetingDate: string | null; readStatus: string }>;
+    /**
+     * ΑΔΑ values a person typed for this meeting. Each is fetched on its own,
+     * outside the organization, unit and date scope, and a published one joins
+     * the documents this poll reads. The outcome of each is in `lookups`.
+     */
+    lookupAdas?: string[];
 }
 
 export interface PollDecisionsResult {
@@ -685,6 +691,15 @@ export interface PollDecisionsResult {
         subjectId: string | null;
         confidence: number | null;
         reasoning: string | null;
+    }>;
+    /** One entry per `lookupAdas` value, in request order. Absent when the request had none. */
+    lookups?: Array<{
+        /** Diavgeia's ΑΔΑ when found or normalizable, else the value as sent. */
+        ada: string;
+        outcome: 'found' | 'not_found' | 'error';
+        organizationId: string | null;
+        /** Set only when the document belongs to another organization than `diavgeiaUid`. Holds the organization id when the name lookup fails. */
+        organizationLabel: string | null;
     }>;
     matches: Array<{
         subjectId: string;

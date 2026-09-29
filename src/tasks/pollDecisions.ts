@@ -1,4 +1,4 @@
-import { Diavgeia, msToISODate } from '@schemalabs/diavgeia-cli';
+import { Diavgeia, DiavgeiaError, msToISODate } from '@schemalabs/diavgeia-cli';
 import { parseDiavgeiaUnitScopes, formatDiavgeiaUnitScope } from './utils/diavgeiaUnitScope.js';
 import type { Decision } from '@schemalabs/diavgeia-cli';
 import Anthropic from '@anthropic-ai/sdk';
@@ -12,6 +12,7 @@ import { detectProtocolPattern, findGaps, reconstructProtocolNumber } from './ut
 import { createScopedLogger } from './utils/scopedLogger.js';
 import { readDecisionDocument } from './utils/readDecisionDocument.js';
 import { partitionReadDecisions, type ReadDecision } from './utils/decisionPartition.js';
+import { normalizeAda } from './utils/ada.js';
 
 const client = new Diavgeia();
 
@@ -507,6 +508,44 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     const scopeLabels = scopes.map(formatDiavgeiaUnitScope);
     log(`Fetched ${decisions.length} decisions from Diavgeia (${scopes.length} query/queries: ${scopeLabels.join(', ')})`);
 
+    // Typed ΑΔΑ values: fetched one by one, outside the scope above, so a
+    // decision filed under another unit, signer or organization can still be
+    // read and linked. A failure is an outcome, not a poll failure.
+    let lookups: PollDecisionsResult['lookups'];
+    if (request.lookupAdas?.length) {
+        lookups = [];
+        for (const typed of request.lookupAdas) {
+            const ada = normalizeAda(typed);
+            if (!ada) {
+                lookups.push({ ada: typed, outcome: 'not_found', organizationId: null, organizationLabel: null });
+                continue;
+            }
+            try {
+                const d = await client.decision(ada);
+                if (d.status !== 'PUBLISHED') {
+                    lookups.push({ ada, outcome: 'not_found', organizationId: d.organizationId, organizationLabel: null });
+                    continue;
+                }
+                const organizationLabel = d.organizationId === request.diavgeiaUid
+                    ? null
+                    : await client.organization(d.organizationId).then(o => o.label, (e) => {
+                        log(`  lookup ${d.ada}: organization ${d.organizationId} name lookup failed`);
+                        return d.organizationId;
+                    });
+                lookups.push({ ada: d.ada, outcome: 'found', organizationId: d.organizationId, organizationLabel });
+                if (!seenAdas.has(d.ada)) {
+                    seenAdas.add(d.ada);
+                    decisions.push(d);
+                }
+            } catch (e) {
+                const notFound = e instanceof DiavgeiaError && e.status === 404;
+                log(`  lookup ${ada}: ${notFound ? 'not found' : e instanceof Error ? e.message : e}`);
+                lookups.push({ ada, outcome: notFound ? 'not_found' : 'error', organizationId: null, organizationLabel: null });
+            }
+        }
+        log(`Looked up ${lookups.length} typed ΑΔΑ value(s): ${lookups.map(l => `${l.ada}=${l.outcome}`).join(', ')}`);
+    }
+
     // --- Phase 0: read every candidate's own statement of its session ---
     onProgress("reading decisions", 10);
     const known = new Map((request.knownDecisions ?? []).map(k => [k.ada, k]));
@@ -788,6 +827,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     return {
         decisions: decisionsOut,
+        lookups,
         matches,
         reassignments,
         unmatchedSubjects,
