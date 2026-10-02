@@ -110,6 +110,9 @@ type AiChatOptions = {
     maxTokens?: number;
     tools?: Anthropic.Messages.Tool[];
     outputFormat?: Anthropic.Messages.JSONOutputFormat;
+    // How much the model thinks and writes (output_config.effort). Left out of
+    // the request for a model that rejects the parameter (see acceptsEffort).
+    effort?: 'low' | 'medium' | 'high' | 'xhigh' | 'max';
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
     batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
     label?: string;  // Observability: generation name shown in Langfuse (defaults to "aiChat")
@@ -392,7 +395,46 @@ export function continuationPrompt(partial: string): string {
 }
 
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
+/** A model id's family and version, e.g. sonnet 4.6; null for an id that names neither. A date suffix is not a minor version. */
+function modelGeneration(model: string): { family: string; major: number; minor: number } | null {
+    const match = model.match(/claude-(opus|sonnet|haiku|fable|mythos)-(\d+)(?:-(\d{1,2})(?!\d))?/);
+    if (!match) return null;
+    return { family: match[1], major: Number(match[2]), minor: Number(match[3] ?? 0) };
+}
+
+/**
+ * Whether a model takes a sampling temperature. Opus from 4.7, Sonnet from 5
+ * and every Fable and Mythos model reject the parameter (Sonnet 5.5 rejects any
+ * non-default value); older models, and Haiku 4.5, still take it. An id this
+ * does not recognize keeps the temperature, as before.
+ */
+export function acceptsTemperature(model: string): boolean {
+    const generation = modelGeneration(model);
+    if (!generation) return true;
+    const { family, major, minor } = generation;
+    if (family === 'fable' || family === 'mythos') return false;
+    if (family === 'opus') return major < 4 || (major === 4 && minor < 7);
+    // Sonnet and Haiku dropped it with their generation 5.
+    return major < 5;
+}
+
+/**
+ * Whether a model takes an effort level. Opus from 4.5, Sonnet from 4.6 and
+ * every Fable and Mythos model do; Sonnet 4.5, Haiku 4.5 and older models
+ * reject the parameter. An id this does not recognize is sent the level.
+ */
+export function acceptsEffort(model: string): boolean {
+    const generation = modelGeneration(model);
+    if (!generation) return true;
+    const { family, major, minor } = generation;
+    if (family === 'fable' || family === 'mythos') return true;
+    if (family === 'opus') return major > 4 || (major === 4 && minor >= 5);
+    if (family === 'sonnet') return major > 4 || (major === 4 && minor >= 6);
+    // Haiku 4.5 rejects it.
+    return major >= 5;
+}
+
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, effort, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
     const maxTokens = maxTokensParam ?? 64000;
     let generation: GenerationHandle | undefined;
     const control = getTaskControl();
@@ -444,15 +486,16 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 : systemPrompt;
 
         const resolvedModel = model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
+        const sentEffort = effort && acceptsEffort(resolvedModel) ? effort : undefined;
         const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
             model: resolvedModel,
             max_tokens: maxTokens,
             system: systemPromptParam,
             messages,
-            // Opus 4.7 rejects the temperature parameter; older models still accept it.
-            ...(resolvedModel.startsWith("claude-opus-4-7") ? {} : { temperature: 0 }),
+            // Newer models reject the temperature parameter; older ones still take it.
+            ...(acceptsTemperature(resolvedModel) ? { temperature: 0 } : {}),
             ...(tools && { tools }),
-            ...(outputFormat && { output_config: { format: outputFormat } })
+            ...((outputFormat || sentEffort) && { output_config: { ...(sentEffort && { effort: sentEffort }), ...(outputFormat && { format: outputFormat }) } })
         };
 
         generation = observeGeneration({

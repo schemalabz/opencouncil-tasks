@@ -1,7 +1,48 @@
 import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import Anthropic from '@anthropic-ai/sdk';
-import { classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, BatchRejectedError, executeBatch } from './ai.js';
+import { acceptsEffort, acceptsTemperature, classifyTransientError, formatApiError, addUsage, NO_USAGE, continuationPrompt, cutToLineBoundary, BatchPromotedError, BatchRejectedError, executeBatch } from './ai.js';
 import { TaskCancelledError, newTaskControl, runWithTaskControl } from './taskControl.js';
+
+// ===========================================================================
+// acceptsTemperature — newer models reject the sampling temperature, so the
+// request leaves it out for them and keeps temperature 0 for the rest
+// ===========================================================================
+
+describe('acceptsTemperature', () => {
+    it('keeps the temperature for the models that take it', () => {
+        for (const model of ['claude-sonnet-4-6', 'claude-sonnet-4-5-20250929', 'claude-haiku-4-5', 'claude-haiku-4-5-20251001', 'claude-opus-4-6', 'claude-opus-4-20250514', 'claude-3-5-sonnet-20241022']) {
+            expect(acceptsTemperature(model), model).toBe(true);
+        }
+    });
+
+    it('leaves it out for Opus from 4.7, Sonnet from 5, and every Fable and Mythos model', () => {
+        for (const model of ['claude-opus-4-7', 'claude-opus-4-8', 'claude-opus-5', 'claude-opus-5-5', 'claude-sonnet-5', 'claude-sonnet-5-5', 'claude-fable-5', 'claude-fable-5-1', 'claude-mythos-5-1', 'anthropic.claude-sonnet-5-5']) {
+            expect(acceptsTemperature(model), model).toBe(false);
+        }
+    });
+
+    it('keeps it for an id it does not recognize, as before', () => {
+        expect(acceptsTemperature('some-other-model')).toBe(true);
+    });
+});
+
+describe('acceptsEffort', () => {
+    it('sends the effort level to the models that take it', () => {
+        for (const model of ['claude-sonnet-4-6', 'claude-sonnet-5', 'claude-sonnet-5-5', 'claude-opus-4-5-20251101', 'claude-opus-4-8', 'claude-opus-5-5', 'claude-fable-5-1', 'claude-mythos-5-1']) {
+            expect(acceptsEffort(model), model).toBe(true);
+        }
+    });
+
+    it('leaves it out for Sonnet 4.5, Haiku 4.5 and older models, which reject it', () => {
+        for (const model of ['claude-sonnet-4-5-20250929', 'claude-haiku-4-5', 'claude-haiku-4-5-20251001', 'claude-opus-4-20250514', 'claude-sonnet-4-20250514']) {
+            expect(acceptsEffort(model), model).toBe(false);
+        }
+    });
+
+    it('sends it to an id it does not recognize', () => {
+        expect(acceptsEffort('some-other-model')).toBe(true);
+    });
+});
 
 // ===========================================================================
 // cutToLineBoundary — truncated partials stitch at line boundaries so the
