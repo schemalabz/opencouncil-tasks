@@ -549,6 +549,27 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         log(`Looked up ${lookups.length} typed ΑΔΑ value(s): ${lookups.map(l => `${l.ada}=${l.outcome}`).join(', ')}`);
     }
 
+    // Candidates of this meeting can fall outside its window
+    // when the issue date precedes the meeting or publication comes late
+    // (Vrilissia ΔΕ jun24_2026, 6Τ75Ω9Ρ-ΥΑΠ: issued two days before). Fetched
+    // one by one; their stored reading spares phase 0 a second read.
+    const outsideWindow = (request.knownDecisions ?? []).filter(k => k.own && !seenAdas.has(k.ada));
+    if (outsideWindow.length) {
+        let added = 0;
+        for (const k of outsideWindow) {
+            try {
+                const d = await client.decision(k.ada);
+                if (d.status !== 'PUBLISHED' || seenAdas.has(d.ada)) continue;
+                seenAdas.add(d.ada);
+                decisions.push(d);
+                added++;
+            } catch (e) {
+                log(`  candidate ${k.ada} of this meeting: ${e instanceof Error ? e.message : e}`);
+            }
+        }
+        log(`Fetched ${added} of ${outsideWindow.length} candidate(s) of this meeting outside the window`);
+    }
+
     // --- Phase 0: read every candidate's own statement of its session ---
     onProgress("reading decisions", 10);
     const known = new Map((request.knownDecisions ?? []).map(k => [k.ada, k]));

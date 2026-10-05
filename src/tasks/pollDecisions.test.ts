@@ -769,6 +769,67 @@ describe("pollDecisions - knownDecisions handshake", () => {
     });
 });
 
+describe("pollDecisions - candidates of this meeting", () => {
+    // Vrilissia ΔΕ jun24_2026: 6Τ75Ω9Ρ-ΥΑΠ declares the session but carries an
+    // issue date two days before it, so the window never returns it.
+    const own = { ada: "ADA-P", meetingDate: "2025-01-10", readStatus: "ok", own: true };
+
+    it("fetches a candidate of this meeting that the window did not return and lets the resolver match it", async () => {
+        mockDecision.mockResolvedValue(makeDecision({ ada: "ADA-P", subject: "Επιστροφή αχρεωστήτως καταβληθέντος ποσού" }));
+        mockAiChat.mockResolvedValueOnce({
+            result: {
+                matches: [{ subjectId: "subA", ada: "ADA-P", confidence: "high", reasoning: "Title matches" }],
+                unmatched: [],
+            },
+            usage: noUsage,
+        });
+
+        const result = await pollDecisions(
+            makeRequest({
+                subjects: [{ subjectId: "subA", name: "Επιστροφή αχρεωστήτως καταβληθέντος ποσού", agendaItemIndex: 1 }],
+                knownDecisions: [own],
+            }),
+            noopProgress,
+        );
+
+        expect(mockDecision).toHaveBeenCalledWith("ADA-P");
+        expect(mockReadDecision).not.toHaveBeenCalled();
+        expect(result.matches).toMatchObject([{ subjectId: "subA", ada: "ADA-P" }]);
+        expect(result.lookups).toBeUndefined();
+    });
+
+    it("does not fetch a candidate of this meeting that the window already returned", async () => {
+        mockSearchAll.mockReturnValue(asyncIter([makeDecision({ ada: "ADA-P", subject: "In the window" })]));
+
+        const result = await pollDecisions(makeRequest({ knownDecisions: [own] }), noopProgress);
+
+        expect(mockDecision).not.toHaveBeenCalled();
+        expect(result.decisions).toHaveLength(1);
+    });
+
+    it("does not fetch a known decision of another meeting", async () => {
+        await pollDecisions(makeRequest({ knownDecisions: [{ ...own, own: undefined }] }), noopProgress);
+
+        expect(mockDecision).not.toHaveBeenCalled();
+    });
+
+    it("skips a candidate of this meeting that is no longer published", async () => {
+        mockDecision.mockResolvedValue(makeDecision({ ada: "ADA-P", subject: "Revoked", status: "REVOKED" }));
+
+        const result = await pollDecisions(makeRequest({ knownDecisions: [own] }), noopProgress);
+
+        expect(result.decisions ?? []).toHaveLength(0);
+    });
+
+    it("a failed fetch of a candidate of this meeting does not fail the poll", async () => {
+        mockDecision.mockRejectedValue(new MockDiavgeiaError(503));
+
+        const result = await pollDecisions(makeRequest({ knownDecisions: [own] }), noopProgress);
+
+        expect(result.decisions ?? []).toHaveLength(0);
+    });
+});
+
 describe("pollDecisions - extraction gate", () => {
     const matchedRequest = () =>
         makeRequest({

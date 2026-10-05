@@ -725,8 +725,13 @@ export interface PollDecisionsRequest extends TaskRequest {
     conventionsText?: string | null;
     /** Fetch window derived by the app from publication-lag history. Absent = legacy 45-day window. */
     window?: { fromDate: string; toDate: string };
-    /** Reading-cache handshake, window-scoped. Presence + readStatus decide whether to read again. */
-    knownDecisions?: Array<{ ada: string; meetingDate: string | null; readStatus: string }>;
+    /**
+     * Reading-cache handshake: the city's stored candidates in the window, plus
+     * the open candidates of this meeting. Presence + readStatus decide whether
+     * to read again. A candidate marked `own` that the window does not return is
+     * fetched by its ΑΔΑ, so the resolver sees it again.
+     */
+    knownDecisions?: Array<{ ada: string; meetingDate: string | null; readStatus: string; own?: boolean }>;
     /**
      * ΑΔΑ values a person typed for this meeting. Each is fetched on its own,
      * outside the organization, unit and date scope, and a published one joins
