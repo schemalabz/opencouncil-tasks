@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildUserPrompt, parseNumberedUtterances } from "./fixTranscript.js";
+import { buildUserPrompt, groupPeopleByParty, parseNumberedUtterances } from "./fixTranscript.js";
 
 describe("parseNumberedUtterances", () => {
     it("parses sequential numbered lines", () => {
@@ -54,6 +54,30 @@ describe("parseNumberedUtterances", () => {
 
     it("returns null when numbering does not start at 1", () => {
         expect(parseNumberedUtterances("2. ένα\n3. δύο", 2)).toBeNull();
+    });
+});
+
+describe("groupPeopleByParty", () => {
+    const person = (name: string, party: string | null) => ({ id: name, name, role: null, party });
+
+    it("lists each party's people on one line, and the people with no party last", () => {
+        const parties = groupPeopleByParty([
+            person("Άννα Ξηνταροπούλου", "Παράταξη Α"),
+            person("Γενικός Γραμματέας", null),
+            person("Νίκος Αδραχτάς", "Παράταξη Β"),
+            { ...person("Γιώργος Δημάκης", "Παράταξη Α"), partyHead: true },
+        ]);
+
+        expect(parties).toEqual([
+            { name: "Παράταξη Α", people: [{ name: "Άννα Ξηνταροπούλου" }, { name: "Γιώργος Δημάκης" }] },
+            { name: "Παράταξη Β", people: [{ name: "Νίκος Αδραχτάς" }] },
+            { name: "No party", people: [{ name: "Γενικός Γραμματέας" }] },
+        ]);
+        expect(buildUserPrompt("Αθήνα", parties, [], "(unknown)", ["πρώτο"])).toContain("No party: Γενικός Γραμματέας");
+    });
+
+    it("adds no line when everyone has a party", () => {
+        expect(groupPeopleByParty([person("Άννα Ξηνταροπούλου", "Παράταξη Α")]).map(p => p.name)).toEqual(["Παράταξη Α"]);
     });
 });
 
