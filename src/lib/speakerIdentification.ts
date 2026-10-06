@@ -246,9 +246,9 @@ ${transcriptLines.join("\n")}`;
  * text. A single segment longer than maxChars becomes its own chunk rather
  * than being cut, so no utterance is ever split across calls.
  */
-export function chunkSegments(segments: SpeakerSegmentInput[], maxChars: number): SpeakerSegmentInput[][] {
-    const chunks: SpeakerSegmentInput[][] = [];
-    let current: SpeakerSegmentInput[] = [];
+export function chunkSegments<T extends SpeakerSegmentInput>(segments: T[], maxChars: number): T[][] {
+    const chunks: T[][] = [];
+    let current: T[] = [];
     let currentChars = 0;
 
     for (const segment of segments) {

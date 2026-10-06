@@ -10,6 +10,9 @@ import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
 import { extractAgendaSubjects, processAgenda } from './tasks/processAgenda.js';
+import { readAttendanceSheetWith } from './tasks/readAttendanceSheet.js';
+import { readTranscriptFacts } from './tasks/utils/transcriptFacts.js';
+import { isSheetMediaType, mediaTypeFromExtension } from './tasks/utils/attendanceSheetReading.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, readCache, writeCache, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
 import { scoreDocument, tallyScores, FIELDS, type ExtractionLabel, type DocumentScore } from './tasks/utils/extractionScoring.js';
 import { parseBodyHints } from './tasks/utils/bodyHints.js';
@@ -34,7 +37,7 @@ import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials, extractMeetingId } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
-import { CityLanguage, DiarizeResult } from './types.js';
+import { CityLanguage, DiarizeResult, MeetingAgendaItem, ReadTranscriptFactsRequest, RosterPerson } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
@@ -1484,6 +1487,80 @@ program
         console.log(JSON.stringify(result, null, 2));
         console.log(fromCache ? '(cached — no API call)' : `Tokens: ${formatUsage(usage)}`);
         server.close();
+    });
+
+program
+    .command('read-attendance-sheet <fileOrUrl>')
+    .description('Read the roll call, the arrivals and departures, the per-item votes and who presided from an attendance sheet (a photo or a PDF). Source: URL or local file path')
+    .requiredOption('--roster <json>', 'JSON file with the roster (RosterPerson[])')
+    .requiredOption('--agenda <json>', 'JSON file with the agenda items (MeetingAgendaItem[])')
+    .option('--layout-notes <text>', "How this body's sheet is laid out, in a person's words")
+    .option('--city <name>', 'city name', 'Δήμος')
+    .option('--body <name>', 'administrative body name')
+    .option('--date <date>', 'meeting date (YYYY-MM-DD)', new Date().toISOString().slice(0, 10))
+    .option('--mayor-id <id>', 'person id of the mayor in the roster')
+    .option('--media-type <type>', 'media type when the extension does not tell it (application/pdf, image/jpeg, image/png, image/webp, image/gif)')
+    .option('--skip-cache', 'ignore the cached reading and call the model again')
+    .action(async (fileOrUrl: string, options: { roster: string; agenda: string; layoutNotes?: string; city: string; body?: string; date: string; mayorId?: string; mediaType?: string; skipCache?: boolean }) => {
+        try {
+            const isUrl = fileOrUrl.startsWith('http://') || fileOrUrl.startsWith('https://');
+            if (options.mediaType !== undefined && !isSheetMediaType(options.mediaType)) {
+                throw new Error(`Unsupported media type ${options.mediaType}`);
+            }
+            const mediaType = options.mediaType ?? mediaTypeFromExtension(isUrl ? new URL(fileOrUrl).pathname : fileOrUrl);
+            if (!mediaType) {
+                throw new Error(`Cannot tell the media type of ${fileOrUrl} from its extension; pass --media-type`);
+            }
+            const roster = JSON.parse(fs.readFileSync(options.roster, 'utf-8')) as RosterPerson[];
+            const agendaItems = JSON.parse(fs.readFileSync(options.agenda, 'utf-8')) as MeetingAgendaItem[];
+            const { reading, usage } = await readAttendanceSheetWith({
+                callbackUrl: '',
+                fileUrl: fileOrUrl,
+                mediaType,
+                cityName: options.city,
+                cityLanguage: 'el',
+                administrativeBodyName: options.body ?? null,
+                date: options.date,
+                roster,
+                agendaItems,
+                mayorId: options.mayorId,
+                layoutNotes: options.layoutNotes ?? null,
+            }, (stage, percent) => console.error(`  [${percent.toFixed(0)}%] ${stage}`), {
+                skipCache: options.skipCache,
+                download: isUrl ? undefined : async (p: string) => fs.readFileSync(p),
+            });
+            console.log(JSON.stringify(reading, null, 2));
+            const total = usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens + usage.cache_read_input_tokens;
+            console.error(total > 0 ? `Tokens: ${usage.input_tokens.toLocaleString()} in, ${usage.output_tokens.toLocaleString()} out` : '(cached — no API call)');
+        } catch (error) {
+            console.error('Error reading attendance sheet:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('read-transcript-facts <requestJson>')
+    .description('Read the roll call, the stated arrivals and departures, the votes and who presided from a transcript. Input: a saved request body file (ReadTranscriptFactsRequest; callbackUrl ignored)')
+    .action(async (requestJson: string) => {
+        try {
+            const request = JSON.parse(fs.readFileSync(requestJson, 'utf-8')) as ReadTranscriptFactsRequest;
+            if (!Array.isArray(request.transcript) || !Array.isArray(request.people)) {
+                throw new Error(`${requestJson} does not carry a transcript and the meeting's people`);
+            }
+            const { result, usage } = await readTranscriptFacts(
+                { ...request, people: request.people, callbackUrl: '' },
+                (stage, percent) => console.error(`  [${percent.toFixed(0)}%] ${stage}`),
+            );
+            console.log(JSON.stringify(result, null, 2));
+            console.error(`Tokens: ${formatUsage(usage)}`);
+        } catch (error) {
+            console.error('Error reading transcript facts:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
     });
 
 const callbacksCommand = program
