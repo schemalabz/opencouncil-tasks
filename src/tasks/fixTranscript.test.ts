@@ -83,7 +83,7 @@ describe("groupPeopleByParty", () => {
             { name: "Παράταξη Β", people: [{ name: "Νίκος Αδραχτάς" }] },
             { name: "No party", people: [{ name: "Γενικός Γραμματέας" }] },
         ]);
-        expect(buildUserPrompt("Αθήνα", parties, [], "(unknown)", ["πρώτο"])).toContain("No party: Γενικός Γραμματέας");
+        expect(buildUserPrompt("Αθήνα", parties, [], ["πρώτο"])).toContain("No party: Γενικός Γραμματέας");
     });
 
     it("adds no line when everyone has a party", () => {
@@ -98,20 +98,23 @@ describe("buildUserPrompt", () => {
     ];
 
     it("formats the roster as readable lines and numbers the utterances", () => {
-        const prompt = buildUserPrompt("Αθήνα", parties, [], "Γιώργος Δημάκης", ["πρώτο", "δεύτερο"]);
+        const prompt = buildUserPrompt("Αθήνα", parties, [], ["πρώτο", "δεύτερο"]);
 
         expect(prompt).toContain("City: Αθήνα");
-        expect(prompt).toContain("Speaker: Γιώργος Δημάκης");
         expect(prompt).toContain("Παράταξη Α: Γιώργος Δημάκης, Άννα Ξηνταροπούλου");
         expect(prompt).toContain("Παράταξη Β: Νίκος Αδραχτάς");
         expect(prompt).toContain("1. πρώτο\n2. δεύτερο");
         expect(prompt).not.toContain("Agenda items");
     });
 
+    it("never names the speaker: the tag's person is a guess the identification must not read back", () => {
+        expect(buildUserPrompt("Αθήνα", parties, [], ["πρώτο"])).not.toMatch(/Speaker/);
+    });
+
     it("includes numbered agenda items when provided", () => {
         const agenda = [{ name: "Ανάπλαση οδού Ερμού" }, { name: "Κανονισμός ύδρευσης (άρθρο 75)" }];
 
-        const prompt = buildUserPrompt("Αθήνα", parties, agenda, "Γιώργος Δημάκης", ["πρώτο"]);
+        const prompt = buildUserPrompt("Αθήνα", parties, agenda, ["πρώτο"]);
 
         expect(prompt).toContain("Agenda items of this meeting (source for street/project/entity names):");
         expect(prompt).toContain("1. Ανάπλαση οδού Ερμού\n2. Κανονισμός ύδρευσης (άρθρο 75)");

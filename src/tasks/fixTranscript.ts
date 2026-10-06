@@ -44,18 +44,23 @@ export function groupPeopleByParty(people: NonNullable<FixTranscriptRequest['peo
     ];
 }
 
+/**
+ * The prompt names the city, the roster and the agenda, never the speaker.
+ * The speaker tag's person is the voiceprint's guess on a first run and an
+ * earlier hint's on a re-run, and a corrector told that name would resolve a
+ * garbled self-introduction toward it; the identification that reads the
+ * corrected text would then confirm the guess it was meant to check.
+ */
 export function buildUserPrompt(
     cityName: string,
     parties: PartyNames,
     agenda: { name: string }[],
-    personName: string,
     utterances: string[]
 ): string {
     const agendaBlock = agenda.length > 0
         ? `Agenda items of this meeting (source for street/project/entity names):\n${agenda.map((s, i) => `${i + 1}. ${s.name}`).join('\n')}\n`
         : '';
     return `City: ${cityName}
-Speaker: ${personName}
 Roster (party — members):
 ${parties.map(p => `${p.name}: ${p.people.map(x => x.name).join(', ')}`).join('\n')}
 ${agendaBlock}Correct the numbered utterances:
@@ -146,7 +151,7 @@ async function processSpeakerSegment(
     }
 
     const utteranceTexts = segment.utterances.map(u => u.text);
-    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, segment.speakerName || "(unknown)", utteranceTexts);
+    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, utteranceTexts);
     const systemPrompt = buildSystemPrompt(cityLanguage);
 
     let usage = NO_USAGE;
