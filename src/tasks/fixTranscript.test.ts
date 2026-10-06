@@ -1,5 +1,15 @@
-import { describe, it, expect } from "vitest";
-import { buildUserPrompt, groupPeopleByParty, parseNumberedUtterances } from "./fixTranscript.js";
+import { describe, it, expect, vi } from "vitest";
+
+vi.mock("../lib/ai.js", async (importOriginal) => ({
+    ...await importOriginal<typeof import("../lib/ai.js")>(),
+    aiChat: vi.fn(),
+}));
+vi.mock("./utils/speakerHints.js", () => ({ identifyTranscriptSpeakers: vi.fn() }));
+
+import { applyCorrections, buildUserPrompt, fixTranscript, groupPeopleByParty, parseNumberedUtterances } from "./fixTranscript.js";
+import { aiChat, NO_USAGE } from "../lib/ai.js";
+import { identifyTranscriptSpeakers } from "./utils/speakerHints.js";
+import { FixTranscriptRequest, SpeakerHint } from "../types.js";
 
 describe("parseNumberedUtterances", () => {
     it("parses sequential numbered lines", () => {
@@ -105,5 +115,82 @@ describe("buildUserPrompt", () => {
 
         expect(prompt).toContain("Agenda items of this meeting (source for street/project/entity names):");
         expect(prompt).toContain("1. Ανάπλαση οδού Ερμού\n2. Κανονισμός ύδρευσης (άρθρο 75)");
+    });
+});
+
+describe("applyCorrections", () => {
+    const utterance = (utteranceId: string, text: string) => ({ utteranceId, text, startTimestamp: 0, endTimestamp: 1 });
+    const segment = (speakerTagId: string, utterances: ReturnType<typeof utterance>[]) => ({
+        speakerName: null, speakerParty: null, speakerRole: null, speakerId: null, speakerSegmentId: `seg-${speakerTagId}`, speakerTagId,
+        text: utterances.map(u => u.text).join(" "), utterances,
+    });
+
+    it("puts the corrected text in place, and leaves the rest as it was", () => {
+        const transcript = [
+            segment("a", [utterance("u1", "Τον λόγο έχει ο κύριος Νέκας."), utterance("u2", "Ευχαριστώ.")]),
+            segment("b", [utterance("u3", "Καλησπέρα.")]),
+        ];
+        const corrected = applyCorrections(transcript, [{ utteranceId: "u1", text: "Τον λόγο έχει ο κύριος Λέκκας.", markUncertain: false }]);
+
+        expect(corrected[0].utterances.map(u => u.text)).toEqual(["Τον λόγο έχει ο κύριος Λέκκας.", "Ευχαριστώ."]);
+        expect(corrected[0].text).toBe("Τον λόγο έχει ο κύριος Λέκκας. Ευχαριστώ.");
+        expect(corrected[0].utterances[0]).toMatchObject({ utteranceId: "u1", startTimestamp: 0, endTimestamp: 1 });
+        expect(corrected[1]).toEqual(transcript[1]);
+        // The request's own transcript is untouched: it is what the task returns corrections against.
+        expect(transcript[0].utterances[0].text).toBe("Τον λόγο έχει ο κύριος Νέκας.");
+    });
+});
+
+describe("fixTranscript", () => {
+    it("identifies the speakers once the corrections are in, from the corrected text", async () => {
+        const utterance = (utteranceId: string, text: string) => ({ utteranceId, text, startTimestamp: 0, endTimestamp: 1 });
+        const segment = (speakerTagId: string, utterances: ReturnType<typeof utterance>[]) => ({
+            speakerName: null, speakerParty: null, speakerRole: null, speakerId: null, speakerSegmentId: `seg-${speakerTagId}`, speakerTagId,
+            text: utterances.map(u => u.text).join(" "), utterances,
+        });
+        const request: FixTranscriptRequest = {
+            callbackUrl: "http://app.test/callback",
+            cityName: "Χαλάνδρι",
+            cityLanguage: "el",
+            administrativeBodyName: "Δημοτικό Συμβούλιο",
+            date: "2026-07-30",
+            topicLabels: [],
+            people: [{ id: "p1", name: "Γιώργος Λέκκας", role: null, party: null }],
+            transcript: [
+                segment("a", [utterance("u1", "Τον λόγο έχει ο κύριος Νέκας."), utterance("u2", "Ευχαριστώ.")]),
+                segment("b", [utterance("u3", "Καλησπέρα.")]),
+            ],
+        };
+
+        // What happened, in order. A correction that returns on the next tick
+        // makes an identification that did not wait show up first.
+        const events: string[] = [];
+        vi.mocked(aiChat).mockImplementation(async ({ userPrompt }) => {
+            await new Promise(resolve => setTimeout(resolve, 5));
+            events.push("corrected");
+            const numbered = userPrompt.split("Correct the numbered utterances:\n")[1];
+            return { result: numbered.replace("Νέκας", "Λέκκας"), usage: NO_USAGE };
+        });
+        const hints: SpeakerHint[] = [{ speakerTagId: "a", personId: "p1", actionable: true, evidenceKind: "addressed", confidence: 90, evidence: "Τον λόγο έχει ο κύριος Λέκκας." }];
+        vi.mocked(identifyTranscriptSpeakers).mockImplementation(async () => {
+            events.push("identified");
+            return { result: hints, usage: NO_USAGE };
+        });
+        const onProgress = vi.fn();
+
+        const result = await fixTranscript(request, onProgress);
+
+        expect(events).toEqual(["corrected", "corrected", "identified"]);
+        expect(onProgress.mock.calls.at(-1)).toEqual(["identifying speakers", 0]);
+
+        const identified = vi.mocked(identifyTranscriptSpeakers).mock.calls[0][0];
+        expect(identified.people).toBe(request.people);
+        expect(identified.transcript[0].utterances.map(u => u.text)).toEqual(["Τον λόγο έχει ο κύριος Λέκκας.", "Ευχαριστώ."]);
+        expect(identified.transcript[0].text).toBe("Τον λόγο έχει ο κύριος Λέκκας. Ευχαριστώ.");
+        expect(identified.transcript[0]).toMatchObject({ speakerTagId: "a", speakerSegmentId: "seg-a" });
+        expect(identified.transcript[1]).toEqual(request.transcript[1]);
+
+        expect(result.updateUtterances).toEqual([{ utteranceId: "u1", text: "Τον λόγο έχει ο κύριος Λέκκας.", markUncertain: false }]);
+        expect(result.speakerHints).toBe(hints);
     });
 });
