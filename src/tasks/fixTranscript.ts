@@ -44,18 +44,23 @@ export function groupPeopleByParty(people: NonNullable<FixTranscriptRequest['peo
     ];
 }
 
+/**
+ * The prompt names the city, the roster and the agenda, never the speaker.
+ * The speaker tag's person is the voiceprint's guess on a first run and an
+ * earlier hint's on a re-run, and a corrector told that name would resolve a
+ * garbled self-introduction toward it; the identification that reads the
+ * corrected text would then confirm the guess it was meant to check.
+ */
 export function buildUserPrompt(
     cityName: string,
     parties: PartyNames,
     agenda: { name: string }[],
-    personName: string,
     utterances: string[]
 ): string {
     const agendaBlock = agenda.length > 0
         ? `Agenda items of this meeting (source for street/project/entity names):\n${agenda.map((s, i) => `${i + 1}. ${s.name}`).join('\n')}\n`
         : '';
     return `City: ${cityName}
-Speaker: ${personName}
 Roster (party — members):
 ${parties.map(p => `${p.name}: ${p.people.map(x => x.name).join(', ')}`).join('\n')}
 ${agendaBlock}Correct the numbered utterances:
@@ -98,6 +103,18 @@ export function parseNumberedUtterances(text: string, expectedCount: number): st
     return parsed.length === expectedCount ? parsed : null;
 }
 
+/** The transcript as it reads once the corrections are applied. Utterances the corrections leave out keep their text. */
+export function applyCorrections(
+    transcript: FixTranscriptRequest['transcript'],
+    corrections: FixTranscriptResult['updateUtterances']
+): FixTranscriptRequest['transcript'] {
+    const correctedText = new Map(corrections.map(c => [c.utteranceId, c.text]));
+    return transcript.map(segment => {
+        const utterances = segment.utterances.map(u => correctedText.has(u.utteranceId) ? { ...u, text: correctedText.get(u.utteranceId)! } : u);
+        return { ...segment, utterances, text: utterances.map(u => u.text).join(' ') };
+    });
+}
+
 export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
     const { transcript, cityName, cityLanguage, agendaItems } = request;
     // A caller that predates `people` still sends them grouped by party.
@@ -105,12 +122,13 @@ export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = as
     console.log(`Fixing transcript for ${cityName} (${cityLanguage}) with ${transcript.length} segments`);
     const inputUtterances = transcript.flatMap(s => s.utterances.map(u => u.text)).length;
 
-    // Correcting the text and identifying the speakers read the same transcript
-    // and don't depend on each other, so they run side by side.
-    const [allResults, speakerHints] = await Promise.all([
-        fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress),
-        identifyTranscriptSpeakers(request),
-    ]);
+    // The corrections come first: the identification reads the text they
+    // produce. Raw transcription mangles names, and names are what the
+    // identification goes by. The corrected text is also what readers and
+    // reviewers see, so the quotes in the hints match the transcript.
+    const allResults = await fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress);
+    onProgress("identifying speakers", 0);
+    const speakerHints = await identifyTranscriptSpeakers({ ...request, transcript: applyCorrections(transcript, allResults.result) });
     const usage = addUsage(allResults.usage, speakerHints.usage);
     const markedUncertain = allResults.result.filter(r => r.markUncertain).length;
     console.log(`Proposing ${allResults.result.length} updates (${allResults.result.length / inputUtterances * 100}%), ${markedUncertain} marked uncertain`);
@@ -133,7 +151,7 @@ async function processSpeakerSegment(
     }
 
     const utteranceTexts = segment.utterances.map(u => u.text);
-    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, segment.speakerName || "(unknown)", utteranceTexts);
+    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, utteranceTexts);
     const systemPrompt = buildSystemPrompt(cityLanguage);
 
     let usage = NO_USAGE;
