@@ -1870,6 +1870,57 @@ program
         }
     });
 
+/** A hand label of one invitation: what the sitting is, read by a person (or a careful reader) from the document. */
+interface MeetingRecordLabel {
+    key: string;
+    kind: AgendaMeetingRecord['kind'];
+    urgent: boolean;
+    sessionNumber: number | null;
+    format: AgendaMeetingRecord['format'];
+    confidence?: 'high' | 'low';
+    note?: string;
+}
+
+program
+    .command('evaluate-meeting-records <labelsFile> <recordsFile>')
+    .description('Score a read-meeting-records output against hand labels: per field, how often the record equals the label (null included), and every disagreement. Label keys are <cityId>__<meetingId>.')
+    .option('--high-only', 'Leave out the labels marked low confidence')
+    .action((labelsFile: string, recordsFile: string, options: { highOnly?: boolean }) => {
+        const labels = (JSON.parse(fs.readFileSync(labelsFile, 'utf8')) as MeetingRecordLabel[])
+            .filter(l => !options.highOnly || l.confidence !== 'low');
+        const records = new Map((JSON.parse(fs.readFileSync(recordsFile, 'utf8')) as { meetings: MeetingRecordRead[] }).meetings
+            .map(r => [`${r.cityId}__${r.meetingId}`, r]));
+        const fields = ['kind', 'urgent', 'sessionNumber', 'format'] as const;
+        const score = Object.fromEntries(fields.map(f => [f, { equal: 0, total: 0, falseValue: 0, missed: 0 }])) as
+            Record<typeof fields[number], { equal: number; total: number; falseValue: number; missed: number }>;
+        const disagreements: string[] = [];
+        const unread: string[] = [];
+        for (const label of labels) {
+            const read = records.get(label.key);
+            // A failed read is a run to repeat, not an answer to score.
+            if (!read || read.error) { unread.push(`${label.key}: ${read?.error ?? 'no record'}`); continue; }
+            for (const field of fields) {
+                const want = label[field] ?? null;
+                const got = read.record?.[field] ?? null;
+                const s = score[field];
+                s.total++;
+                if (want === got) { s.equal++; continue; }
+                // A wrong value would be written; a missing one (or an unread urgency) only leaves the field to a person.
+                if (got !== null && got !== false) s.falseValue++; else s.missed++;
+                const evidence = read.record?.[`${field}Evidence` as const];
+                disagreements.push(`${label.key} ${field}: label ${want ?? '-'}, read ${got ?? '-'}${evidence ? ` «${evidence}»` : ''}${label.note ? `  [label note: ${label.note}]` : ''}`);
+            }
+        }
+        console.log(`${labels.length} labels${options.highOnly ? ' (low-confidence labels left out)' : ''}\n`);
+        for (const field of fields) {
+            const s = score[field];
+            console.log(`${field.padEnd(14)} ${s.equal}/${s.total} equal (${(100 * s.equal / Math.max(1, s.total)).toFixed(1)}%), ${s.falseValue} wrong value, ${s.missed} missed`);
+        }
+        if (unread.length > 0) console.log(`\nNot scored, not read (${unread.length}):\n${unread.map(u => `  ${u}`).join('\n')}`);
+        if (disagreements.length > 0) console.log(`\nDisagreements (${disagreements.length}):\n${disagreements.map(d => `  ${d}`).join('\n')}`);
+        server.close();
+    });
+
 program.parse(process.argv);
 
 if (!process.argv.slice(2).length) {
