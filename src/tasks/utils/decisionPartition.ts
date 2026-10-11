@@ -1,5 +1,6 @@
 import type { Decision } from '@schemalabs/diavgeia-cli';
 import type { DecisionReading } from './readDecisionDocument.js';
+import type { AdministrativeBodyType } from '../../types.js';
 
 /**
  * Partitioning of window candidates by the session their document declares
@@ -100,6 +101,19 @@ export function sameBody(documentBody: string, meetingBody: string): boolean {
     // callers' truthiness guards do not catch whitespace-only strings.
     if (!sa || !sb) return false;
     return sa.includes(sb) || sb.includes(sa);
+}
+
+/**
+ * The kind of body a printed label names, for a body whose name is not
+ * printed as configured. A community's council («ΣΥΜΒΟΥΛΙΟ 1ης ΔΗΜΟΤΙΚΗΣ
+ * ΚΟΙΝΟΤΗΤΑΣ») is a community, never the city council.
+ */
+export function bodyTypeOfLabel(label: string): AdministrativeBodyType | null {
+    const n = normalizeBodyLabel(label);
+    if (COMMUNITY.test(n)) return 'community';
+    if (/ΕΠΙΤΡΟΠ/.test(n)) return 'committee';
+    if (/ΣΥΜΒΟΥΛ/.test(n)) return 'council';
+    return null;
 }
 
 export function partitionReadDecisions(

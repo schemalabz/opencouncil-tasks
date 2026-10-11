@@ -4,9 +4,11 @@ import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
 import { fetchAgendaDocument, type AgendaDocument } from "../lib/documentConversion.js";
 import { AGENDA_ITEM_TITLE_RULES, normalizeAgendaItemTitle } from "../lib/agendaItemTitle.js";
-import { CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
+import { MEETING_RULES, MEETING_SCHEMA, markBody, normalizeMeeting, pickMeeting, type MeetingRecordWarningCode, type RawAgendaMeeting } from "../lib/agendaMeetingRecord.js";
+import { AgendaMeeting, AgendaMeetingRecord, CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
 export type AgendaWarningCode =
+    | MeetingRecordWarningCode
     | 'MISSING_AGENDA_ITEM_INDEX'
     | 'MISSING_AGENDA_ITEM_TITLE'
     | 'INCONSISTENT_AGENDA_SECTION'
@@ -17,56 +19,65 @@ import { Task } from "./pipeline.js";
 import { generateSubjectUUID, extractMeetingId } from "../utils.js";
 import { logMultiPhaseUsage } from "../lib/usageLogging.js";
 
+const SUBJECT_SCHEMA = {
+    type: "object",
+    properties: {
+        name: { type: "string" },
+        description: { type: "string" },
+        agendaItemTitle: { type: ["string", "null"] },
+        agendaItemIndex: { type: ["number", "null"] },
+        agendaSectionIndex: { type: ["number", "null"] },
+        agendaSectionTitle: { type: ["string", "null"] },
+        locationText: { type: ["string", "null"] },
+        introducedByPersonId: { type: ["string", "null"] },
+        topicLabel: { type: ["string", "null"] },
+        topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
+        proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
+        meetingIndex: { type: "integer" },
+    },
+    required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "agendaSectionIndex", "agendaSectionTitle", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance", "meetingIndex"],
+    additionalProperties: false
+};
+
+/** The meetings of the agenda and their subjects, in one reading: which meeting an item belongs to is part of reading it. */
 export const AGENDA_EXTRACTION_SCHEMA = {
-    type: "array",
-    items: {
-        type: "object",
-        properties: {
-            name: { type: "string" },
-            description: { type: "string" },
-            agendaItemTitle: { type: ["string", "null"] },
-            agendaItemIndex: { type: ["number", "null"] },
-            agendaSectionIndex: { type: ["number", "null"] },
-            agendaSectionTitle: { type: ["string", "null"] },
-            locationText: { type: ["string", "null"] },
-            introducedByPersonId: { type: ["string", "null"] },
-            topicLabel: { type: ["string", "null"] },
-            topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
-            proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
-        },
-        required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "agendaSectionIndex", "agendaSectionTitle", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance"],
-        additionalProperties: false
-    }
+    type: "object",
+    properties: {
+        meetings: { type: "array", items: MEETING_SCHEMA },
+        subjects: { type: "array", items: SUBJECT_SCHEMA },
+    },
+    required: ["meetings", "subjects"],
+    additionalProperties: false
 };
 
 export type AgendaExtraction = {
     extracted: ExtractedSubject[];
+    /** Every meeting the agenda calls; each subject's `meetingIndex` points into it. */
+    meetings: AgendaMeeting[];
+    /** The position in `meetings` of the request's meeting; null when it cannot be told. */
+    thisMeeting: number | null;
+    meetingRecord: AgendaMeetingRecord | null;
     warnings: TaskWarning<AgendaWarningCode>[];
     extraction: UsageStats;
 };
 
 /** Phases 1 and 2: the document and the model's reading of it, normalized. No enrichment. */
-export const extractAgendaSubjects = async (
+export const extractAgenda = async (
     request: Omit<ProcessAgendaRequest, 'callbackUrl'>,
-    onProgress: (stage: string, progressPercent: number) => void
+    onProgress: (stage: string, progressPercent: number) => void,
+    document?: AgendaDocument
 ): Promise<AgendaExtraction> => {
-    if (!request.agendaUrl) {
-        throw new Error("Agenda is required");
-    }
-
-    console.log('');
-    console.log('📄 PHASE 1: Document Download');
-    const agenda = await fetchAgendaDocument(request.agendaUrl);
+    const agenda = document ?? await fetchAgenda(request);
 
     console.log('');
     console.log('📝 PHASE 2: Extraction');
     onProgress("extraction", 0);
 
-    const result = await aiChat<Omit<ExtractedSubject, "speakerContributions">[]>({
+    const result = await aiChat<{ meetings: RawAgendaMeeting[]; subjects: Omit<ExtractedSubject, "speakerContributions">[] }>({
         model: "claude-opus-4-6",
         label: "agenda-extraction",
         systemPrompt: getSystemPrompt(request.cityLanguage),
-        userPrompt: getUserPrompt(agenda, request.cityName, request.cityLanguage, request.date, request.people, request.topicLabels),
+        userPrompt: getUserPrompt(agenda, request),
         documentBase64: agenda.kind === 'pdf' ? agenda.base64 : undefined,
         outputFormat: {
             type: "json_schema",
@@ -76,13 +87,17 @@ export const extractAgendaSubjects = async (
 
     onProgress("extraction", 1);
 
-    const extracted: ExtractedSubject[] = result.result.map(s => ({ ...s, speakerContributions: [] }));
+    const meetings = markBody(result.result.meetings.map(normalizeMeeting), request.administrativeBody);
+    const picked = pickMeeting(meetings, { time: request.time });
+    const extracted = assignMeetings(result.result.subjects, meetings.length, picked.thisMeeting ?? 0);
+    separateMeetingSections(extracted, meetings);
     // Sections first: a filled number depends on its section, and the
     // duplicate check depends on both.
     const warnings = normalizeExtractedSections(extracted);
     warnings.push(...fillMissingAgendaIndices(extracted));
     warnings.push(...warnDuplicateAgendaPositions(extracted));
     warnings.push(...normalizeExtractedTitles(extracted));
+    warnings.push(...picked.warnings);
 
     const importanceDist = { doNotNotify: 0, normal: 0, high: 0 };
     let introducerCount = 0;
@@ -107,12 +122,26 @@ export const extractAgendaSubjects = async (
     console.log(`   Locations found: ${locationTextCount}/${extracted.length}`);
     console.log(`   Agenda item titles kept: ${titledCount}/${extracted.length}`);
     console.log(`   Sections: ${sectionCount} (${sectionedCount}/${extracted.length} subjects sectioned)`);
+    const record = picked.record;
+    console.log(`   Meetings: ${meetings.length}; this one: kind ${record?.kind ?? '-'}${record?.urgent ? ' (urgent)' : ''}, session ${record?.sessionNumber ?? '-'}, format ${record?.format ?? '-'}`);
 
     return {
         extracted,
+        meetings,
+        thisMeeting: picked.thisMeeting,
+        meetingRecord: record,
         warnings,
         extraction: { usage: result.usage, resolvedModel: result.resolvedModel, batchMode: result.batchMode },
     };
+};
+
+const fetchAgenda = async (request: Pick<ProcessAgendaRequest, 'agendaUrl'>): Promise<AgendaDocument> => {
+    if (!request.agendaUrl) {
+        throw new Error("Agenda is required");
+    }
+    console.log('');
+    console.log('📄 PHASE 1: Document Download');
+    return fetchAgendaDocument(request.agendaUrl);
 };
 
 export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = async (request, onProgress) => {
@@ -129,8 +158,13 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     console.log(`   • Topic labels: ${request.topicLabels.length}`);
     console.log('───────────────────────────────────────────────────────────');
 
-    const { extracted, warnings, extraction } = await extractAgendaSubjects(request, onProgress);
+    const { extracted, meetings, thisMeeting, meetingRecord, warnings, extraction } = await extractAgenda(request, onProgress);
     const locationTextCount = extracted.filter(s => s.locationText).length;
+    const meetingsInAgenda = meetings.map((m, i) => ({
+        ...m,
+        subjectCount: extracted.filter(s => s.meetingIndex === i).length,
+        isThisMeeting: i === thisMeeting,
+    }));
 
     const usagePhases: ({ label: string } & UsageStats)[] = [
         { label: 'Phase 2 (Extraction)', ...extraction }
@@ -183,7 +217,7 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
     console.log(`✅ PROCESS AGENDA COMPLETED [${meetingId}]`);
     console.log('═══════════════════════════════════════════════════════════');
 
-    return { subjects, warnings };
+    return { subjects, warnings, meetingRecord, meetingsInAgenda };
 };
 
 export const extractedSubjectToApiSubject = async (
@@ -257,6 +291,57 @@ type SectionedSubject = {
     agendaSectionIndex: number | null;
     agendaSectionTitle: string | null;
 };
+
+/**
+ * Each subject's meeting. An index the model got wrong (outside the agenda's
+ * meetings) takes the meeting of a subject in the same section, else
+ * `fallback`: a guessed meeting must not become a section of its own.
+ */
+export function assignMeetings(
+    subjects: Array<Omit<ExtractedSubject, "speakerContributions" | "meetingIndex"> & { meetingIndex: number | null }>,
+    meetingCount: number,
+    fallback: number,
+): ExtractedSubject[] {
+    const valid = (i: number | null) => Number.isInteger(i) && i! >= 0 && i! < meetingCount;
+    return subjects.map((s, _, all) => {
+        if (valid(s.meetingIndex)) return { ...s, meetingIndex: s.meetingIndex!, speakerContributions: [] };
+        const mate = all.find((o) => valid(o.meetingIndex) && o.agendaSectionIndex === s.agendaSectionIndex);
+        return { ...s, meetingIndex: mate ? mate.meetingIndex! : fallback, speakerContributions: [] };
+    });
+}
+
+/**
+ * Gives each meeting of the agenda its own sections, in place. Two meetings
+ * in one document each number their items from 1, and the app matches an
+ * item by its (section, number) position, so a section that holds items of
+ * two meetings repeats positions (#366). The model is asked for a section per
+ * meeting; this holds when it does not: a section shared by meetings becomes
+ * one section per meeting, titled with the meeting's body as printed, the way
+ * a second invitation's heading names its body. Runs before
+ * normalizeExtractedSections, which renumbers the sections.
+ */
+export function separateMeetingSections(
+    subjects: Array<{ agendaSectionIndex: number | null; agendaSectionTitle: string | null; meetingIndex: number }>,
+    meetings: Array<{ bodyName: string | null }>,
+): void {
+    if (meetings.length < 2) return;
+    const meetingsOfSection = new Map<number | null, Set<number>>();
+    for (const s of subjects) {
+        const set = meetingsOfSection.get(s.agendaSectionIndex) ?? new Set();
+        set.add(s.meetingIndex);
+        meetingsOfSection.set(s.agendaSectionIndex, set);
+    }
+    if (![...meetingsOfSection.values()].some(set => set.size > 1)) return;
+
+    // Sections are ordered by meeting, then by the model's own section order;
+    // normalizeExtractedSections renumbers them 1..K from these indices.
+    const span = Math.max(0, ...subjects.map(s => s.agendaSectionIndex ?? 0)) + 1;
+    for (const s of subjects) {
+        const title = s.agendaSectionTitle ?? meetings[s.meetingIndex]?.bodyName ?? null;
+        s.agendaSectionIndex = s.meetingIndex * span + (s.agendaSectionIndex ?? 0) + 1;
+        s.agendaSectionTitle = title;
+    }
+}
 
 /**
  * Normalizes the sections in place. A section's identity is the printed index
@@ -444,10 +529,12 @@ export type ExtractedSubject = {
     topicLabel: string | null;
     topicImportance: 'doNotNotify' | 'normal' | 'high';
     proximityImportance: 'none' | 'near' | 'wide';
+    /** The meeting of the agenda this item is on, as a position in its meetings. */
+    meetingIndex: number;
 }
 
 export const getSystemPrompt = (cityLanguage: CityLanguage) => {
-    return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένας πίνακας (array) με objects με το ακόλουθο structure:
+    return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένα object με δύο πεδία: meetings, οι συνεδριάσεις που καλεί το έγγραφο (βλ. τους κανόνες για τις συνεδριάσεις παρακάτω), και subjects, ένας πίνακας (array) με objects με το ακόλουθο structure:
 
 {
     name: string; // Ένας σύντομος τίτλος για το θέμα (2-6 λέξεις)
@@ -469,6 +556,7 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
     topicImportance: 'doNotNotify' | 'normal' | 'high'; // Η σημασία του θέματος για ειδοποιήσεις
     proximityImportance: 'none' | 'near' | 'wide'; // Η γεωγραφική ακτίνα επιρροής του θέματος
+    meetingIndex: number | null; // Η θέση (από 0) στο meetings της συνεδρίασης στην οποία ανήκει το θέμα. Όταν το έγγραφο καλεί μία συνεδρίαση, 0 σε όλα τα θέματα.
 };
 
 ${IMPORTANCE_GUIDELINES}
@@ -481,10 +569,18 @@ ${AGENDA_ITEM_TITLE_RULES}
 - Το agendaSectionIndex είναι η σειρά της ενότητας μέσα στο έγγραφο, ξεκινώντας από το 1. Το agendaSectionTitle είναι η επικεφαλίδα ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένη στο έγγραφο, σε μία γραμμή, αντιγραμμένη αυτούσια. ΜΗΝ συνθέτεις δικό σου τίτλο, ΜΗΝ συνδυάζεις δύο γραμμές και ΜΗΝ προσθέτεις αριθμό πρόσκλησης, ώρα ή άλλα στοιχεία που δεν βρίσκονται στη γραμμή της επικεφαλίδας. Όταν το έγγραφο περιέχει περισσότερες από μία προσκλήσεις, χρησιμοποίησε τη γραμμή που ονομάζει το όργανο της κάθε πρόσκλησης, π.χ. «ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ».
 - Όταν το έγγραφο έχει μία μόνο αριθμημένη λίστα θεμάτων, βάλε null και στα δύο πεδία σε ΟΛΑ τα θέματα. ΜΗΝ επινοείς ενότητα.
 
+${MEETING_RULES}
+
+Όταν το έγγραφο καλεί περισσότερες από μία συνεδριάσεις, εξάγεις τα θέματα ΟΛΩΝ των συνεδριάσεων και δίνεις σε κάθε θέμα το meetingIndex της συνεδρίασής του. Τα θέματα κάθε συνεδρίασης είναι και δική της ενότητα (agendaSectionIndex, agendaSectionTitle), όπως ορίζουν οι κανόνες για τις ενότητες για μια δεύτερη πρόσκληση στο ίδιο έγγραφο: δύο συνεδριάσεις δεν μοιράζονται ποτέ ενότητα.
+
 Είναι πολύ σημαντικό να εξάγεις ΟΛΑ τα θέματα που υπάρχουν στην ημερήσια διάταξη, χωρίς να παραλήψεις απολύτως κανένα, και να βάλεις τους σωστούς αριθμούς.${languageDirectiveSuffix(cityLanguage)}`;
 }
 
-export const getUserPrompt = (agenda: AgendaDocument, cityName: string, cityLanguage: CityLanguage, date: string, people: { id: string; name: string; role: string; party: string; }[], topicLabels: TopicLabelInfo[]) => {
+export const getUserPrompt = (agenda: AgendaDocument, request: Omit<ProcessAgendaRequest, 'callbackUrl'>) => {
+    // Which meeting the request is about is decided in code (pickMeeting), not
+    // told to the model: told, it reads only that meeting and drops the items
+    // of the others in the same document.
+    const { cityName, cityLanguage, date, people, topicLabels } = request;
     const formattedTopics = formatTopicLabels(topicLabels);
 
     // A PDF agenda rides along as a document block; a .docx was converted to

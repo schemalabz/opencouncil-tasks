@@ -9,14 +9,16 @@ import { transcribe } from './tasks/transcribe.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
-import { extractAgendaSubjects, processAgenda } from './tasks/processAgenda.js';
+import { extractAgenda, processAgenda } from './tasks/processAgenda.js';
+import { extractAgendaMeetings } from './lib/agendaMeetingRecord.js';
+import { fetchAgendaDocument } from './lib/documentConversion.js';
 import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, readCache, writeCache, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
 import { scoreDocument, tallyScores, FIELDS, type ExtractionLabel, type DocumentScore } from './tasks/utils/extractionScoring.js';
 import { parseBodyHints } from './tasks/utils/bodyHints.js';
 import { identifySpeakers, chunkSegments, buildSystemPrompt, buildUserPrompt, ACTIONABLE_EVIDENCE_KINDS, DEFAULT_IDENTIFICATION_MODEL, DEFAULT_IDENTIFICATION_EFFORT, DEFAULT_CHUNK_CHARS, type IdentificationEffort, type SpeakerIdentification } from './lib/speakerIdentification.js';
 import { buildBacktestInput, identificationFingerprint, scoreBacktest, acceptActionable, acceptAtConfidence, evidenceBreakdown, formatBacktestReport, formatEvidenceTable, formatMeetingTable, formatThresholdSweep, thresholdSweep, estimateCostUsd, aggregateSummaries, isRosterSource, type AnchorMode, type RosterMode, type MeetingApiData, type BacktestSummary, type ScoredSpeaker } from './tasks/utils/speakerBacktest.js';
 import { readDecisionDocument, type DecisionReading } from './tasks/utils/readDecisionDocument.js';
-import { partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
+import { bodyTypeOfLabel, partitionReadDecisions, sameBody, type ReadDecision } from './tasks/utils/decisionPartition.js';
 import { sameDecisionNumber } from './tasks/utils/decisionNumberCompare.js';
 import { decisionPdfUrl } from './tasks/utils/resolverMatchDecisions.js';
 import { Diavgeia } from '@schemalabs/diavgeia-cli';
@@ -34,7 +36,7 @@ import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials, extractMeetingId } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
-import { CityLanguage, DiarizeResult } from './types.js';
+import { AdministrativeBodyType, AgendaMeeting, AgendaMeetingRecord, CityLanguage, DiarizeResult, TaskWarning } from './types.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
@@ -1631,9 +1633,12 @@ program
     .option('--city <name>', 'City name given to the model', 'Δήμος')
     .option('--date <date>', 'Meeting date given to the model (YYYY-MM-DD)', new Date().toISOString().slice(0, 10))
     .option('--language <el|fr|sr>', 'City language', parseLanguageOption, 'el')
+    .option('--body <name>', 'The body that holds the meeting, e.g. "Δημοτικό Συμβούλιο"')
+    .option('--body-type <type>', 'council, committee or community (default: read from --body)', parseBodyType)
+    .option('--time <HH:MM>', "The meeting's start in the city's time")
     .option('--enrich', 'Also run the enrichment phase (geocoding, web context). Default: extraction only')
     .option('-O, --output-file <file>', 'Save the result JSON (the ProcessAgendaResult shape when --enrich, else the extracted subjects and warnings)')
-    .action(async (agendaUrl: string, options: { city: string; date: string; language: CityLanguage; enrich?: boolean; outputFile?: string }) => {
+    .action(async (agendaUrl: string, options: { city: string; date: string; language: CityLanguage; body?: string; bodyType?: AdministrativeBodyType; time?: string; enrich?: boolean; outputFile?: string }) => {
         try {
             const request = {
                 agendaUrl,
@@ -1642,11 +1647,14 @@ program
                 cityName: options.city,
                 cityLanguage: options.language,
                 date: options.date,
+                administrativeBody: bodyOption(options.body, options.bodyType),
+                time: options.time,
             };
             const onProgress = () => { };
 
             let rows: Array<{ agendaSection: { index: number; title: string } | null; agendaItemIndex: number | null; name: string; agendaItemTitle: string | null }>;
             let warnings: { code: string; severity: string; message: string }[];
+            let meetings: (AgendaMeeting & { subjectCount?: number; isThisMeeting: boolean })[];
             let output: unknown;
 
             if (options.enrich) {
@@ -1658,9 +1666,10 @@ program
                     agendaItemTitle: s.agendaItemTitle ?? null,
                 }));
                 warnings = result.warnings;
+                meetings = result.meetingsInAgenda;
                 output = result;
             } else {
-                const result = await extractAgendaSubjects(request, onProgress);
+                const result = await extractAgenda(request, onProgress);
                 rows = result.extracted.map(s => ({
                     agendaSection: s.agendaSectionIndex !== null && s.agendaSectionTitle !== null
                         ? { index: s.agendaSectionIndex, title: s.agendaSectionTitle }
@@ -1670,9 +1679,13 @@ program
                     agendaItemTitle: s.agendaItemTitle,
                 }));
                 warnings = result.warnings;
-                output = { subjects: result.extracted, warnings: result.warnings };
+                meetings = result.meetings.map((m, i) => ({ ...m, subjectCount: result.extracted.filter(x => x.meetingIndex === i).length, isThisMeeting: i === result.thisMeeting }));
+                output = { meetings: result.meetings, thisMeeting: result.thisMeeting, meetingRecord: result.meetingRecord, subjects: result.extracted, warnings: result.warnings };
                 console.log(`\nTokens: ${formatUsage(result.extraction.usage)}`);
             }
+
+            console.log(`\nMeetings (${meetings.length}):`);
+            meetings.forEach((m, i) => console.log(`  ${m.isThisMeeting ? '→' : ' '} #${i} ${m.bodyName ?? '?'}${m.time ? ` ${m.time}` : ''}: ${m.kind ?? '-'}, session ${m.sessionNumber ?? '-'}, ${m.format ?? '-'}${m.subjectCount !== undefined ? `, ${m.subjectCount} subjects` : ''}`));
 
             // One block per section, in document order; an unsectioned agenda is one block.
             console.log('');
@@ -1701,6 +1714,156 @@ program
             }
         } catch (error) {
             console.error('Error processing agenda:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+
+const BODY_TYPES: AdministrativeBodyType[] = ['council', 'committee', 'community'];
+function parseBodyType(value: string): AdministrativeBodyType {
+    if (!BODY_TYPES.includes(value as AdministrativeBodyType)) throw new InvalidArgumentError(`expected one of ${BODY_TYPES.join(', ')}`);
+    return value as AdministrativeBodyType;
+}
+
+/** The body of `--body`, with its kind from `--body-type` or else from the name itself. */
+function bodyOption(name: string | undefined, type: AdministrativeBodyType | undefined): { name: string; type: AdministrativeBodyType } | undefined {
+    if (!name) return undefined;
+    return { name, type: type ?? bodyTypeOfLabel(name) ?? 'council' };
+}
+
+function formatMeetingRecord(record: AgendaMeetingRecord | null): string {
+    if (!record) return 'not read';
+    const field = (value: unknown, evidence: string | null) => `${value ?? '-'}${evidence ? `  «${evidence}»` : ''}`;
+    return [
+        `kind:          ${field(record.kind, record.kindEvidence)}`,
+        `urgent:        ${field(record.urgent, record.urgentEvidence)}`,
+        `sessionNumber: ${field(record.sessionNumber, record.sessionNumberEvidence)}`,
+        `format:        ${field(record.format, record.formatEvidence)}`,
+    ].join('\n');
+}
+
+program
+    .command('read-meeting-record <agendaUrl>')
+    .description("Read the meetings that an agenda calls, without its subjects: the reading of the archive backfill (processAgenda reads them with the subjects)")
+    .option('--date <date>', 'Meeting date given to the model (YYYY-MM-DD)', new Date().toISOString().slice(0, 10))
+    .option('--body <name>', 'The body that holds the meeting, e.g. "Δημοτικό Συμβούλιο"')
+    .option('--body-type <type>', 'council, committee or community (default: read from --body)', parseBodyType)
+    .option('--time <HH:MM>', "The meeting's start in the city's time")
+    .action(async (agendaUrl: string, options: { date: string; body?: string; bodyType?: AdministrativeBodyType; time?: string }) => {
+        try {
+            const body = bodyOption(options.body, options.bodyType);
+            const result = await extractAgendaMeetings(await fetchAgendaDocument(agendaUrl), { body, time: options.time, date: options.date });
+            console.log(`\nMeetings (${result.meetings.length}):`);
+            result.meetings.forEach((m, i) => console.log(`  ${i === result.thisMeeting ? '→' : ' '} #${i} ${m.bodyName ?? '?'}${m.time ? ` ${m.time}` : ''}: ${m.kind ?? '-'}, session ${m.sessionNumber ?? '-'}, ${m.format ?? '-'}`));
+            console.log(`\n${formatMeetingRecord(result.record)}`);
+            for (const w of result.warnings) console.log(`  [${w.severity}] ${w.code}: ${w.message}`);
+            console.log(`\nTokens: ${formatUsage(result.extraction.usage)}`);
+        } catch (error) {
+            console.error('Error reading the meetings:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+/** One meeting of the export that opencouncil's scripts/meeting-record-export.ts writes. */
+interface MeetingRecordExportRow {
+    cityId: string;
+    meetingId: string;
+    /** The meeting's calendar date in the city's time (YYYY-MM-DD). */
+    date: string;
+    /** The meeting's start in the city's time (HH:MM). */
+    time?: string;
+    agendaUrl: string;
+    administrativeBody: { name: string; type: AdministrativeBodyType } | null;
+}
+
+interface MeetingRecordRead {
+    cityId: string;
+    meetingId: string;
+    agendaUrl: string;
+    /** The body and time the reading picked this meeting by: a change re-reads it. */
+    body?: string | null;
+    time?: string | null;
+    record: AgendaMeetingRecord | null;
+    meetings: AgendaMeeting[];
+    thisMeeting: number | null;
+    warnings: TaskWarning[];
+    error?: string;
+    inputTokens?: number;
+    outputTokens?: number;
+}
+
+program
+    .command('read-meeting-records <exportFile>')
+    .description("Read the meetings of every agenda in an export of opencouncil (scripts/meeting-record-export.ts). The output feeds opencouncil's meeting record report. A second run with the same output reads only the meetings that are missing or failed.")
+    .requiredOption('-O, --output-file <file>', 'Where the records go (JSON)')
+    .option('--concurrency <n>', 'Documents read at once', (v) => {
+        const n = Number(v);
+        if (!Number.isInteger(n) || n < 1) throw new InvalidArgumentError('expected a positive integer');
+        return n;
+    }, 4)
+    .action(async (exportFile: string, options: { outputFile: string; concurrency: number }) => {
+        try {
+            const rows = (JSON.parse(fs.readFileSync(exportFile, 'utf8')) as { meetings: MeetingRecordExportRow[] }).meetings;
+            const key = (r: { cityId: string; meetingId: string }) => `${r.cityId}/${r.meetingId}`;
+            const bodyOf = (r: MeetingRecordExportRow) => r.administrativeBody?.name ?? null;
+            const done = new Map<string, MeetingRecordRead>();
+            if (fs.existsSync(options.outputFile)) {
+                for (const r of (JSON.parse(fs.readFileSync(options.outputFile, 'utf8')) as { meetings: MeetingRecordRead[] }).meetings) {
+                    if (!r.error) done.set(key(r), r);
+                }
+            }
+            // A reading counts only for the agenda, body and time it was made for.
+            const current = (r: MeetingRecordExportRow) => {
+                const read = done.get(key(r));
+                return read !== undefined && read.agendaUrl === r.agendaUrl && (read.body ?? null) === bodyOf(r) && (read.time ?? null) === (r.time ?? null);
+            };
+            const pending = rows.filter(r => !current(r));
+            console.log(`${rows.length} meetings, ${done.size} already read, ${pending.length} to read`);
+
+            // Written aside and renamed, so an interrupted save never truncates the paid readings.
+            const save = () => {
+                fs.writeFileSync(`${options.outputFile}.tmp`, JSON.stringify({
+                    readAt: new Date().toISOString(),
+                    meetings: rows.map(r => done.get(key(r))).filter((r): r is MeetingRecordRead => r !== undefined),
+                }, null, 2));
+                fs.renameSync(`${options.outputFile}.tmp`, options.outputFile);
+            };
+
+            let next = 0, input = 0, output = 0;
+            const worker = async () => {
+                while (next < pending.length) {
+                    const row = pending[next++];
+                    const base = { cityId: row.cityId, meetingId: row.meetingId, agendaUrl: row.agendaUrl, body: bodyOf(row), time: row.time ?? null };
+                    try {
+                        const document = await fetchAgendaDocument(row.agendaUrl);
+                        // A meeting with no body is the council's.
+                        const result = await extractAgendaMeetings(document, { body: row.administrativeBody ?? { type: 'council' }, time: row.time, date: row.date });
+                        input += result.extraction.usage.input_tokens;
+                        output += result.extraction.usage.output_tokens;
+                        done.set(key(row), {
+                            ...base, record: result.record, meetings: result.meetings, thisMeeting: result.thisMeeting, warnings: result.warnings,
+                            inputTokens: result.extraction.usage.input_tokens, outputTokens: result.extraction.usage.output_tokens,
+                        });
+                        const r = result.record;
+                        console.log(`  ${key(row)}: ${r ? `${r.kind ?? '-'} #${r.sessionNumber ?? '-'} ${r.format ?? '-'}` : 'not read'}${result.warnings.length ? ` (${result.warnings.map(w => w.code).join(', ')})` : ''}`);
+                    } catch (error) {
+                        const message = error instanceof Error ? error.message : String(error);
+                        done.set(key(row), { ...base, record: null, meetings: [], thisMeeting: null, warnings: [], error: message });
+                        console.log(`  ${key(row)}: error: ${message}`);
+                    }
+                    save();
+                }
+            };
+            await Promise.all(Array.from({ length: options.concurrency }, worker));
+            save();
+            const failed = [...done.values()].filter(r => r.error).length;
+            console.log(`\nRead ${pending.length - failed} of ${pending.length}${failed ? `, ${failed} failed (run again to retry)` : ''}. Tokens: ${input} in, ${output} out. -> ${options.outputFile}`);
+        } catch (error) {
+            console.error('Error reading the meeting records:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();
