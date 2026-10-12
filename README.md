@@ -18,7 +18,7 @@ The server supports the following processing tasks:
 - [`generateHighlight`](docs/generateHighlight.md) - Produces short highlight clips from source videos with optional social media transforms, speaker overlays, and captions
 
 ### Transcription & Diarization
-- [`diarize`](src/tasks/diarize.ts) - Identifies and separates different speakers in audio recordings
+- [`diarize`](src/tasks/diarize.ts) - Identifies and separates different speakers in audio recordings, and matches them against the voiceprints the request carries. The app sends only the voiceprints of people whose consent is in force; a request without voiceprints matches nobody
 - [`splitAudioDiarization`](src/tasks/splitAudioDiarization.ts) - Splits audio files based on speaker segments with configurable duration limits
 - [`transcribe`](src/tasks/transcribe.ts) - Converts audio to text with support for custom vocabulary and prompts
 - [`applyDiarization`](src/tasks/applyDiarization.ts) - Applies speaker identification to existing transcripts
