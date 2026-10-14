@@ -62,6 +62,7 @@ MERGE RULES (CRITICAL):
 4. Update the kept subject's name and description to reflect the combined topic.
 5. Only merge subjects that genuinely cover the same topic. Do NOT merge unrelated subjects.
 6. If no merges are needed, return an empty merges array.
+7. Never state vote results in newDescription (approved/rejected, unanimity, vote counts, who voted how).
 
 Return a JSON object with a "merges" array. Each merge has:
 - keepId: the ID of the subject to keep
