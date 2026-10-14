@@ -151,7 +151,7 @@ app.post('/summarize', taskManager.registerTask(summarize, {
     summary: 'Summarize transcript content',
     description: 'Generate a summary of transcript content with subject extraction',
     // v6: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
-    // v7: subject descriptions and speaker contributions no longer state vote results
+    // v7: summaries no longer state vote results
     version: 7,
   }));
 
