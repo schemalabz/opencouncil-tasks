@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command, InvalidArgumentError } from 'commander';
+import { registerEvalCommands } from './evals/cli.js';
 import { splitAudioDiarization } from './tasks/splitAudioDiarization.js';
 import { pipeline, Task } from './tasks/pipeline.js';
 import { downloadYTV } from './tasks/downloadYTV.js';
@@ -22,6 +23,7 @@ import { taskManager } from './lib/TaskManager.js';
 import { isObservabilityEnabled, withPhaseSpan } from './lib/observability.js';
 import { listRuns, fetchRun } from './lib/runs/fetch.js';
 import { openArchive } from './lib/archive/store.js';
+import { flushTelemetry } from './lib/telemetry/telemetry.js';
 import type { RunEnv } from './lib/telemetry/context.js';
 import { showRun } from './lib/runs/show.js';
 import { expandRequest, findCall } from './lib/runs/call.js';
@@ -1364,6 +1366,12 @@ program
         if (disagreements.length > 0) console.log(`\nDisagreements (${disagreements.length}):\n${disagreements.map(d => `  ${d}`).join('\n')}`);
         server.close();
     });
+
+registerEvalCommands(program);
+// The callback server above keeps the process alive; eval commands don't close it themselves.
+program.commands.find(c => c.name() === 'eval')?.hook('postAction', () => { server.close(); });
+// Sinks buffer (archive ad-hoc calls, PostHog events); a CLI process exits right after its action.
+program.hook('postAction', async () => { await flushTelemetry(); });
 
 program.parse(process.argv);
 

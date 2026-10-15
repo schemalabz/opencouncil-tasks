@@ -11,3 +11,19 @@ export const parseEnvOption = (value: string): RunEnv => {
     if (!isRunEnv(value)) throw new InvalidArgumentError(`expected one of ${RUN_ENVS.join(', ')}`);
     return value;
 };
+
+export const parseUsdOption = (value: string): number => {
+    const parsed = Number(value);
+    if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) throw new InvalidArgumentError('expected an amount in USD');
+    return parsed;
+};
+
+/** A count where 0 would silently do nothing (`--concurrency 0` runs no worker). */
+export const parsePositiveIntOption = (value: string): number => {
+    const parsed = Number(value);
+    if (value.trim() === '' || !Number.isInteger(parsed) || parsed < 1) throw new InvalidArgumentError('expected a whole number of at least 1');
+    return parsed;
+};
+
+/** For a repeatable option: each use adds one value. */
+export const collect = (value: string, previous: string[] = []): string[] => [...previous, value];
