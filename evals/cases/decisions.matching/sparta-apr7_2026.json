@@ -1,0 +1,246 @@
+{
+  "id": "decisions.matching/sparta-apr7_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "sparta/apr7_2026",
+    "meetingDate": "2026-04-07",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-05-09",
+      "fromDate": "2026-04-07"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqabasys03bp37zy3sb5vc0b",
+        "name": "Ψηφιακός Μετασχηματισμός Δήμου Σπάρτης",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabasz203bq37zybymyui2i",
+        "name": "Δαπάνες σχολικών μονάδων 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabasz803br37zygx6pzke5",
+        "name": "Καθαρισμός δημοτικών κτιρίων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat2x03bs37zyoniy9xxk",
+        "name": "Εξώδικος συμβιβασμός Γεωργαντά",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat4403bt37zyi4b2o5yu",
+        "name": "Συμφωνία ΔΕΔΔΗΕ για φωτισμό",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat4a03bu37zy3xg1rsy8",
+        "name": "Πρόσληψη προσωπικού Κέντρου Κοινότητας",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat4h03bv37zy9dfqkhws",
+        "name": "Προγραμματισμός ανθρώπινου δυναμικού 2027-2030",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat4n03bw37zyteqxekjd",
+        "name": "Εποχιακό προσωπικό πυροπροστασίας 2026",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat4s03bx37zy2f9f1kbg",
+        "name": "Ανάκληση ανάθεσης πρασίνου Σπάρτης",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat4z03by37zy6kvrnybi",
+        "name": "Ανάθεση διαχείρισης πρασίνου Σπάρτης",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat5a03bz37zyo36su7zw",
+        "name": "Αποζημίωση ρυμοτομίας Πλατανιστά-Αγία Ειρήνη",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat5j03c037zyx69xqkk1",
+        "name": "Ανάθεση δικηγόρου για αίτηση ακύρωσης",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqabat6v03c137zyjyx5ay7r",
+        "name": "Έγκριση κίνησης οχημάτων Δήμου",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqabasys03bp37zy3sb5vc0b]": {
+      "value": "ΡΘΣΛΩ1Ν-1Γ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabasz203bq37zybymyui2i]": {
+      "value": "Ρ59ΖΩ1Ν-Ε30",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabasz803br37zygx6pzke5]": {
+      "value": "Ψ3ΩΦΩ1Ν-Α9Π",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat2x03bs37zyoniy9xxk]": {
+      "value": "9ΒΧΜΩ1Ν-Ε5Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat4403bt37zyi4b2o5yu]": {
+      "value": "6ΝΟΩΩ1Ν-ΟΕΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat4a03bu37zy3xg1rsy8]": {
+      "value": "962ΖΩ1Ν-4Δ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat4h03bv37zy9dfqkhws]": {
+      "value": "9Γ8ΛΩ1Ν-ΝΦΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat4n03bw37zyteqxekjd]": {
+      "value": "9ΓΓΩΩ1Ν-ΘΒΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat4s03bx37zy2f9f1kbg]": {
+      "value": "9Ω0ΑΩ1Ν-ΑΞΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat4z03by37zy6kvrnybi]": {
+      "value": "90Μ9Ω1Ν-ΘΕΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat5a03bz37zyo36su7zw]": {
+      "value": "9ΩΣΥΩ1Ν-ΨΤΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat5j03c037zyx69xqkk1]": {
+      "value": "938ΤΩ1Ν-Ω8Π",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqabat6v03c137zyjyx5ay7r]": {
+      "value": "632ΝΩ1Ν-ΟΕΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[6ΜΣ6Ω1Ν-ΖΝ2]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1ujqa019w7xm4o890gvk3"
+    },
+    "reject[905ΡΩ1Ν-82Σ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1ujpg019k7xm4gvrzckfv"
+    },
+    "reject[Ψ098Ω1Ν-ΔΧ3]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1ujpk019m7xm4a1qig72a"
+    },
+    "reject[ΨΚΜ4Ω1Ν-ΓΕΞ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1ujkd017q7xm42u6iu2hp"
+    },
+    "reject[ΨΥ8ΙΩ1Ν-Φ0Κ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1ujpb019i7xm4p3qr5a7b"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

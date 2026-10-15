@@ -1,0 +1,275 @@
+{
+  "id": "decisions.matching/chania-jun9_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chania/jun9_2026",
+    "meetingDate": "2026-06-09",
+    "diavgeiaUid": "6318",
+    "diavgeiaUnitIds": [
+      "100086019"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-07-10",
+      "fromDate": "2026-06-09"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmq6oseu20vd13dbk13eeck31",
+        "name": "Εξειδίκευση μετακίνησης Δημάρχου στην Αθήνα",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq6oseuf0vd23dbky60zspwk",
+        "name": "Τροποποίηση τεχνικού προγράμματος για διαγραμμίσεις και αθλητικά",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq6oseun0vd33dbkawyr6164",
+        "name": "Φιλανθρωπική εκδήλωση ενίσχυσης ανήλικου ασθενούς",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0ym8gi0kpm3dbkml6hl4vv",
+        "name": "Αναμόρφωση προϋπολογισμού - Αποδοχή χρηματοδοτήσεων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8gy0kpn3dbkmr4kaxhc",
+        "name": "Αναμόρφωση οικονομικού προϋπολογισμού 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8h70kpo3dbk2n0g7x7d",
+        "name": "Τέλη αθλητικών εγκαταστάσεων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8hg0kpp3dbkpr9mn4wa",
+        "name": "Εξουσιοδότηση νομικού συμβούλου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8ho0kpq3dbk68qei339",
+        "name": "Ένδικα μέσα κατά απόφασης Πρωτοδικείου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8im0kpr3dbkxtceha2f",
+        "name": "Προσκύρωση χώρου Κουμπέ Μουρνιών",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8j20kps3dbkfoqb8loi",
+        "name": "Φύλαξη Ξενώνα Φιλοξενίας Γυναικών",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8jc0kpt3dbkqj7v5y9a",
+        "name": "Ανάθεση επίδοσης εγγράφων",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8jj0kpu3dbkttvk6l4x",
+        "name": "Μετακίνηση Αντιδημάρχου στην Αθήνα",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8ju0kpv3dbkbvjf70bm",
+        "name": "Έκδοση τόμου «Εν Χανίοις»",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8k50kpw3dbk06e644ax",
+        "name": "Επιχορήγηση συλλόγου ΣΥΝ-ΚΙΝΗΣΗ",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8kg0kpx3dbk7h3mxutt",
+        "name": "Εκδήλωση εγκαινίων στην οδό Κριάρη",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8kt0kpy3dbkj4jdoq76",
+        "name": "Σύνδεση δικτύου Ρήγα Φεραίου",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8l30kpz3dbksw6czwpn",
+        "name": "Απαλλαγή οφειλετών από προσαυξήσεις",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq0ym8lb0kq03dbktbyjhhg4",
+        "name": "Διαγραφή προστίμων αυθαιρέτων",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq6oseuz0vd43dbk2f7hwyir",
+        "name": "Κατακύρωση πλειοδοτικού διαγωνισμού καταστημάτων Δημοτικής Αγοράς",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmq0ym8gi0kpm3dbkml6hl4vv]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmq0ym8gy0kpn3dbkmr4kaxhc]": {
+      "value": "Ψ7Θ8ΩΗ5-ΓΞΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8h70kpo3dbk2n0g7x7d]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmq0ym8hg0kpp3dbkpr9mn4wa]": {
+      "value": "6ΝΣΠΩΗ5-ΕΤ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8ho0kpq3dbk68qei339]": {
+      "value": "9ΝΦΘΩΗ5-ΜΓ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8im0kpr3dbkxtceha2f]": {
+      "value": "65ΝΠΩΗ5-8Ν2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8j20kps3dbkfoqb8loi]": {
+      "value": "99ΛΜΩΗ5-673",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8jc0kpt3dbkqj7v5y9a]": {
+      "value": "9Λ8ΙΩΗ5-5ΛΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8jj0kpu3dbkttvk6l4x]": {
+      "value": "9ΓΟ3ΩΗ5-6ΟΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8ju0kpv3dbkbvjf70bm]": {
+      "value": "92Φ1ΩΗ5-ΧΤΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8k50kpw3dbk06e644ax]": {
+      "value": "ΨΖΒΨΩΗ5-9Ρ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8kg0kpx3dbk7h3mxutt]": {
+      "value": "9Ρ5ΙΩΗ5-ΡΘΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8kt0kpy3dbkj4jdoq76]": {
+      "value": "9ΧΩΒΩΗ5-Ρ8Ω",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8l30kpz3dbksw6czwpn]": {
+      "value": "ΨΑΤΖΩΗ5-1ΚΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0ym8lb0kq03dbktbyjhhg4]": {
+      "value": "ΨΩΧΝΩΗ5-ΦΔΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq6oseu20vd13dbk13eeck31]": {
+      "value": "9Θ3ΘΩΗ5-ΛΞΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq6oseuf0vd23dbky60zspwk]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmq6oseun0vd33dbkawyr6164]": {
+      "value": "ΨΔΑ8ΩΗ5-9ΘΨ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-08-10",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:cmsn6jsh30004d7h548af3dwy"
+    },
+    "link[cmq6oseuz0vd43dbk2f7hwyir]": {
+      "value": "9ΩΒΗΩΗ5-Ψ3Ω",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "chania/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

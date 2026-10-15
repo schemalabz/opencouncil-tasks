@@ -1,0 +1,60 @@
+{
+  "id": "decisions.matching/argos-jun26_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "argos/jun26_2026",
+    "meetingDate": "2026-06-26",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-10",
+      "fromDate": "2026-06-26"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqhuxro102bzkn9agvst96jj",
+        "name": "Λογοδοσία Δημοτικής Αρχής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqhuxro102bzkn9agvst96jj]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[6Τ8ΚΩΨΔ-Ζ3Ω]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5nz5x07se7xm4ls1if2pw"
+    },
+    "reject[9Μ2ΒΩΨΔ-ΕΒΜ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5nz6407sg7xm46lfsv7h7"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

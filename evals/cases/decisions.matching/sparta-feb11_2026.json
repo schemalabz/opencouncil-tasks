@@ -1,0 +1,135 @@
+{
+  "id": "decisions.matching/sparta-feb11_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/feb11_2026",
+    "meetingDate": "2026-02-11",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-02-25",
+      "fromDate": "2026-02-11"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmlktpw1j02t4l3k79s4w9ipq",
+        "name": "Συμπλήρωση απόφασης για παραλαβή έργου Καρυών",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlktpvxa02qwl3k7qg8b4fuq",
+        "name": "Συμπλήρωση απόφασης για παραλαβή έργου Καρυών",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlktpw2502tol3k7fcy8v920",
+        "name": "Μίσθωση ακινήτου για 1ο Νηπιαγωγείο Σπάρτης",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlktpvyp02ral3k72hrsm763",
+        "name": "Μίσθωση ακινήτου για 1ο Νηπιαγωγείο Σπάρτης",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlktpvzp02rpl3k7dq5y0u91",
+        "name": "Καθορισμός αρδευτικής περιόδου 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlktpw0m02s1l3k7nqm7sll6",
+        "name": "Αποκατάσταση ζημιών από βροχοπτώσεις 26/1/2026",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmlktpvxa02qwl3k7qg8b4fuq]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmlktpvyp02ral3k72hrsm763]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmlktpvzp02rpl3k7dq5y0u91]": {
+      "value": "Ρ9ΚΑΩ1Ν-Θ6Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlktpw0m02s1l3k7nqm7sll6]": {
+      "value": "ΡΘ9ΖΩ1Ν-Γ3Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlktpw1j02t4l3k79s4w9ipq]": {
+      "value": "ΡΙ0ΧΩ1Ν-9ΣΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlktpw2502tol3k7fcy8v920]": {
+      "value": "ΨΝΧ4Ω1Ν-ΣΒΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[6ΣΨ8Ω1Ν-3ΦΙ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1vpse02447xm424j471hu"
+    },
+    "reject[9ΠΦΘΩ1Ν-6ΨΕ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1vprz023y7xm43nnsw7pu"
+    },
+    "reject[ΨΒΠ8Ω1Ν-Ν1Λ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1vpsx024a7xm4z8ygucfq"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

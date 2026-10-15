@@ -1,0 +1,194 @@
+{
+  "id": "decisions.matching/argos-dec23_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/dec23_2025",
+    "meetingDate": "2025-12-23",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-01-06",
+      "fromDate": "2025-12-23"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmjcv4wnc0008r4n49n2jarjr",
+        "name": "Επιχειρησιακό Πρόγραμμα 2025-2028",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wnt000ar4n49vtohnhy",
+        "name": "Ετήσιο Πρόγραμμα Δράσης 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wo5000cr4n41x9oqrlr",
+        "name": "Τεχνικό Πρόγραμμα 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wor000er4n49irdbm1d",
+        "name": "Απογραφή Γηπέδου Νέας Κίου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wp5000gr4n4xr3utu92",
+        "name": "Τροποποίηση Σύμβασης Λιπαντικών",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wph000ir4n4fl6spcny",
+        "name": "Τροποποίηση Σύμβασης Καυσίμων Κίνησης",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wps000kr4n4ugh61qi6",
+        "name": "Τροποποίηση Σύμβασης Καυσίμων Θέρμανσης",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wq6000mr4n4peuas093",
+        "name": "Κυκλοφοριακές Ρυθμίσεις Θεοφανίων",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmjcv4wqg000or4n41cm02phm",
+        "name": "Συνδρομή ΚΑΠΗ",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmjcv4wnc0008r4n49n2jarjr]": {
+      "value": "ΨΗΚ2ΩΨΔ-7ΣΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wnt000ar4n49vtohnhy]": {
+      "value": "Ψ9Φ7ΩΨΔ-ΜΙΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wo5000cr4n41x9oqrlr]": {
+      "value": "ΨΑ82ΩΨΔ-Ω36",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wor000er4n49irdbm1d]": {
+      "value": "6ΗΣΠΩΨΔ-75Ω",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wp5000gr4n4xr3utu92]": {
+      "value": "Ψ6ΡΓΩΨΔ-ΟΕΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wph000ir4n4fl6spcny]": {
+      "value": "9ΡΞΔΩΨΔ-ΜΩ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wps000kr4n4ugh61qi6]": {
+      "value": "9ΗΟΘΩΨΔ-ΟΡΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wq6000mr4n4peuas093]": {
+      "value": "6ΣΝΣΩΨΔ-Δ4Ο",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmjcv4wqg000or4n41cm02phm]": {
+      "value": "ΨΝΔ7ΩΨΔ-ΟΨ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[6ΞΓ0ΩΨΔ-ΒΜ0]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pel607h4u36pezb5g8bn"
+    },
+    "reject[6ΧΧΨΩΨΔ-ΘΛ8]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pekt07gyu36pobkb76gu"
+    },
+    "reject[9Ι9ΝΩΨΔ-ΠΜ9]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pekn07gwu36p19ikjsqd"
+    },
+    "reject[ΨΔΜΓΩΨΔ-Ρ2Α]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pele07h8u36poqq1c7nd"
+    },
+    "reject[ΨΘΙ0ΩΨΔ-ΞΜΔ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pela07h6u36pv41brnq0"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,171 @@
+{
+  "id": "decisions.matching/vrilissia-sep30_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/sep30_2_2026",
+    "meetingDate": "2026-09-30",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "100085541"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-10-14",
+      "fromDate": "2026-09-30"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmuq3zt4l0cdtxwqtm4vt83ux",
+        "name": "Παράταση έργου βελτίωσης ασφάλειας οδών 2021-2022",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmuq3zt5g0ceaxwqtloxb5lan",
+        "name": "Όροι διαγωνισμού μεταφοράς μελών ΚΑΠΗ-ΚΔΑΠ-Summer Camp 2027",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmuq3zt650celxwqtjho63t2g",
+        "name": "Συγκρότηση επιτροπής διαγωνισμού μεταφοράς μελών",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmuq3zt6h0cemxwqtjmym26nq",
+        "name": "Συγκρότηση επιτροπής παραλαβής σύμβασης μεταφοράς μελών",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmuguhz1g0natwysp03wsp98n",
+        "name": "Εξειδίκευση εγκεκριμένης πίστωσης Προϋπολογισμού, οικονομικού έτους 2026 υπό τον Α.Λ.Ε. 000.2390503 με τίτλο «Αποζημιώσεις λόγω πρόκλησης σωματικής βλάβης, ηθικής βλάβης, ψυχικής οδύνης και εν γένει κάθε ζημιογόνου γεγονότος σε φυσικά και νομικά πρόσωπα» σύμφωνα με την απόφαση της ΔΕ 241/2026 για εξώδικο συμβιβασμό με τον Κ.Χ. για αποζημίωση βλάβης του οχήματός του εξαιτίας πρόσκρουσης σε τρύπα οδοστρώματος",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmuguhz1x0nauwyspv237bvf8",
+        "name": "Εισήγηση για λήψη απόφασης περί αποδοχής ή μη δωρεάς κλιματιστικού μηχανήματος από τη δημοτική παράταξη «Βριλήσσια Πορεία Ευθύνης» για τις ανάγκες του φυλακίου της Πολιτικής Προστασίας στη Ναυτική Βάση",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmuguhz260navwysp24mcd13y",
+        "name": "Έγκριση πρωτοκόλλου προσωρινής & οριστικής παραλαβής του έργου «Επισκευή και βελτίωση των ηλεκτρομηχανολογικών εγκαταστάσεων δημοτικών κτηρίων»",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmuguhz2f0nawwyspg6gmqeto",
+        "name": "Εισήγηση προς τη Δημοτική Επιτροπή για τη διατύπωση εισήγησης προς το Δημοτικό Συμβούλιο επί της υπ' αριθ. πρωτ. 6251/07.04.2026 αίτησης των Κ.Τ, Θ.Τ και Ν. Τ. του Π. για την τροποποίηση του εγκεκριμένου ρυμοτομικού σχεδίου στο Ο.Τ. 61 (οδός Μενελάου 14, ΚΑΕΚ 050350506010), συνεπεία της αρθείσας ρυμοτομικής απαλλοτρίωσης και σε συμμόρφωση προς την υπ' αριθ. 8351/2009 απόφαση του Τριμελούς Διοικητικού Πρωτοδικείου Αθηνών",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmuguhz2n0naxwysp58qirdr6",
+        "name": "Απαλλαγή από προσαυξήσεις εκπρόθεσμης καταβολής ληξιπρόθεσμων οφειλών από χρηματικούς καταλόγους , σύμφωνα με το άρθρο 509 παρ. 1 περ. α΄ του Ν. 5314/2026",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmuguhz2w0naywysp0c3wvh7r",
+        "name": "Επιστροφή αχρεωστήτως καταβληθέντος ποσού από υπερβάλλουσες εισπράξεις τελών ύδρευσης",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmuguhz310nazwysp0anzmkfv",
+        "name": "Έγκριση πρόσληψης προσωπικού με σχέση εργασίας ιδιωτικού δικαίου ορισμένου χρόνου (ωρομίσθιοι έως 120 ώρες μηνιαίως), διάρκειας έως οκτώ (8) μήνες με κάλυψη της δαπάνης υπό τη μορφή αντιτίμου (άρθρο 12 παρ.14 του ν.4071/2012) διάρκειας έως οκτώ (8) μήνες περιόδου 2026 -2027 – Έγκριση σχεδίου ανακοίνωσης πρόσληψης",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmuguhz1g0natwysp03wsp98n]": {
+      "value": "Ρ6Ε1Ω9Ρ-ΗΜΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuguhz1x0nauwyspv237bvf8]": {
+      "value": "9ΚΘ6Ω9Ρ-ΒΦΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuguhz260navwysp24mcd13y]": {
+      "value": "9Ι2ΩΩ9Ρ-ΑΝΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuguhz2f0nawwyspg6gmqeto]": {
+      "value": "ΨΧ3ΩΩ9Ρ-Α9Δ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuguhz2n0naxwysp58qirdr6]": {
+      "value": "94ΥΙΩ9Ρ-ΦΣΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuguhz2w0naywysp0c3wvh7r]": {
+      "value": "9224Ω9Ρ-23Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuguhz310nazwysp0anzmkfv]": {
+      "value": "ΡΚΩΖΩ9Ρ-Μ68",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:c3775832715044078b4a044d3a7801939"
+    },
+    "link[cmuq3zt4l0cdtxwqtm4vt83ux]": {
+      "value": "ΡΠΠΘΩ9Ρ-ΕΩΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuq3zt5g0ceaxwqtloxb5lan]": {
+      "value": "ΨΒ42Ω9Ρ-Κ4Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuq3zt650celxwqtjho63t2g]": {
+      "value": "Ε40ΝΩ9Ρ-ΑΑΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmuq3zt6h0cemxwqtjmym26nq]": {
+      "value": "91ΞΒΩ9Ρ-Β35",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

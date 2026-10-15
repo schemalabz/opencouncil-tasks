@@ -1,0 +1,171 @@
+{
+  "id": "decisions.matching/zografou-jun18_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "zografou/jun18_2026",
+    "meetingDate": "2026-06-18",
+    "diavgeiaUid": "6104",
+    "diavgeiaUnitIds": [
+      "81689"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-19",
+      "fromDate": "2026-06-18"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqmdbtdr07gq10a1nuoytfkh",
+        "name": "Νυχτερινό Grand Prix 2026",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqmdbted07h110a1v3dfi7zb",
+        "name": "Συνέδριο απανταχού Ελλήνων μαθηματικών",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqazoqdc00wwpn1te5gfb8x6",
+        "name": "Παραχώρηση τάφου Λυκούργου Αγγελόπουλου",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqb500wopn1tcyr0aead",
+        "name": "Ανακοινώσεις – Ερωτήσεις",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqbf00wppn1t9abfcxk9",
+        "name": "Νέο ΔΣ της ΕΝ.Ε.Ζ. Α.Ε.",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqbo00wqpn1tx9ff8xt0",
+        "name": "Παραχώρηση χώρων Α' ΚΑΠΗ",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqbv00wrpn1txsusdto3",
+        "name": "Ανακεφαλαιωτική έκθεση ηλεκτροφωτισμού",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqc200wspn1tdbrr7jit",
+        "name": "Παραχώρηση εγκαταστάσεων σε Ηλυσιακό",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqcf00wtpn1tcdb5yk4w",
+        "name": "Μίσθωμα 8ου & 14ου Νηπιαγωγείου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqct00wupn1t1tkg11jo",
+        "name": "Μίσθωμα ΚΔΑΠ Βυσινόκηπος",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazoqd400wvpn1tg6ey3a6a",
+        "name": "Μίσθωμα παιδικού σταθμού",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqazoqb500wopn1tcyr0aead]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqazoqbf00wppn1t9abfcxk9]": {
+      "value": "ΡΞΤ2ΩΡΦ-Ο7Ρ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazoqbo00wqpn1tx9ff8xt0]": {
+      "value": "ΡΧΣ6ΩΡΦ-0Ν5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazoqbv00wrpn1txsusdto3]": {
+      "value": "ΨΓΨΚΩΡΦ-1ΩΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazoqc200wspn1tdbrr7jit]": {
+      "value": "ΕΗΠΞΩΡΦ-ΒΤΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazoqcf00wtpn1tcdb5yk4w]": {
+      "value": "ΕΟ8ΣΩΡΦ-ΖΕΘ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu477rl90agfmpr06ilsr163"
+    },
+    "link[cmqazoqct00wupn1t1tkg11jo]": {
+      "value": "9ΑΞΘΩΡΦ-5ΟΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazoqd400wvpn1tg6ey3a6a]": {
+      "value": "900ΤΩΡΦ-ΤΩΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazoqdc00wwpn1te5gfb8x6]": {
+      "value": "ΡΟΘΗΩΡΦ-4Τ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqmdbtdr07gq10a1nuoytfkh]": {
+      "value": "Ε79ΣΩΡΦ-ΒΑ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqmdbted07h110a1v3dfi7zb]": {
+      "value": "ΡΥΣΝΩΡΦ-4ΧΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

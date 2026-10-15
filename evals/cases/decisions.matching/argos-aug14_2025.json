@@ -1,0 +1,63 @@
+{
+  "id": "decisions.matching/argos-aug14_2025",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "argos/aug14_2025",
+    "meetingDate": "2025-08-14",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-08-28",
+      "fromDate": "2025-08-14"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb87vpz00apepq2u5kbcrv5",
+        "name": "Άδεια χρήσης αθλητικών εγκαταστάσεων - Α.Ο. Φείδων Άργους",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb59oou03c25kc9amnfbzec",
+        "name": "Τροποποίηση προϋπολογισμού 2025",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb59oou03c25kc9amnfbzec]": {
+      "value": "9ΒΦΠΩΨΔ-ΛΓΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb87vpz00apepq2u5kbcrv5]": {
+      "value": "9ΙΝ9ΩΨΔ-ΑΙΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΨΗ69ΩΨΔ-Η9Ζ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pu5r08h57xm43d8dfd0y"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

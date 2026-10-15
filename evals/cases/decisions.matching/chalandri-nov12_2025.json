@@ -1,0 +1,197 @@
+{
+  "id": "decisions.matching/chalandri-nov12_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chalandri/nov12_2025",
+    "meetingDate": "2025-11-12",
+    "diavgeiaUid": "6314",
+    "diavgeiaUnitIds": [
+      "79311"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-11-26",
+      "fromDate": "2025-11-12"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmtk10v7x0krx92088wt5bn9k",
+        "name": "Αναχρηματοδότηση δανείων Δήμου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmtk10v960ktl92087b1z6c1l",
+        "name": "Κυκλοφοριακή μελέτη Πατήματος 2",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmhovk6i0009uiuc6fataja5a",
+        "name": "Τέλη καθαριότητας και ηλεκτροφωτισμού 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6ik009wiuc6quztdthg",
+        "name": "Φόροι ηλεκτροδοτούμενων χώρων 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6iu009yiuc6e09in4z9",
+        "name": "Τέλη κοινοχρήστων χώρων 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6j400a0iuc6jpmb0zj8",
+        "name": "Τέλη διαφήμισης 2026",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6jf00a2iuc68kp0hco7",
+        "name": "Τέλη Κοιμητηρίου 2026",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6jp00a4iuc6mf9qcwzp",
+        "name": "Προμήθεια πετρελαίου θέρμανσης - Τροποποίηση σύμβασης",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6jz00a6iuc6xntsgks8",
+        "name": "Προμήθεια πετρελαίου Β' βάθμιας εκπαίδευσης",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6kd00a8iuc6sp9hdipd",
+        "name": "Μετάθεση σύμβασης αναζωογόνησης κέντρου",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6ks00aaiuc67ybekh5t",
+        "name": "Παραχώρηση γηπέδου για Πανελλήνιους Αγώνες",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6l500aciuc6uf0nqvp0",
+        "name": "Παραχώρηση χώρου για υποσταθμό ΔΕΔΔΗΕ",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmhovk6li00aeiuc69me205ut",
+        "name": "Παραλαβή έργου Κοινωνικής Υπηρεσίας",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmhovk6i0009uiuc6fataja5a]": {
+      "value": "6Θ41ΩΗΔ-8ΕΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6ik009wiuc6quztdthg]": {
+      "value": "9ΗΚΚΩΗΔ-ΥΜΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6iu009yiuc6e09in4z9]": {
+      "value": "Ψ6Ν0ΩΗΔ-ΣΝ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6j400a0iuc6jpmb0zj8]": {
+      "value": "ΡΒΜΖΩΗΔ-16Χ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6jf00a2iuc68kp0hco7]": {
+      "value": "ΨΛ0ΥΩΗΔ-ΖΕΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6jp00a4iuc6mf9qcwzp]": {
+      "value": "ΨΒ34ΩΗΔ-ΟΥΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6jz00a6iuc6xntsgks8]": {
+      "value": "9Π7ΝΩΗΔ-ΓΩΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6kd00a8iuc6sp9hdipd]": {
+      "value": "ΨΤΜΗΩΗΔ-Κ3Ω",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6ks00aaiuc67ybekh5t]": {
+      "value": "6823ΩΗΔ-ΙΑΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6l500aciuc6uf0nqvp0]": {
+      "value": "ΨΙ93ΩΗΔ-Γ02",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmhovk6li00aeiuc69me205ut]": {
+      "value": "Ρ7Ε2ΩΗΔ-ΜΗΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtk10v7x0krx92088wt5bn9k]": {
+      "value": "911ΑΩΗΔ-Ζ1Η",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtk10v960ktl92087b1z6c1l]": {
+      "value": "Ψ4ΩΑΩΗΔ-8ΕΞ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-02",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtk12prp0kv4920825etihyi"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

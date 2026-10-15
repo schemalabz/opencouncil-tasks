@@ -1,0 +1,141 @@
+{
+  "id": "decisions.matching/athens-aug27_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/aug27_2026",
+    "meetingDate": "2026-08-27",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085601"
+    ],
+    "administrativeBodyName": "3η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-09-12",
+      "fromDate": "2026-08-27"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmt48aoce02iruznh3rd2tedj",
+        "name": "Λήψη απόφασης για τη διατήρηση ή μη ρυμοτομικής απαλλοτρίωσης σε ιδιοκτησία που βρίσκεται στη συμβολή των οδών Αλκμήνης & Πάλλαντος, στο Ο.Τ.76 περ.58, στη συνοικία Κάτω Πετράλωνα στην 3η Δ.Κ., κατόπιν αυτοδίκαιης άρσης. (Σχετ.: το με Α.Π. 202418/30-07-2026 έγγραφο του Τμήματος Πολεοδομικού Σχεδιασμού, της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aod102isuznh7hzuuexr",
+        "name": "Κυκλοφοριακές Ρυθμίσεις στις οδούς Ευπατριδών, Ευμολπιδών, Βουτάδων, Ιεροφαντών, Τριπτολέμου και Ιάκχου στη συνοικία \"ΓΚΑΖΙ\". (Σχετ.: το με Α.Π. 204846/03-08-2026 έγγραφο του Τμήματος Πολεοδομικού Σχεδιασμού, της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aodi02ituznh4550uenx",
+        "name": "Παραχώρηση θέσης στάθμευσης για το με αρ. κυκλοφορίας ΥΝΤ 5911 όχημα ατόμου με αναπηρία, στην οδό Νεφέλης 27. (Σχετ.: το με Α.Π. 197338/24-07-2026 έγγραφο του Τμήματος Βιώσιμης Κινητικότητας, της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aoe002iuuznh05n0utqd",
+        "name": "Παραχώρηση θέσης στάθμευσης για το με αρ. κυκλοφορίας ΚΡΗ 1013 όχημα ατόμου με αναπηρία, στην οδό Ηούς 108. (Σχετ.: το με Α.Π. 77496/20-03-2026 έγγραφο του Τμήματος Βιώσιμης Κινητικότητας, της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aoez02iwuznhkeqn7vrv",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ – ΜΠΑΡ\", με την επωνυμία \"BIOS - Εξερευνώντας τον Αστικό Πολιτισμό\", στην οδό ΛΕΩΝΙΔΟΥ 63-65. (Σχετ.: η με Α.Π. 166713/24-06-2026 αίτηση επανεξέτασης, ΑΠΟ ΑΝΑΒΟΛΗ ΠΡΑΞΗ 110/2026)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aofu02iyuznh7mq8aveh",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ - ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"ΚΟΚΚΙΝΙΔΟΥ ΕΥΓΝΩΣΙΑ\", στην οδό ΚΑΛΛΙΣΘΕΝΟΥΣ 90. (Σχετ.: η με Α.Π. 202379/30-07-2026 αίτηση)",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aogc02izuznhd4h9vwfk",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"Χ ΜΗΤΡΟΠΟΥΛΟΣ Κ ΣΙΑ ΟΕ\", στην οδό ΑΡΚΑΔΩΝ 4. (Σχετ.: η με Α.Π. 189075/16-07-2026 αίτηση, ΑΠΟ ΑΝΑΒΟΛΗ ΠΡΑΞΗ 77/2026)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt48aogt02j0uznhbne4embz",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ - ΨΗΤΟΠΩΛΕΙΟ - ΕΣΤΙΑΤΟΡΙΟ\", με την επωνυμία \"LLESHI NDUE & ΣΙΑ Ο.Ε.\", στην οδό ΑΜΦΙΠΟΛΕΩΣ 19. (Σχετ.: η με Α.Π. 199731/28-07-2026 αίτηση)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmt48aoce02iruznh3rd2tedj]": {
+      "value": "Ρ05ΞΩ6Μ-ΝΒΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aod102isuznh7hzuuexr]": {
+      "value": "Ψ0ΝΠΩ6Μ-15Κ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aodi02ituznh4550uenx]": {
+      "value": "Ρ6ΤΧΩ6Μ-3Κ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aoe002iuuznh05n0utqd]": {
+      "value": "657ΚΩ6Μ-093",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aoez02iwuznhkeqn7vrv]": {
+      "value": "ΡΨ51Ω6Μ-Φ16",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aofu02iyuznh7mq8aveh]": {
+      "value": "Ψ55ΑΩ6Μ-7ΓΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aogc02izuznhd4h9vwfk]": {
+      "value": "ΡΡΟ0Ω6Μ-2ΡΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt48aogt02j0uznhbne4embz]": {
+      "value": "Ψ371Ω6Μ-ΩΞΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[Ρ1ΑΙΩ6Μ-3Υ2]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvm7hs7010jipx6au6i059n"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,314 @@
+{
+  "id": "decisions.matching/athens-jan19_4_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jan19_4_2026",
+    "meetingDate": "2026-01-22",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085606"
+    ],
+    "administrativeBodyName": "6η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-02-05",
+      "fromDate": "2026-01-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmq0rfa1m0aka6iuzcmmcgr34",
+        "name": "Μετατόπιση δικαιούχου περιπτέρου Αναπαύσεως",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0rfa230akb6iuz8h8x481q",
+        "name": "Θέση στάθμευσης ΑμεΑ Μοσχονησίων 8",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0rfa830akc6iuz0wkdfl61",
+        "name": "Θέση στάθμευσης ΑμεΑ Ρεθύμνης 1",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0rfa8d0akd6iuz01smd08h",
+        "name": "Θέση στάθμευσης ΑμεΑ (ΙΕΥ3027)",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0rfa9a0ake6iuzfu65g8is",
+        "name": "Θέση στάθμευσης ΑμεΑ Κύπρου 84",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0rfa9p0akf6iuz01jh4idk",
+        "name": "Θέση στάθμευσης ΑμεΑ Ζωμαγιά 43",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0rfaa40akg6iuzfn6x0a82",
+        "name": "Θέση στάθμευσης ΑμεΑ Αστυπάλαιας 78",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmlha1y8d02vz1rnsjaj8uoxd",
+        "name": "«Διατύπωση απόψεων, σχετικά με πρόταση αναγνώρισης τμήματος της οδού Κρήνης (από Καυκάσου έως Λαχανά) ως προϋφιστάμενης του έτους 1923 και πεζοδρόμηση αυτής, στο Ο.Τ. 72 περ.84, στη συνοικία της Νέας Κυψέλης 1 της 6ης Δ.Κ. (Σχετ.: Το με Α.Π.:295226/20-11-2025 Έγγραφο του Τμήματος Πολεοδομικού Σχεδιασμού της Δνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)»",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1y9t02wc1rnsqpl2gx5u",
+        "name": "«Διατύπωση γνώμης σχετικά με το εγκεκριμένο Στρατηγικό Σχέδιο – Α' Φάση του Επιχειρησιακού Προγράμματος του Δήμου Αθηναίων (Σχετ.: Η 718/2025 Απόφαση του Δημοτικού Συμβουλίου Αθηναίων)»",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yay02x11rnsf853oz5w",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΚΑΦΕ-ΜΠΑΡ\" με την επωνυμία \"ΑΛΑΣΚΑ\" επί της οδού ΚΕΡΚΥΡΑΣ 66 (Σχετ.:1.Το με Α.Π.9349/14-01-2026 Εισηγητικό της Υπηρεσίας,2.Η με Α.Π.:310972/05-12-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1ycd02x31rnsa3480p16",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΚΑΦΕ-ΜΠΑΡ-ΑΝΑΨΥΚΤΗΡΙΟ-ΚΑΦΕΝΕΙΟ\" με την επωνυμία \"HOTEL ETERNITE\" επί της οδού ΠΑΞΩΝ 34 (Σχετ.:1.Το με Α.Π.:9029/14-01-2026 Εισηγητικό της Υπηρεσίας, 2. Η με Α.Π.:315792/10-12-2026 αίτηση της ενδιαφερομένης)»",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1ycv02x41rnsnpul9alp",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΑΝΑΨΥΚΤΗΡΙΟ\" του ΒΑΣΙΛΟΠΟΥΛΟΥ ΜΙΧΑΗΛ επί της οδού Ι.ΔΡΟΣΟΠΟΥΛΟΥ 47 (Σχετ.:Το με Α.Π.:9041/14-01-2026 Εισηγητικό της Υπηρεσίας,2.Η με Α.Π.:320715/15-02-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1ydc02x51rnsb1cmxfs8",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΕΣΤΙΑΤΟΡΙΟ-ΚΑΦΕ-ΜΠΑΡ\" του ΒΕΗ ΕΥΑΓΓΕΛΟΥ επί της οδού ΑΓΙΑΣ ΖΩΝΗΣ 38 (Σχετ.:1.Το με Α.Π.:9017/14-01-2026 Εισηγητικό της Υπηρεσίας, 2. Η με Α.Π.: 320717/15-12-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yds02x61rnsgxlbx6n0",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΚΑΦΕΤΕΡΙΑ\" με την επωνυμία \"ΔΙΠΟΡΤΟ\" επί της οδού ΤΕΝΕΔΟΥ 40 (Σχετ.:1.Το με Α.Π.: 9063/14-01-2026 Εισηγητικό της Υπηρεσίας, 2. Η με Α.Π..:322291/17-12-2025 αίτηση της ενδιαφερομένης)»",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1ye902x71rnsh71dkuf3",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΚΑΦΕΤΕΡΙΑ\" με την επωνυμία \"ΤΟ ΜΙΚΙΟ ΙΚΕ\" επί της οδού Ι.ΔΡΟΣΟΠΟΥΛΟΥ 14 (Σχετ.:1.Το με Α.Π.:9353/14-01-2026 Εισηγητικό της Υπηρεσίας, 2.Η με Α.Π.: 323431/18-12-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yf602xe1rns6o1nie04",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος '\"ΣΝΑΚ ΜΠΑΡ ΜΕ ΠΑΡΑΣΚΕΥΑΣΤΗΡΙΟ\" με την επωνυμία \"JET COFFEE EE\" επί της οδού ΕΥΠΑΛΙΝΟΥ 21 (Σχετ.:1.Tο με Α.Π.:9004/14-01-2026 Εισηγητικό της Υπηρεσίας, 2.H με Α.Π.:323493/18-12-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yg802xm1rnsvz9nwwuu",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΕΣΤΙΑΤΟΡΙΟ-ΜΠΑΡ\" με την επωνυμία \"ΟΡΦΕΑΣ\" επί της οδού ΦΩΚ. ΝΕΓΡΗ 25 ΚΑΙ ΑΓ. ΖΩΝΗΣ 1(Σχετ.:1.Το με Α.Π.:9347/14-01-2026 Εισηγητικό της Υπηρεσίας, 2.Η με Α.Π. 325077/19-12-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yh702xr1rnsfplr98cw",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΚΑΦΕ-ΜΠΑΡ\" με την επωνυμία \"APOTEKA\" επί της οδού ΔΕΡΙΓΝΥ 29 (Σχετ.:1.Το με Α.Π.:9032/14-01-2026 Εισηγητικό της Υπηρεσίας, 2. Η με Α.Π. 328446/23-12-2025 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yhp02xs1rns4f179cr4",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΕΣΤΙΑΤΟΡΙΟ-ΠΙΤΣΑΡΙΑ\" με την επωνυμία \"ΜΑΡΙΑ ΚΑΡΑΤΖΑΦΕΡΗ ΚΑΙ ΣΙΑ ΕΕ\" επί της οδού ΥΔΡΑΣ 2-4 (Σχετ.:1.Το με Α.Π.: 9348/14-01-2026 Εισηγητικό της Υπηρεσίας, 2.Η με Α.Π.:3936/08-01-2026 αίτηση της ενδιαφερομένης)»",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yi602xt1rnsxn7m9wv5",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΣΝΑΚ-ΜΠΑΡ-ΚΑΦΕΤΕΡΙΑ\" της ΡΕΦΕΝΕ ΖΩΙΤΣΑΣ επί της οδού ΚΑΥΚΑΣΟΥ 168 & ΓΡ. ΑΥΞΕΝΤΙΟΥ (Σχετ.:1.Το με Α.Π.:9095/14-01-2026 Εισηγητικό της Υπηρεσίας, 2. Η με Α.Π.: 5105/09-01-2026 αίτηση της ενδιαφερομένης)»",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yio02xu1rns1keqy9on",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος ¨ΚΑΦΕ-ΜΠΑΡ\" με την επωνυμία ΣΥΚΑΣ ΜΙΧΑΗΛ επί της ΠΛΑΤΕΙΑΣ ΒΙΚΤΩΡΙΑΣ 10-12 (Σχετ.:1.Το με Α.Π.:9076/14-01-2026 Εισηγητικό της Υπηρεσίας,2.Η με Α.Π. 6375/12-01-2026 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlha1yj702xv1rnsz5sn191y",
+        "name": "«Λήψη Απόφασης έγκρισης ή μη χορήγησης παράτασης ωραρίου χρήσης μουσικών οργάνων σε κατάστημα υγειονομικού ενδιαφέροντος \"ΚΑΦΕ-MΠΑΡ\" με την επωνυμία \"IZNOGOOD AND NEPHEN\" επί της οδού ΑΓΙΑΣ ΖΩΝΗΣ 28 (Σχετ.:1.Το με Α.Π.:9138/14-01-2026 Εισηγητικό της Υπηρεσίας,2.Η με Α.Π.:6988/13-01-2026 αίτηση του ενδιαφερομένου)»",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmlha1y8d02vz1rnsjaj8uoxd]": {
+      "value": "6ΖΖΒΩ6Μ-ΠΜΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1y9t02wc1rnsqpl2gx5u]": {
+      "value": "ΨΝ80Ω6Μ-ΑΘΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yay02x11rnsf853oz5w]": {
+      "value": "ΡΥ4ΨΩ6Μ-22Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1ycd02x31rnsa3480p16]": {
+      "value": "9ΗΙΘΩ6Μ-ΟΟ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1ycv02x41rnsnpul9alp]": {
+      "value": "ΕΨΞΔΩ6Μ-ΙΘΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1ydc02x51rnsb1cmxfs8]": {
+      "value": "9Α7ΡΩ6Μ-Ε3Γ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yds02x61rnsgxlbx6n0]": {
+      "value": "ΕΟ07Ω6Μ-ΑΨΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1ye902x71rnsh71dkuf3]": {
+      "value": "9ΨΞΩΩ6Μ-ΛΙΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yf602xe1rns6o1nie04]": {
+      "value": "ΨΗΠΧΩ6Μ-ΑΚΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yg802xm1rnsvz9nwwuu]": {
+      "value": "ΡΒ4ΗΩ6Μ-0ΝΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yh702xr1rnsfplr98cw]": {
+      "value": "ΨΦ8ΚΩ6Μ-ΞΡ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yhp02xs1rns4f179cr4]": {
+      "value": "ΨΞΤΓΩ6Μ-ΜΤΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yi602xt1rnsxn7m9wv5]": {
+      "value": "6ΖΝΜΩ6Μ-2ΤΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yio02xu1rns1keqy9on]": {
+      "value": "9ΗΕΠΩ6Μ-Ψ98",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlha1yj702xv1rnsz5sn191y]": {
+      "value": "ΡΚΗ5Ω6Μ-ΔΙΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rfa1m0aka6iuzcmmcgr34]": {
+      "value": "ΨΑΦΦΩ6Μ-ΘΗΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rfa230akb6iuz8h8x481q]": {
+      "value": "ΡΣ1ΔΩ6Μ-ΠΦΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rfa830akc6iuz0wkdfl61]": {
+      "value": "Ψ8Ν6Ω6Μ-Κ2Α",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-10",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtvf010n00qpd1y2cq9xk0cs"
+    },
+    "link[cmq0rfa8d0akd6iuz01smd08h]": {
+      "value": "Ψ9ΓΧΩ6Μ-Χ49",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rfa9a0ake6iuzfu65g8is]": {
+      "value": "ΡΘΔΗΩ6Μ-ΣΥΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rfa9p0akf6iuz01jh4idk]": {
+      "value": "9ΝΩΞΩ6Μ-ΦΟΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rfaa40akg6iuzfn6x0a82]": {
+      "value": "9ΦΕΠΩ6Μ-Η0Ι",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "athens/6η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

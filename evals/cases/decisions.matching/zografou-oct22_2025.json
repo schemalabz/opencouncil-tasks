@@ -1,0 +1,45 @@
+{
+  "id": "decisions.matching/zografou-oct22_2025",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "zografou/oct22_2025",
+    "meetingDate": "2025-10-22",
+    "diavgeiaUid": "6104",
+    "diavgeiaUnitIds": [
+      "81689"
+    ],
+    "subjects": [
+      {
+        "subjectId": "cmh397tam003072irjpn8r0kn",
+        "name": "Έκθεση Πεπραγμένων Δημοτικής Επιτροπής 2024",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmh397tam003072irjpn8r0kn]": {
+      "value": "9ΣΔΧΩΡΦ-Χ5Κ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[6ΑΕΠΩΡΦ-6ΜΥ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmt9vohh70012d2o9wt6x2m4r"
+    }
+  },
+  "cluster": "zografou/unknown body",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

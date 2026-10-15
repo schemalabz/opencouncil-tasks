@@ -1,0 +1,172 @@
+{
+  "id": "decisions.matching/vrilissia-jun24_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/jun24_2_2026",
+    "meetingDate": "2026-06-24",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-08",
+      "fromDate": "2026-06-24"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqtlvrki00mbfmuuvgj8q54g",
+        "name": "Παράταση λογαριασμών ύδρευσης α' τριμήνου 2026",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqtlvrl400mjfmuuwjcwbbu2",
+        "name": "Παραχώρηση προαυλίου 1ου Δημοτικού",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqkyrv5i0lsokn9abm8a9bmu",
+        "name": "Μίσθωση οικοπέδου στην Βιομηχανική Περιοχή Γέρακα για την εγκατάσταση του στόλου των οχημάτων του δήμου μας και την απομάκρυνσή τους από την Ναυτική Βάση",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv5z0lspkn9a136r90qt",
+        "name": "Αντικατάσταση και ορισμός νέου συντονιστή του Δήμου Βριλησσίων στο «Εθνικό Διαδημοτικό Δίκτυο Υγιών Πόλεων - Προαγωγής Υγείας»",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv680lsqkn9a0wgh4t8i",
+        "name": "Τέταρτη (4η) τροποποίηση τεχνικού προγράμματος έτους 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv6g0lsrkn9av0aqa51q",
+        "name": "Έγκριση τέταρτης (4ης) αναμόρφωσης προϋπολογισμού οικονομικού έτους 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv6t0lsskn9a5vocrcrb",
+        "name": "Έγκριση εκμίσθωσης σχολικού κυλικείου του 1ου Λυκείου Βριλησσίων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv750lstkn9a194tt5zh",
+        "name": "Ορισμός αιρετού εκπροσώπου του Δήμου κατά τη συγκρότηση της επιτροπής διενέργειας διαγωνισμού για την εκμίσθωση του κυλικείου του 1ου Λυκείου Βριλησσίων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv7i0lsukn9agerdaxhb",
+        "name": "Έγκριση παραχώρησης χρήσης των αθλητικών εγκαταστάσεων του Δήμου Βριλησσίων σε Αθλητικούς Συλλόγους για την αγωνιστική περίοδο 2026-2027",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv7y0lsvkn9ag0ojegiv",
+        "name": "Εισήγηση για λήψη απόφασης για την έγκριση ή μη δωρεάν παραχώρησης χρήσης ως έδρα δημοτικού ακινήτου επί των οδών Σπ.Λούη και Βριλησσού – Βριλήσσια (Ο.Τ. 388) στον Αθλητικό Σύλλογο Βριλησσίων «ΘΗΣΕΑΣ",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqkyrv8e0lswkn9a3iycp0gs",
+        "name": "Εισήγηση για λήψη απόφασης για την έγκριση ή μη δωρεάν παραχώρησης χρήσης ως γραφεία χώρου του δηµοτικού κτιρίου εντός του πάρκου «Μίκης Θεοδωράκης» που βρίσκεται στην συµβολή των οδών Μπακογιάννη – Πλαταιών και Πάρνηθος- Βριλήσσια στο νομικό πρόσωπο «ΣΥΛΛΟΓΟΣ ΕΡΓΑΖΟΜΕΝΩΝ ΔΗΜΟΥ ΒΡΙΛΗΣΣΙΩΝ»",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqkyrv5i0lsokn9abm8a9bmu]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqkyrv5z0lspkn9a136r90qt]": {
+      "value": "ΨΖΧΡΩ9Ρ-ΧΩΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqkyrv680lsqkn9a0wgh4t8i]": {
+      "value": "ΨΟ7ΧΩ9Ρ-ΝΤΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqkyrv6g0lsrkn9av0aqa51q]": {
+      "value": "91Ξ9Ω9Ρ-ΥΝΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqkyrv6t0lsskn9a5vocrcrb]": {
+      "value": "9ΨΝ6Ω9Ρ-ΙΛ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqkyrv750lstkn9a194tt5zh]": {
+      "value": "Ρ684Ω9Ρ-ΡΙΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqkyrv7i0lsukn9agerdaxhb]": {
+      "value": "ΡΗΜΘΩ9Ρ-Σ03",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqkyrv7y0lsvkn9ag0ojegiv]": {
+      "value": "ΡΥΕΔΩ9Ρ-3ΦΞ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-04",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmutfz7p90287dj9s759i7ml4"
+    },
+    "link[cmqkyrv8e0lswkn9a3iycp0gs]": {
+      "value": "ΨΗΩΦΩ9Ρ-ΞΘ1",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-04",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmutfzagr01ddhr3apg82atcj"
+    },
+    "link[cmqtlvrki00mbfmuuvgj8q54g]": {
+      "value": "9Γ2ΝΩ9Ρ-Υ12",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqtlvrl400mjfmuuwjcwbbu2]": {
+      "value": "Ψ7Ρ0Ω9Ρ-ΦΙΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

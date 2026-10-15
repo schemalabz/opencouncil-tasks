@@ -1,0 +1,251 @@
+{
+  "id": "decisions.matching/sparta-dec22_2_2025",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "sparta/dec22_2_2025",
+    "meetingDate": "2025-12-22",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-01-05",
+      "fromDate": "2025-12-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb8kdbk0109epq20lzrpw2o",
+        "name": "Απαλλαγές υπολόγων παγίας προκαταβολής Προέδρων Κοινοτήτων 2025",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb5bsni05z3pn1toxv40wli",
+        "name": "Τεχνικό Πρόγραμμα 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bsnq05z4pn1tbhicuort",
+        "name": "Αναμόρφωση προϋπολογισμού 2025",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bsnx05z5pn1tc0afdoxr",
+        "name": "Διορισμός Δικαστικού Επιμελητή",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bso205z6pn1taye1kn9a",
+        "name": "Προμήθεια κάδων απορριμμάτων 2025",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bso805z7pn1tyruaznzv",
+        "name": "Πρόσληψη ανέργων ΑμεΑ",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bsog05z8pn1t5xgv56s4",
+        "name": "Αποτίμηση μέσων ατομικής προστασίας 2024",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bsoo05z9pn1txvuzo86k",
+        "name": "Δαπάνες σχολικών μονάδων 2025",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb5bsni05z3pn1toxv40wli]": {
+      "value": "916ΓΩ1Ν-5ΡΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bsnq05z4pn1tbhicuort]": {
+      "value": "6ΖΠ0Ω1Ν-Ο4Ρ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bsnx05z5pn1tc0afdoxr]": {
+      "value": "6ΥΗΔΩ1Ν-Υ5Λ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bso205z6pn1taye1kn9a]": {
+      "value": "6ΑΠΕΩ1Ν-ΧΝΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bso805z7pn1tyruaznzv]": {
+      "value": "ΨΘ9ΣΩ1Ν-510",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bsog05z8pn1t5xgv56s4]": {
+      "value": "ΡΟ9ΖΩ1Ν-ΙΚΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bsoo05z9pn1txvuzo86k]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqb8kdbk0109epq20lzrpw2o]": {
+      "value": "Ψ5Ψ2Ω1Ν-ΓΞΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[68ΙΗΩ1Ν-ΦΜΘ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xeef02z27xm4jcdowkfa"
+    },
+    "reject[6ΞΖΘΩ1Ν-2Δ1]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xedu02ys7xm4wj82sbqe"
+    },
+    "reject[6ΞΛΒΩ1Ν-9ΓΞ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xef602ze7xm4t8m9zf70"
+    },
+    "reject[99ΖΑΩ1Ν-ΟΘΗ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xeeb02z07xm408b8lrc9"
+    },
+    "reject[9Ξ5ΧΩ1Ν-Χ3Σ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xeej02z47xm47jadefxv"
+    },
+    "reject[9ΨΙΟΩ1Ν-ΚΜΨ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xedy02yu7xm4h240aqk7"
+    },
+    "reject[Ψ98ΣΩ1Ν-ΗΥ0]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xee602yy7xm476btxket"
+    },
+    "reject[Ψ9ΜΡΩ1Ν-52Ι]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xeew02za7xm4ab7nbawn"
+    },
+    "reject[ΨΘΔ7Ω1Ν-0ΦΓ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xeen02z67xm4px6f648f"
+    },
+    "reject[ΨΙΛΣΩ1Ν-Ε9Δ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xees02z87xm424sqmg2l"
+    },
+    "reject[ΨΚΖ7Ω1Ν-5Δ7]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xee202yw7xm4mk9861ru"
+    },
+    "reject[ΨΧΦΛΩ1Ν-4ΡΖ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1xef102zc7xm4zw8cre48"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

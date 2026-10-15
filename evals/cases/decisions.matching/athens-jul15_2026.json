@@ -1,0 +1,466 @@
+{
+  "id": "decisions.matching/athens-jul15_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jul15_2026",
+    "meetingDate": "2026-07-15",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "78341"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-31",
+      "fromDate": "2026-07-15"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmriviiso061s2sjdgb1szzmm",
+        "name": "Συζήτηση για τις ζημιές που προκλήθηκαν σε πολυκατοικίες της Κυψέλης από τις εργασίες διάνοιξης σήραγγας της Γραμμής 4 του Μετρό",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviira061q2sjdtpzluwb7",
+        "name": "Έγκριση Α. Για τον ορισμό εκπροσώπου του Δήμου Αθηναίων, ο οποίος θα παραστεί στην Τακτική Γενική Συνέλευση των Μετόχων της Ανώνυμης Εταιρείας με την επωνυμία «ΑΝΑΠΤΥΞΙΑΚΗ ΑΘΗΝΑΣ Α.Ε ΑΝΑΠΤΥΞΙΑΚΟΣ ΟΡΓΑΝΙΣΜΟΣ ΤΟΠΙΚΗΣ ΑΥΤΟΔΙΟΙΚΗΣΗΣ» στις 24.07.2026 και Β. Για την υπόδειξη του τρόπου άσκησης του δικαιώματος ψήφου του εκπροσώπου του Δήμου Αθηναίων επί των θεμάτων της ημερήσιας διάταξης",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviis5061r2sjd7vdoys6h",
+        "name": "Έγκριση α) της συνδιοργάνωσης του τουρνουά «ATHENS FINALS 2026» του Πανελληνίου Πρωταθλήματος Beach Volley, που θα πραγματοποιηθεί στην Πλατεία Συντάγματος κατά το χρονικό διάστημα 24 έως 26 Ιουλίου 2026, με συνδιοργανωτές τον Δήμο Αθηναίων, τον Οργανισμό Πολιτισμού, Αθλητισμού και Νεολαίας Δήμου Αθηναίων (Ο.Π.Α.Ν.Δ.Α.) και την Ελληνική Ομοσπονδία Πετοσφαίρισης. β) των όρων του συνημμένου Μνημονίου Συνεργασίας μεταξύ του Δήμου Αθηναίων, του Ο.Π.Α.Ν.Δ.Α. και της Ελληνικής Ομοσπονδίας Πετοσφαίρισης και γ) της εξουσιοδότησης του Δημάρχου Αθηναίων για την υπογραφή του ανωτέρω Μνημονίου Συνεργασίας",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviit2061t2sjdpovt9jjj",
+        "name": "Έγκριση των προσωρινών κυκλοφοριακών ρυθμίσεων για την εκτέλεση των εργασιών του έργου «ΑΠΟΚΑΤΑΣΤΑΣΗ - ΕΠΑΝΑΧΡΗΣΗ ΚΤΗΡΙΟΥ ΜΠΕΚΑΚΕΙΟΥ ΒΙΒΛΙΟΘΗΚΗΣ», με διακοπή κυκλοφορίας της οδού ΑΝΘΙΜΟΥ ΓΑΖΗ στο τμήμα της από τη συμβολή της με την οδό ΚΟΛΟΚΟΤΡΩΝΗ έως τη συμβολή της με την οδό ΧΡΗΣΤΟΥ ΛΑΔΑ, για χρονικό διάστημα έως και τις 31.12.2026, κάθε Τετάρτη και Πέμπτη τις ώρες από τις 00.00 έως τις 06.00",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiti061u2sjdzezvg9k3",
+        "name": "Έγκριση των προσωρινών κυκλοφοριακών ρυθμίσεων για την εκτέλεση των εργασιών του έργου «ΑΝΑΚΑΤΑΣΚΕΥΗ ΟΔΟΣΤΡΩΜΑΤΩΝ ΜΕ ΑΝΤΙΟΛΙΣΘΗΡΟ ΣΚΥΡΟΔΕΜΑ ΚΑΙ ΑΝΑΚΑΤΑΣΚΕΥΗ ΕΓΚΑΡΣΙΩΝ ΡΕΙΘΡΩΝ ΣΕ ΟΛΕΣ ΤΙΣ ΔΗΜΟΤΙΚΕΣ ΚΟΙΝΟΤΗΤΕΣ ΤΟΥ ΔΗΜΟΥ ΑΘΗΝΑΙΩΝ», με διακοπή κυκλοφορίας στην οδό ΚΥΘΗΡΩΝ μεταξύ των οδών ΑΓΙΑΣ ΖΩΝΗΣ έως ΤΑΫΓΕΤΟΥ, για χρονικό διάστημα 60 ημερών από την ημέρα έναρξης των εργασιών",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviity061v2sjduejdjywa",
+        "name": "Έγκριση των προσωρινών κυκλοφοριακών ρυθμίσεων για την εκτέλεση των εργασιών του έργου «ΣΤΕΡΕΩΣΗ ΚΑΙ ΑΠΟΚΑΤΑΣΤΑΣΗ ΚΤΙΡΙΟΥ PROKESCH VON OSTEN ΕΠΙ ΤΗΣ ΟΔΟΥ ΦΕΙΔΙΟΥ 3, ΑΘΗΝΑ», που αφορούν στην παράταση ισχύος της διακοπής κυκλοφορίας της οδού ΦΕΙΔΙΟΥ στο τμήμα της από την οδό ΧΑΡΙΛΑΟΥ ΤΡΙΚΟΥΠΗ έως την οδό ΖΩΟΔΟΧΟΥ ΠΗΓΗΣ, για χρονικό διάστημα μέχρι και τις 30-09-2026 τις εργάσιμες ημέρες από Δευτέρα έως Παρασκευή από τις 07:00 έως τις 16:00",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiuf061w2sjdz6vcx29o",
+        "name": "Έγκριση για τον καθορισμό χώρου στάσης – στάθμευσης ενός (1) οχήματος ΑμΕΑ, επί της οδού ΜΙΚΡΑΣ ΑΣΙΑΣ, πλησίον του Γενικού Νοσοκομείου «ΛΑΪΚΟ», πριν τη συμβολή της με την οδό ΑΓΙΟΥ ΘΩΜΑ και παραπλεύρως της ΠΛΑΤΕΙΑΣ ΑΓΙΟΥ ΘΩΜΑ, με ταυτόχρονη κατάργηση μιας (1) θέσης ελεγχόμενης στάθμευσης «επί πληρωμή»",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiuw061x2sjdn49vuiju",
+        "name": "Έγκριση για τον καθορισμό χώρου στάσης – στάθμευσης ενός (1) οχήματος ΑμΕΑ, επί της οδού ΥΨΗΛΑΝΤΟΥ 45, πλησίον της εισόδου του Νοσοκομείου «ΕΥΑΓΓΕΛΙΣΜΟΣ», με ταυτόχρονη κατάργηση μιας (1) θέσης ελεγχόμενης στάθμευσης «επί πληρωμή»",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviivd061y2sjdbat4d32o",
+        "name": "Έγκριση της πρότασης ανάπλασης της οδού ΩΡΟΛΟΓΑ (7η Δημοτική Κοινότητα)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviivo061z2sjdv1qcnb5g",
+        "name": "Έγκριση ανάκλησης της με αρ. 405/2026 Απόφασης Δημοτικού Συμβουλίου που αφορά «συγκρότηση Τριμελούς Επιτροπής Παρακολούθησης και Παραλαβής για το με αρ. πρωτ. 151254/09-06-2026 συμφωνητικό με θέμα «ΠΡΟΜΗΘΕΙΑ ΗΛΕΚΤΡΟΚΙΝΗΤΩΝ ΟΧΗΜΑΤΩΝ ΓΙΑ ΤΙΣ ΑΝΑΓΚΕΣ ΤΩΝ ΠΑΙΔΙΚΩΝ ΕΞΟΧΩΝ ΤΟΥ ΔΗΜΟΥ ΑΘΗΝΑΙΩΝ» διότι, η εισήγηση της εν λόγω απόφασης ήταν λανθασμένη και δεν έπρεπε να ληφθεί υπόψη κατόπιν ενημέρωσης της αρμόδιας Υπηρεσίας",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviivz06202sjdpp8c8216",
+        "name": "Έγκριση της Γ΄ Αναμόρφωσης προϋπολογισμού του Κέντρου Υποδοχής & Αλληλεγγύης Δήμου Αθηναίων για το οικονομικό έτος 2026",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiw906212sjdb6zm6npw",
+        "name": "Έγκριση για την τροποποίηση της με αρ. 14/2026 Απόφασης του Δημοτικού Συμβουλίου σχετικά με «έγκριση για τη συγκρότηση του Διοικητικού Συμβουλίου του νομικού προσώπου δημοσίου δικαίου (ν.π.δ.δ) με την επωνυμία «Οργανισμός Πολιτισμού Αθλητισμού και Νεολαίας Δήμου Αθηναίων» και τον ορισμό της θητείας αυτού» ως προς την αντικατάσταση παραιτηθέντος τακτικού μέλους του Δ.Σ. του Ο.Π.Α.Ν.Δ.Α.",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiwn06222sjd1afxavep",
+        "name": "Έγκριση υποβολής αιτήματος του Δήμου Αθηναίων για το χαρακτηρισμό του κτιρίου «ΦΟΡΟΣ», στη θέση Φασίδερι της Δημοτικής Ενότητας Νέας Ερυθραίας του Δήμου Κηφισιάς, ιδιοκτησίας του Δήμου Αθηναίων, ως νεότερου μνημείου, στην Υπηρεσία Νεώτερων Μνημείων και Τεχνικών Έργων Αττικής, Ανατολικής Στερεάς Ελλάδας και Κυκλάδων (ΥΝΜΤΕΑΑΣΕΚ) του Υπουργείου Πολιτισμού",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiwx06232sjde4l5psc9",
+        "name": "Ορισμός ενός (1) Δημοτικού Συμβούλου για την σύσταση Επιτροπής αξιολόγησης περιουσιακών στοιχείων του Δήμου Αθηναίων και ορισμός μελών αυτής",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviixd06242sjddvkbslmg",
+        "name": "Έγκριση για Α) την επανεπιβολή ρυμοτομικής απαλλοτρίωσης για τον ίδιο σκοπό, κατ΄ εφαρμογή των διατάξεων των άρθρων 88 και 89 του Ν. 4759/2020 (ΦΕΚ 245 Α΄2020), σε τμήμα ακινήτου (ΚΑΕΚ 050092130014) με εμβαδόν 279,67 τ.μ. που βρίσκεται στη συμβολή των οδών Λιοσίων 193 & Στενημάχου, στο Ο.Τ. 83 περ. 86, στη γειτονιά «Πλ. Αττικής» της 4ης Δημοτικής Κοινότητας, το οποίο χαρακτηρίστηκε, με το από 30-08-1969 Β.Δ. (ΦΕΚ 198 Δ΄1969), ως οδός και Β) την εγγραφή της δαπάνης αποζημίωσης, λόγω ρυμοτομικής απαλλοτρίωσης, ύψους 223.461,22 € στον προϋπολογισμό εξόδων του τρέχοντος οικονομικού έτους, σε εξειδικευμένο κωδικό αριθμό της Διεύθυνσης Δημοτικής Περιουσίας περί απαλλοτριώσεων",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviixy06252sjd8gvo1gdm",
+        "name": "Έγκριση για την ανάκληση της με αρ. 526/2025 Απόφασης του Δημοτικού Συμβουλίου σχετικά με \"έγκριση της τοποθέτησης της μαρμάρινης προτομής του ΜΑΝΟΥ ΧΑΤΖΙΔΑΚΙ στο Άλσος Παγκρατίου, κατόπιν της με αρ. 1675/2025 Πράξης της Δημοτικής Επιτροπής\" και την απομάκρυνση της προτομής από τον ανωτέρω κοινόχρηστο χώρο",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiyq06272sjd0h5gk63h",
+        "name": "Έγκριση για την προσωρινή παραχώρηση ενός (1) απορριμματοφόρου οχήματος, με στοιχεία ΚΗΗ 7384 (ΔΑ 2408) μάρκας MERCEDES στο Δήμο Αγίας Βαρβάρας, για χρονικό διάστημα έξι (6) μηνών",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiye06262sjdgexydk1h",
+        "name": "Έγκριση παράτασης, για χρονικό διάστημα τριών (3) μηνών, της προσωρινής τοποθέτησης του γλυπτού \"Αιολικό\" του γλύπτη Τάκη (Takis) στον κοινόχρηστο χώρο (χαμηλό παρτέρι φύτευσης πρασίνου) στη συμβολή των οδών Πανεπιστημίου και Βουκουρεστίου που βρίσκεται σήμερα",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiz006282sjdw7ipdofv",
+        "name": "Έγκριση για την προσωρινή παραχώρηση ενός (1) απορριμματοφόρου οχήματος (με αέριο καύσιμο), με στοιχεία ΚΗΗ 7640 (ΔΑ 1969) μάρκας MERCEDES στο Δήμο Σαλαμίνας, για χρονικό διάστημα δεκαπέντε (15) ημερών",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviiz906292sjdlkvgzvae",
+        "name": "Έγκριση επιβολής προστίμου ύψους 400 ευρώ, για αυθαίρετη τοποθέτηση διακοσμητικών στοιχείων,ανεμιστήρων και ηλεκτρολογικού εξοπλισμού από την ΕΑΜΑ ΙΚΕ με διακριτικό τίτλο \"GYPSY JUNGLE\" σε χώρο πρασίνου",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviizj062a2sjd3gq4xg3e",
+        "name": "Έγκριση της 13ης αναμόρφωσης προϋπολογισμού οικονομικού έτους 2026 του Δήμου Αθηναίων",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviizr062b2sjd7fspzsyg",
+        "name": "Έγκριση για την αποδοχή των πρακτικών της Β΄ Επιτροπής Συμβιβασμού Μαΐου 2026",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmriviizz062c2sjdgrq1m1oi",
+        "name": "Έγκριση για την αποδοχή των πρακτικών της Ε΄ Επιτροπής Συμβιβασμού Μαΐου 2026",
+        "agendaItemIndex": 23,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij08062d2sjdr6zmzxn7",
+        "name": "Έγκριση για την αποδοχή των πρακτικών της Δ΄ Επιτροπής Συμβιβασμού Ιουνίου 2026",
+        "agendaItemIndex": 24,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij0g062e2sjd730wxx5n",
+        "name": "Έγκριση ή μη της επαναϋποβολής του Ετήσιου Οικονομικού Απολογισμού έτους 2021 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 4ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 25,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij0q062f2sjdkeax0hh7",
+        "name": "Έγκριση ή μη της επαναϋποβολής του Ετήσιου Οικονομικού Απολογισμού έτους 2023 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 4ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 26,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij11062g2sjd8m666rq0",
+        "name": "Έγκριση ή μη της επαναϋποβολής του Ετήσιου Οικονομικού Απολογισμού έτους 2022 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 4ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 27,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij1b062h2sjdwabv22g2",
+        "name": "Έγκριση ή μη της επαναϋποβολής του Ετήσιου Οικονομικού Απολογισμού έτους 2024 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 4ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 28,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij1k062i2sjdbcxzuagf",
+        "name": "Έγκριση ή μη του Ετήσιου Οικονομικού Απολογισμού έτους 2025 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 3ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 29,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij1v062j2sjd5gow5iup",
+        "name": "Έγκριση ή μη του Ετήσιου Οικονομικού Απολογισμού έτους 2025 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 4ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 30,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij25062k2sjdiyu7gcf9",
+        "name": "Έγκριση ή μη του Ετήσιου Οικονομικού Απολογισμού έτους 2025 της Σχολικής Επιτροπής Πρωτοβάθμιας Εκπαίδευσης της 7ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 31,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij2e062l2sjdujzq8d76",
+        "name": "Έγκριση ή μη του Ετήσιου Οικονομικού Απολογισμού έτους 2025 της Σχολικής Επιτροπής Δευτεροβάθμιας Εκπαίδευσης της 1ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 32,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrivij2q062m2sjdk9gbk5aw",
+        "name": "Έγκριση ή μη του Ετήσιου Οικονομικού Απολογισμού έτους 2025 της Σχολικής Επιτροπής Δευτεροβάθμιας Εκπαίδευσης της 7ης Δημοτικής Κοινότητας Δήμου Αθηναίων",
+        "agendaItemIndex": 33,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmriviira061q2sjdtpzluwb7]": {
+      "value": "936ΞΩ6Μ-ΖΙΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviis5061r2sjd7vdoys6h]": {
+      "value": "9Ζ7ΗΩ6Μ-ΓΑ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiso061s2sjdgb1szzmm]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmriviit2061t2sjdpovt9jjj]": {
+      "value": "ΨΨΕ4Ω6Μ-ΨΞΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiti061u2sjdzezvg9k3]": {
+      "value": "Ψ8ΖΘΩ6Μ-ΛΕ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviity061v2sjduejdjywa]": {
+      "value": "ΨΩ0ΧΩ6Μ-ΝΜ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiuf061w2sjdz6vcx29o]": {
+      "value": "6ΑΟΜΩ6Μ-26Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiuw061x2sjdn49vuiju]": {
+      "value": "6ΖΣΕΩ6Μ-ΦΗΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviivd061y2sjdbat4d32o]": {
+      "value": "62ΟΧΩ6Μ-ΔΑΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviivo061z2sjdv1qcnb5g]": {
+      "value": "Ψ848Ω6Μ-ΙΗΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviivz06202sjdpp8c8216]": {
+      "value": "9Ψ27Ω6Μ-Ψ4Φ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiw906212sjdb6zm6npw]": {
+      "value": "9ΣΨ2Ω6Μ-3ΒΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiwn06222sjd1afxavep]": {
+      "value": "ΨΔΠΩΩ6Μ-ΧΧΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiwx06232sjde4l5psc9]": {
+      "value": "Ρ8ΝΨΩ6Μ-Θ39",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviixd06242sjddvkbslmg]": {
+      "value": "91ΝΣΩ6Μ-42Υ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviixy06252sjd8gvo1gdm]": {
+      "value": "ΨΒΛ6Ω6Μ-55Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiye06262sjdgexydk1h]": {
+      "value": "6ΑΠ1Ω6Μ-8ΒΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiyq06272sjd0h5gk63h]": {
+      "value": "91ΣΠΩ6Μ-ΣΑ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiz006282sjdw7ipdofv]": {
+      "value": "ΨΖ23Ω6Μ-ΩΟΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviiz906292sjdlkvgzvae]": {
+      "value": "9ΦΞΖΩ6Μ-1ΑΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviizj062a2sjd3gq4xg3e]": {
+      "value": "9ΛΨΡΩ6Μ-8ΧΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviizr062b2sjd7fspzsyg]": {
+      "value": "ΨΙΝ1Ω6Μ-ΧΟΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmriviizz062c2sjdgrq1m1oi]": {
+      "value": "ΨΟΙΜΩ6Μ-Ψ5Χ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij08062d2sjdr6zmzxn7]": {
+      "value": "Ψ8Ζ3Ω6Μ-9Ψ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij0g062e2sjd730wxx5n]": {
+      "value": "97ΡΔΩ6Μ-86Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij0q062f2sjdkeax0hh7]": {
+      "value": "ΨΜΠ3Ω6Μ-ΨΔΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij11062g2sjd8m666rq0]": {
+      "value": "6Σ9ΤΩ6Μ-1ΧΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij1b062h2sjdwabv22g2]": {
+      "value": "Ψ5Φ7Ω6Μ-Ω59",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij1k062i2sjdbcxzuagf]": {
+      "value": "9ΩΚΑΩ6Μ-91Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij1v062j2sjd5gow5iup]": {
+      "value": "Ψ6ΣΝΩ6Μ-46Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij25062k2sjdiyu7gcf9]": {
+      "value": "ΨΔ9ΧΩ6Μ-ΦΕΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij2e062l2sjdujzq8d76]": {
+      "value": "940ΣΩ6Μ-Λ3Γ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrivij2q062m2sjdk9gbk5aw]": {
+      "value": "ΨΙΗ7Ω6Μ-ΧΜ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[637ΛΩ6Μ-07Ξ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0t9vv0fyo1etfkxg36rt1"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

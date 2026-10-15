@@ -1,0 +1,115 @@
+{
+  "id": "decisions.matching/athens-jul20_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jul20_2_2026",
+    "meetingDate": "2026-07-20",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085600"
+    ],
+    "administrativeBodyName": "2η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-08-05",
+      "fromDate": "2026-07-20"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrnkafl105jjd1ia4fm81j15",
+        "name": "Λήψη απόφασης σχετικά με οριοθέτηση των χώρων λειτουργίας της Λαϊκής Αγοράς Γούβα, ημέρα Δευτέρα, της 2ης Δημοτικής Κοινότητας και τακτοποίηση των ορίων λειτουργίας αυτής επί της οδού Αναξάρχου(Σχετ: Η με Α.Π.165884/23-06-2026 εισήγηση του Τμήματος Οργάνωσης & Λειτουργίας του Φορέα Λειτουργίας Λαϊκών Αγορών)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrnkafkb05jid1ia3r1j2v1m",
+        "name": "Λήψη απόφασης σχετικά με έγκριση για τον καθορισμό του ανώτατου ύψους προϋπολογισμού εξόδων της 2ης Δημοτικής Κοινότητας για το οικονομικό έτος 2027 (Σχετ.:Α.Δ.Σ.:415/24-06-2026(ΑΔΑ:6ΔΜ0Ω6Μ-7ΜΗ)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrnkafll05jkd1iaugi1z2nl",
+        "name": "Λήψη απόφασης σχετικά με αποξήλωση και απομάκρυνση μεταλλικής κατασκευής και της αποκατάστασης του πεζοδρομίου επί της οδού Ηλία Ηλιού 26 & της Λεωφόρου Βουλιαγμένης στη 2η Δημοτική Κοινότητα(Σχετ: Η με Α.Π.183495/10-07-2026 εισήγηση του Τμήματος Μελετών, Προγραμματισμού & Τεκμηρίωσης της Δ/νσης Οδοποιίας, Αποχέτευσης & Κοινοχρήστων Χώρων)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrnkafm005jld1ia8jya1xf1",
+        "name": "Λήψη απόφασης σχετικά με κατάργηση της στάσης και στάθμευσης στην οδό Τερπάνδρου στη δεξιά πλευρά της οδού κατά τη φορά κυκλοφορίας (Σχετ: Η με Α.Π.185632/13-07-2026 εισήγηση του Τμήματος Βιώσιμης Κινητικότητας της Δ/νσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrnkafmf05jmd1iay9crf0hx",
+        "name": "Λήψη απόφασης σχετικά με διαπλάτυνση πεζοδρομίου στην οδό Κόνωνος, από την οδό Θήρωνος έως την οδό Μονής Σέκκου εις βάρος της παρόδιας στάθμευσης(Σχετ: Η με Α.Π.183490/10-07-2026 εισήγηση του Τμήματος Μελετών, Προγραμματισμού & Τεκμηρίωσης της Δ/νσης Οδοποιίας, Αποχέτευσης & Κοινοχρήστων Χώρων)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrnkafmv05jnd1ia41omu7dv",
+        "name": "Προτάσεις μέτρων διευκόλυνσης κυκλοφορίας οχημάτων και πεζών στην οδό Οβρένοβιτς(Σχετ.:Το με Α.Π.188889/16-07-2026 αίτημα του Κοινοτικού Συμβούλου κ. Ζαχαράκη Μελέτη)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrnkafkb05jid1ia3r1j2v1m]": {
+      "value": "ΨΜΞ6Ω6Μ-ΓΤΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrnkafl105jjd1ia4fm81j15]": {
+      "value": "ΨΙΨΧΩ6Μ-2ΜΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrnkafll05jkd1iaugi1z2nl]": {
+      "value": "ΡΠΤΚΩ6Μ-ΙΟΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrnkafm005jld1ia8jya1xf1]": {
+      "value": "Ψ4Ω1Ω6Μ-ΠΒΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrnkafmf05jmd1iay9crf0hx]": {
+      "value": "Ψ3ΡΦΩ6Μ-14Η",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrnkafmv05jnd1ia41omu7dv]": {
+      "value": "ΨΝΟΗΩ6Μ-ΦΛ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΛΗΜΩ6Μ-2ΜΧ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvf29qk01v36ah2r2z9k8ul"
+    }
+  },
+  "cluster": "athens/2η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

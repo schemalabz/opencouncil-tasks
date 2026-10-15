@@ -1,0 +1,176 @@
+{
+  "id": "decisions.matching/sparta-may12_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/may12_2026",
+    "meetingDate": "2026-05-12",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-05-26",
+      "fromDate": "2026-05-12"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmp0z05j1073h32ls7i4q0au0",
+        "name": "Τροποποίηση τεχνικού προγράμματος 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05jc073i32lsjfmoeq0q",
+        "name": "1η Υποχρεωτική Αναμόρφωση Προϋπολογισμού 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05ji073j32lsaf2jn9bt",
+        "name": "Αναμόρφωση Ολοκληρωμένου Πλαισίου Δράσης 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05jp073k32lszzxty0ch",
+        "name": "Αποδοχή δωρεάς Ιδρύματος Παύλος Δ. Γιαννακόπουλος",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05ju073l32lsgqgfay8j",
+        "name": "Μίσθωση ακινήτου για 1ο Νηπιαγωγείο Σπάρτης",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05k0073m32lsqb2z5ata",
+        "name": "Εξειδίκευση πίστωσης για πληροφοριακό σύστημα μισθοδοσίας",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05k5073n32lszeuajpay",
+        "name": "Έγκριση πρωτοκόλλου ταμειακής διαχείρισης Μαρτίου 2026",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05kc073o32lsmn8hl0xx",
+        "name": "Έγκριση κίνησης οχημάτων Δήμου",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp0z05ki073p32lslyp7s35h",
+        "name": "Έγκριση δαπανών Παγίας Προκαταβολής σχολείων 2026",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmp0z05j1073h32ls7i4q0au0]": {
+      "value": "9Β7ΟΩ1Ν-1ΘΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05jc073i32lsjfmoeq0q]": {
+      "value": "9ΔΓ8Ω1Ν-ΘΣΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05ji073j32lsaf2jn9bt]": {
+      "value": "ΡΟ3ΟΩ1Ν-ΣΡΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05jp073k32lszzxty0ch]": {
+      "value": "9ΒΖΠΩ1Ν-ΧΒΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05ju073l32lsgqgfay8j]": {
+      "value": "ΡΙΒΛΩ1Ν-ΝΑΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05k0073m32lsqb2z5ata]": {
+      "value": "ΡΠΕΦΩ1Ν-Ο3Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05k5073n32lszeuajpay]": {
+      "value": "9ΜΟΑΩ1Ν-ΕΙΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp0z05kc073o32lsmn8hl0xx]": {
+      "value": "ΨΠΑΖΩ1Ν-ΣΧ4",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu46nolf0107y5k23xyhyrl1"
+    },
+    "link[cmp0z05ki073p32lslyp7s35h]": {
+      "value": "Ψ1Ν8Ω1Ν-10Μ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu46nw8e010ay5k2xojqnz8f"
+    },
+    "reject[6Δ95Ω1Ν-2ΓΦ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1thtz028au36pwy2ilwsd"
+    },
+    "reject[9ΗΨΔΩ1Ν-ΧΚΗ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1thuf028gu36pqc4wzgdd"
+    },
+    "reject[ΨΧ2ΖΩ1Ν-ΚΑΞ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1thu4028cu36pxeg7r642"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "id": "decisions.matching/xylokastro-jul14_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "xylokastro/jul14_2026",
+    "meetingDate": "2026-07-14",
+    "diavgeiaUid": "6222",
+    "diavgeiaUnitIds": [
+      "100085589"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-07-28",
+      "fromDate": "2026-07-14"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrewn16j05p02sjd438ex901",
+        "name": "Εκλογή Αντιπροέδρου Δημοτικής Επιτροπής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrewn16j05p02sjd438ex901]": {
+      "value": "9ΘΛΠΩΞΠ-ΠΑ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[6ΤΔ7ΩΞΠ-Η03]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-26",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk55y1306jx7xm4qgm9hq9l"
+    }
+  },
+  "cluster": "xylokastro/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

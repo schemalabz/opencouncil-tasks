@@ -1,0 +1,112 @@
+{
+  "id": "decisions.matching/athens-jul14_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jul14_2026",
+    "meetingDate": "2026-07-14",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085601"
+    ],
+    "administrativeBodyName": "3η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-07-30",
+      "fromDate": "2026-07-14"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrekzsnc0awbqhaqta3m2puz",
+        "name": "Ενημέρωση, συζήτηση και διατύπωση προτάσεων για την έμπρακτη στήριξη των κατοίκων της πολυκατοικίας που κατέρρευσε στην οδό Αλκμήνης 22. Θα συμμετέχουν η Αντιδήμαρχος Κοινωνικής Αλληλεγγύης και Αστικής Πανίδας & Ζωοφιλίας, κα Φούντζουλα Ασήμω και ο Πρόεδρος του Κέντρου Υποδοχής και Αλληλεγγύης (ΚΥΑΔΑ), κ. Νίκος Χρυσόγελος",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrekzspo0awdqhaqojeuyg7x",
+        "name": "\"ΚΑΦΕΝΕΙΟ – ΠΑΝΤΟΠΩΛΕΙΟ - ΚΑΒΑ ΠΟΤΩΝ\", με την επωνυμία \"ΡΑΓΓΟΣ ΕΥΑΓΓΕΛΟΣ\", στην οδό ΗΡΑΚΛΕΙΔΩΝ 30. (Σχετ.: η με Α.Π. 153902/10-06-2026 αίτηση)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrekzsq50aweqhaqsnzn0f39",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"S GAZI CAFE Ε.Ε.\", στην οδό ΒΟΥΤΑΔΩΝ 44. (Σχετ.: η με Α.Π. 171429/29-06-2026 αίτηση)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrekzss60awfqhaqre57hlk3",
+        "name": "\"ΣΝΑΚ ΜΠΑΡ - ΕΣΤΙΑΤΟΡΙΟ - ΑΝΑΨΥΚΤΗΡΙΟ\", με την επωνυμία \"FOCU SAUVAGE Ε.Ε.\", στην οδό ΜΕΓΑΛΟΥ ΒΑΣΙΛΕΙΟΥ 52. (Σχετ.: η με Α.Π. 163175/19-06-2026 αίτηση)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrekzssn0awgqhaq42hoi0e5",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ\", με την επωνυμία \"TWO_GOATS Ο.Ε.\", στην οδό ΜΥΡΜΙΔΟΝΩΝ 16 - ΑΙΞΩΝΕΩΝ 2 & ΘΕΣΣΑΛΟΝΙΚΗΣ 35. (Σχετ.: η με Α.Π. 181544/09-07-2026 αίτηση)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrekzsnc0awbqhaqta3m2puz]": {
+      "value": "9ΣΤΓΩ6Μ-Ω47",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrekzspo0awdqhaqojeuyg7x]": {
+      "value": "9ΡΛ5Ω6Μ-1ΔΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrekzsq50aweqhaqsnzn0f39]": {
+      "value": "ΡΧΖΥΩ6Μ-Β4Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrekzss60awfqhaqre57hlk3]": {
+      "value": "ΨΩΘΓΩ6Μ-8ΕΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrekzssn0awgqhaq42hoi0e5]": {
+      "value": "9ΧΨΠΩ6Μ-ΨΩ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[985ΜΩ6Μ-ΟΨ0]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvm7d1e00o31etfz21h81yi"
+    },
+    "reject[ΨΒΤΞΩ6Μ-ΥΨΨ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvm7d1900o11etf48ns7wyv"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

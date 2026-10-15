@@ -1,0 +1,66 @@
+{
+  "id": "decisions.matching/argithea-jul24_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argithea/jul24_2_2026",
+    "meetingDate": "2026-07-24",
+    "diavgeiaUid": "6041",
+    "diavgeiaUnitIds": [
+      "83024"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-08-11",
+      "fromDate": "2026-07-24"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmruc697o036ecip8bf2tjy0e",
+        "name": "Αναμόρφωση προϋπολογισμού 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmruc698n036gcip8s2refjui",
+        "name": "Αποζημίωση μελών Δημοτικού Συμβουλίου",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmruc699b036hcip8uepbrpwk",
+        "name": "Βεβαίωση θέσης ακινήτου Μεταμόρφωσης",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmruc697o036ecip8bf2tjy0e]": {
+      "value": "ΨΕΨΠΩΨ3-Π9Α",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmruc698n036gcip8s2refjui]": {
+      "value": "ΨΑΝΒΩΨ3-ΜΚΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmruc699b036hcip8uepbrpwk]": {
+      "value": "90ΚΟΩΨ3-ΦΡΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "argithea/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

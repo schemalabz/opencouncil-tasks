@@ -1,0 +1,184 @@
+{
+  "id": "decisions.matching/vrilissia-sep16_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/sep16_2_2026",
+    "meetingDate": "2026-09-16",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-09-30",
+      "fromDate": "2026-09-16"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmtwzszxb0jnnipx6nx061nih",
+        "name": "Ζητήματα της εκπαιδευτικής κοινότητας Βριλησσίων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszxv0jnoipx6pukzfm2u",
+        "name": "Τροποποίηση της υπ' αριθμ. 77/2026 Απόφασης του Δημοτικού Συμβουλίου με θέμα: «Ορισμός δικαιούχων αποζημίωσης λόγω συμμετοχής σε συνεδριάσεις του ΔΣ και προσδιορισμός ύψους της εν λόγω καταβαλλόμενης αποζημίωσης σύμφωνα με τις διατάξεις των παρ. 1α και 1β του άρθρου 299, του ν.5314/2026» λόγω ορισμού νέων έμμισθων Αντιδημάρχων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszy60jnpipx6fbs5inj2",
+        "name": "Τροποποίηση της ΑΔΣ 78/2026 με θέμα: «Ορισμός δικαιούχων αποζημίωσης λόγω συμμετοχής σε συνεδριάσεις της Δημοτικής Επιτροπής και προσδιορισμός ύψους της εν λόγω καταβαλλόμενης αποζημίωσης σύμφωνα με τις διατάξεις της παρ. 1γ, του άρθρου 299, του ν. 5314/2026» λόγω ορισμού νέων έμμισθων Αντιδημάρχων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszyf0jnqipx661xuhlms",
+        "name": "Αντικατάσταση Προέδρου της γνωμοδοτικής επιτροπής κοινωνικής συνοχής, συμπερίληψης και ισότητας των φύλων του Δήμου Βριλησσίων (άρθρο 153, του ν. 5314/2026)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszyn0jnripx6crau8qrw",
+        "name": "Τροποποίηση της Απόφασης Δημοτικού Συμβουλίου 98/2025 (ΑΔΑ: ΨΞΩ9Ρ-ΙΘΜ), περί συγκρότησης Επιτροπής Διαχείρισης Δημοτικού Κοινωνικού παντοπωλείου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszyu0jnsipx6cc9j963o",
+        "name": "Έγκριση του Πρακτικού Επιτροπής Αξιολόγησης Αιτήσεων Εγγραφών επί των πινάκων επιλαχόντων βρεφών στους βρεφονηπιακούς σταθμούς για το σχολικό έτος 2026-2027 και νέων εγγραφών β΄ φάσης Σεπτεμβρίου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszz40jntipx6uapnfdlz",
+        "name": "Έγκριση του Πρακτικού Επιτροπής Αξιολόγησης Αιτήσεων Εγγραφών επί των πινάκων επιλαχόντων νηπίων στους παιδικούς και βρεφονηπιακούς σταθμούς για το σχολικό έτος 2026-2027 και νέων εγγραφών β΄ φάσης Σεπτεμβρίου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszzb0jnuipx6r5514qra",
+        "name": "Έγκριση έκτης (6ης) αναμόρφωσης προϋπολογισμού έτους 2026 Δήμου Βριλησσίων",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszzi0jnvipx61sqikq2l",
+        "name": "Τροποποίηση της με αρ. 69/2026 (ΑΔΑ: 9ΑΟΖΩ9Ρ-Ζ2Χ) Απόφασης Δημοτικού Συμβουλίου περί τροποποίησης οργανισμού εσωτερικής υπηρεσίας δήμου Βριλησσίων, σύμφωνα με τις παρατηρήσεις/προτάσεις της Αποκεντρωμένης Διοίκησης Αττικής",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszzp0jnwipx6wt1em3qf",
+        "name": "Λήψη απόφασης για: α) την άσκηση ή μη αίτησης αναίρεσης στον Άρειο Πάγο κατά της υπ' αριθ. 2071/2026 απόφασης του Μονομελούς Εφετείου Αθηνών και β) την αποδοχή ή μη της υπ' αριθ. πρωτ. 14384/27-7-2026 αίτησης περί καταβολής των επιδικασθέντων ποσών και παραίτησης από τους τόκους",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzszzw0jnxipx6uq408vz5",
+        "name": "Έγκριση του υπ' αριθ. 01/27-08-2026 Πρακτικού της Επιτροπής γνωμοδότησης για την καταστροφή αντικειμένων που δεν έχουν αξία (πλαστικοί κάδοι απορριμμάτων) (άρθρο 560 του Ν. 5314/2026)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwzt0040jnyipx66v3hmd2q",
+        "name": "Παραχωρήσεις χώρων για το σχολικό έτος 2026-2027",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmtwzszxb0jnnipx6nx061nih]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmtwzszxv0jnoipx6pukzfm2u]": {
+      "value": "ΕΒΤΒΩ9Ρ-0Ψ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszy60jnpipx6fbs5inj2]": {
+      "value": "ΨΨΚΝΩ9Ρ-Γ5Τ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszyf0jnqipx661xuhlms]": {
+      "value": "9Β0ΛΩ9Ρ-Ρ84",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszyn0jnripx6crau8qrw]": {
+      "value": "ΨΩΒΙΩ9Ρ-ΧΓΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszyu0jnsipx6cc9j963o]": {
+      "value": "ΨΙΒΕΩ9Ρ-Λ9Π",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszz40jntipx6uapnfdlz]": {
+      "value": "ΨΞΓΚΩ9Ρ-ΠΨΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszzb0jnuipx6r5514qra]": {
+      "value": "65Ε5Ω9Ρ-9Γ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszzi0jnvipx61sqikq2l]": {
+      "value": "ΨΒΡΑΩ9Ρ-344",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c0ce1b461fd594bc99d95b5e171483b12"
+    },
+    "link[cmtwzszzp0jnwipx6wt1em3qf]": {
+      "value": "ΡΟΩ2Ω9Ρ-2Θ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzszzw0jnxipx6uq408vz5]": {
+      "value": "63ΩΦΩ9Ρ-ΔΣ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwzt0040jnyipx66v3hmd2q]": {
+      "value": "9ΩΡΝΩ9Ρ-Μ58",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

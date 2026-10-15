@@ -1,0 +1,184 @@
+{
+  "id": "decisions.matching/vrilissia-sep30_3_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "vrilissia/sep30_3_2026",
+    "meetingDate": "2026-09-30",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-10-14",
+      "fromDate": "2026-09-30"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmusl9stk09uhpmwy8awx8a1h",
+        "name": "7η αναμόρφωση προϋπολογισμού",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmugwx9mq0cypod4qzjh4wcog",
+        "name": "Παραίτηση ή μη του Δήμου Βριλησσίων από την ασκηθείσα έφεσή του (Γ.Α.Κ. 285880/2025, Ε.Α.Κ. 9237/2025) κατά της υπ' αριθ. 1287/2023 απόφασης του Μονομελούς Πρωτοδικείου Αθηνών (Διαδικασία Εργατικών Διαφορών), κατ' εφαρμογή του άρθρου 731 παρ. 4 του ν. 5314/2026",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9mw0cyqod4qbb1tm7ke",
+        "name": "Παραίτηση ή μη του Δήμου Βριλησσίων από την ασκηθείσα έφεσή του (Γ.Α.Κ. 159135/2024, Ε.Α.Κ. 6706/2024) κατά της υπ' αριθ. 1261/2022 απόφασης του Μονομελούς Πρωτοδικείου Αθηνών (Διαδικασία Εργατικών Διαφορών), κατ' εφαρμογή του άρθρου 731 παρ. 4 του ν. 5314/2026",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9n20cyrod4q4dk4hihr",
+        "name": "Άσκηση ή μη ενδίκων μέσων εκ μέρους του Δήμου Βριλησσίων κατά της υπ' αριθ. 1606/2025 απόφασης του Μονομελούς Πρωτοδικείου Αθηνών (Διαδικασία Περιουσιακών Διαφορών), κατ' εφαρμογή του άρθρου 731 παρ. 4 του ν. 5314/2026",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9ll0cyjod4q9gmkoqt1",
+        "name": "Λήψη Απόφασης επί της υπ' αριθ. πρωτ. 6251/07.04.2026 αίτησης των Κ.Τ, Θ.Τ και Ν.Τ του Π. για την τροποποίηση του εγκεκριμένου ρυμοτομικού σχεδίου στο Ο.Τ. 61 (οδός Μενελάου 14, ΚΑΕΚ 050350506010), συνεπεία της αρθείσας ρυμοτομικής απαλλοτρίωσης και σε συμμόρφωση προς την υπ' αριθ. 8351/2009 απόφαση του Τριμελούς Διοικητικού Πρωτοδικείου Αθηνών",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9kt0cyhod4q8286yljo",
+        "name": "Έγκριση τροποποίησης Οργανισμού Εσωτερικής Υπηρεσίας (ΟΕΥ) - Σύσταση θέσεων τακτικού προσωπικού στους Δημοτικούς Παιδικούς, Βρεφικούς και Βρεφονηπιακούς Σταθμούς του Δήμου Βριλησσίων, σύμφωνα με τα άρθρα 759 και 768 του ν.5314/2026 (Κώδικας Τοπικής Αυτοδιοίκησης) και την υπ' αριθμ. πρωτ. 43691/04-08-2026 εγκύκλιο του Υπουργείου Εσωτερικών",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9l70cyiod4qpudtb5jj",
+        "name": "Έγκριση ή μη απομάκρυνσης μη βιώσιμων και επικίνδυνων δένδρων από κοινόχρηστους χώρους του Δήμου Βριλησσίων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9lv0cykod4qnbdf2rt5",
+        "name": "Έγκριση του Πρακτικού Επιτροπής Αξιολόγησης Αιτήσεων Εγγραφών βρεφών επί των νέων εγγραφών και νέων διαγραφών βρεφών γ΄ φάσης Σεπτεμβρίου 2026 (τέλη Σεπτεμβρίου με αρχές Οκτωβρίου)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9m10cylod4q8q304fo3",
+        "name": "Έγκριση του Πρακτικού Επιτροπής Αξιολόγησης Αιτήσεων Εγγραφών νηπίων επί των νέων εγγραφών και νέων διαγραφών νηπίων γ΄ φάσης Σεπτεμβρίου 2026 (τέλη Σεπτεμβρίου με αρχές Οκτωβρίου)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9m70cymod4qkgmwkgy6",
+        "name": "Αντικατάσταση μέλους Επιτροπής Διαχείρισης Δημοτικού Κοινωνικού Παντοπωλείου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9me0cynod4qxvl2s748",
+        "name": "Ορισμός Εισηγητή Εκκαθάρισης Δαπανών για την διαχείριση των παραστατικών προς πληρωμή και την κατάρτιση της εντολής πληρωμής των έργων και δράσεων που χρηματοδοτούνται από το Πρόγραμμα Δημοσίων Επενδύσεων (Π.Δ.Ε.)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmugwx9mk0cyood4qrtcev9w9",
+        "name": "Παραχωρήσεις χώρων για το σχολικό έτος 2026-2027",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmugwx9kt0cyhod4q8286yljo]": {
+      "value": "ΨΡΩ4Ω9Ρ-ΛΞΛ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:cf46d82775aff40fdab586eb59a9f262b"
+    },
+    "link[cmugwx9l70cyiod4qpudtb5jj]": {
+      "value": "6ΝΛΧΩ9Ρ-ΜΑ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9ll0cyjod4q9gmkoqt1]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmugwx9lv0cykod4qnbdf2rt5]": {
+      "value": "9ΗΙΗΩ9Ρ-ΕΙ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9m10cylod4q8q304fo3]": {
+      "value": "9ΠΖΓΩ9Ρ-ΦΘΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9m70cymod4qkgmwkgy6]": {
+      "value": "9ΩΠΦΩ9Ρ-7ΛΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9me0cynod4qxvl2s748]": {
+      "value": "Ψ768Ω9Ρ-ΥΓ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9mk0cyood4qrtcev9w9]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmugwx9mq0cypod4qzjh4wcog]": {
+      "value": "6ΤΛ3Ω9Ρ-ΘΥΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9mw0cyqod4qbb1tm7ke]": {
+      "value": "Ψ8ΔΞΩ9Ρ-5Ε4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmugwx9n20cyrod4q4dk4hihr]": {
+      "value": "9Τ1ΟΩ9Ρ-7ΓΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmusl9stk09uhpmwy8awx8a1h]": {
+      "value": "9ΖΟΓΩ9Ρ-ΦΘΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

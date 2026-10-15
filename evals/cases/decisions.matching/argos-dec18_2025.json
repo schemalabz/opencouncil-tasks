@@ -1,0 +1,282 @@
+{
+  "id": "decisions.matching/argos-dec18_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/dec18_2025",
+    "meetingDate": "2025-12-18",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-01-01",
+      "fromDate": "2025-12-18"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb5ab2j03co5kc9cb6sy9gy",
+        "name": "Τροποποίηση προϋπολογισμού 2025",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb93z4q01d0epq2ottmgnno",
+        "name": "Ανάκληση και επανέγκριση Επιχειρησιακού Σχεδίου 2025-2028",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb93z5i01dhepq2ki5wql25",
+        "name": "Τροποποίηση τεχνικού προγράμματος για αστυνομικό κτίριο Νέας Κίου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb5ab3l03cs5kc94mo1h9db",
+        "name": "Εργοταξιακή σήμανση ανάπλασης οδών",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab4103cu5kc9baruodha",
+        "name": "Συμβούλιο Επιθεώρησης Θεάτρων 2026",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab4903cv5kc9yi71i1kd",
+        "name": "Εγγραφές-διαγραφές Παιδικών Σταθμών",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab4h03cw5kc9e2fmexaq",
+        "name": "Καταστροφή και ανακύκλωση αντικειμένων",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab4s03cx5kc9yekgfm7w",
+        "name": "Κοπή δέντρων στο Φίχτι",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab5603cy5kc91djzay2s",
+        "name": "Αναστολή πωλητών λαϊκής αγοράς",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab5e03cz5kc9ru6yod0f",
+        "name": "Μεταβολές σχολικών μονάδων 2026-2027",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab5n03d05kc926e4nh0t",
+        "name": "Παράταση σύμβασης τεχνικών μελετών",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab5u03d15kc9qv17jyhk",
+        "name": "Παράταση σύμβασης αναπτυξιακών μελετών",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab6103d25kc9rkunpdr2",
+        "name": "Παράταση σύμβασης οικοδομικών αδειών",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab6b03d35kc9r0jwyfg2",
+        "name": "Παράταση σύμβασης αδειοδότησης ΔΑΚ Άργους",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5ab6w03d55kc9fx4d23et",
+        "name": "Καταγγελία μίσθωσης περιπτέρου Τσόκρη-Μπελίνου",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb5ab2j03co5kc9cb6sy9gy]": {
+      "value": "9Ζ2ΘΩΨΔ-ΨΙΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab3l03cs5kc94mo1h9db]": {
+      "value": "ΨΗΧΟΩΨΔ-0Ο1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab4103cu5kc9baruodha]": {
+      "value": "ΨΛΧΡΩΨΔ-ΥΕΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab4903cv5kc9yi71i1kd]": {
+      "value": "6Υ0ΕΩΨΔ-Θ7Ρ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab4h03cw5kc9e2fmexaq]": {
+      "value": "6Θ7ΑΩΨΔ-Η05",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab4s03cx5kc9yekgfm7w]": {
+      "value": "9ΡΡΒΩΨΔ-ΤΚΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab5603cy5kc91djzay2s]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqb5ab5e03cz5kc9ru6yod0f]": {
+      "value": "ΡΒΚΔΩΨΔ-Ξ4Φ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab5n03d05kc926e4nh0t]": {
+      "value": "6Α9ΒΩΨΔ-Π4Ρ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab5u03d15kc9qv17jyhk]": {
+      "value": "6ΙΨΩΩΨΔ-ΗΗΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab6103d25kc9rkunpdr2]": {
+      "value": "6ΘΠΨΩΨΔ-ΦΤΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab6b03d35kc9r0jwyfg2]": {
+      "value": "Ψ0Η0ΩΨΔ-3Κ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5ab6w03d55kc9fx4d23et]": {
+      "value": "ΨΣΒ7ΩΨΔ-Η5Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb93z4q01d0epq2ottmgnno]": {
+      "value": "9ΗΚΜΩΨΔ-ΗΑΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb93z5i01dhepq2ki5wql25]": {
+      "value": "936ΙΩΨΔ-ΠΝΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[61ΗΧΩΨΔ-Χ9Ο]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pem807hmu36pljtr9m40"
+    },
+    "reject[6ΘΦ8ΩΨΔ-59Α]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pemk07hsu36ph4m9u8nv"
+    },
+    "reject[9Ι9ΖΩΨΔ-Μ2Υ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pemg07hqu36pk663gl8s"
+    },
+    "reject[ΡΠΛ8ΩΨΔ-2ΓΟ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5p45g088c7xm4wjhh2x2m"
+    },
+    "reject[Ψ8ΖΠΩΨΔ-Σ2Θ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5p47h088y7xm4muvo3bt0"
+    },
+    "reject[ΨΜ83ΩΨΔ-2ΤΦ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pemc07hou36pt2emtsl1"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}
