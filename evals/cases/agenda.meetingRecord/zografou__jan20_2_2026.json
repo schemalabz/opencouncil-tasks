@@ -1,0 +1,60 @@
+{
+  "id": "agenda.meetingRecord/zografou__jan20_2_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "zografou",
+    "meetingId": "jan20_2_2026",
+    "date": "2026-01-21",
+    "time": "09:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/zografou_jan20_2_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "της Δημοτικής Επιτροπής στο Δημαρχείο"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Σας προσκαλούμε σε ΕΚΤΑΚΤΗ ΣΥΝΕΔΡΙΑΣΗ (1η) της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": 1,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "ΕΚΤΑΚΤΗ ΣΥΝΕΔΡΙΑΣΗ (1η)"
+    },
+    "urgent": {
+      "value": true,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "zografou/Δημοτική Επιτροπή",
+  "tags": [
+    "zografou",
+    "committee",
+    "low-confidence"
+  ],
+  "note": "'(1η)' attached to ΕΚΤΑΚΤΗ ΣΥΝΕΔΡΙΑΣΗ - may be an urgent-sitting counter rather than overall sitting number. Invitation dated 20/01, sitting 21/01/2026. Format inferred only from 'στο Δημαρχείο'."
+}

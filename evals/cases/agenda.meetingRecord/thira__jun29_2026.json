@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/thira__jun29_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "thira",
+    "meetingId": "jun29_2026",
+    "date": "2026-06-29",
+    "time": "18:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/thira_jun29_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στην αίθουσα του Δημοτικού Συμβουλίου στο ΔΑΠΠΟΣ"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "σας καλεί σε τακτική δημόσια συνεδρίαση του Δημοτικού Συμβουλίου"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "thira/Δημοτικό Συμβούλιο",
+  "tags": [
+    "thira",
+    "council"
+  ],
+  "note": "«ΠΡΟΣΚΛΗΣΗ ΜΕ ΑΡΙΘΜΟ 13/2026» is the invitation number."
+}

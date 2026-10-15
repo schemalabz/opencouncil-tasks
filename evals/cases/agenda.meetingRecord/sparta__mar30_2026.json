@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/sparta__mar30_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "sparta",
+    "meetingId": "mar30_2026",
+    "date": "2026-03-30",
+    "time": "19:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/sparta_mar30_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "τόσο δια ζώσης (στο Δημαρχιακό Μέγαρο ...), όσο και με τηλεδιάσκεψη"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Καλείστε σε τακτική δημόσια συνεδρίαση"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "council"
+  ],
+  "note": "Document is a notice moving the 18-03-2026 sitting (requested by 1/3 of councillors) to 30-03-2026, followed by the original invitation (Αριθ.8/2026); kind and format are read from that original invitation. 'Αριθ.8/2026' is an invitation number."
+}

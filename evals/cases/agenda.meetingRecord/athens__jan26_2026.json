@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/athens__jan26_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "jan26_2026",
+    "date": "2026-01-26",
+    "time": "14:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/athens_jan26_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Η Συνεδρίαση θα πραγματοποιηθεί δια ζώσης και με τηλεδιάσκεψη"
+    },
+    "kind": {
+      "value": "special",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "sessionNumber": {
+      "value": 3,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "στην 3η Ειδική Συνεδρίαση του Σώματος"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "athens",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Ειδική sitting whose single item is approval of the Δημοτική Επιτροπή's semi-annual έκθεση πεπραγμένων (Β΄ εξάμηνο 2025) — not the municipality's annual απολογισμός nor λογοδοσία; labelled null. Reviewer may prefer annualReport."
+}

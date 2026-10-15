@@ -78,7 +78,7 @@ export function stemOf(c: Pick<Case, 'id' | 'suite'>): string {
 }
 
 function orderExpected(e: Expected): Expected {
-    return { value: e.value, tier: e.tier, by: e.by, at: e.at, source: e.source, signal: e.signal, reason: e.reason };
+    return { value: e.value, tier: e.tier, by: e.by, at: e.at, source: e.source, signal: e.signal, reason: e.reason, evidence: e.evidence };
 }
 
 /** Keys in a fixed order so a rewrite of an unchanged case is byte-identical. */
@@ -95,6 +95,7 @@ export function serializeCase(c: Case): string {
         cluster: c.cluster,
         tags: c.tags,
         guards: c.guards,
+        note: c.note,
         history: c.history,
     };
     return JSON.stringify(ordered, null, 2) + '\n';

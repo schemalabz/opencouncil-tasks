@@ -1,0 +1,60 @@
+{
+  "id": "agenda.meetingRecord/zografou__jan26_2_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "zografou",
+    "meetingId": "jan26_2_2026",
+    "date": "2026-01-26",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/zografou_jan26_2026_agenda_2.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "στην αίθουσα του Δημοτικού Συμβουλίου, στο Δημαρχείο Ζωγράφου"
+    },
+    "kind": {
+      "value": "special",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Σας προσκαλούμε σε ΕΙΔΙΚΗ (2η) συνεδρίαση"
+    },
+    "sessionNumber": {
+      "value": 2,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "ΕΙΔΙΚΗ (2η) συνεδρίαση"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Ειδική sitting whose only item is approval of the Ολοκληρωμένο Πλαίσιο Δράσης 2026 (cites art. 77 par. 7 N.4172/2013, the budget-procedure article) — not the budget itself, so null; reviewer may consider budget."
+}

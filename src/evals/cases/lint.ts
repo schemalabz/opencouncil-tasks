@@ -26,6 +26,7 @@ function schemaErrors(raw: unknown, suite: string, stem: string): string[] {
     if (typeof raw.cluster !== 'string' || !raw.cluster) errors.push('cluster must be a non-empty string');
     if (!isStringArray(raw.tags)) errors.push('tags must be an array of strings');
     if (raw.guards !== undefined && !isStringArray(raw.guards)) errors.push('guards must be an array of strings');
+    if (raw.note !== undefined && typeof raw.note !== 'string') errors.push('note must be a string');
     if (raw.history !== undefined && !(Array.isArray(raw.history) && raw.history.every(h => isObject(h) && typeof h.at === 'string' && typeof h.change === 'string'))) {
         errors.push('history must be an array of { at, change }');
     }
@@ -40,7 +41,7 @@ function schemaErrors(raw: unknown, suite: string, stem: string): string[] {
         for (const key of ['by', 'at', 'source'] as const) {
             if (typeof e[key] !== 'string' || !e[key]) errors.push(`expect.${field}.${key} must be a non-empty string`);
         }
-        for (const key of ['signal', 'reason'] as const) {
+        for (const key of ['signal', 'reason', 'evidence'] as const) {
             if (e[key] !== undefined && typeof e[key] !== 'string') errors.push(`expect.${field}.${key} must be a string`);
         }
     }

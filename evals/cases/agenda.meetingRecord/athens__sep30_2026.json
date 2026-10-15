@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/athens__sep30_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "sep30_2026",
+    "date": "2026-09-30",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/athens_sep30_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "1η Δημοτική Κοινότητα",
+      "type": "community"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στην αίθουσα του 1ου ορόφου"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "σε συνεδρίαση για λήψη απόφασης των παρακάτω θεμάτων"
+    },
+    "sessionNumber": {
+      "value": 12,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "12η ΣΥΝΕΔΡΙΑΣΗ"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "community"
+  ],
+  "note": "Word τακτική absent; nothing marks it urgent/special."
+}

@@ -16,6 +16,8 @@ export type Expected = {
     signal?: string;
     /** Required when a tier goes down. */
     reason?: string;
+    /** The source's own words the value was read from, so a reviewer sees what it rests on. */
+    evidence?: string;
 };
 
 export type Split = 'dev' | 'holdout';
@@ -34,6 +36,8 @@ export type Case<I = unknown> = {
     tags: string[];
     /** Failure modes this case is a gate case for. */
     guards?: string[];
+    /** What the labeller wrote about the case as a whole. */
+    note?: string;
     history?: Array<{ at: string; change: string; batch?: string; reason?: string }>;
 };
 

@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/chania__jan27_2025_2",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "chania",
+    "meetingId": "jan27_2025_2",
+    "date": "2025-01-27",
+    "time": "00:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/14909a46-f1bd-4a99-be0c-9d0f5c1bb6a3.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "θα διεξαχθεί δια ζώσης στην αίθουσα συνεδριάσεων του Δημοτικού Καταστήματος"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Καλείστε να προσέλθετε στη δημόσια συνεδρίαση του Δημοτικού Συμβουλίου"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Date mismatch: item date 2025-01-26 but invitation is for 27 Jan 2025 (Monday). Labels describe the 27/1/2025 sitting. Budget of Λιμενικό Ταμείο is one item among many."
+}

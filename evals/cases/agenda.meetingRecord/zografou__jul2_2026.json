@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/zografou__jul2_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "zografou",
+    "meetingId": "jul2_2026",
+    "date": "2026-07-02",
+    "time": "18:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/zografou_jul2_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "προσέλθετε στο Δημαρχείο Ζωγράφου (αίθουσα Δημοτικού Συμβουλίου – 3ος όροφος)"
+    },
+    "kind": {
+      "value": "presidencyElection",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Πρόσκληση σε ειδική συνεδρίαση (7η) του Δημοτικού Συμβουλίου, για την εκλογή του Προεδρείου"
+    },
+    "sessionNumber": {
+      "value": 7,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "ειδική (7η) συνεδρίαση"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "council"
+  ],
+  "note": "Also elects Δημοτική Επιτροπή members."
+}

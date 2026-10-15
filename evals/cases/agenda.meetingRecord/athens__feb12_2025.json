@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/athens__feb12_2025",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "feb12_2025",
+    "date": "2025-02-12",
+    "time": "00:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/f0c557d1-528c-4e20-ae20-46926f8e2543.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Η Συνεδρίαση θα πραγματοποιηθεί διά ζώσης και με τηλεδιάσκεψη"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Σας προσκαλούμε να συμμετέχετε στην 5η Συνεδρίαση του Σώματος"
+    },
+    "sessionNumber": {
+      "value": 5,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στην 5η Συνεδρίαση του Σώματος"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "athens",
+    "council"
+  ],
+  "note": "Word τακτική absent; nothing marks it urgent/special. Input date 2025-02-11 but invitation says Τετάρτη 12 Φεβρουαρίου 2025."
+}
