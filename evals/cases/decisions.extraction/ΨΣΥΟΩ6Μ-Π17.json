@@ -1,0 +1,193 @@
+{
+  "id": "decisions.extraction/ΨΣΥΟΩ6Μ-Π17",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΣΥΟΩ6Μ-Π17",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΣΥΟΩ6Μ-Π17",
+    "city": "athens",
+    "body": "7η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=all",
+        "arrival=yes",
+        "changeAnchor=agenda_item",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Γιαννακόπουλος Νικόλαος",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο Σύμβουλος κ. Γιαννακόπουλος Νικόλαος, προσήλθε στη συνεδρίαση κατά τη συζήτηση του 3ου θέματος της Ημερήσιας Διάταξης, το οποίο προτάθηκε και συζητήθηκε ως 1ο θέμα της Ημερήσιας Διάταξης (2/2026 Α.Κ.Σ.)."
+          },
+          {
+            "name": "Τσαρός Περικλής",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 9,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Ο Σύμβουλος κ. Τσαρός Περικλής, αποχώρησε μετά τη συζήτηση του 9ου θέματος της Ημερήσιας Διάταξης (10/2026 Α.Κ.Σ.)."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3734,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 7ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Ζαχαροπούλου Αθανασία",
+          "Αυγερινός Εμμανουήλ",
+          "Αυγητίδου – Παπακώστα Γεωργία",
+          "Γαβρίλη Δάφνη",
+          "Γαρμπιδάκης Νικόλαος",
+          "Γουργιώτου Γεωργία",
+          "Πετράκη Αναστασία",
+          "Ραπτάκης Βασίλειος",
+          "Τσαρός Περικλής",
+          "Τσαρουχά Μαρία",
+          "Φουσέκη – Παπαπροκοπίου Ευσταθία",
+          "Χριστοφορίδης Ιωάννης"
+        ],
+        "absentMembers": [
+          "Γιαννακόπουλος Νικόλαος",
+          "Γρίβα Σοφία",
+          "Κουτσούμπα Χριστίνα"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 23,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 23,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Ζαχαροπούλου Αθανασία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αυγερινός Εμμανουήλ",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αυγητίδου – Παπακώστα Γεωργία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γαρμπιδάκης Νικόλαος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γιαννακόπουλος Νικόλαος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Πετράκη Αναστασία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Τσαρουχά Μαρία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Φουσέκη – Παπαπροκοπίου Ευσταθία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Χριστοφορίδης Ιωάννης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γουργιώτου Γεωργία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ραπτάκης Βασίλειος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Γαβρίλη Δάφνη",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/7η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=all",
+    "arrival=yes",
+    "changeAnchor=agenda_item",
+    "declaration=yes"
+  ]
+}

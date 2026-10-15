@@ -1,0 +1,24 @@
+id: FM-0002
+slug: context_empty_after_error
+title: Subject returned without context although enrichment ran
+definition: >
+  A summarize or processAgenda result holds a subject whose context is null or has empty text.
+  Both tasks enrich every subject they return, and enrichSubjectData stores
+  { text: "", citationUrls: [] } when the context call throws, so an empty context is a
+  swallowed error (seen in bulk backfills under rate limiting).
+boundary: >
+  Not this mode: subjects stored before enrichment existed (null context in the database, never
+  in a task result); a short but non-empty context.
+suite: [summarize.context, agenda.context]
+scope: task
+severity: degraded
+impact: silent
+status: confirmed
+detector:
+  kind: code
+  module: src/evals/checks/contextEmpty.ts
+issue: schemalabz/opencouncil-tasks#75
+related:
+  - { type: similar, id: FM-0001 }
+decision: fix
+alert: "any run with a fail: Discord immediately with the run's meeting and the failing subject count"

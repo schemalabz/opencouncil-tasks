@@ -1,0 +1,143 @@
+{
+  "id": "decisions.extraction/ΨΥ8ΨΩΗΔ-Υ7Κ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΥ8ΨΩΗΔ-Υ7Κ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥ8ΨΩΗΔ-Υ7Κ",
+    "city": "chalandri",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 7,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "substitute=yes",
+        "mayorStated=yes",
+        "arrival=yes",
+        "changeAnchor=agenda_item",
+        "namedVoters=dissenters_only"
+      ],
+      "namedEdgeCase": "An arriving substitute (Ευθυμίου for Λυμπεράτος) is absent from ΣΥΜΜΕΤΕΧΟΝΤΕΣ while a different substitute with the same annotation is present. This is the document that proved the roll call is opening-only and that a merged present/roster flag reads it backwards.",
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Κ. Ευθυμίου",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 7,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια συζήτησης του 7ου θέματος της ημερήσιας διάταξης προσήλθε ο κ. Κ. Ευθυμίου (σε αντικατάσταση του τακτικού μέλους κ. Γ. Λυμπεράτου)."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 9135,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΜΜΕΤΕΧΟΝΤΕΣ",
+          "ΜΗ ΣΥΜΜΕΤΕΧΟΝΤΕΣ"
+        ],
+        "statedBodySize": 9,
+        "presentMembers": [
+          "ΣΥΜΕΩΝ (ΣΙΜΟΣ) ΡΟΥΣΣΟΣ",
+          "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ",
+          "ΙΩΑΝΝΑ ΑΘΑΝΑΣΑΤΟΥ",
+          "ΧΡΙΣΤΙΝΑ ΜΑΧΑΙΡΑ",
+          "ΔΗΜΗΤΡΙΟΣ ΒΑΣΙΛΟΠΟΥΛΟΣ",
+          "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+          "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ",
+          "ΠΑΡΑΣΚΕΥΗ ΖΟΡΜΠΑ"
+        ],
+        "absentMembers": [
+          "ΓΕΡΑΣΙΜΟΣ ΛΥΜΠΕΡΑΤΟΣ",
+          "ΧΑΡΑΛΑΜΠΟΣ ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 8,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 8,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Κονδυλία Καρατζά",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Παρασκευή Ζορμπά",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chalandri/Δημοτική Επιτροπή",
+  "tags": [
+    "chalandri",
+    "rollCallLayout=present_and_absent",
+    "substitute=yes",
+    "mayorStated=yes",
+    "arrival=yes",
+    "changeAnchor=agenda_item",
+    "namedVoters=dissenters_only"
+  ]
+}

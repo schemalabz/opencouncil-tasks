@@ -1,0 +1,20 @@
+{
+  "kind": "must-fire",
+  "input": {
+    "label": "decision-extraction",
+    "request": {
+      "model": "claude-sonnet-4-6",
+      "max_tokens": 16000,
+      "messages": [],
+      "output_config": {
+        "format": {
+          "type": "json_schema"
+        }
+      }
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"name\": \"Έγκριση",
+      "stopReason": "max_tokens"
+    }
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "id": "decisions.extraction/ΨΠΞΟΩ9Ρ-69Μ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΠΞΟΩ9Ρ-69Μ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΠΞΟΩ9Ρ-69Μ",
+    "city": "vrilissia",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 6,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "substitute=yes",
+        "mayorStated=yes",
+        "voteTally=yes",
+        "outOfAgenda=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2098,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Συμμετέχοντες-Παρόντες",
+          "Μη συμμετέχοντες-Απόντες :",
+          "Προσελεύσεις:",
+          "Αποχωρήσεις:"
+        ],
+        "statedBodySize": 7,
+        "presentMembers": [
+          "Βαφειάδης Κωνσταντίνος",
+          "Μαρίνης Γεώργιος",
+          "Δημαράς Θεόδωρος-Ερνέστος (Άκης)",
+          "Φαράκλας Κωνσταντίνος",
+          "Χρηστάκης Αναστάσιος (Τάσος)",
+          "Δημητρίου Αναστάσιος (Τάσος)",
+          "Παπαχριστοδούλου Μαρίνα"
+        ],
+        "absentMembers": [
+          "Πισιμίσης Ιωάννης",
+          "Σταματελόπουλος Νικήτας",
+          "Λιακόπουλος Κωνσταντίνος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "neither is right",
+            "note": "it's the second out of agenda item"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "second out-of-agenda item"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα Με επτά (7) θετικές ψήφους",
+        "phraseAsExtracted": "Ομόφωνα με επτά (7) θετικές ψήφους",
+        "carriesTally": true,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "vrilissia",
+    "rollCallLayout=present_and_absent",
+    "substitute=yes",
+    "mayorStated=yes",
+    "voteTally=yes",
+    "outOfAgenda=yes"
+  ]
+}

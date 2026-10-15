@@ -1,0 +1,136 @@
+{
+  "id": "decisions.extraction/ΨΙΤ4ΩΞ1-7ΑΚ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΙΤ4ΩΞ1-7ΑΚ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΙΤ4ΩΞ1-7ΑΚ",
+    "city": "papagos-cholargos",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 8,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "namedVoters=dissenters_only",
+        "declaration=yes",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2016,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Ηλίας Αποστολόπουλος",
+          "Αικατερίνη Γκούμα",
+          "Αγλαΐα Σουρανή",
+          "Μιχάλης Υφαντής",
+          "Θεόδωρος Πουρσαϊτίδης",
+          "Αναστασία Χαμηλοθώρη - Κουγιουμτζοπούλου",
+          "Αλέξανδρος Νομικός"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ (επί των καταμετρούμενων ψήφων)",
+        "phraseAsExtracted": "Ομόφωνα (επί των καταμετρούμενων ψήφων)",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Αναστασία Χαμηλοθώρη – Κουγιουμτζοπούλου",
+            "vote": "ABSTAIN"
+          },
+          {
+            "name": "Αλέξανδρος Νομικός",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration stored as a vote",
+            "verdict": "extraction is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "reviewer: what the page prints are votes, not declarations"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτική Επιτροπή",
+  "tags": [
+    "papagos-cholargos",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "namedVoters=dissenters_only",
+    "declaration=yes",
+    "embeddedDecision=yes"
+  ]
+}

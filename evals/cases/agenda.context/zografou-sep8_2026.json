@@ -1,0 +1,529 @@
+{
+  "id": "agenda.context/zografou-sep8_2026",
+  "suite": "agenda.context",
+  "split": "dev",
+  "input": {
+    "meeting": "zografou/sep8_2026"
+  },
+  "replay": "b75c44bd9bb3bc26aed354f8c4193fc3",
+  "expect": {
+    "subject[#1 Φεστιβάλ Κουκλοθεάτρου 2026]": {
+      "value": {
+        "id": "109ca7250db92c54da2e4918cac72af4fefd",
+        "name": "Φεστιβάλ Κουκλοθεάτρου 2026",
+        "description": "Θα εξεταστεί η εξειδίκευση πίστωσης για τη διοργάνωση του 2ου τριήμερου Φεστιβάλ Κουκλοθεάτρου τον Σεπτέμβριο του 2026 στο Δήμο Ζωγράφου.",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null,
+        "topic": "Πολιτισμός",
+        "withdrawn": false,
+        "context": "Το 2ο Φεστιβάλ Κουκλοθεάτρου του Δήμου Ζωγράφου πραγματοποιήθηκε στις 25, 26 και 27 Σεπτεμβρίου 2026 με παραστάσεις θεάτρου κούκλας, θεάτρου σκιών, αφηγήσεις παραδοσιακών παραμυθιών και δημιουργικά εργαστήρια για παιδιά. Οι εκδηλώσεις φιλοξενήθηκαν στην Πλατεία Άνοιξης, το Άλσος Ιλισίων και το Πάρκο Γουδή με ελεύθερη είσοδο για το κοινό.\n\nΤο κουκλοθέατρο αποτελεί μια καλλιτεχνική μορφή που συνδυάζει αρμονικά το θέατρο με τη μουσική, τα εικαστικά και τον χορό. Στην Ελλάδα, το Διεθνές Φεστιβάλ Κουκλοθεάτρου και Παντομίμας του Δήμου Κιλκίς αποτελεί τον μακροβιότερο πολιτιστικό θεσμό με ιστορία που υπερβαίνει τις δύο δεκαετίες. Το Υπουργείο Πολιτισμού επιχορηγεί πολιτιστικές δράσεις μέσω αντικειμενικών κριτηρίων, έχοντας εγκρίνει πρόσφατα 226 προτάσεις πολιτιστικών φορέων με συνολικό ποσό 1.694.500 ευρώ.\n\nΤα φεστιβάλ κουκλοθεάτρου περιλαμβάνουν συνήθως εργαστήρια και εκπαιδευτικές δραστηριότητες για διαφορετικές ηλικιακές ομάδες, με στόχο την επαφή του κοινού με τις τεχνικές αυτής της τέχνης. Οι διοργανώσεις αυτές συμβάλλουν στη σύνδεση με την τοπική κοινωνία και στον πολιτιστικό τουρισμό.",
+        "contextCitationUrls": [
+          "https://www.zografou.gov.gr/me-megali-symmetochi-oloklirothike-to-2o-festival-kouklotheatrou-tou-dimou-zografou/",
+          "https://www.zografou.gov.gr/2o-festival-kouklotheatrou-stis-geitonies-tou-dimou-mas/",
+          "https://notiesdiadromes.gr/2026/09/23/%CE%B1%CF%80%CF%8C-25-%CE%AD%CF%89%CF%82-27-%CF%83%CE%B5%CF%80%CF%84%CE%B5%CE%BC%CE%B2%CF%81%CE%AF%CE%BF%CF%85-%CF%84%CE%BF-2%CE%BF-%CF%86%CE%B5%CF%83%CF%84%CE%B9%CE%B2%CE%AC%CE%BB-%CE%BA%CE%BF%CF%85/",
+          "https://www.visitgreece.gr/el/experiences/culture/archaeological-sites-monuments/international-puppet-and-mime-festival-of-the-municipality-of-kilkis",
+          "https://www.huffingtonpost.gr/culture/yppo-epichorigiseis-ypsous-1-694-500-evro-gia-neotero-politismo-festival-paradosiakon-choron-ayli-politistiki-klironomia/",
+          "https://www.dimoprasion.gr/epichorigiseis-gia-draseis-mouseion-festival-paradosiakon-choron-kai-mousikis-kai-aylis-politistikis-klironomias/",
+          "https://eleftheriaonline.gr/local/politismos/item/361335-ksekina-to-10o-diethnes-festival-kouklotheatrou",
+          "https://eleftheriaonline.gr/local/politismos/item/361288-kalamata-ola-etoima-gia-to-10o-diethnes-festival-kouklotheatrou"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#10 Εκμίσθωση κυλικείου 5ου Λυκείου]": {
+      "value": {
+        "id": "d0baf3c706c6db28213d18df58802fa02908",
+        "name": "Εκμίσθωση κυλικείου 5ου Λυκείου",
+        "description": "Θα εξεταστεί η έγκριση πρακτικού άγονου διαγωνισμού, η έγκριση διενέργειας επαναληπτικού δημόσιου πλειοδοτικού διαγωνισμού και η κατάρτιση όρων διακήρυξης για την εκμίσθωση του κυλικείου του 5ου Λυκείου Ζωγράφου.",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Η εκμίσθωση σχολικών κυλικείων αποτελεί αρμοδιότητα της Δημοτικής Επιτροπής, η οποία διενεργεί διαγωνισμό λαμβάνοντας υπόψη την τιμή της προσφοράς, την προϋπηρεσία σε μίσθωση σχολικού κυλικείου και την πολυτεκνική ιδιότητα. Οι συμβάσεις ισχύουν για τέσσερα χρόνια, αρχίζουν την 1η Ιουλίου και λήγουν την 30η Ιουνίου του τέταρτου έτους, ενώ η Σχολική Επιτροπή μπορεί να παρατείνει τη σύμβαση μίσθωσης του κυλικείου μέχρι δύο χρόνια. Τα μισθώματα των σχολικών κυλικείων αποτελούν έσοδο της αρμόδιας Σχολικής Επιτροπής.\n\nΌταν ένας διαγωνισμός κηρύσσεται άγονος λόγω έλλειψης προσφορών ή μη αποδοχής των υποβληθεισών, διεξάγεται επαναληπτικός διαγωνισμός. Η Επιτροπή Διαγωνισμού προτείνει την κήρυξη του διαγωνισμού ως άγονου και η Οικονομική Επιτροπή εγκρίνει το πρακτικό και αποφασίζει την επανάληψη του διαγωνισμού με τους ίδιους όρους. Η διαδικασία αυτή είναι σημαντική για τη διασφάλιση της λειτουργίας των σχολικών κυλικείων, καθώς η παρουσία του εκμισθωτή στο κυλικείο τις ώρες λειτουργίας του είναι απαραίτητη.",
+        "contextCitationUrls": [
+          "https://mitos.gov.gr/index.php/%CE%94%CE%94:%CE%95%CE%BA%CE%BC%CE%AF%CF%83%CE%B8%CF%89%CF%83%CE%B7_%CE%94%CE%B9%CE%BA%CE%B1%CE%B9%CF%8E%CE%BC%CE%B1%CF%84%CE%BF%CF%82_%CE%95%CE%BA%CE%BC%CE%B5%CF%84%CE%AC%CE%BB%CE%BB%CE%B5%CF%85%CF%83%CE%B7%CF%82_%CE%BA%CF%85%CE%BB%CE%B9%CE%BA%CE%B5%CE%AF%CF%89%CE%BD_%CE%B4%CE%B7%CE%BC%CF%8C%CF%83%CE%B9%CF%89%CE%BD_%CF%83%CF%87%CE%BF%CE%BB%CE%B5%CE%AF%CF%89%CE%BD",
+          "https://www.aftodioikisi.gr/paideia/allages-stin-ekmisthosi-kylikeion-dimosion-scholeion-fek/",
+          "https://www.esos.gr/arthra/82909/nea-apofasi-gia-ti-leitoyrgia-ton-kylikeion-dimosion-sholeion",
+          "https://www.dsanet.gr/Epikairothta/Nomothesia/ya11927_04.htm",
+          "https://edu.klimaka.gr/nomothesia/symvulia-epitropes/2048-leitourgia-kylikeia-dhmosia-sxoleia",
+          "https://kiato.gov.gr/%CE%B4%CE%B9%CE%B1%CE%BA%CE%B7%CF%81%CF%85%CE%BE%CE%B7-%CF%80%CE%BB%CE%B5%CE%B9%CE%BF%CE%B4%CE%BF%CF%84%CE%B9%CE%BA%CE%BF%CF%85-%CE%B4%CE%B9%CE%B1%CE%B3%CF%89%CE%BD%CE%B9%CF%83%CE%BC%CE%BF%CF%85/",
+          "https://www.aeginaportal.gr/aftodioikisi/epitropes/29265-agonos-o-diagonismos-gia-tis-meletes-tou-kleistoy-gipedou-tis-aiginas-i-oikonomiki-epitropi-apofasise-na-epanalifthei.html"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#11 Δαπάνη εκπαίδευσης Δημοτικής Αστυνομίας]": {
+      "value": {
+        "id": "b4febf622b4b820f270338203305c51b1d0c",
+        "name": "Δαπάνη εκπαίδευσης Δημοτικής Αστυνομίας",
+        "description": "Θα εξεταστεί η έγκριση δαπάνης για οδοιπορικά και σίτιση των υπαλλήλων της Δημοτικής Αστυνομίας κατά τη διάρκεια της υποχρεωτικής τους εκπαίδευσης.",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null,
+        "topic": "Δημόσια Ασφάλεια",
+        "withdrawn": false,
+        "context": "Η Δημοτική Αστυνομία αποτελείται από ειδικό ένστολο προσωπικό που λαμβάνει υποχρεωτική εισαγωγική εκπαίδευση μετά τη δημοσίευση των οριστικών πινάκων επιτυχόντων. Με πρόσφατη υπουργική απόφαση (ΦΕΚ Β' 1682/26.03.2026) καθορίστηκε ολοκληρωμένο πλαίσιο για την εκπαίδευση, που περιλαμβάνει 720 ώρες συνολικά σε διάρκεια 6 μηνών, με υποχρεωτική παρακολούθηση. Η εκπαίδευση είναι θεωρητική και πρακτική, με τρεις μήνες θεωρητική εκπαίδευση στο ΕΚΔΔΑ, δύο μήνες πρακτική άσκηση σε αστυνομικά τμήματα και έναν μήνα σε αστυνομικές σχολές.\n\nΤα έξοδα της εισαγωγικής εκπαίδευσης και της επιμόρφωσης του ειδικού ένστολου προσωπικού της δημοτικής αστυνομίας καλύπτονται από πιστώσεις του προϋπολογισμού του οικείου δήμου. Κατά τη διάρκεια της εκπαίδευσής τους στις εγκαταστάσεις της Ελληνικής Αστυνομίας, οι εκπαιδευόμενοι δημοτικοί αστυνομικοί δύνανται να διαμένουν και να σιτίζονται εντός αυτών. Οι δαπάνες για οδοιπορικά και σίτιση αποτελούν αναγκαίες δαπάνες που πρέπει να εγκρίνονται από το Δημοτικό Συμβούλιο για την ομαλή διεξαγωγή της υποχρεωτικής εκπαίδευσης.\n\nΟι δήμοι υποχρεούνται να μεριμνούν για την επιμόρφωση και την τακτική επανεκπαίδευση των δημοτικών αστυνομικών σε όλη τη διάρκεια της σταδιοδρομίας τους. Η ολοκλήρωση της εκπαίδευσης αποτελεί προϋπόθεση για τη μονιμοποίηση των νέων δημοτικών αστυνομικών και την απόκτηση των απαραίτητων προσόντων για την άσκηση των καθηκόντων τους.",
+        "contextCitationUrls": [
+          "https://www.opengov.gr/ypes/?p=8495",
+          "https://www.dsanet.gr/Epikairothta/Nomothesia/n3731_08.htm",
+          "https://www.myota.gr/2026/03/28/%CF%85%CF%80%CE%BF%CF%85%CF%81%CE%B3%CE%B9%CE%BA%CE%AE-%CE%B1%CF%80%CF%8C%CF%86%CE%B1%CF%83%CE%B7-%CE%B3%CE%B9%CE%B1-%CF%84%CE%B7%CE%BD-%CE%B5%CE%BA%CF%80%CE%B1%CE%AF%CE%B4%CE%B5%CF%85%CF%83%CE%B7/",
+          "https://tomanifesto.gr/dimotiki-astynomia-allages-stis-proslipseis-tin-ekpaideysi-kai-tis-armodiotites-187901",
+          "https://www.ypes.gr/wp-content/uploads/2026/03/eggr17155-20260327.pdf"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#12 Χορηγία φωτιστικών γηπέδου Γουδή]": {
+      "value": {
+        "id": "61cb0acabc22f4b1d3a510b6b21292c02639",
+        "name": "Χορηγία φωτιστικών γηπέδου Γουδή",
+        "description": "Θα εξεταστεί η αποδοχή χορηγίας φωτιστικών σωμάτων Led για το ανοικτό γήπεδο ποδοσφαίρου 11x11 στο Πάρκο Γουδή του Δήμου Ζωγράφου. Η χορηγία αφορά τον φωτισμό αθλητικής εγκατάστασης.",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null,
+        "topic": "Αθλητισμός",
+        "withdrawn": false,
+        "context": "Η αποδοχή χορηγιών από δήμους ρυθμίζεται από υπουργική απόφαση που καθορίζει ανώτατα όρια συνδεδεμένα με τους Κεντρικούς Αυτοτελείς Πόρους (ΚΑΠ) κάθε δήμου. Συγκεκριμένα, το όριο για χορηγίες ανέρχεται στο 1% επί των ΚΑΠ λειτουργικών δαπανών της προηγούμενης χρήσης, πολλαπλασιαζόμενο με τον αντίστοιχο συντελεστή κάθε δήμου. Εξαιρούνται από τα όρια αυτά οι χορηγίες που χρηματοδοτούνται από έκτακτες οικονομικές ενισχύσεις για συγκεκριμένο σκοπό.\n\nΗ αντικατάσταση παλαιών φωτιστικών με σύγχρονα LED σε αθλητικές εγκαταστάσεις επιτυγχάνει εξοικονόμηση ενέργειας άνω του 70%, συμβάλλοντας στη μείωση του λειτουργικού κόστους και του περιβαλλοντικού αποτυπώματος. Η βελτιστοποίηση του φωτισμού επιτρέπει την απρόσκοπτη λειτουργία των εγκαταστάσεων κατά τις βραδινές ώρες για προπονήσεις συλλόγων και αθλούμενων πολιτών. Το αθλητικό συγκρότημα στο Πάρκο Γουδή περιλαμβάνει γήπεδο 11x11 που παραχωρείται σε τοπικά αθλητικά σωματεία και σχολικά συγκροτήματα.",
+        "contextCitationUrls": [
+          "https://parianostypos.gr/ellada/ellada-koinonia/item/111351-nea-ypourgiki-apofasi-vazei-oria-stis-epixorigiseis-xorigies-kai-enisxyseis-apo-dimous-kai-perifereies",
+          "https://www.dimokratiki.gr/02-09-2026/o-dimos-rodou-anavathmise-to-voithitiko-gipedo-tis-ialysou-me-ypersygchrono-fotismo-led/",
+          "https://enypografa.gr/%CF%80%CE%B5%CF%81%CE%B9%CF%86%CE%B5%CF%81%CE%B5%CE%B9%CE%B1-%CE%B1%CF%84%CF%84%CE%B9%CE%BA%CE%B7%CF%82/%CE%BD%CE%AD%CE%BF%CF%82-%CF%86%CF%89%CF%84%CE%B9%CF%83%CE%BC%CF%8C%CF%82-%CF%83%CF%84%CE%BF-%CE%B3%CE%AE%CF%80%CE%B5%CE%B4%CE%BF-%CF%80%CE%BF%CE%B4%CE%BF%CF%83%CF%86%CE%B1%CE%AF%CF%81%CE%BF%CF%85/",
+          "https://zografouculture.gr/project/gipedo-podosferou-goudi/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#13 Αποδοχή δωρεάς έργων τέχνης]": {
+      "value": {
+        "id": "ee7de2eaec00ed975b2e33e9e26d9913fe25",
+        "name": "Αποδοχή δωρεάς έργων τέχνης",
+        "description": "Θα εξεταστεί η κατ' αρχήν αποδοχή δωρεάς έργων τέχνης καθώς και η έγκριση εκτίμησης και ψηφιοποίησης αυτών.",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null,
+        "topic": "Πολιτισμός",
+        "withdrawn": false,
+        "context": "Η αποδοχή δωρεών από τους δήμους αποτελεί διαδικασία που απαιτεί απόφαση της Δημοτικής Επιτροπής ή του Δημοτικού Συμβουλίου, η οποία αξιολογεί τη χρησιμότητα και την προέλευση των δωρούμενων αντικειμένων. Σύμφωνα με τη νομοθεσία για δωρεές προς το δημόσιο τομέα, ο δωρητής και ο εξουσιοδοτημένος εκπρόσωπος του δήμου συνάπτουν συμβολαιογραφική πράξη δωρεάς. Τα υλικά που δωρίζονται πρέπει να καταγράφονται στο βιβλίο υλικού καθώς και στο Μητρώο Παγίων ώστε να είναι προσβάσιμα προς έλεγχο ανά πάσα στιγμή.\n\nΗ εκτίμηση της αξίας των έργων τέχνης αποτελεί σημαντικό βήμα της διαδικασίας, καθώς διασφαλίζει την τεκμηρίωση της περιουσίας του δήμου. Ως πρωτότυπα έργα τέχνης νοούνται τα έργα εικαστικών τεχνών, όπως οι πίνακες, τα κολάζ, τα έργα ζωγραφικής, τα σχέδια, οι εικόνες χαρακτικής, χαλκογραφίες και λιθογραφίες, τα γλυπτά, τα εργόχειρα χαλιά τοίχου, τα κεραμικά και έργα υαλουργίας και οι φωτογραφίες. Η ψηφιοποίηση των έργων συμβάλλει στη διατήρηση, την προβολή και την προστασία της πολιτιστικής κληρονομιάς που αποκτά ο δήμος.\n\nΟ Δήμος Ζωγράφου διαθέτει Εργαστήριο Ζωγραφικής που δραστηριοποιείται για περισσότερο από μία τριακονταετία, γεγονός που καταδεικνύει το ενδιαφέρον του δήμου για τις εικαστικές τέχνες. Οι δωρεές έργων τέχνης μπορούν να εμπλουτίσουν τη δημοτική συλλογή και να προσφέρουν πολιτιστικά οφέλη στους δημότες μέσω εκθέσεων και εκπαιδευτικών προγραμμάτων.",
+        "contextCitationUrls": [
+          "https://www.patmostimes.gr/gia-tis-dorees-stous-dimous-prepei-na-efarmozetai-i-nomothesia-allios-prokeitai-gia-paranomi-diacheirisi/",
+          "https://opengov.gr/minfin/?p=13744",
+          "https://www.dsanet.gr/Epikairothta/Nomothesia/n3524_07.htm",
+          "https://zografouculture.gr/project/ergastiri-zografikis/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#14 Κοπή δένδρου πλατεία Άνοιξη]": {
+      "value": {
+        "id": "2e0015781eb73315e53601badda1cbeb4101",
+        "name": "Κοπή δένδρου πλατεία Άνοιξη",
+        "description": "Θα εξεταστεί η έκφραση γνώμης για την κοπή δένδρου λεύκας στην πλατεία Άνοιξη στο Δήμο Ζωγράφου.",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null,
+        "topic": "Περιβάλλον",
+        "withdrawn": false,
+        "context": "Η κοπή δένδρων σε κοινόχρηστους χώρους, όπως πλατείες και πεζοδρόμια, αποτελεί αρμοδιότητα του οικείου Δήμου. Η διαδικασία προβλέπει κατάθεση αιτήματος στο πρωτόκολλο του Δήμου, επιτόπια εξέταση από γεωπόνους, εισήγηση της Διεύθυνσης Περιβάλλοντος προς την Επιτροπή Περιβάλλοντος, και τελική απόφαση από το Δημοτικό Συμβούλιο. Η λεύκα ανήκει στα δασικά δέντρα που προστατεύονται από τη νομοθεσία, γεγονός που καθιστά την έγκριση κοπής ιδιαίτερα σημαντική.\n\nΗ πλατεία Άνοιξη αποτελεί κεντρικό δημόσιο χώρο του Δήμου Ζωγράφου που ολοκλήρωσε πρόσφατα (Μάιος 2025) εκτεταμένη ανάπλαση με στόχο τη δημιουργία σύγχρονου χώρου αναψυχής και κοινωνικοποίησης για όλες τις ηλικίες. Το έργο χρηματοδοτήθηκε με 2,35 εκατ. ευρώ από το Εθνικό Σχέδιο Ανάκαμψης και Ανθεκτικότητας «Ελλάδα 2.0» της Ευρωπαϊκής Ένωσης. Η ανάπλαση περιλάμβανε φυτοτεχνική αναβάθμιση με νέες αρδευόμενες φυτεύσεις δένδρων και θάμνων, γεγονός που καθιστά κάθε απόφαση για κοπή δένδρου ιδιαίτερα σημαντική για τη διατήρηση του πρασίνου στην πυκνοδομημένη περιοχή.\n\nΗ αξιολόγηση της φυτοϋγείας των δένδρων και η λήψη αποφάσεων για την κοπή τους αποτελεί μέρος της συνολικής διαχείρισης του αστικού πρασίνου, που στοχεύει στην ισορροπία μεταξύ ασφάλειας, αισθητικής και περιβαλλοντικής προστασίας.",
+        "contextCitationUrls": [
+          "https://www.aftodioikisi.gr/ota/dimoi/i-grafeiokratia-ton-dentron-amp-ta-provlimata-poy-prokalei/",
+          "https://www.protothema.gr/greece/article/1096645/kakokairia-mideia-telika-poios-einai-upeuthunos-gia-tin-kopi-ton-dedron/",
+          "https://www.kifissia.gr/el/DiadikasiaKopisDendron",
+          "https://www.zografou.gov.gr/oloklirothike-i-anaplasi-tis-plateias-anoixis-tou-dimou-mas/",
+          "https://www.zografou.gov.gr/prokiriksis/prokiryxi-dimosias-symvasis-gia-paremvaseis-anavathmisis-tis-plateias-anoixi-kai-ton-trion-parakeimenon-kentrikon-odon/",
+          "https://www.in.gr/2022/10/17/politics/aftodioikisi/anakataskeyazetai-plateia-anoiksis-sto-dimo-zografou/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#15 Επιστροφή αχρεωστήτως εισπραχθέντων]": {
+      "value": {
+        "id": "3961f508fe38d1b635af35ccace0eb3ad6be",
+        "name": "Επιστροφή αχρεωστήτως εισπραχθέντων",
+        "description": "Θα εξεταστεί η επιστροφή αχρεωστήτως εισπραχθέντων ποσών από τον Δήμο Ζωγράφου.",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null,
+        "topic": "Προϋπολογισμός & Οικονομία",
+        "withdrawn": false,
+        "context": "Η επιστροφή αχρεωστήτως εισπραχθέντων ποσών αποτελεί διαδικασία που ρυθμίζεται από το άρθρο 140 παράγραφος 2 του νόμου 4270/2014, σύμφωνα με το οποίο η απαίτηση κατά του Δημοσίου προς επιστροφή αχρεωστήτως καταβληθέντος χρηματικού ποσού παραγράφεται μετά τρία έτη από την καταβολή. Αφορά περιπτώσεις όπου πολίτες ή επιχειρήσεις κατέβαλαν σε δήμους ποσά που δεν όφειλαν, είτε λόγω διπλής χρέωσης, είτε λόγω λανθασμένης βεβαίωσης δημοτικών τελών, είτε για άλλους λόγους.\n\nΩς αχρεωστήτως καταβληθέντα ποσά νοούνται και τα ποσά τα οποία οφείλονταν κατά το χρόνο της καταβολής τους, κατέστησαν όμως εκ των υστέρων αχρεώστητα. Εφόσον τα δικαιολογητικά είναι πλήρη, ο χρόνος διεκπεραίωσης του αιτήματος είναι εξήντα ημέρες από την ημερομηνία υποβολής της αίτησης, σύμφωνα με το άρθρο 6 παράγραφος 1 του νόμου 3242/2004. Η διαδικασία αυτή είναι σημαντική καθώς διασφαλίζει τα δικαιώματα των πολιτών και αποτρέπει τον αδικαιολόγητο πλουτισμό των δήμων από εσφαλμένες εισπράξεις.\n\nΣε πολλές περιπτώσεις, δημοτικά συμβούλια ικανοποιούν αιτήματα επιστροφής μετά από παρεμβάσεις του Συνηγόρου του Πολίτη, ενώ η επιστροφή αχρεωστήτως καταβληθέντων ποσών δεν συνδέεται με την ύπαρξη ή μη υπαιτιότητας των υπόχρεων.",
+        "contextCitationUrls": [
+          "https://www.e-forologia.gr/lawbank/document.aspx?digest=F6DD4669245B3978.32B0ECF259D478&version=2014%2F06%2F28",
+          "https://www.taxheaven.gr/news/13609/epistrofh-axrewsthtws-katablhoentwn-poswn-gia-dhmotika-telh-kai-foroys-meta-apo-parembash-toy-synhgoroy-toy-polith",
+          "https://www.pkm.gov.gr/default.aspx?lang=el-GR&page=1011"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#16 Διαγραφή ανείσπρακτων Δ.Τ, Δ.Φ, ΤΑΠ]": {
+      "value": {
+        "id": "4521e622c7ffe1e0d95845ec3e46225b5156",
+        "name": "Διαγραφή ανείσπρακτων Δ.Τ, Δ.Φ, ΤΑΠ",
+        "description": "Θα εξεταστεί η διαγραφή από βεβαιωτικούς χρηματικούς καταλόγους ανείσπρακτων δημοτικών τελών (Δ.Τ), δημοτικού φόρου (Δ.Φ) και ΤΑΠ ηλεκτροδοτούμενων ακινήτων από καταστάσεις ΔΕΗ.",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null,
+        "topic": "Προϋπολογισμός & Οικονομία",
+        "withdrawn": false,
+        "context": "Η διαγραφή ανείσπρακτων δημοτικών οφειλών αποτελεί διαδικασία που ρυθμίζεται από συγκεκριμένο νομοθετικό πλαίσιο. Με τον νόμο 5027/2023 ορίζεται πενταετής παραγραφή για όλες τις οφειλές προς τους δήμους, ενώ προβλέπεται η διαγραφή και μη αναζήτηση οφειλών που γεννήθηκαν πριν από την 31η Δεκεμβρίου 2012. Τα δημοτικά τέλη καθαριότητας και φωτισμού, καθώς και το Τέλος Ακίνητης Περιουσίας (ΤΑΠ), συνεισπράττονται με τους λογαριασμούς του ηλεκτρικού ρεύματος από τη ΔΕΗ ή τους εναλλακτικούς προμηθευτές για τα ηλεκτροδοτούμενα ακίνητα.\n\nΙδιαίτερο ενδιαφέρον παρουσιάζει το ζήτημα των μη ηλεκτροδοτούμενων ακινήτων, όπου πρόσφατες νομοθετικές ρυθμίσεις προβλέπουν απαλλαγές. Η ισχύουσα νομοθεσία προβλέπει ότι η υποβολή δήλωσης διακοπής ρευματοδότησης ακινήτου στον οικείο Δήμο απαλλάσσει τον ιδιοκτήτη από τα δημοτικά τέλη καθαριότητας και φωτισμού μόνο από την ημερομηνία υποβολής της στην υπηρεσία Εσόδων και μετά. Η διαγραφή ανείσπρακτων οφειλών είναι σημαντική για τη δημοσιονομική διαχείριση των δήμων, καθώς η αδράνεια είσπραξης οδηγεί συχνότατα στην οριστική απώλεια των εσόδων, με τις οικονομικές υπηρεσίες να εισηγούνται προς τα δημοτικά συμβούλια τη διαγραφή τους λόγω παραγραφής.",
+        "contextCitationUrls": [
+          "https://www.odigostoupoliti.eu/diagrafontai-me-nomo-ofeiles-politon-pros-tous-dimous/",
+          "https://www.star.gr/eidiseis/oikonomia/614955/ofeiles-se-dhmoys-poia-xreh-diagrafontai",
+          "https://www.vlaxerna.gr/?p=49879",
+          "https://ecopress.gr/pos-diagrafontai-ofeiles-dimotikon-t/",
+          "https://www.esodaota.gr/wp-content/uploads/2023/12/%CE%91%CE%B4%CF%81%CE%AC%CE%BD%CE%B5%CE%B9%CE%B1-%CF%83%CF%84%CE%B7%CE%BD-%CE%B5%CE%AF%CF%83%CF%80%CF%81%CE%B1%CE%BE%CE%B7-%CF%84%CF%89%CE%BD-%CE%B4%CE%B7%CE%BC%CE%BF%CF%84%CE%B9%CE%BA%CF%8E%CE%BD-%CE%B5%CF%83%CF%8C%CE%B4%CF%89%CE%BD.pdf"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#17 Διαγραφή οφειλών παραβάσεων ΚΟΚ]": {
+      "value": {
+        "id": "b9e5b9f930899c2a3e33fec3ec7818a3e049",
+        "name": "Διαγραφή οφειλών παραβάσεων ΚΟΚ",
+        "description": "Θα εξεταστεί η διαγραφή οφειλών από παραβάσεις ΚΟΚ από βεβαιωτικούς καταλόγους μισθωμένων οχημάτων από εταιρίες leasing.",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null,
+        "topic": "Προϋπολογισμός & Οικονομία",
+        "withdrawn": false,
+        "context": "Η ταμειακή βεβαίωση των προστίμων ΚΟΚ θα πρέπει να διενεργείται αυστηρά εντός τριετίας, η οποία ξεκινά από τη λήξη του έτους εντός του οποίου αποκτήθηκε η κλήση. Μετά την πάροδο τριών ετών από την απόκτηση του τίτλου βεβαίωσης, η συγκεκριμένη βεβαίωση θεωρείται ως μη νόμιμη και ο δήμος έχει χάσει την αξίωσή του να ζητάει την καταβολή της οφειλής. Ο Συνήγορος του Πολίτη έχει εξετάσει περιπτώσεις όπου δήμοι αρνούνταν να διαγράψουν οφειλές από κλήσεις παλαιών ετών, ενώ κάποιοι δήμοι διατύπωσαν επιφυλάξεις όσον αφορά την έναρξη της προθεσμίας, καθώς θεωρούσαν ότι αυτή εκκινεί από τότε που περιήλθαν σε γνώση τους τα πλήρη στοιχεία του παραβάτη.\n\nΣτην περίπτωση των μισθωμένων οχημάτων από εταιρίες leasing, οι παραβάσεις ΚΟΚ καλύπτονται από τον μισθωτή και όχι από την εταιρεία. Τα οχήματα που είναι μισθωμένα από εταιρείες χρηματοδοτικής μίσθωσης φέρουν μόνο αντίγραφο της άδειας κυκλοφορίας. Η διαδικασία διαγραφής οφειλών από βεβαιωτικούς καταλόγους αποτελεί συνήθη πρακτική των δήμων όταν διαπιστώνεται ότι η οφειλή έχει καταχωρηθεί σε λάθος όνομα ή όταν έχει παρέλθει η νόμιμη προθεσμία βεβαίωσης. Ο Δήμος Ζωγράφου προχωρά τακτικά σε διαγραφές οφειλών από βεβαιωτικούς καταλόγους ανείσπρακτων προστίμων παραβάσεων ΚΟΚ.",
+        "contextCitationUrls": [
+          "https://www.odigostoupoliti.eu/pote-diagrafontai-oi-ofeiles-apo-kliseis-tou-kok/",
+          "https://www.odigostoupoliti.eu/ofeiles-apo-kliseis-gia-paravaseis-tou-kok-se-posa-chronia-diagrafontai/",
+          "https://www.taxheaven.gr/news/66429/synhgoros-toy-polith-paragrafh-ofeilwn-apo-parabaseis-kok-se-ekkremothta-oi-ofeiles-pareloontwn-etwn",
+          "https://www.naftemporiki.gr/business/2006149/oroi-leasing-aytokiniton-vasikoi-oroi-symvoyles/",
+          "https://www.e-nomothesia.gr/law-news/neos-kok-nomos-52092025-phek-100a-13-6-2025-ta-prostima-ana-kathgoria-kai-ana-parabasi.html",
+          "https://et.diavgeia.gov.gr/luminapi/api/search/export?q=organizationUid:%226104%22&sort=recent&wt=xml"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#18 Διαγραφή προστίμου κοινόχρηστου χώρου]": {
+      "value": {
+        "id": "f8f5f6e6ce32bf53815430d357cc990b4844",
+        "name": "Διαγραφή προστίμου κοινόχρηστου χώρου",
+        "description": "Θα εξεταστεί η διαγραφή προστίμου αυθαίρετης χρήσης κοινόχρηστου χώρου στο Δήμο Ζωγράφου.",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null,
+        "topic": "Προϋπολογισμός & Οικονομία",
+        "withdrawn": false,
+        "context": "Η αυθαίρετη χρήση κοινόχρηστου χώρου αφορά την κατάληψη δημοτικών χώρων χωρίς την απαιτούμενη άδεια του Δημοτικού Συμβουλίου. Οι κοινόχρηστοι χώροι προορίζονται για την ελεύθερη κυκλοφορία πεζών και οχημάτων, και ο Δήμος έχει την ευθύνη διαχείρισης και εκμετάλλευσής τους διαφυλάττοντας τον δημόσιο χαρακτήρα τους. Σε περίπτωση χρήσης κοινόχρηστου χώρου χωρίς άδεια, επιβάλλεται νομίμως πρόστιμο από τον Δήμο.\n\nΠρόσφατα, με τον Νόμο 5143/2024 που δημοσιεύθηκε τον Οκτώβριο 2024, προβλέπονται σημαντικά αυξημένα πρόστιμα και αυστηρότερες κυρώσεις για παραβάσεις σε ιδιοκτήτες καταστημάτων που δεν έχουν εφοδιαστεί με την απαιτούμενη άδεια. Η διαγραφή προστίμων αποτελεί αρμοδιότητα του Δημοτικού Συμβουλίου, το οποίο εξετάζει κάθε περίπτωση ξεχωριστά. Το τέλος χρήσης κοινόχρηστου χώρου ορίζεται με απόφαση Δημοτικού Συμβουλίου και εξαρτάται από την επιφάνεια, τη θέση του καταλαμβανόμενου χώρου και τη διάρκεια της κατάληψης.\n\nΤο θέμα είναι σημαντικό γιατί αφορά τη διαφύλαξη των κοινόχρηστων χώρων της πόλης και την ισότιμη πρόσβαση όλων των πολιτών σε αυτούς, ενώ παράλληλα επηρεάζει τα δημοτικά έσοδα από τέλη και πρόστιμα.",
+        "contextCitationUrls": [
+          "https://www.lawspot.gr/nomika-nea/epivoli-prostimoy-gia-aythaireti-hrisi-koinohristoy-horoy-fysi-toy-prostimoy/",
+          "https://www.b2green.gr/el/runmyproject/blog_post/73507/ti-epitrepetai-kai-ti-apagoreyetai-stous-dimosious-koinochristous-chorous",
+          "https://www.aftodioikisi.gr/ota/dimoi/ayximena-prostima-provlepei-o-neos-nomos-gia-aythaireti-chrisi-koinochriston-choron/",
+          "https://mitos.gov.gr/index.php/%CE%94%CE%94:%CE%A0%CE%B1%CF%81%CE%B1%CF%87%CF%8E%CF%81%CE%B7%CF%83%CE%B7_%CE%9A%CE%BF%CE%B9%CE%BD%CF%8C%CF%87%CF%81%CE%B7%CF%83%CF%84%CE%BF%CF%85_%CE%A7%CF%8E%CF%81%CE%BF%CF%85_%CF%83%CE%B5_%CE%9A%CE%B1%CF%84%CE%B1%CF%83%CF%84%CE%AE%CE%BC%CE%B1%CF%84%CE%B1_%CE%A5%CE%B3%CE%B5%CE%B9%CE%BF%CE%BD%CE%BF%CE%BC%CE%B9%CE%BA%CE%BF%CF%8D_%CE%95%CE%BD%CE%B4%CE%B9%CE%B1%CF%86%CE%AD%CF%81%CE%BF%CE%BD%CF%84%CE%BF%CF%82_%CE%B3%CE%B9%CE%B1_%CE%91%CE%BD%CE%AC%CF%80%CF%84%CF%85%CE%BE%CE%B7_%CE%A4%CF%81%CE%B1%CF%80%CE%B5%CE%B6%CE%BF%CE%BA%CE%B1%CE%B8%CE%B9%CF%83%CE%BC%CE%AC%CF%84%CF%89%CE%BD"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#2 Χορευτικό Φεστιβάλ Θεσσαλών]": {
+      "value": {
+        "id": "9d0e9dae17a8de0f86f770334eaea3737b29",
+        "name": "Χορευτικό Φεστιβάλ Θεσσαλών",
+        "description": "Θα εξεταστεί η εξειδίκευση πίστωσης για τη συνδιοργάνωση του «1ου Χορευτικού Φεστιβάλ Θεσσαλών Ζωγράφου» με τον Πολιτιστικό Σύλλογο «Η Παναγία Τσούμα». Το φεστιβάλ έχει ως θέμα τη γιορτή της παράδοσης και τη δημιουργία κοινότητας.",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null,
+        "topic": "Πολιτισμός",
+        "withdrawn": false,
+        "context": "Το 1ο Χορευτικό Φεστιβάλ Θεσσαλών Ζωγράφου διοργανώθηκε από τον Σύλλογο Θεσσαλών και Φίλων της Θεσσαλίας Δήμου Ζωγράφου «Η Παναγία Τσούμα» σε συνδιοργάνωση με τον Δήμο Ζωγράφου, με κεντρικό μήνυμα «Γιορτάζουμε την παράδοση, χτίζουμε κοινότητα». Ο συγκεκριμένος πολιτιστικός σύλλογος συμμετέχει ενεργά στις πολιτιστικές δραστηριότητες της πόλης του Ζωγράφου, ενώ η εκδήλωση πραγματοποιήθηκε στις 19 Σεπτεμβρίου 2026 με ελεύθερη είσοδο.\n\nΗ συνδιοργάνωση πολιτιστικών εκδηλώσεων μεταξύ δήμων και πολιτιστικών συλλόγων αποτελεί συνήθη πρακτική στην Ελλάδα. Νομικά πρόσωπα ιδιωτικού ή δημοσίου δικαίου μη κερδοσκοπικού χαρακτήρα με πολιτιστικούς σκοπούς μπορούν να υποβάλλουν προτάσεις για επιχορήγηση πολυθεματικών φεστιβάλ. Η επιχορήγηση πολιτιστικών φεστιβάλ αποσκοπεί στην ενίσχυση της πολιτιστικής δραστηριότητας στην περιφέρεια, στην ενδυνάμωση της πολιτιστικής δραστηριότητας και στην ανάδειξη της πολιτιστικής πολυμορφίας της Ελλάδας. Το Υπουργείο Πολιτισμού στηρίζει σταθερά δράσεις που ενισχύουν την πολιτιστική δημιουργία και διαφυλάσσουν τις ζωντανές εκφράσεις της άυλης πολιτιστικής κληρονομιάς.\n\nΤα φεστιβάλ παραδοσιακών χορών συμβάλλουν στη διατήρηση της πολιτιστικής ταυτότητας και στη δημιουργία κοινοτικών δεσμών. Πολλοί σύλλογοι Θεσσαλών από διάφορες περιοχές της Αττικής συμμετέχουν σε τέτοιες διοργανώσεις, ενώ τα πολιτιστικά φεστιβάλ διευρύνουν την πρόσβαση των πολιτών στον σύγχρονο πολιτισμό και αναδεικνύουν το δημιουργικό δυναμικό των τοπικών κοινοτήτων, συμβάλλοντας στην κοινωνική συνοχή.",
+        "contextCitationUrls": [
+          "https://www.zografou.gov.gr/1o-festival-chorou-giortazoume-tin-paradosi-chtizoume-koinotita/",
+          "https://www.zografou.gov.gr/to-3o-zografiotiko-antamoma-synergazomenon-politistikon-syllogon-kai-omadon-eichame-ti-chara-na-apolafsoume-kai-na-ginoume-anapospasto-meros-tou-to-savvato-21-kai-tin-kyriaki-22-iouniou/",
+          "https://portal.culture.gov.gr/epichorigiseis/polythematika-festival-draseis/",
+          "https://portal.culture.gov.gr/apotelesmata-prosklisis-polythematikon-festival-draseon-2026/",
+          "https://www.dimoprasion.gr/epichorigiseis-gia-draseis-mouseion-festival-paradosiakon-choron-kai-mousikis-kai-aylis-politistikis-klironomias/",
+          "https://www.e-grammi.gr/o-syllogos-thessalon-galatsioy-argo/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#3 Εκδήλωση Τρίτης Ηλικίας 2026]": {
+      "value": {
+        "id": "29cce693c813407635d326c5c27fa79428ed",
+        "name": "Εκδήλωση Τρίτης Ηλικίας 2026",
+        "description": "Θα εξεταστεί η εξειδίκευση πίστωσης για τη διοργάνωση εκδήλωσης στο πλαίσιο του εορτασμού της Παγκόσμιας Ημέρας για την Τρίτη Ηλικία για το έτος 2026.",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null,
+        "topic": "Πρόνοια",
+        "withdrawn": false,
+        "context": "Η Παγκόσμια Ημέρα για την Τρίτη Ηλικία εορτάζεται κάθε χρόνο την 1η Οκτωβρίου, αφού ο ΟΗΕ την ανακήρυξε το 1990. Οι πέντε βασικές αρχές που όρισε ο ΟΗΕ για τους ηλικιωμένους είναι η ανεξαρτησία, η ενεργός συμμετοχή στα κοινά, η δυνατότητα εκπλήρωσης των προσωπικών στόχων, η φροντίδα και η αξιοπρέπεια. Ο Δήμος Ζωγράφου και το Εθνικό Συμβούλιο Ελληνίδων συνδιοργάνωσαν ημερίδα με θέμα «Τρίτη Ηλικία και Ενεργός Γήρανση» την 1η Οκτωβρίου 2026, εστιάζοντας σε ζητήματα που αφορούν τα δικαιώματα, την ενεργό γήρανση, την ποιότητα ζωής, την υγεία και τον ρόλο των ΚΑΠΗ.\n\nΤο 23,7% του ελληνικού πληθυσμού είναι 65 ετών και άνω, γεγονός που καθιστά τη δημογραφική γήρανση μία από τις μεγαλύτερες προκλήσεις στην Ελλάδα. Ο αριθμός των ατόμων ηλικίας 65 ετών και άνω προβλέπεται να υπερδιπλασιαστεί παγκοσμίως, από 761 εκατομμύρια το 2021 σε 1,6 δισεκατομμύρια έως το 2050. Η εποχή της μακροζωίας φέρνει νέες ανάγκες για πρόληψη, φροντίδα, αυτονομία και κοινωνική συμμετοχή. Οι δήμοι σε όλη την Ελλάδα διοργανώνουν εκδηλώσεις με αφορμή την ημέρα αυτή, αναγνωρίζοντας τη σημασία της υποστήριξης και της ενεργού συμμετοχής των ηλικιωμένων στην κοινωνική ζωή.",
+        "contextCitationUrls": [
+          "https://ekka.org.gr/index.php/el/component/icagenda/32-diethnis-imera-gia-tous-ilikiomenous",
+          "https://love-teaching.com/2025/10/1-oktwvriou-pagkosmia-mera-ilikiwmwnwn-papoudes-giagiades-triti-ilikia/",
+          "https://www.lifelinehellas.gr/1%CE%B7-%CE%BF%CE%BA%CF%84%CF%89%CE%B2%CF%81%CE%AF%CE%BF%CF%85-%CF%80%CE%B1%CE%B3%CE%BA%CF%8C%CF%83%CE%BC%CE%B9%CE%B1-%CE%B7%CE%BC%CE%AD%CF%81%CE%B1-%CF%84%CF%89%CE%BD-%CE%B7%CE%BB%CE%B9%CE%BA%CE%B9/",
+          "https://www.zografou.gov.gr/imerida-triti-ilikia-kai-energos-giransi/",
+          "https://notiesdiadromes.gr/2026/09/29/%CE%B7%CE%BC%CE%B5%CF%81%CE%AF%CE%B4%CE%B1-%CE%BC%CE%B5-%CE%B8%CE%AD%CE%BC%CE%B1-%CF%84%CF%81%CE%AF%CF%84%CE%B7-%CE%B7%CE%BB%CE%B9%CE%BA%CE%AF%CE%B1-%CE%BA%CE%B1%CE%B9-%CE%B5%CE%BD%CE%B5%CF%81/",
+          "https://www.emakedonia.gr/pagkosmia-imera-tritis-ilikias-i-dimografiki-giransi-apo-tis-megalyteres-prokliseis-stin-ellada-to-23-7-toy-plithysmoy-65-eton-kai-ano",
+          "https://www.oloygeia.gr/health/pagkosmia-imera-tritis-ilikias-i-ellada-gerna-ti-allazei-stin-ygeia-kai-ti-zoi-ton-megalyteron-anthropon/",
+          "https://unric.org/el/1-%CE%BF%CE%BA%CF%84%CF%89%CE%B2%CF%81%CE%AF%CE%BF%CF%85-%CE%B4%CE%B9%CE%B5%CE%B8%CE%BD%CE%AE%CF%82-%CE%B7%CE%BC%CE%AD%CF%81%CE%B1-%CE%B7%CE%BB%CE%B9%CE%BA%CE%B9%CF%89%CE%BC%CE%AD%CE%BD%CF%89%CE%BD-2/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#4 Πανελλήνιοι Θεατρικοί Αγώνες Ερασιτεχνών]": {
+      "value": {
+        "id": "4a430275b13988842a7bb8e78371e24d677e",
+        "name": "Πανελλήνιοι Θεατρικοί Αγώνες Ερασιτεχνών",
+        "description": "Θα εξεταστεί η συμπληρωματική εξειδίκευση πίστωσης για την πραγματοποίηση των «39ων Πανελλήνιων Θεατρικών Αγώνων Ερασιτεχνικών Θιάσων».",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null,
+        "topic": "Πολιτισμός",
+        "withdrawn": false,
+        "context": "Οι Πανελλήνιοι Θεατρικοί Αγώνες Ερασιτεχνικών Θιάσων αποτελούν έναν από τους μακροβιότερους και σημαντικότερους θεσμούς του είδους του στη χώρα, με ιστορία που εκτείνεται σχεδόν τέσσερις δεκαετίες. Η διοργάνωση έχει καθιερωθεί ως σημείο αναφοράς για το ερασιτεχνικό θέατρο, συγκεντρώνοντας κάθε χρόνο το ενδιαφέρον πολλών θεατρικών ομάδων και πλήθος θεατρόφιλων. Στη φετινή διοργάνωση υπέβαλαν προτάσεις συμμετοχής σχεδόν πενήντα θίασοι, γεγονός που αποδεικνύει τη δυναμική του θεσμού.\n\nΟι 39οι Πανελλήνιοι Θεατρικοί Αγώνες πραγματοποιήθηκαν από 7 έως 20 Σεπτεμβρίου 2026 στο Υπαίθριο Δημοτικό Θέατρο Ζωγράφου. Το πρόγραμμα εμπλουτίστηκε ακαδημαϊκά μέσω συνεργασίας με τη Φιλοσοφική Σχολή και το Τμήμα Θεατρικών Σπουδών του ΕΚΠΑ, με διαλέξεις και βιωματικά θεατρικά σεμινάρια για ενηλίκους. Η είσοδος σε όλες τις παραστάσεις ήταν ελεύθερη, ενώ ήταν ευπρόσδεκτες οι συνεισφορές των πολιτών σε τρόφιμα και φάρμακα για την ενίσχυση των Κοινωνικών Δομών του Δήμου.\n\nΟι Πανελλήνιοι Θεατρικοί Αγώνες προάγουν τον πολιτισμό, ενισχύουν τη θεατρική έκφραση και καλλιεργούν τη συνεργασία και την ανταλλαγή εμπειριών μεταξύ των ερασιτεχνικών θιάσων. Η διοργάνωση προσφέρει μια σημαντική πλατφόρμα για την ανάδειξη της θεατρικής τέχνης, ενώ στόχος της επιτροπής είναι η σύνθεση ενός ποιοτικού και πλουραλιστικού προγράμματος που εκφράζει την πολυμορφία του θεατρικού φαινομένου.",
+        "contextCitationUrls": [
+          "https://www.zografou.gov.gr/97661-2/",
+          "https://zoumenotia.gr/39oi-panellinioi-theatrikoi-agones-dimou-zografou/",
+          "https://notiesdiadromes.gr/2026/09/03/%CE%BE%CE%B5%CE%BA%CE%B9%CE%BD%CE%BF%CF%8D%CE%BD-%CE%BF%CE%B9-39%CE%BF%CE%B9-%CF%80%CE%B1%CE%BD%CE%B5%CE%BB%CE%BB%CE%AE%CE%BD%CE%B9%CE%BF%CE%B9-%CE%B8%CE%B5%CE%B1%CF%84%CF%81%CE%B9%CE%BA%CE%BF%CE%AF/",
+          "https://www.zografou.gov.gr/ornithes-apopse-sto-ypaithrio-dimotiko-theatro-zografou-synechizontai-oi-39oi-panellinioi-theatrikoi-agones/",
+          "https://www.zografou.gov.gr/38oi-panellinioi-theatrikoi-agones-erasitechnikon-thiason-dimou-zografou-apotelesmata-prokrimatikis-epitropis/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#5 Συντήρηση μηχανογραφικών προγραμμάτων]": {
+      "value": {
+        "id": "ced5fad24da2d27418fe42b67c46c71b3da5",
+        "name": "Συντήρηση μηχανογραφικών προγραμμάτων",
+        "description": "Θα εξεταστεί η έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για τη συντήρηση των μηχανογραφικών προγραμμάτων των υπηρεσιών του Δήμου, καθώς και την παροχή υπηρεσιών τεχνικής υποστήριξης και αναβάθμισης. Θα εγκριθούν οι τεχνικές προδιαγραφές και θα καθοριστούν οι όροι διαπραγμάτευσης.",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null,
+        "topic": "Συμμετοχή & Ψηφιακά",
+        "withdrawn": false,
+        "context": "Η διαδικασία διαπραγμάτευσης χωρίς δημοσίευση προκήρυξης διαγωνισμού έχει εξαιρετικό χαρακτήρα και επιτρέπεται να εφαρμόζεται μόνο στις περιοριστικώς απαριθμούμενες στις διατάξεις του Ν. 4412/2016 περιπτώσεις. Ο νόμος 4412/2016 αποτελεί το βασικό νομοθετικό πλαίσιο για τις δημόσιες συμβάσεις έργων, προμηθειών και υπηρεσιών στην Ελλάδα. Η διαδικασία αυτή μπορεί να χρησιμοποιηθεί στο μέτρο που είναι απολύτως απαραίτητο, εάν λόγω κατεπείγουσας ανάγκης οφειλόμενης σε γεγονότα απρόβλεπτα για την αναθέτουσα αρχή, δεν είναι δυνατή η τήρηση των προθεσμιών που προβλέπονται για τις ανοικτές, κλειστές ή ανταγωνιστικές διαδικασίες με διαπραγμάτευση.\n\nΗ συντήρηση μηχανογραφικών προγραμμάτων αποτελεί κρίσιμη υπηρεσία για τη λειτουργία των δημοτικών υπηρεσιών, καθώς τα πληροφοριακά συστήματα υποστηρίζουν καθημερινές διοικητικές, οικονομικές και λογιστικές λειτουργίες. Η αναβάθμιση των πληροφοριακών συστημάτων απαιτεί προσαρμογή των μηχανογραφικών εφαρμογών για να υποστηρίξουν τη νέα ταξινόμηση, τους λογαριασμούς και τη διασύνδεση προϋπολογισμού–λογιστικής. Η τεχνική υποστήριξη και η συνεχής αναβάθμιση των συστημάτων διασφαλίζουν την απρόσκοπτη λειτουργία των υπηρεσιών και την εξυπηρέτηση των πολιτών.\n\nΗ προσφυγή στη διαδικασία αυτή εφαρμόζεται ανεξαρτήτως εκτιμώμενης αξίας της σύμβασης, μόνο εφόσον συντρέχουν οι νόμιμες προϋποθέσεις. Οι δήμοι οφείλουν να τεκμηριώνουν επαρκώς τους λόγους για τους οποίους επιλέγουν αυτή τη διαδικασία, καθώς αποτελεί εξαίρεση από τον κανόνα της ανοικτής διαδικασίας που εξασφαλίζει τη διαφάνεια και τον ανταγωνισμό στις δημόσιες συμβάσεις.",
+        "contextCitationUrls": [
+          "https://pedmede.gr/dieyrkiniseis-tis-eaadisy-schetika-me-tin-prosfygi-sti-diadikasia-diapragmateysis-choris-dimosieysi-prokiryxis-diagonismoy/",
+          "https://www.forin.gr/laws/law/3508/nomos-4412-2016",
+          "https://eclass.ekdd.gr/esdda/modules/document/file.php/KST116/2%CE%BF%20%CE%9C%CE%91%CE%98%CE%97%CE%9C%CE%91.pdf",
+          "https://karagilanis.gr/files/odigos_py__2026.pdf"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#6 Σύστημα d-management σχολικών μονάδων]": {
+      "value": {
+        "id": "d7987f757f1de5f72c21021b073b145df699",
+        "name": "Σύστημα d-management σχολικών μονάδων",
+        "description": "Θα εξεταστεί η έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για την παροχή υπηρεσίας ολοκληρωμένου πληροφορικού συστήματος d-management για τη διαχείριση των σχολικών μονάδων Α΄βάθμιας και Β΄βάθμιας εκπαίδευσης. Θα εγκριθούν οι τεχνικές προδιαγραφές και θα καθοριστούν οι όροι διαπραγμάτευσης.",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Το D-Management αποτελεί ολοκληρωμένο πληροφοριακό σύστημα διαχείρισης και πληροφόρησης των δημοτικών επιτροπών και των σχολικών μονάδων, παρέχοντας αναλυτική παρακολούθηση δαπανών ανά σχολείο, διαχείριση της πάγιας προκαταβολής, καταχώρηση τιμολογίων και παρακολούθηση συμβάσεων. Το σύστημα παρέχει δυνατότητες παρακολούθησης πολλών τομέων των σχολικών λειτουργιών σε περιβάλλον δημοτικών αρμοδιοτήτων, καλύπτοντας τις ανάγκες μιας ολοκληρωμένης διαχείρισης των σχολικών μονάδων.\n\nΗ διαδικασία με διαπραγμάτευση χωρίς προηγούμενη δημοσίευση μπορεί να χρησιμοποιείται για δημόσιες συμβάσεις έργων, προμηθειών και υπηρεσιών σε συγκεκριμένες περιπτώσεις που προβλέπονται από το άρθρο 32 του νόμου 4412/2016 για τις δημόσιες συμβάσεις. Πρόκειται για εξαιρετική διαδικασία που επιτρέπει στις αναθέτουσες αρχές να προσφύγουν σε απευθείας ανάθεση υπό συγκεκριμένες προϋποθέσεις.\n\nΗ ψηφιοποίηση της διαχείρισης των σχολικών μονάδων αποσκοπεί στην αποσυμφόρηση των εκπαιδευτικών από γραφειοκρατικό βάρος, ενώ έχει προκύψει συζήτηση σχετικά με το αν τέτοιες πλατφόρμες θα έπρεπε να παρέχονται δωρεάν από το υπουργείο Παιδείας αντί να επιβαρύνουν τους δημοτικούς προϋπολογισμούς.",
+        "contextCitationUrls": [
+          "https://www.dmanagementplus.gr/what-is-dmanagement.html",
+          "https://www.dmanagementplus.gr/",
+          "https://www.smanagementplus.gr/index.php/%CE%B1%CE%BD%CE%B1%CE%BA%CE%BF%CE%B9%CE%BD%CF%89%CF%83%CE%B5%CE%B9%CF%83?start=276",
+          "http://nomoskopio.gr/n_4412_16_32.php?toc=0",
+          "https://notiesdiadromes.gr/2026/10/06/%CF%80%CE%BF%CE%BB%CE%B9%CF%84%CE%B9%CE%BA%CE%AE-%CE%B1%CE%BD%CF%84%CE%B9%CF%80%CE%B1%CF%81%CE%AC%CE%B8%CE%B5%CF%83%CE%B7-%CE%B3%CE%B9%CE%B1-%CF%84%CE%B7-%CF%87%CF%81%CE%B7%CE%BC%CE%B1%CF%84%CE%BF/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#7 Λογισμικό Asc Time Table σχολείων]": {
+      "value": {
+        "id": "e58734e747e9c14bbd35e09de17b0aa37bdd",
+        "name": "Λογισμικό Asc Time Table σχολείων",
+        "description": "Θα εξεταστεί η έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για την παροχή υπηρεσίας λειτουργίας λογισμικού On-Line Asc Time Table για τις σχολικές μονάδες Α΄βάθμιας και Β΄βάθμιας εκπαίδευσης. Θα εγκριθούν οι τεχνικές προδιαγραφές και θα καθοριστούν οι όροι διαπραγμάτευσης.",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Το ASC Timetables είναι εξειδικευμένο λογισμικό που επιλύει αυτόματα το πρόβλημα της δημιουργίας ωρολογίου προγράμματος για σχολικές μονάδες, χρησιμοποιούμενο ήδη από χιλιάδες σχολεία σε περισσότερες από 170 χώρες. Η εφαρμογή συνδυάζει πολύπλοκες παραμέτρους όπως διαθεσιμότητες εκπαιδευτικών, ειδικότητες, τμήματα, αίθουσες και εργαστήρια χωρίς επικαλύψεις. Η διαδικτυακή έκδοση προσφέρει ασφαλή αποθήκευση δεδομένων στο cloud με αυτόματα αντίγραφα ασφαλείας και δυνατότητα σχεδιασμού από οποιοδήποτε λειτουργικό σύστημα.\n\nΗ διαδικασία με διαπραγμάτευση χωρίς προηγούμενη δημοσίευση μπορεί να χρησιμοποιείται για δημόσιες συμβάσεις έργων, προμηθειών και υπηρεσιών σε συγκεκριμένες περιπτώσεις που προβλέπει το άρθρο 32 του Ν. 4412/2016. Πρόκειται για εξαιρετική διαδικασία ανάθεσης δημοσίων συμβάσεων που επιτρέπεται υπό συγκεκριμένες προϋποθέσεις, όπως όταν δεν υποβλήθηκαν κατάλληλες προσφορές σε προηγούμενο διαγωνισμό ή όταν η σύμβαση μπορεί να ανατεθεί μόνο σε συγκεκριμένο οικονομικό φορέα.\n\nΤο Εβδομαδιαίο Ωρολόγιο Πρόγραμμα του σχολείου συντάσσεται το πρώτο δεκαπενθήμερο του Σεπτεμβρίου και αποτελεί ευθύνη του Διευθυντή της σχολικής μονάδας. Η χρήση εξειδικευμένου λογισμικού διευκολύνει σημαντικά αυτή τη σύνθετη διαδικασία, εξασφαλίζοντας τη σωστή κατανομή των διδακτικών ωρών και την αποφυγή συγκρούσεων στο πρόγραμμα.",
+        "contextCitationUrls": [
+          "https://www.epafos.gr/en/eshop/software/%CF%80%CF%81%CE%BF%CF%8A%CF%8C%CE%BD/on-line-asc-time-table/",
+          "https://www.epafos.gr/eshop/%CE%B2%CE%B9%CE%B2%CE%BB%CE%AF%CE%B1/%CF%80%CF%81%CE%BF%CF%8A%CF%8C%CE%BD/on-line-asc-time-table/",
+          "https://www.myota.gr/2026/09/08/%CE%BD%CE%AD%CE%BF-on-line-asc-timetable-%CE%B1%CF%80%CF%8C-%CF%84%CE%B7%CE%BD-%CE%B5%CF%80%CE%B1%CF%86%CE%BF%CF%82-%CE%B1%CF%85%CF%84%CF%8C%CE%BC%CE%B1%CF%84%CE%B7-%CE%B4%CE%B7%CE%BC%CE%B9%CE%BF/",
+          "https://www.epafos.gr/eshop/%CE%BB%CE%BF%CE%B3%CE%B9%CF%83%CE%BC%CE%B9%CE%BA%CF%8C/%CF%80%CF%81%CE%BF%CF%8A%CF%8C%CE%BD/on-line-asc-time-table/",
+          "http://nomoskopio.gr/n_4412_16_32.php?toc=0",
+          "https://thessaloniki.gr/%CF%80%CF%81%CE%BF%CF%83%CF%86%CF%85%CE%B3%CE%AE-%CF%83%CF%84%CE%B7-%CE%B4%CE%B9%CE%B1%CE%B4%CE%B9%CE%BA%CE%B1%CF%83%CE%AF%CE%B1-%CE%BC%CE%B5-%CE%B4%CE%B9%CE%B1%CF%80%CF%81%CE%B1%CE%B3%CE%BC%CE%AC-2/",
+          "https://www.minedu.gov.gr/%CE%94%CE%97%CE%9C%CE%9F%CE%A4%CE%99%CE%9A%CE%91.pdf"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#8 Μίσθωση εκτυπωτών για σχολεία]": {
+      "value": {
+        "id": "8e839d0ad5a710270254d2decdaea6018cf3",
+        "name": "Μίσθωση εκτυπωτών για σχολεία",
+        "description": "Θα εξεταστεί η έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για τη μίσθωση 44 πολυμηχανημάτων και εκτυπωτών με χρηματοδοτική μίσθωση (leasing) διάρκειας 11 μηνών για τις σχολικές μονάδες του Δήμου Ζωγράφου. Θα εγκριθούν οι τεχνικές προδιαγραφές και θα καθοριστούν οι όροι διαπραγμάτευσης.",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Η διαδικασία διαπραγμάτευσης χωρίς δημοσίευση προκήρυξης διαγωνισμού έχει εξαιρετικό χαρακτήρα και επιτρέπεται να εφαρμόζεται μόνο στις περιοριστικώς απαριθμούμενες στις διατάξεις του Ν. 4412/2016 περιπτώσεις. Η προσφυγή στη διαδικασία αυτή εφαρμόζεται ανεξαρτήτως εκτιμώμενης αξίας της σύμβασης, μόνο εφόσον συντρέχουν οι νόμιμες προϋποθέσεις. Η διαδικασία μπορεί να χρησιμοποιηθεί στο μέτρο που είναι απολύτως απαραίτητο, εάν λόγω κατεπείγουσας ανάγκης οφειλόμενης σε γεγονότα απρόβλεπτα για την αναθέτουσα αρχή, δεν είναι δυνατή η τήρηση των προθεσμιών που προβλέπονται για τις ανοικτές, κλειστές ή ανταγωνιστικές διαδικασίες με διαπραγμάτευση.\n\nΗ χρηματοδοτική μίσθωση (leasing) είναι μια σύγχρονη μέθοδος μεσομακροπρόθεσμης χρηματοδότησης επιχειρήσεων και επαγγελματιών για την απόκτηση παγίων στοιχείων, δηλαδή εξοπλισμού και ακινήτων για επαγγελματική χρήση. Ως μισθωτής μπορεί να καταρτίσει χρηματοδοτική μίσθωση οποιοδήποτε φυσικό ή νομικό πρόσωπο, δημόσιου ή ιδιωτικού δικαίου, το οποίο ασκεί επιχείρηση ή επάγγελμα και επιθυμεί να προμηθευτεί μηχανήματα παραγωγής, αγαθά επαγγελματικού εξοπλισμού ή και ακίνητο, για επαγγελματικό σκοπό.\n\nΠολλοί δήμοι προχωρούν σε ανανέωση του εκτυπωτικού εξοπλισμού των σχολείων και δημοτικών υπηρεσιών μέσω χρηματοδοτικής μίσθωσης (leasing) πολυμηχανημάτων. Η ανανέωση του εξοπλισμού έρχεται να αντιμετωπίσει τις ανάγκες που δημιουργούνται από τη συνεχή χρήση των εκτυπωτικών μηχανημάτων στις σχολικές μονάδες και στις δημοτικές υπηρεσίες, προσφέροντας σύγχρονες υποδομές και μεγαλύτερη λειτουργικότητα στην καθημερινή τους δραστηριότητα.",
+        "contextCitationUrls": [
+          "https://pedmede.gr/dieyrkiniseis-tis-eaadisy-schetika-me-tin-prosfygi-sti-diadikasia-diapragmateysis-choris-dimosieysi-prokiryxis-diagonismoy/",
+          "https://eclass.ekdd.gr/esdda/modules/document/file.php/KST116/2%CE%BF%20%CE%9C%CE%91%CE%98%CE%97%CE%9C%CE%91.pdf",
+          "https://el.wikipedia.org/wiki/%CE%A7%CF%81%CE%B7%CE%BC%CE%B1%CF%84%CE%BF%CE%B4%CE%BF%CF%84%CE%B9%CE%BA%CE%AE_%CE%BC%CE%AF%CF%83%CE%B8%CF%89%CF%83%CE%B7",
+          "https://tpvlaw.gr/leasing-simvasi-xrimatodotikis-misthosis-ti-einai/",
+          "https://www.paron.gr/178-nea-polyleitoyrgika-michanimata-se-scholeia-kai-dimotikes-ypiresies-nikaias-agioy-ioanni-renti/",
+          "https://www.syneidisi.com/178-%CE%BD%CE%AD%CE%B1-%CF%80%CE%BF%CE%BB%CF%85%CE%BB%CE%B5%CE%B9%CF%84%CE%BF%CF%85%CF%81%CE%B3%CE%B9%CE%BA%CE%AC-%CE%BC%CE%B7%CF%87%CE%B1%CE%BD%CE%AE%CE%BC%CE%B1%CF%84%CE%B1-%CF%83%CE%B5-%CF%83%CF%87/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    },
+    "subject[#9 Εκμίσθωση κυλικείου 6ου Γυμνασίου-Λυκείου]": {
+      "value": {
+        "id": "58b9cdc04e402d5af1c406ea18479f56b5f5",
+        "name": "Εκμίσθωση κυλικείου 6ου Γυμνασίου-Λυκείου",
+        "description": "Θα εξεταστεί η έγκριση πρακτικού της Επιτροπής διαγωνισμού, η κατακύρωση αποτελέσματος και η ανάδειξη αναδόχου για την εκμίσθωση του κυλικείου του 6ου Γυμνασίου και 6ου Λυκείου Ζωγράφου.",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Η αρμοδιότητα ανάθεσης της λειτουργίας και εκμετάλλευσης των κυλικείων των δημοσίων σχολείων ασκείται από τη Δημοτική Επιτροπή, ενώ η ανάθεση γίνεται μόνον κατόπιν διαγωνισμού σε συνάρτηση με την τιμή της προσφοράς, την προϋπηρεσία σε μίσθωση σχολικού κυλικείου και την πολυτεκνική ιδιότητα. Για κάθε ευρώ προσφοράς υπολογίζεται ένα μόριο, ενώ για κάθε χρόνο προϋπηρεσίας σε εκμίσθωση σχολικού κυλικείου υπολογίζεται επίσης ένα μόριο. Τα μισθώματα των σχολικών κυλικείων αποτελούν έσοδο του Δήμου ή της αρμόδιας Σχολικής Επιτροπής και διατίθενται κατά τις ισχύουσες οικείες διατάξεις.\n\nΠρόσφατα, διάφοροι δήμοι προκηρύσσουν διαγωνισμούς για εκμίσθωση σχολικών κυλικείων με διάρκεια μίσθωσης εννέα ετών. Η νέα εγκύκλιος που δημοσιεύθηκε στο ΦΕΚ 3060/2026 φέρνει σημαντικές αλλαγές στη λειτουργία των σχολικών κυλικείων, καθορίζοντας αναλυτικά ποια προϊόντα επιτρέπονται και ποια απαγορεύονται. Οι αλλαγές αφορούν απαιτήσεις για HACCP, αλλεργιογόνα και τα επιτρεπόμενα προϊόντα που μπορούν να διατίθενται στους μαθητές, με στόχο τη βελτίωση της ποιότητας διατροφής στα σχολεία.",
+        "contextCitationUrls": [
+          "https://mitos.gov.gr/index.php/%CE%94%CE%94:%CE%95%CE%BA%CE%BC%CE%AF%CF%83%CE%B8%CF%89%CF%83%CE%B7_%CE%94%CE%B9%CE%BA%CE%B1%CE%B9%CF%8E%CE%BC%CE%B1%CF%84%CE%BF%CF%82_%CE%95%CE%BA%CE%BC%CE%B5%CF%84%CE%AC%CE%BB%CE%BB%CE%B5%CF%85%CF%83%CE%B7%CF%82_%CE%BA%CF%85%CE%BB%CE%B9%CE%BA%CE%B5%CE%AF%CF%89%CE%BD_%CE%B4%CE%B7%CE%BC%CF%8C%CF%83%CE%B9%CF%89%CE%BD_%CF%83%CF%87%CE%BF%CE%BB%CE%B5%CE%AF%CF%89%CE%BD",
+          "https://www.aftodioikisi.gr/paideia/allages-stin-ekmisthosi-kylikeion-dimosion-scholeion-fek/",
+          "https://www.esos.gr/arthra/82909/nea-apofasi-gia-ti-leitoyrgia-ton-kylikeion-dimosion-sholeion",
+          "https://edu.klimaka.gr/nomothesia/symvulia-epitropes/2048-leitourgia-kylikeia-dhmosia-sxoleia",
+          "https://e-thessalia.gr/diagonismoi-gia-ekmisthosi-scholikon-kylikeion-se-exi-scholikes-monades-toy-dimoy-voloy/",
+          "https://www.safeeat.gr/blog/1/asfaleia-trofimon/102/nea-eghkyklios-ghia-ta-skholika-kilikia-2026-ti-allazei-se-haccp-allerghioghona-kai-epitrepomena-idi"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {}
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:b75c44bd9bb3bc26aed354f8c4193fc3"
+    }
+  },
+  "cluster": "zografou",
+  "tags": [
+    "recorded-run",
+    "env:development"
+  ]
+}

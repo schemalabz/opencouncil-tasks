@@ -1,0 +1,125 @@
+{
+  "id": "decisions.extraction/9ΧΞΥΩ1Λ-ΛΓΞ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "9ΧΞΥΩ1Λ-ΛΓΞ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΧΞΥΩ1Λ-ΛΓΞ",
+    "city": "samothraki",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 7,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "voteTally=yes",
+        "namedVoters=dissenters_only"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 461,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Σκαρλατίδης Αθανάσιος",
+          "Σαράντου Δημήτριος",
+          "Σαλαμανή Τριανταφυλλιά",
+          "Τσιαούσης Χρήστος",
+          "Πρόξενος Χρήστος",
+          "Καλαϊτζή Αικατερίνη",
+          "Τόλιου Βασιλική",
+          "Θεοδώρου Ιωάννης",
+          "Βασιλειάδου Σωτηρία",
+          "Γλήνιας Ιωάννης"
+        ],
+        "absentMembers": [
+          "Παπάς Παναγιώτης",
+          "Μαμουγιώργης Πέτρος",
+          "Γαλατούμος Νικόλαος",
+          "Γρηγόραινας Ιωάννης",
+          "Κυλίμος Νικόλαος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία με 9 ΥΠΕΡ και 1 ΚΑΤΑ",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Θεοδώρου Ιωάννης",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "samothraki/Δημοτικό Συμβούλιο",
+  "tags": [
+    "samothraki",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "voteTally=yes",
+    "namedVoters=dissenters_only"
+  ]
+}

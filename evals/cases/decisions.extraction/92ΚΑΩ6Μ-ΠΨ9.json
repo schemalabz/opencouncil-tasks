@@ -1,0 +1,142 @@
+{
+  "id": "decisions.extraction/92ΚΑΩ6Μ-ΠΨ9",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "92ΚΑΩ6Μ-ΠΨ9",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/92ΚΑΩ6Μ-ΠΨ9",
+    "city": "athens",
+    "body": "5η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΒΑΤΣΑΚΗΣ ΓΕΩΡΓΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Μετά την ψηφοφορία του 1ου θέματος της Η/Δ αποχώρησε για προσωπικούς λόγους ο Κοινοτικός Σύμβουλος κος ΒΑΤΣΑΚΗΣ ΓΕΩΡΓΙΟΣ."
+          },
+          {
+            "name": "ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Μετά την ψηφοφορία του 3ου θέματος της Η/Δ αποχώρησε για προσωπικούς λόγους η Κοινοτική Σύμβουλος κα ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1463,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 5ης ΚΟΙΝΟΤΗΤΑΣ",
+          "ΟΙ ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "ΒΟΛΟΝΑΣΗ ΧΑΡΟΥΛΑ (ΚΟΡΙΝΑ)",
+          "ΠΑΤΣΙΔΗΣ ΧΑΡΑΛΑΜΠΟΣ",
+          "ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ",
+          "ΒΑΤΣΑΚΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΡΤΣΟΥΝΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΠΑΠΑΧΡΗΣΤΟΥ ΣΟΦΙΑ",
+          "ΛΙΓΝΟΣ ΓΕΡΑΣΙΜΟΣ",
+          "ΒΛΑΧΟΥ ΑΝΝΑ",
+          "ΔΟΜΑΖΟΥ-ΠΑΝΤΕΛΙΔΟΥ ΡΟΔΟΜΑΡΙΑ",
+          "ΚΕΦΑΛΑ ΠΟΛΥΞΕΝΗ",
+          "ΠΟΘΗΤΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΧΑΡΑΛΑΜΠΟΣ"
+        ],
+        "absentMembers": [
+          "ΚΑΠΟΔΙΣΤΡΙΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΣΤΑΜΟΥ ΣΤΑΥΡΙΑΝΗ",
+          "ΦΙΛΟΣΟΦΟΥ ΣΩΤΗΡΙΑ",
+          "ΖΑΧΑΡΟΠΟΥΛΟΥ ΜΑΡΙΑ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 10,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 10,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "ΟΜΟΦΩΝΑ",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

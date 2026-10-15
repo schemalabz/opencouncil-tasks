@@ -1,0 +1,141 @@
+{
+  "id": "decisions.extraction/9ΗΧΧΩΨ3-3ΝΟ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΗΧΧΩΨ3-3ΝΟ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΗΧΧΩΨ3-3ΝΟ",
+    "city": "argithea",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "namedVoters=dissenters_only",
+        "departure=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": "Two minority members walk out after the 8th item with a recorded statement of reasons.",
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Κορλού Όλγα",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Τα μέλη της παράταξης της μειοψηφίας κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος μετά τη συζήτηση του 8ου θέματος της ημερήσιας διάταξης αποχώρησαν, διαμαρτυρόμενοι λέγοντας: « Οι εισηγήσεις είναι ελλιπείς και δεν παρίσταται η Τεχνική υπηρεσία στη συνεδρίαση για να απαντήσει στις ερωτήσεις που τέθηκαν»."
+          },
+          {
+            "name": "Θεοδωράκης Αθανάσιος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Τα μέλη της παράταξης της μειοψηφίας κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος μετά τη συζήτηση του 8ου θέματος της ημερήσιας διάταξης αποχώρησαν, διαμαρτυρόμενοι λέγοντας: « Οι εισηγήσεις είναι ελλιπείς και δεν παρίσταται η Τεχνική υπηρεσία στη συνεδρίαση για να απαντήσει στις ερωτήσεις που τέθηκαν»."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2816,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Καραγεώργος Αθανάσιος",
+          "Γραμμένος Κωνσταντίνος",
+          "Κορλού Όλγα",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Κορλού Όλγα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Θεοδωράκης Αθανάσιος",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argithea",
+    "rollCallLayout=present_and_absent",
+    "namedVoters=dissenters_only",
+    "departure=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

@@ -1,0 +1,107 @@
+{
+  "id": "decisions.extraction/6ΥΘ2Ω1Λ-ΕΔ0",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΥΘ2Ω1Λ-ΕΔ0",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΥΘ2Ω1Λ-ΕΔ0",
+    "city": "samothraki",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 5,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1155,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Βίτσας Αθανάσιος",
+          "Σκαρλατίδης Αθανάσιος",
+          "Σαλαμανή Τριανταφυλλιά",
+          "Γαλατούμος Νικόλαος",
+          "Θεοδώρου Ιωάννης"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 9,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 9,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "samothraki/Δημοτική Επιτροπή",
+  "tags": [
+    "samothraki",
+    "rollCallLayout=present_and_absent",
+    "embeddedDecision=yes"
+  ]
+}

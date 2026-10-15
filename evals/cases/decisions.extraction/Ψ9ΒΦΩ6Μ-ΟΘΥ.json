@@ -1,0 +1,275 @@
+{
+  "id": "decisions.extraction/Ψ9ΒΦΩ6Μ-ΟΘΥ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ9ΒΦΩ6Μ-ΟΘΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ9ΒΦΩ6Μ-ΟΘΥ",
+    "city": "athens",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 5,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=dissenters_only",
+        "arrival=yes",
+        "changeAnchor=decision_number",
+        "voteTally=yes",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Σιδερή Δήμητρα",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθαν κατά τη συζήτηση των εκτός ημερήσιας διάταξης θεμάτων οι κ.κ. Δ. Σιδερή, Χ. Γιώτης, Ευαγ. Γιαννόπουλος, Αικ. Γκαγκάκη-Δημητριάδου, Ζ. Αγρογιάννη-Μουκριώτου."
+          },
+          {
+            "name": "Γιώτης Χαράλαμπος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθαν κατά τη συζήτηση των εκτός ημερήσιας διάταξης θεμάτων οι κ.κ. Δ. Σιδερή, Χ. Γιώτης, Ευαγ. Γιαννόπουλος, Αικ. Γκαγκάκη-Δημητριάδου, Ζ. Αγρογιάννη-Μουκριώτου."
+          },
+          {
+            "name": "Γιαννόπουλος Ευάγγελος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθαν κατά τη συζήτηση των εκτός ημερήσιας διάταξης θεμάτων οι κ.κ. Δ. Σιδερή, Χ. Γιώτης, Ευαγ. Γιαννόπουλος, Αικ. Γκαγκάκη-Δημητριάδου, Ζ. Αγρογιάννη-Μουκριώτου."
+          },
+          {
+            "name": "Γκαγκάκη-Δημητριάδου Αικατερίνη",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθαν κατά τη συζήτηση των εκτός ημερήσιας διάταξης θεμάτων οι κ.κ. Δ. Σιδερή, Χ. Γιώτης, Ευαγ. Γιαννόπουλος, Αικ. Γκαγκάκη-Δημητριάδου, Ζ. Αγρογιάννη-Μουκριώτου."
+          },
+          {
+            "name": "Αγρογιάννη-Μουκριώτου Ζαχαρία",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθαν κατά τη συζήτηση των εκτός ημερήσιας διάταξης θεμάτων οι κ.κ. Δ. Σιδερή, Χ. Γιώτης, Ευαγ. Γιαννόπουλος, Αικ. Γκαγκάκη-Δημητριάδου, Ζ. Αγρογιάννη-Μουκριώτου."
+          },
+          {
+            "name": "Παπαδοπούλου Ελένη",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησε στη με αρ. 42 ΑΔΣ η κα Ελ. Παπαδοπούλου."
+          },
+          {
+            "name": "Καλαμπόκας Εμμανουήλ",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησε στη με αρ. 42 ΑΔΣ στο (β) σκέλος ο κ. Εμμ. Καλαμπόκας"
+          },
+          {
+            "name": "Λαλιώτης Νικόλαος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθε στη με αρ. 46 ΑΔΣ ο κ. Ν. Λαλιώτης."
+          },
+          {
+            "name": "Μπακογιάννης Κωνσταντίνος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησε στη με αρ. 46 ΑΔΣ ο κ. Κ. Μπακογιάννης."
+          },
+          {
+            "name": "Σκιαδάς Ελευθέριος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησαν στη με αρ. 57 ΑΔΣ οι κ.κ. Ελ. Σκιαδάς, Ν. Σοφιανός."
+          },
+          {
+            "name": "Σοφιανός Νικόλαος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησαν στη με αρ. 57 ΑΔΣ οι κ.κ. Ελ. Σκιαδάς, Ν. Σοφιανός."
+          },
+          {
+            "name": "Γιώτης Χαράλαμπος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησε στη με αρ. 64 ΑΔΣ ο κ. Χ. Γιώτης."
+          },
+          {
+            "name": "Βουρδουμπάς Χαράλαμπος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αποχώρησε στη με αρ. 65 ΑΔΣ ο κ. Χ. Βουρδουμπάς."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 6045,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Λιμνιωτάκη Δέσποινα",
+          "Αβραμίδης Νικόλαος",
+          "Αποστολόπουλος Γεώργιος",
+          "Βασιλείου Χριστίνα",
+          "Βελεγράκης Εμμανουήλ",
+          "Βουρδουμπάς Χαράλαμπος",
+          "Γεννηματά Ιωάννα",
+          "Γεωργιάδης Θωμάς",
+          "Γιάνναρος Γεώργιος-Κωνσταντίνος",
+          "Γιαννοπούλου Καλλιόπη",
+          "Δούρου Όλγα",
+          "Ευαγγελίδου Μαρία",
+          "Ζαχαριάδης Κωνσταντίνος",
+          "Ζωντήρου Ελένη",
+          "Καββαθάς Τρύφων",
+          "Καλαμπόκας Εμμανουήλ",
+          "Κλείτσα Όλγα",
+          "Κολλάτος Ευγένιος",
+          "Μαντζαβίνου Ελένη",
+          "Μπακογιάννης Κωνσταντίνος",
+          "Μπάρκα Βασιλική",
+          "Μπέη-Καραμπότσου Ρωξάνη-Ευαγγελία",
+          "Παπαδοπούλου Ελένη",
+          "Σκιαδάς Ελευθέριος",
+          "Σκουμπουρδή Άρτεμις",
+          "Σοφιανός Νικόλαος",
+          "Στρατηγάκη Μαρία",
+          "Φούντζουλα Ασήμω",
+          "Χαρλαύτης Παναγιώτης-Πάρης",
+          "Χειμωνάς Αθανάσιος",
+          "Χρυσόγελος Νικόλαος"
+        ],
+        "absentMembers": [
+          "Τεντόμας Χρήστος",
+          "Αλεβυζάκη Δέσποινα",
+          "Αγρογιάννη-Μουκριώτου Ζαχαρία",
+          "Βουλγαράκης Γεώργιος",
+          "Βουτυράκου Διαλεκτή-Αθηνά",
+          "Γιάννα Δέσποινα",
+          "Γιαννόπουλος Ευάγγελος",
+          "Γιώτης Χαράλαμπος",
+          "Γκαγκάκη-Δημητριάδου Αικατερίνη",
+          "Γραμματικογιάννης Ανδρέας",
+          "Λαλιώτης Νικόλαος",
+          "Σιδερή Δήμητρα"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 28,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 28,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "επί συνόλου παρευρισκόμενων 30 Δημοτικών Συμβούλων, εγκρίνεται το ανωτέρω θέμα",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "Κλείτσα Όλγα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Βελεγράκης Εμμανουήλ",
+            "vote": "ABSTAIN"
+          },
+          {
+            "name": "Κλείτσα Όλγα",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration stored as a vote",
+            "verdict": "extraction is right",
+            "note": "extraction got the against and abstain and the rest voted υπερ"
+          },
+          {
+            "what": "vote tally dropped",
+            "verdict": "extraction is right",
+            "note": "not sure what the correct is here"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "«επί συνόλου παρευρισκόμενων 30» is an attendance count, not a tally"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=dissenters_only",
+    "arrival=yes",
+    "changeAnchor=decision_number",
+    "voteTally=yes",
+    "partialVote=yes"
+  ]
+}

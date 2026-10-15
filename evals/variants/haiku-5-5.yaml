@@ -1,0 +1,5 @@
+# Decision reading on claude-haiku-5-5; everything else as in production.
+name: haiku-5-5
+overrides:
+  "decision-reading":
+    model: claude-haiku-5-5

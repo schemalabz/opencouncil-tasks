@@ -1,0 +1,19 @@
+id: FM-0005
+slug: empty_excerpt
+title: Decision extraction returns an empty excerpt
+definition: >
+  The whole-document decision extraction returns an empty or whitespace-only decisionExcerpt, so the decision has no text to show.
+  The pipeline's own EMPTY_EXCERPT warning (validateRawExtraction / validateProcessedDecision), run as a check.
+boundary: >
+  Only the whole-document read (label decision-extraction) is checked: partial, continuation and closing reads of long documents leave fields empty by instruction, and their merged result is not a single call.
+suite: decisions.extraction
+scope: call
+severity: major
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/decisionValidationCodes.ts
+  export: EMPTY_EXCERPT
+decision: monitor
+alert: "fail rate per city > 3× its 30-day baseline, min 5 decision-extraction calls"

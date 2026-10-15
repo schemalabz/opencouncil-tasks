@@ -1,0 +1,216 @@
+{
+  "id": "decisions.extraction/ΨΓ3ΥΩΡΝ-Γ0Σ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΓ3ΥΩΡΝ-Γ0Σ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓ3ΥΩΡΝ-Γ0Σ",
+    "city": "thira",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 6,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "perVoteAbsence=yes",
+        "arrival=yes",
+        "changeAnchor=nothing",
+        "namedVoters=dissenters_only",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": "Per-vote absence stated before the vote, right after the roll call: «Κατά την ώρα της συζήτησης του θέματος αυτού απουσίασαν από την αίθουσα … Ευάγγελος Ζώρζος, Γεώργιος Δαρζέντας». Out for this item, not departed: the same sitting’s pages for 129–135/2026 (items 4–10) state no absence for them, and 137/2026 (item 12) names them again. The page also states two arrivals with no item and a «ΠΑΡΟΥΣΑ» declaration.",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "nothing",
+        "asExtracted": [
+          {
+            "name": "Σιγάλας Αντώνιος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Κατά την ώρα της συνεδρίασης προσήλθαν στην αίθουσα Συνεδριάσεως του Δ.Σ. οι κάτωθι Δημοτικοί Σύμβουλοι : 1. Σιγάλας Αντώνιος. 2. Καραμολέγκος Χαράλαμπος."
+          },
+          {
+            "name": "Καραμολέγκος Χαράλαμπος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Κατά την ώρα της συνεδρίασης προσήλθαν στην αίθουσα Συνεδριάσεως του Δ.Σ. οι κάτωθι Δημοτικοί Σύμβουλοι : 1. Σιγάλας Αντώνιος. 2. Καραμολέγκος Χαράλαμπος."
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Κατά την ώρα της συνεδρίασης προσήλθαν στην αίθουσα Συνεδριάσεως του Δ.Σ. οι κάτωθι Δημοτικοί Σύμβουλοι : 1. Σιγάλας Αντώνιος. 2. Καραμολέγκος Χαράλαμπος.",
+          "ada": "ΨΓ3ΥΩΡΝ-Γ0Σ",
+          "page": 2,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Ευάγγελος Ζώρζος",
+          "Γεώργιος Δαρζέντας"
+        ],
+        "asPrinted": "Κατά την ώρα της συζήτησης του θέματος αυτού απουσίασαν από την αίθουσα Συνεδριάσεως του Δ.Σ. οι κάτωθι Δημοτικοί Σύμβουλοι : 1. Ευάγγελος Ζώρζος. 2. Γεώργιος Δαρζέντας.",
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Κατά την ώρα της συζήτησης του θέματος αυτού απουσίασαν από την αίθουσα Συνεδριάσεως του Δ.Σ. οι κάτωθι Δημοτικοί Σύμβουλοι : 1. Ευάγγελος Ζώρζος. 2. Γεώργιος Δαρζέντας.",
+          "ada": "ΨΓ3ΥΩΡΝ-Γ0Σ",
+          "page": 2,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 25,
+        "presentMembers": [
+          "ΛΙΓΝΟΣ ΙΑΚΩΒΟΣ",
+          "ΜΑΪΝΑΣ ΙΩΑΝΝΗΣ",
+          "ΖΩΡΖΟΣ ΕΥΑΓΓΕΛΟΣ",
+          "ΝΟΜΙΚΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΤΣΙΠΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΡΟΥΣΣΟΣ ΙΩΑΝΝΗΣ",
+          "ΝΟΜΙΚΟΥ ΓΕΩΡΓΙΑ",
+          "ΚΑΜΠΟΥΡΑΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΒΑΡΒΑΡΗΓΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΤΖΟΥΡΟΣ ΕΛΕΥΘΕΡΙΟΣ",
+          "ΚΑΝΕΛΛΑΚΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΑΡΓΥΡΟΣ ΝΙΚΟΛΑΟΣ",
+          "ΖΩΤΟΣ ΝΙΚΟΛΑΟΣ",
+          "ΟΡΦΑΝΟΣ ΕΜΜΑΝΟΥΗΛ",
+          "ΧΑΛΑΡΗΣ ΑΝΤΩΝΙΟΣ",
+          "ΔΑΡΖΕΝΤΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΡΑΜΟΛΕΓΚΟΣ ΜΙΧΑΗΛ",
+          "ΑΡΓΥΡΟΥ ΜΑΡΙΑ"
+        ],
+        "absentMembers": [
+          "ΚΑΦΙΕΡΗΣ ΜΗΝΑΣ",
+          "ΜΠΑΪΚΑ ΜΑΡΙΕΤΤΑ",
+          "ΑΛΑΦΟΥΖΟΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΠΡΕΚΑΣ ΠΕΤΡΟΣ",
+          "ΣΥΚΗΝΙΩΤΗΣ ΙΩΑΝΝΗΣ",
+          "ΣΙΓΑΛΑΣ ΑΝΤΩΝΙΟΣ",
+          "ΚΑΡΑΜΟΛΕΓΚΟΣ ΧΑΡΑΛΑΜΠΟΣ"
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "επί συνόλου είκοσι πέντε (25) μελών, βρέθηκαν παρόντα Δέκα- οκτώ (18)",
+          "ada": "ΨΓ3ΥΩΡΝ-Γ0Σ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 3,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "εισηγούμενη το 3Ο θέμα της ημερήσιας διάταξης",
+          "ada": "ΨΓ3ΥΩΡΝ-Γ0Σ",
+          "page": 2,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Ορφανός Εμμανουήλ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Χάλαρης Αντώνιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Καραμολέγκος Χαράλαμπος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Σιγάλας Αντώνιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Καραμολέγκος Μιχαήλ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Αργυρού Μαρία",
+            "vote": "PRESENT"
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Οι Δημοτικοί Σύμβουλοι κ. Ορφανός Εμμανουήλ, κ. Χάλαρης Αντώνιος, κ. Καραμολέγκος Χαράλαμπος, κ. Σιγάλας Αντώνιος, κ. Καραμολέγκος Μιχαήλ, δεν συμφώνησαν με την ανωτέρω απόφαση και ψήφισαν «Αρνητικά». Η Δημοτική Σύμβουλος κ. Αργυρού Μαρία δήλωσε «ΠΑΡΟΥΣΑ».",
+          "ada": "ΨΓ3ΥΩΡΝ-Γ0Σ",
+          "page": 5,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "thira/Δημοτικό Συμβούλιο",
+  "tags": [
+    "thira",
+    "rollCallLayout=present_and_absent",
+    "perVoteAbsence=yes",
+    "arrival=yes",
+    "changeAnchor=nothing",
+    "namedVoters=dissenters_only",
+    "declaration=yes"
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "id": "decisions.extraction/Ψ6ΘΡΩΞΒ-8ΡΨ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ6ΘΡΩΞΒ-8ΡΨ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6ΘΡΩΞΒ-8ΡΨ",
+    "city": "orestiada",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "perVoteAbsence=yes",
+        "departure=yes",
+        "changeAnchor=this_document",
+        "advisoryAct=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "perVoteAbsence",
+        "advisoryAct"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "this_document",
+        "asExtracted": [
+          {
+            "name": "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 12,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια ψήφισης του θέματος απουσίαζε από την αίθουσα ο Δημοτικός Σύμβουλος Γεώργιος Καραγιάννης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1127,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ",
+          "ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΕΜΜΑΝΟΥΗΛ",
+          "ΓΚΙΛΙΛΟΥΔΗ ΧΡΙΣΤΙΝΑ",
+          "ΤΣΟΜΠΑΝΙΔΗΣ ΑΝΤΩΝΙΟΣ",
+          "ΤΣΕΛΕΜΠΗΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΑΣΤΕΡΙΑΔΗΣ ΜΑΡΓΑΡΙΤΗΣ",
+          "ΣΕΜΕΝ ΘΕΟΔΩΡΑ",
+          "ΔΗΜΟΥΤΣΗΣ ΠΑΝΤΕΛΗΣ",
+          "ΧΑΤΖΗΧΑΡΑΛΑΜΠΟΥΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΑΔΟΓΛΟΥ ΓΕΩΡΓΙΟΣ",
+          "ΣΤΑΥΡΙΔΗΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΣΤΡΑΝΤΖΕΛΗΣ ΜΙΧΑΗΛ",
+          "ΠΑΠΑΛΑΜΠΙΔΗΣ ΖΗΣΗΣ",
+          "ΜΠΡΑΪΚΟΥΔΗ ΕΥΑΓΓΕΛΙΑ",
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΑΘΗΝΟΔΩΡΟΣ",
+          "ΝΑΣΤΟΥΛΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΔΟΜΠΑΣ ΑΘΑΝΑΣΙΟΣ",
+          "ΜΑΥΡΙΔΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΕΡΙΣΤΕΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΑΡΓΥΡΙΑΔΗΣ ΠΕΤΡΟΣ",
+          "ΑΡΧΟΝΤΙΔΗΣ ΑΡΧΟΝΤΗΣ",
+          "ΜΙΧΑΗΛΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΑΖΑΛΤΖΗΣ ΧΡΗΣΤΟΣ",
+          "ΣΟΥΚΟΥΛΔΑΝΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΛΕΒΕΝΤΗΣ ΧΡΗΣΤΟΣ",
+          "ΚΥΡΓΙΑΝΝΗΣ ΑΘΑΝΑΣΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΜΑΝΑΒΗ ΜΑΡΙΑ",
+          "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ",
+          "ΟΡΜΑΝΛΙΔΗΣ ΧΡΗΣΤΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 12,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 12,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "orestiada/Δημοτική Επιτροπή",
+  "tags": [
+    "orestiada",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "perVoteAbsence=yes",
+    "departure=yes",
+    "changeAnchor=this_document",
+    "advisoryAct=yes"
+  ]
+}

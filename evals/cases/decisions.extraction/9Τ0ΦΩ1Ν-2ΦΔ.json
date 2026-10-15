@@ -1,0 +1,175 @@
+{
+  "id": "decisions.extraction/9Τ0ΦΩ1Ν-2ΦΔ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9Τ0ΦΩ1Ν-2ΦΔ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Τ0ΦΩ1Ν-2ΦΔ",
+    "city": "sparta",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 21,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "mayorStated=yes",
+        "changeAnchor=clock_time"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Δεδεδήμου Γεωργία",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η δημοτική σύμβουλος Δεδεδήμου Γεωργία, προσήλθε κατά τη διάρκεια της συνεδρίασης(ώρα 19:18)"
+          },
+          {
+            "name": "Κυριακούλιας Δημήτριος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "ο δημοτικός σύμβουλος Κυριακούλιας Δημήτριος προσήλθε κατά τη διάρκεια της συνεδρίασης (ώρα 21:40)"
+          },
+          {
+            "name": "Σκιαδάς Απόστολος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "ο δημοτικός σύμβουλος Σκιαδάς Απόστολος προσήλθε κατά τη διάρκεια της συνεδρίασης."
+          },
+          {
+            "name": "Μαλλιαρός Δημήτριος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο δημοτικός σύμβουλος Μαλλιαρός Δημήτριος αποχώρησε κατά τη διάρκεια συζήτησης του 2ου θέματος (ώρα 21:50) και συνδέθηκε μέσω της πλατφόρμας τηλεδιάσκεψης zoom."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 373,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Δεδεδήμου Γεωργία",
+          "Κουρεμπής Γεώργιος",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Αρβανίτης Δημήτριος",
+          "Αρφάνης Δημήτριος",
+          "Βαγιακάκου-Δογαντζή Αδαμαντία",
+          "Βαλιώτης Ευάγγελος",
+          "Γιαννόπουλος Δημήτριος",
+          "Γκολέμης Αναστάσιος",
+          "Ζαχαράκη Νίκη",
+          "Κακούρος Δημοσθένης",
+          "Κανελλοπούλου Αναστασία",
+          "Καρμοίρης Ιωάννης",
+          "Κοκκορός Ευστράτιος",
+          "Κουλουβάκος Γεώργιος",
+          "Κουρτσούνης Παναγιώτης",
+          "Κυριακούλιας Δημήτριος",
+          "Λάζαρης Θεοφάνης",
+          "Μαλλιαρός Δημήτριος",
+          "Μπαρέλος Παναγιώτης",
+          "Παυλής Παναγιώτης",
+          "Σελίμος Σπυρίδων",
+          "Σκιαδάς Απόστολος",
+          "Σοφού-Παπαστάθη Ευγενία",
+          "Τζανετέα Αδαμαντία",
+          "Τριτάκης Παναγιώτης",
+          "Τσιρώνη Μαρία",
+          "Τσούκλερης Νικόλαος",
+          "Φλώρος Νικόλαος"
+        ],
+        "absentMembers": [
+          "Γιαννακόπουλος Παντελής",
+          "Δούκας Πέτρος",
+          "Κανελλάκης Ηλίας",
+          "Καρούνος Παναγιώτης",
+          "Κατσίχτης Θεόδωρος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 4,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 4,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "mayorStated=yes",
+    "changeAnchor=clock_time"
+  ]
+}

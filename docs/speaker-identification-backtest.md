@@ -22,32 +22,27 @@ The floor is there because the kind alone does not carry the model's doubt. When
 
 The decision lives next to the prompt and the model on purpose. Change either, run this backtest, and read the evidence table before touching `ACTIONABLE_EVIDENCE_KINDS`, and the threshold table before touching `MIN_ACTIONABLE_CONFIDENCE`. The 75 was chosen on the meetings it was measured on, so it flatters itself, and it belongs to this prompt and this model.
 
-Command: `backtest-speaker-identification` in `src/cli.ts`
-Helpers: `src/tasks/utils/speakerBacktest.ts`
+Suite: `fix.speaker-id` (`src/evals/suites/fixSpeakerId.ts`)
+Scoring and tables: `src/evals/suites/speakerBacktest.ts`
 
 ## Run it
 
 ```bash
-npx tsx src/cli.ts backtest-speaker-identification athens/sep14_2026 chania/aug5_2026 --summary-only
+npx tsx src/cli.ts eval cases from-meeting fix.speaker-id athens/sep14_2026 chania/aug5_2026   # or a saved payload file
+npx tsx src/cli.ts eval run fix.speaker-id --variant production --split all --case fix.speaker-id/athens-sep14_2026 --budget-usd 2
+npx tsx src/cli.ts eval report fix.speaker-id <runId>
 ```
 
-Each meeting is fetched from opencouncil's public meeting endpoint. Pass a file path instead to read a saved copy of that JSON. With more than one meeting, a table at the end shows each meeting and the total.
+A case is one meeting's public payload (`GET /api/cities/:cityId/meetings/:meetingId`), stored in the private case root, or harvested from an opencouncil export (docs/evals.md). The report prints, for a single meeting, its per-person table; then the meeting table, the evidence table and the confidence sweep. A meeting where a chunk got no answer is an error row, never scored.
 
-| Option | Purpose |
+| Old option | Now |
 | --- | --- |
-| `--anchor none` (default) | Hide every stored identity. This is the no-voiceprint case. |
-| `--anchor voiceprint` | Hand the untouched voiceprint matches to the model as known. |
-| `--roster meeting` (default) | The model may answer with the people who may speak at the meeting, as in production. |
-| `--roster city` | The model may answer with everyone in the city. |
-| `--min-confidence <n>` | Score a bare confidence threshold instead of the pass's own decision. For comparison only. |
-| `--model <id>` | Model to call. |
-| `--effort <level>` | How much the model thinks: `low`, `medium`, `high`, `xhigh` or `max`. Run the same meetings at two levels to choose `DEFAULT_IDENTIFICATION_EFFORT`. |
-| `--chunk-chars <n>` | Transcript characters per model call. Long meetings are read in contiguous chunks and the answers merged. |
-| `--skip-cache` | Answers are cached per meeting, anchor mode, model, effort, chunk size and the content shown to the model, so a meeting that changed at the same URL is identified again. Pass this after a prompt change. |
-| `--dry-run` | Print the exact prompts that would be sent and exit. No model call. |
-| `--summary-only` | Skip each meeting's per-person table. The wrong names are still listed. |
-| `-O, --output-file <file>` | Write every meeting's scored tags, raw answers and summary as JSON. |
-| `--base-url <url>` | Another opencouncil instance. |
+| `--anchor`, `--roster`, `--chunk-chars` | variant `params: { anchor, roster, chunkChars }` |
+| `--model`, `--effort` | `--override 'speaker-identification:*.model=<id>'`, `...effort=<level>` |
+| `--min-confidence` | the report's confidence sweep |
+| `--skip-cache` | live suite runs are fresh samples; `--replay --no-live` re-scores recorded answers for $0 |
+| `--dry-run` | no equivalent; `runs call <traceId> '#1' -p request` shows a run's prompts |
+| `-O` | the run's `results.jsonl` |
 
 ## Terms
 

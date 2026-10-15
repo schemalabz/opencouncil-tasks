@@ -1,0 +1,130 @@
+{
+  "id": "decisions.extraction/6Τ6ΟΩΗ5-20Ο",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6Τ6ΟΩΗ5-20Ο",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6Τ6ΟΩΗ5-20Ο",
+    "city": "chania",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "changeAnchor=decision_number",
+        "substitute=yes"
+      ],
+      "namedEdgeCase": "ΠΑΡΟΝΤΕΣ silently contains substitutes, ΑΠΟΝΤΕΣ is incomplete (Βαρδάκης appears in neither), and two arrivals are pinned to decision numbers. The open question for the municipality.",
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Κοτσιφάκης Εμμανουήλ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Μετά τη λήψη της υπ' αριθμ. 256/2025 απόφασης Δημοτικής Επιτροπής προσήλθε ο κ. Κοτσιφάκης Εμμανουήλ ο οποίος αναπληρώνει το απουσιάζον τακτικό μέλος της πλειοψηφίας κ. Μαυριδάκη Ζαχάρη."
+          },
+          {
+            "name": "Νικηφοράκης Ιωάννης",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Μετά τη λήψη της υπ' αριθμ. 257/2025 απόφασης προσήλθε ο κ. Νικηφοράκης Ιωάννης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 896,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 9,
+        "presentMembers": [
+          "Ελευθεριάδου – Παπαδάκη Σοφία",
+          "Γιαννακάκης Ιωάννης",
+          "Τσουπάκης Μιχαήλ",
+          "Ζερβουδάκη Ελένη",
+          "Πετρουλάκης Βασίλειος",
+          "Λουτσέτης Χαράλαμπος"
+        ],
+        "absentMembers": [
+          "Αλόγλου Αναστάσιος",
+          "Νικηφοράκης Ιωάννης",
+          "Μαυριδάκης Ζαχάρης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chania/Δημοτική Επιτροπή",
+  "tags": [
+    "chania",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "changeAnchor=decision_number",
+    "substitute=yes"
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "id": "decisions.extraction/ΨΤΤΜΩ6Μ-ΤΩΠ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΤΤΜΩ6Μ-ΤΩΠ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΤΤΜΩ6Μ-ΤΩΠ",
+    "city": "athens",
+    "body": "7η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "changeAnchor=decision_number"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Γιαννακόπουλος Νικόλαος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Ο Σύμβουλος κ. Γιαννακόπουλος Νικόλαος, αποχώρησε μετά τη συζήτηση του 2ου θέματος της Ημερήσιας Διάταξης (84/2026 Α.Κ.Σ.)."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 4525,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 7ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Ζαχαροπούλου Αθανασία",
+          "Αυγερινός Εμμανουήλ",
+          "Αυγητίδου – Παπακώστα Γεωργία",
+          "Γιαννακόπουλος Νικόλαος",
+          "Γρίβα Σοφία",
+          "Πετράκη Αναστασία",
+          "Τσαρουχά Μαρία"
+        ],
+        "absentMembers": [
+          "Γαβρίλη Δάφνη",
+          "Γαρμπιδάκης Νικόλαος",
+          "Γουργιώτου Γεωργία",
+          "Κουτσούμπα Χριστίνα",
+          "Ραπτάκης Βασίλειος",
+          "Τσαρός Περικλής",
+          "Φουσέκη – Παπαπροκοπίου Ευσταθία",
+          "Χριστοφορίδης Ιωάννης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 7,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 7,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/7η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "changeAnchor=decision_number"
+  ]
+}

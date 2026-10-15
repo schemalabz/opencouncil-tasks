@@ -1,0 +1,40 @@
+{
+  "id": "decisions.reading/94Π2ΩΞΒ-ΙΘ8",
+  "suite": "decisions.reading",
+  "split": "dev",
+  "input": {
+    "ada": "94Π2ΩΞΒ-ΙΘ8",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/94Π2ΩΞΒ-ΙΘ8",
+    "meta": {
+      "notes": "mayoral declaratory act (ΔΙΑΠΙΣΤΩΤΙΚΗ ΠΡΑΞΗ), not a decision"
+    }
+  },
+  "expect": {
+    "decisionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "other",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "orestiada/other",
+  "tags": [
+    "orestiada",
+    "other"
+  ]
+}

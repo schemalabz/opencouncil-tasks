@@ -1,0 +1,22 @@
+{
+  "kind": "must-not-fire",
+  "expect": "unknown",
+  "note": "A closing read of a long document is not checked: its fields are empty by instruction",
+  "input": {
+    "label": "decision-extraction:closing",
+    "request": {
+      "model": "claude-sonnet-4-6",
+      "max_tokens": 16000,
+      "messages": [],
+      "output_config": {
+        "format": {
+          "type": "json_schema"
+        }
+      }
+    },
+    "response": {
+      "text": "{\"attendanceFormat\":\"explicit_present_absent\",\"compositionMembers\":null,\"presentMembers\":[\"Παπαδόπουλος Γεώργιος\",\"Νικολάου Μαρία\",\"Κωνσταντίνου Ελένη\"],\"absentMembers\":[\"Αλεξίου Δημήτριος\"],\"mayorPresent\":null,\"decisionExcerpt\":\"Το Δημοτικό Συμβούλιο, αφού έλαβε υπόψη την εισήγηση, ΑΠΟΦΑΣΙΖΕΙ Ομόφωνα την έγκριση της μελέτης.\",\"decisionNumber\":\"142/2026\",\"references\":\"Ν. 3852/2010\",\"voteResult\":\"Ομόφωνα\",\"voteDetails\":[],\"attendanceChanges\":[],\"discussionOrder\":null,\"subjectInfo\":{\"agendaItemIndex\":3,\"nonAgendaReason\":null},\"incomplete\":true,\"presidedBy\":{\"name\":\"\"},\"actingSecretary\":{\"name\":\"\"},\"subjectHeading\":\"ΘΕΜΑ 3ο\",\"decisionAttendance\":{\"present\":[]},\"voteTally\":{\"FOR\":3,\"AGAINST\":-1,\"ABSTAIN\":-1,\"PRESENT\":-1,\"DID_NOT_VOTE\":-1}}",
+      "stopReason": "end_turn"
+    }
+  }
+}

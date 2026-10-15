@@ -1,0 +1,171 @@
+{
+  "id": "decisions.extraction/Ψ14ΒΩ6Μ-Χ70",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ14ΒΩ6Μ-Χ70",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ14ΒΩ6Μ-Χ70",
+    "city": "athens",
+    "body": "4η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=all",
+        "advisoryAct=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "advisoryAct"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 490,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 4ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΑΡΒΑΝΙΤΗ ΕΥΑΝΘΙΑ",
+          "ΓΙΑΝΝΟΠΟΥΛΟΥ ΓΕΩΡΓΙΑ",
+          "ΚΑΡΥΔΑΣ ΔΗΜΗΤΡΙΟΣ-ΕΥΑΓΓΕΛΟΣ",
+          "ΚΕΛΕΠΟΥΡΗ ΑΝΑΣΤΑΣΙΑ",
+          "ΚΟΛΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΙΟΣ",
+          "ΜΗΤΡΟΠΟΥΛΟΥ-ΚΑΤΣΙΚΗ ΓΕΡΑΣΙΜΟΥΛΑ",
+          "ΠΑΝΟΠΟΥΛΟΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΦΡΑΓΚΙΟΥΔΑΚΗ-ΚΩΝΣΤΑΝΤΑΚΗ ΚΥΡΙΑΚΗ",
+          "ΨΗΜΜΕΝΟΥ ΓΙΑΝΝΟΥΛΑ"
+        ],
+        "absentMembers": [
+          "ΑΡΒΑΝΙΤΗΣ ΣΠΥΡΙΔΩΝ",
+          "ΚΑΛΛΙΤΣΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΛΟΚΑ ΜΑΡΙΑ",
+          "ΜΑΡΚΟΥΙΖΟΣ ΗΡΑΚΛΗΣ",
+          "ΜΟΝΑΣΤΗΡΙΩΤΗΣ ΑΝΑΣΤΑΣΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 6,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 6,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΥΠΕΡ ψήφισαν η Πρόεδρος κα Βαρδή Π. και οι κ.κ. Σύμβουλοι",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Βαρδή Π.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αρβανίτη Ε.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γιαννοπούλου Γ.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Καρύδας Δ.-Ε.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κελεπούρη Α.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κολλιόπουλος Δ.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μητροπούλου-Κατσίκη Γ.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Πανόπουλος Α.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Φραγκιουδάκη-Κωνσταντάκη Κ.",
+            "vote": "FOR"
+          },
+          {
+            "name": "Ψημμένου Γ.",
+            "vote": "FOR"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "named voters dropped",
+            "verdict": "neither is right",
+            "note": "survey got the beginning correct but it meissed the name,s the full extract is \"YΠΕΡ ψήφισαν η Πρόεδρος κα Βαρδή Π. και οι κ.κ. Σύμβουλοι: Αρβανίτη Ε., Γιαννοπούλου Γ., Καρύδας Δ.-\nΕ., Κελεπούρη Α., Κολλιόπουλος Δ., Μητροπούλου-Κατσίκη Γ., Πανόπουλος Α., Φραγκιουδάκη-\nΚωνσταντάκη Κ., Ψημμένου Γ.\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "names as printed, initials only"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/4η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=all",
+    "advisoryAct=yes"
+  ]
+}

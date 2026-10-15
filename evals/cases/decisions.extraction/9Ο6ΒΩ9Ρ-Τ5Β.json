@@ -1,0 +1,193 @@
+{
+  "id": "decisions.extraction/9Ο6ΒΩ9Ρ-Τ5Β",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9Ο6ΒΩ9Ρ-Τ5Β",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Ο6ΒΩ9Ρ-Τ5Β",
+    "city": "vrilissia",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 6,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "changeAnchor=session_phase",
+        "voteTally=yes",
+        "mayorStated=yes",
+        "namedVoters=dissenters_only",
+        "declaration=yes",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "phase",
+        "asExtracted": [
+          {
+            "name": "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η Δημοτική Σύμβουλος κ. Χαντζάρα Σοφία προσήλθε μετά το πέρας της διαδικασίας για την ανάδειξη του Προεδρείου του Δ.Σ."
+          },
+          {
+            "name": "ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. Σπηλιώτης Αθανάσιος προσήλθε μετά το πέρας της διαδικασίας ανάδειξης των μελών της Δημοτικής Επιτροπής"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 519,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΡΗΣΤΑΚΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΤΖΙΜΑ ΛΑΜΠΡΙΝΗ ΛΙΛΗ",
+          "ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ",
+          "ΔΗΜΗΤΡΙΟΥ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΣΤΑΜΑΤΕΛΟΠΟΥΛΟΣ ΝΙΚΗΤΑΣ",
+          "ΜΠΗΤΑΣ ΙΩΑΝΝΗΣ",
+          "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+          "ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+          "ΜΑΝΤΙΝΙΔΟΥ-ΤΣΟΥΒΑΛΟΥ ΣΟΦΙΑ",
+          "ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ)",
+          "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+          "ΜΑΡΙΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΠΠΑΣ ΧΡΗΣΤΟΣ",
+          "ΑΝΑΓΝΩΣΤΟΥ ΠΑΝΑΓΙΩΤΗΣ (ΠΑΝΟΣ)",
+          "ΔΗΜΑΡΑΣ ΘΕΟΔΩΡΟΣ-ΕΡΝΕΣΤΟΣ (ΑΚΗΣ)",
+          "ΦΑΡΑΚΛΑΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΟΥΤΣΙΩΡΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΒΑΦΕΙΑΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΥΡΙΤΣΗ ΙΩΑΝΝΑ",
+          "ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ)",
+          "ΡΑΠΤΗ ΣΟΦΙΑ",
+          "ΛΙΑΚΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΤΣΟΥΤΣΙΑΣ ΙΩΑΝΝΗΣ",
+          "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+          "ΑΡΧΙΜΑΝΔΡΙΤΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΒΗΤΤΟΣ ΒΑΣΙΛΕΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+          "ΜΑΛΑΚΟΥ ΧΡΙΣΤΙΝΑ",
+          "ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ψήφισαν: 26",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "ΚΑΠΠΑΣ ΧΡΗΣΤΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΛΙΑΚΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΡΧΙΜΑΝΔΡΙΤΗΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΒΗΤΤΟΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+            "vote": "PRESENT"
+          }
+        ],
+        "verified": "unresolvable",
+        "review": [
+          {
+            "what": "vote tally dropped",
+            "verdict": "not resolvable from this page",
+            "note": null
+          },
+          {
+            "what": "unresolvable",
+            "verdict": null,
+            "note": "reviewer: not resolvable from this page"
+          }
+        ]
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "vrilissia",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "changeAnchor=session_phase",
+    "voteTally=yes",
+    "mayorStated=yes",
+    "namedVoters=dissenters_only",
+    "declaration=yes",
+    "partialVote=yes"
+  ]
+}

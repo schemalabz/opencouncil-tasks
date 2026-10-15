@@ -1,0 +1,140 @@
+{
+  "id": "summarize.contributions/xylokastro-sep28_2026",
+  "suite": "summarize.contributions",
+  "split": "holdout",
+  "input": {
+    "meeting": "xylokastro/sep28_2026"
+  },
+  "replay": "6c9ffbb0372c4b7b91855dad68315358",
+  "expect": {
+    "subject[#1 Νέα παροχή ρεύματος για μετεγκατάσταση 3ου Δημοτικού]": {
+      "value": {
+        "id": "cmufjun5u05jlod4ql86rbt03",
+        "name": "Νέα παροχή ρεύματος για μετεγκατάσταση 3ου Δημοτικού",
+        "description": "Έγκριση δαπάνης για νέα παροχή ισχύος 35 KVA στη διεύθυνση Νοταρά και Ρωμέση στο Ξυλόκαστρο, [λόγω της μετεγκατάστασης του 3ου Δημοτικού Σχολείου](REF:UTTERANCE:cmul66wrr013n8je52ogddjvp). Εγκρίθηκε ομόφωνα χωρίς ουσιαστική συζήτηση.",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Η νέα παροχή ηλεκτρικού ρεύματος ισχύος 35 KVA αφορά την ηλεκτροδότηση του νέου σχολικού συγκροτήματος που θα στεγάσει το 3ο Δημοτικό Σχολείο και το 3ο Νηπιαγωγείο Ξυλοκάστρου. Το έργο έχει προϋπολογισμό 5.850.000 ευρώ και χρηματοδοτείται από το Επιχειρησιακό Πρόγραμμα «Πελοπόννησος 2021-2027». Το νέο συγκρότημα θα έχει επιφάνεια 2.258,03 τ.μ. με δυνατότητα εξυπηρέτησης έως 230 μαθητών.\n\nΗ μετεγκατάσταση αποτελεί λύση σε χρόνιο πρόβλημα, καθώς μπαίνει οριστικό τέλος στις αίθουσες-κοντέινερ και ξεκινά η κατασκευή ενός νέου, σύγχρονου και πλήρως προσβάσιμου σχολικού συγκροτήματος. Όσον αφορά την ηλεκτρική παροχή, η ισχύς των 35 KVA κατατάσσει την εγκατάσταση στους μη οικιακούς καταναλωτές με μεγάλη ισχύ. Η παλαιότητα αρκετών σχολικών κτηρίων σημαίνει ότι σε πολλές περιπτώσεις απαιτείται πρώτα αναβάθμιση ή ακόμη και αντικατάσταση ηλεκτρολογικών εγκαταστάσεων, γι' αυτό και η νέα παροχή είναι απαραίτητη για τη λειτουργία του σύγχρονου σχολικού κτιρίου.\n\nΗ έγκριση της δαπάνης για τη νέα παροχή αποτελεί απαραίτητο βήμα στην υλοποίηση του έργου, καθώς προηγούνται μελέτες και ηλεκτρολογικές εργασίες και ακολουθούν έλεγχος της εγκατάστασης και έκδοση Πιστοποιητικού Καταλληλότητας. Το σχολείο βρίσκεται επί των οδών Νοταρά και Ρωμέση, στην καρδιά του Ξυλοκάστρου.",
+        "contextCitationUrls": [
+          "https://www.ppel.gov.gr/spoudeo-vima-gia-to-telos-ton-konteiner-sto-3o-dimotiko-ke-nipiagogio-xilokastrou-dimitris-ptochos-ke-vlasis-tsiotos-anakinosan-tin-entaxi-ergou-585-ekat-evro/",
+          "https://www.xylokastro-evrostini.gov.gr/el/zo-ston-dimo-services/enemeronomai/ta-nea-mas/programmata-chrematodoteses/programmata-espa/8841-kataskevi-neou-sxolikoy-sygkrotimatos-sto-ksylokastro-3o-dimotiko-sxoleio-3o-nipiagogeio",
+          "https://hmerisiakorinthou.gr/173823-2/",
+          "https://www.tothemaonline.com/Article/474288/klimatistika-sta-sholeia-apo-thn-exaggelia-stis-kathysterhseis---sto-mikroskopio-asfaleia-kostos-kai-ylopoihsh"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 6,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:6c9ffbb0372c4b7b91855dad68315358"
+    },
+    "subject[#2 Παραχώρηση γηπέδου για αθλητική εκδήλωση]": {
+      "value": {
+        "id": "cmufjun6g05jmod4qrd5bpuqp",
+        "name": "Παραχώρηση γηπέδου για αθλητική εκδήλωση",
+        "description": "Παραχώρηση χρήσης του γηπέδου Ξυλοκάστρου «Σωτήρης Αγγελόπουλος» σε αθλητικό σύλλογο για [εκδήλωση για παιδιά στις 24-25 Οκτωβρίου](REF:UTTERANCE:cmul66wrr013w8je55dpgkeya). Εγκρίθηκε ομόφωνα χωρίς συζήτηση.",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null,
+        "topic": "Αθλητισμός",
+        "withdrawn": false,
+        "context": "Η παραχώρηση δημοτικών αθλητικών εγκαταστάσεων σε αθλητικούς συλλόγους και φορείς αποτελεί συνήθη πρακτική που ρυθμίζεται από συγκεκριμένο νομοθετικό πλαίσιο. Σύμφωνα με το άρθρο 65 του Ν. 3852/2010, δύναται η παραχώρηση περιορισμένης και περιοδικής χρήσης δημοτικών αθλητικών εγκαταστάσεων σε αθλητικούς συλλόγους με σκοπό την προετοιμασία, την προγύμναση και τη διεξαγωγή αγώνων. Οι δήμοι έχουν τη δυνατότητα να παραχωρούν ελεύθερα τις αθλητικές τους εγκαταστάσεις σε νομικά πρόσωπα δημοσίου ή ιδιωτικού δικαίου, συλλόγους, φορείς, συλλογικότητες αλλά και ιδιώτες αθλούμενους, με βάση τον εκάστοτε κανονισμό λειτουργίας και διαχείρισης των αθλητικών εγκαταστάσεων κάθε ΟΤΑ.\n\nΤο γήπεδο Ξυλοκάστρου φέρει το όνομα του Σωτήρη Αγγελόπουλου, διεθνούς ποδοσφαιριστή που γεννήθηκε στο Ξυλόκαστρο και αγωνίστηκε ως αμυντικός στον Παναθηναϊκό από το 1953 έως το 1964. Η παραχώρηση αθλητικών χώρων για εκδηλώσεις, ιδίως όταν αφορά παιδιά, ενισχύει την κοινωνική συνοχή και προάγει τον αθλητισμό στην τοπική κοινότητα. Για να δικαιούνται αθλητικά σωματεία την παραχώρηση αθλητικών εγκαταστάσεων που ανήκουν σε ΟΤΑ, πρέπει να διαθέτουν ειδική αθλητική αναγνώριση και εγγραφή στο Ηλεκτρονικό Μητρώο Ερασιτεχνικών Αθλητικών Σωματείων.",
+        "contextCitationUrls": [
+          "https://limnos.gov.gr/%CE%B1%CE%BD%CE%B1%CE%BA%CE%BF%CE%AF%CE%BD%CF%89%CF%83%CE%B7-%CE%B3%CE%B9%CE%B1-%CF%84%CE%B7%CE%BD-%CF%80%CE%B1%CF%81%CE%B1%CF%87%CF%8E%CF%81%CE%B7%CF%83%CE%B7-%CE%B1%CE%B8%CE%BB%CE%B7%CF%84%CE%B9/",
+          "https://astros-kynourianews.gr/%CF%84%CE%B9-%CE%B1%CE%BB%CE%BB%CE%AC%CE%B6%CE%B5%CE%B9-%CE%BC%CE%B5-%CF%84%CE%B7%CE%BD-%CF%80%CE%B1%CF%81%CE%B1%CF%87%CF%8E%CF%81%CE%B7%CF%83%CE%B7-%CE%B4%CE%B7%CE%BC%CE%BF%CF%84%CE%B9%CE%BA%CF%8E/",
+          "https://el.wikipedia.org/wiki/%CE%A3%CF%89%CF%84%CE%AE%CF%81%CE%B7%CF%82_%CE%91%CE%B3%CE%B3%CE%B5%CE%BB%CF%8C%CF%80%CE%BF%CF%85%CE%BB%CE%BF%CF%82",
+          "https://www.myota.gr/2026/01/18/%CE%B4%CE%B9%CE%B5%CF%85%CE%BA%CF%81%CE%B9%CE%BD%CE%B9%CF%83%CF%84%CE%B9%CE%BA%CE%AE-%CE%B5%CE%B3%CE%BA%CF%8D%CE%BA%CE%BB%CE%B9%CE%BF%CF%82-%CE%B3%CE%B9%CE%B1-%CF%84%CE%B7%CE%BD-%CF%80%CE%B1%CF%81/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 4,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:6c9ffbb0372c4b7b91855dad68315358"
+    },
+    "subject[#3 Διαχείριση μεταχειρισμένων ειδών ένδυσης]": {
+      "value": {
+        "id": "cmufjun6q05jnod4qob9q2955",
+        "name": "Διαχείριση μεταχειρισμένων ειδών ένδυσης",
+        "description": "Τροποποίηση του συμφωνητικού συνεργασίας για τη διαχείριση μεταχειρισμένων ειδών ένδυσης και υπόδησης, στο πλαίσιο πρόληψης δημιουργίας αποβλήτων στον Δήμο Ξυλοκάστρου-Ευρωστίνης. Εγκρίθηκε ομόφωνα χωρίς συζήτηση.",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null,
+        "topic": "Καθαριότητα & Απορρίμματα",
+        "withdrawn": false,
+        "context": "Από τις 19 Ιουλίου 2026 τέθηκαν σε ισχύ νέοι ευρωπαϊκοί κανόνες που απαγορεύουν την καταστροφή απούλητων ενδυμάτων και υποδημάτων, στο πλαίσιο του νέου κοινοτικού κανονισμού ESPR για τα βιώσιμα προϊόντα. Οι επιχειρήσεις πρέπει να δίνουν προτεραιότητα στη διατήρηση των προϊόντων σε χρήση, πουλώντας τα, δωρίζοντάς τα σε φιλανθρωπικές οργανώσεις ή προετοιμάζοντάς τα για επαναχρησιμοποίηση.\n\nΣτην Ελλάδα, σύμφωνα με την Οδηγία 2008/98/ΕΚ που τροποποιήθηκε από την Οδηγία 2018/851, θεσμοθετείται η σταδιακή εφαρμογή χωριστής συλλογής κλωστοϋφαντουργικών προϊόντων από το 2023. Τα κλωστοϋφαντουργικά αποτελούν ένα από τα ρεύματα προτεραιότητας του Εθνικού Προγράμματος Πρόληψης Δημιουργίας Αποβλήτων. Τα μεταχειρισμένα είδη ένδυσης συλλέγονται και οδηγούνται κατά προτεραιότητα προς επαναχρησιμοποίηση, ενώ όσα δεν ικανοποιούν αυτή τη δυνατότητα προωθούνται προς ανακύκλωση.\n\nΟ Δήμος Ξυλοκάστρου-Ευρωστίνης συνεργάζεται με την εταιρεία Recycom τοποθετώντας 12 μεταλλικούς μοβ κάδους για την ανακύκλωση ενδυμάτων και υποδημάτων. Ο δήμος διαθέτει επίσης Κοινωνική Ιματιοθήκη που διανέμει ρούχα σε δικαιούχους, στο πλαίσιο της στήριξης που προσφέρουν οι δημοτικές κοινωνικές δομές. Η διαχείριση μεταχειρισμένων ειδών ένδυσης συμβάλλει στη μείωση των αποβλήτων που καταλήγουν σε χώρους υγειονομικής ταφής και στην εξοικονόμηση φυσικών πόρων.",
+        "contextCitationUrls": [
+          "https://www.ot.gr/2026/07/21/green/ee-apagoreyei-tin-katastrofi-apouliton-rouxon-ypodimaton-kai-aksesouar-endysis-ti-tha-isxyei/",
+          "https://www.eleftherostypos.gr/diethni/oi-etairies-den-tha-petane-ta-roucha-kai-papoutsia-pou-menoun-apoulita",
+          "https://alexpolis.gr/wp-content/uploads/2021/12/%CE%A4%CE%A3%CE%94%CE%91-2021_FINAL.pdf",
+          "https://penteli.gov.gr/wp-content/uploads/2024/08/%CE%9A%CE%B1%CE%BD%CE%BF%CE%BD%CE%B9%CF%83%CE%BC%CF%8C%CF%82-%CE%9A%CE%B1%CE%B8%CE%B1%CF%81%CE%B9%CF%8C%CF%84%CE%B7%CF%84%CE%B1%CF%82-%CE%A4%CE%B5%CE%BB%CE%B9%CE%BA%CF%8C.pdf",
+          "https://corfu.gr/se-leitoyrgia-dhmotiko-diktyo-xwrisths-sylloghs-metaxeirismenwn-eidwn-endyshs-ypodhshs-kai-loipwn-yfasmatinwn-ylikwn/",
+          "https://sfedona.gr/112478/2024/",
+          "https://www.korinthia.net.gr/2026/10/08/121568/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 5,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:6c9ffbb0372c4b7b91855dad68315358"
+    },
+    "subject[outOfAgenda Ορισμός διαχειριστών λογαριασμών ΠΔΕ]": {
+      "value": {
+        "id": "cmulcmtiv01ky8je5kwmf23up",
+        "name": "Ορισμός διαχειριστών λογαριασμών ΠΔΕ",
+        "description": "Έκτακτο θέμα για τον ορισμό υπευθύνων διαχειριστών των λογαριασμών των έργων του Προγράμματος Δημοσίων Επενδύσεων. Πρόκειται για [ετήσια απόφαση](REF:UTTERANCE:cmul66wrs014d8je5y38rs7uj) και ορίστηκαν [οι υπάλληλοι Δημητρακοπούλου Αναστασία και μια υπάλληλος Βασιλική](REF:UTTERANCE:cmul66wrs014f8je5nue00ome). Εγκρίθηκε ομόφωνα.",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda",
+        "topic": "Διοίκηση",
+        "withdrawn": false,
+        "context": "Το Πρόγραμμα Δημοσίων Επενδύσεων (ΠΔΕ) αποτελεί το βασικό μηχανισμό χρηματοδότησης αναπτυξιακών έργων στη χώρα, και για την εκτέλεσή του απαιτείται ο ορισμός υπολόγων διαχειριστών έργου ανά έργο, με απόφαση των φορέων χρηματοδότησης που αναρτάται στο πρόγραμμα «Διαύγεια». Υπόλογοι διαχειριστές είναι συνήθως οι οικονομικές υπηρεσίες φορέων της γενικής κυβέρνησης, οι οποίοι με τη σειρά τους ορίζουν εισηγητές εκκαθάρισης δαπάνης και υπεύθυνους λογαριασμού για κάθε έργο. Οι πληρωμές διενεργούνται από τους εξουσιοδοτημένους «Υπευθύνους Πληρωμών» που ορίζονται αρμοδίως από τους Φορείς του Δημοσίου – «Υπολόγους Διαχειριστές» για κάθε έργο του Προγράμματος.\n\nΟι πληρωμές των έργων πραγματοποιούνται μέσω λογαριασμών δημοσίων επενδύσεων που τηρούνται στην Τράπεζα της Ελλάδος. Για το 2026, προβλέπεται να διατεθούν 16,719 εκατ. ευρώ μέσω του Προϋπολογισμού Δημοσίων Επενδύσεων, ο οποίος συνιστά τον υψηλότερο των τελευταίων 16 ετών. Ο ετήσιος ορισμός των διαχειριστών λογαριασμών αποτελεί διαδικαστική υποχρέωση που διασφαλίζει τη διαφάνεια και την ορθή διαχείριση των δημοσίων πόρων που διατίθενται για αναπτυξιακά έργα σε τοπικό επίπεδο.",
+        "contextCitationUrls": [
+          "https://www.opengov.gr/minfin/?p=12991",
+          "https://www.bankofgreece.gr/kiries-leitourgies/foreis-genikhs-kyvernhshs/programma-dhmosiwn-ependysewn",
+          "https://www.taxhorizon.club/el/%CE%B2%CE%B9%CE%B2%CE%BB%CE%B9%CE%BF%CE%B8%CE%AE%CE%BA%CE%B7-10015",
+          "https://epde.gr/portal/wp-content/uploads/2025/08/%CE%95%CE%B3%CE%BA%CF%8D%CE%BA%CE%BB%CE%B9%CE%BF%CF%82-%CE%9F%CE%B4%CE%B7%CE%B3%CE%B9%CF%8E%CE%BD-%CE%B3%CE%B9%CE%B1-%CF%84%CE%BF-%CE%91%CE%A0%CE%94%CE%95-2026-%CE%BA%CE%B1%CE%B9-%CF%84%CE%BF%CE%BD-%CE%A0%CF%81%CE%BF%CE%B3%CF%81%CE%B1%CE%BC%CE%BC%CE%B1%CF%84%CE%B9%CF%83%CE%BC%CF%8C-%CE%94%CE%B1%CF%80%CE%B1%CE%BD%CF%8E%CE%BD-%CE%91%CE%A0%CE%94%CE%95-2026-2029.pdf",
+          "https://acci.gr/%CF%80%CF%81%CF%8C%CE%B3%CF%81%CE%B1%CE%BC%CE%BC%CE%B1-%CE%B4%CE%B7%CE%BC%CE%BF%CF%83%CE%AF%CF%89%CE%BD-%CE%B5%CF%80%CE%B5%CE%BD%CE%B4%CF%8D%CF%83%CE%B5%CF%89%CE%BD-167-%CE%B4%CE%B9%CF%83-%CE%B5/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 7,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:6c9ffbb0372c4b7b91855dad68315358"
+    }
+  },
+  "cluster": "xylokastro",
+  "tags": [
+    "recorded-run",
+    "env:development"
+  ]
+}

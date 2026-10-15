@@ -1,0 +1,106 @@
+{
+  "id": "decisions.extraction/9ΟΚ6Ω6Μ-06Θ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "9ΟΚ6Ω6Μ-06Θ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΟΚ6Ω6Μ-06Θ",
+    "city": "athens",
+    "body": "3η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "decisionNumber=text"
+      ],
+      "namedEdgeCase": "C8: the stored decisionNumber was text from the page, not the number. Only the decision number is labelled here; the scorer does not read it yet. Stored: «ΚΑΦΕΝΕΙΟ & ΜΑΓΕΙΡΕΙΟ ΠΑΡΑΔΟΣΙΑΚΟΥ ΤΥΠΟΥ».",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "decisionNumber": {
+      "value": {
+        "number": "91",
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "ΠΡΑΞΗ 91",
+          "ada": "9ΟΚ6Ω6Μ-06Θ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [],
+        "absentMembers": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "decisionNumber=text"
+  ]
+}

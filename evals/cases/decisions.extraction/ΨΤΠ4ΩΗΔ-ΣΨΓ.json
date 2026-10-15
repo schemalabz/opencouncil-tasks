@@ -1,0 +1,129 @@
+{
+  "id": "decisions.extraction/ΨΤΠ4ΩΗΔ-ΣΨΓ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΤΠ4ΩΗΔ-ΣΨΓ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΤΠ4ΩΗΔ-ΣΨΓ",
+    "city": "chalandri",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "substitute=yes",
+        "mayorStated=yes",
+        "outOfAgenda=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1833,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΜΜΕΤΕΧΟΝΤΕΣ",
+          "ΜΗ ΣΥΜΜΕΤΕΧΟΥΣΕΣ"
+        ],
+        "statedBodySize": 9,
+        "presentMembers": [
+          "ΣΥΜΕΩΝ (ΣΙΜΟΣ) ΡΟΥΣΣΟΣ",
+          "ΓΕΡΑΣΙΜΟΣ ΛΥΜΠΕΡΑΤΟΣ",
+          "ΙΩΑΝΝΑ ΑΘΑΝΑΣΑΤΟΥ",
+          "ΧΡΙΣΤΙΝΑ ΜΑΧΑΙΡΑ",
+          "ΔΗΜΗΤΡΙΟΣ ΒΑΣΙΛΟΠΟΥΛΟΣ",
+          "ΕΛΕΥΘΕΡΙΟΣ ΠΑΝΤΕΛΙΔΑΚΗΣ",
+          "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+          "ΧΑΡΑΛΑΜΠΟΣ ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)"
+        ],
+        "absentMembers": [
+          "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ",
+          "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "survey is right",
+            "note": "it was the first out of agenda"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "first out-of-agenda item"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chalandri/Δημοτική Επιτροπή",
+  "tags": [
+    "chalandri",
+    "rollCallLayout=present_and_absent",
+    "substitute=yes",
+    "mayorStated=yes",
+    "outOfAgenda=yes"
+  ]
+}

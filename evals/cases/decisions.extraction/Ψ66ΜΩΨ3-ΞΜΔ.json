@@ -1,0 +1,104 @@
+{
+  "id": "decisions.extraction/Ψ66ΜΩΨ3-ΞΜΔ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ66ΜΩΨ3-ΞΜΔ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ66ΜΩΨ3-ΞΜΔ",
+    "city": "argithea",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 467,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "Μ έ λ η"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Μερεντίτης Κωνσταντίνος",
+          "Γραμμένος Κωνσταντίνος",
+          "Κορλού Όλγα",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 6,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 6,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτική Επιτροπή",
+  "tags": [
+    "argithea",
+    "rollCallLayout=composition_and_absent"
+  ]
+}

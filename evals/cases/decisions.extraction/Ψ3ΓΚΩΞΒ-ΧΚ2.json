@@ -1,0 +1,125 @@
+{
+  "id": "decisions.extraction/Ψ3ΓΚΩΞΒ-ΧΚ2",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ3ΓΚΩΞΒ-ΧΚ2",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ3ΓΚΩΞΒ-ΧΚ2",
+    "city": "orestiada",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 0,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "perVoteAbsence=yes",
+        "decisionAttendance=none"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "decisionAttendance": {
+      "value": {
+        "members": null,
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Δημήτριος Τσελεμπής",
+          "Μιχαήλ Στράντζελης",
+          "Αθανάσιος Δόμπας",
+          "Πέτρος Αργυριάδης",
+          "Ηλίας Αγγελακούδης"
+        ],
+        "asPrinted": "Κατά την διάρκεια της ψήφισης του θέματος απουσίαζαν από την αίθουσα οι Δημοτικοί Σύμβουλοι Δημήτριος Τσελεμπής, Μιχαήλ Στράντζελης, Αθανάσιος Δόμπας, Πέτρος Αργυριάδης και Ηλίας Αγγελακούδης.",
+        "verified": true,
+        "evidence": {
+          "quote": "Κατά την διάρκεια της ψήφισης του θέματος απουσίαζαν από την αίθουσα οι Δημοτικοί Σύμβουλοι Δημήτριος Τσελεμπής, Μιχαήλ Στράντζελης, Αθανάσιος Δόμπας, Πέτρος Αργυριάδης και Ηλίας Αγγελακούδης.",
+          "ada": "Ψ3ΓΚΩΞΒ-ΧΚ2",
+          "page": 1,
+          "adjudicatedAt": "2026-09-22T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-22",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [],
+        "absentMembers": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "orestiada/Δημοτικό Συμβούλιο",
+  "tags": [
+    "orestiada",
+    "perVoteAbsence=yes",
+    "decisionAttendance=none"
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "id": "decisions.extraction/ΨΜΒΣΩΗΔ-ΕΛ4",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΜΒΣΩΗΔ-ΕΛ4",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΜΒΣΩΗΔ-ΕΛ4",
+    "city": "chalandri",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "namedVoters=dissenters_only",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1570,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΜΜΕΤΕΧΟΝΤΕΣ",
+          "ΜΗ ΣΥΜΜΕΤΕΧΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΚΩΝΣΤΑΝΤΙΝΑ - ΟΛΥΜΠΙΑ ΚΑΡΑΓΙΑΝΝΗ",
+          "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ",
+          "ΙΩΑΝΝΑ ΑΘΑΝΑΣΑΤΟΥ",
+          "ΓΕΡΑΣΙΜΟΣ ΛΥΜΠΕΡΑΤΟΣ",
+          "ΧΡΙΣΤΙΝΑ ΜΑΧΑΙΡΑ",
+          "ΑΛΕΞΙΟΣ ΜΑΥΡΑΓΑΝΗΣ",
+          "ΧΡΥΣΑΥΓΗ ΑΛΟΥΠΗ",
+          "ΕΥΘΥΜΙΟΣ ΚΟΥΡΑΣΗΣ",
+          "ΕΛΕΥΘΕΡΙΟΣ ΠΑΝΤΕΛΙΔΑΚΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΧΡΙΣΤΟΥΛΑΚΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΒΑΣΙΛΟΠΟΥΛΟΣ",
+          "ΣΠΥΡΙΔΩΝ ΦΩΤΕΙΝΟΣ",
+          "ΑΝΝΑ ΣΟΥΣΟΥ",
+          "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ",
+          "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ",
+          "ΠΑΝΑΓΙΩΤΗΣ ΛΑΜΠΡΟΠΟΥΛΟΣ",
+          "ΧΡΗΣΤΟΣ ΚΙΑΚΟΣ",
+          "ΘΕΟΔΩΡΑ ΑΛΕΞΑΝΔΡΗ",
+          "ΧΑΡΑΛΑΜΠΟΣ ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)",
+          "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ",
+          "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+          "ΕΜΜΑΝΟΥΗΛ ΚΡΑΝΙΔΗΣ"
+        ],
+        "absentMembers": [
+          "ΧΑΡΗΣ ΜΑΥΡΟΥΔΗΣ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΕΡΟΛΥΜΑΤΟΣ",
+          "ΙΩΑΝΝΗΣ ΛΑΔΟΠΟΥΛΟΣ",
+          "ΔΗΜΗΤΡΑ ΓΚΑΣΟΥΚΑ",
+          "ΕΥΤΕΡΠΗ ΛΕΡΤΑ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΑΒΡΑΣ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΕΥΘΥΜΙΟΥ",
+          "ΙΩΑΝΝΑ ΚΑΜΠΟΥΡΗ",
+          "ΙΩΑΝΝΗΣ ΚΟΥΡΑΣΗΣ",
+          "ΠΑΡΑΣΚΕΥΗ ΖΟΡΜΠΑ",
+          "ΕΛΠΙΝΙΚΗ ΠΑΠΑΓΙΑΝΝΑΚΗ",
+          "ΕΙΡΗΝΗ ΚΑΛΛΗ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "αποφασίζει κατά πλειοψηφία",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΔΗΜΗΤΡΙΟΣ ΧΡΙΣΤΟΥΛΑΚΗΣ",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chalandri",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "namedVoters=dissenters_only",
+    "declaration=yes"
+  ]
+}

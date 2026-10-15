@@ -1,0 +1,118 @@
+{
+  "id": "decisions.extraction/6ΜΣ1Ω6Μ-ΞΕΘ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΜΣ1Ω6Μ-ΞΕΘ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΜΣ1Ω6Μ-ΞΕΘ",
+    "city": "athens",
+    "body": "5η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "advisoryAct=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "advisoryAct"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1635,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 5ης ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "ΒΟΛΟΝΑΣΗ ΧΑΡΟΥΛΑ (ΚΟΡΙΝΑ)",
+          "ΠΑΤΣΙΔΗΣ ΧΑΡΑΛΑΜΠΟΣ",
+          "ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ",
+          "ΒΑΤΣΑΚΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΠΟΔΙΣΤΡΙΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΠΑΠΑΧΡΗΣΤΟΥ ΣΟΦΙΑ",
+          "ΛΙΓΝΟΣ ΓΕΡΑΣΙΜΟΣ",
+          "ΣΤΑΜΟΥ ΣΤΑΥΡΙΑΝΗ",
+          "ΦΙΛΟΣΟΦΟΥ ΣΩΤΗΡΙΑ",
+          "ΒΛΑΧΟΥ ΑΝΝΑ",
+          "ΚΕΦΑΛΑ ΠΟΛΥΞΕΝΗ",
+          "ΠΟΘΗΤΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΧΑΡΑΛΑΜΠΟΣ"
+        ],
+        "absentMembers": [
+          "ΚΑΡΤΣΟΥΝΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΔΟΜΑΖΟΥ-ΠΑΝΤΕΛΙΔΟΥ ΡΟΔΟΜΑΡΙΑ",
+          "ΖΑΧΑΡΟΠΟΥΛΟΥ ΜΑΡΙΑ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": null,
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "advisoryAct=yes"
+  ]
+}

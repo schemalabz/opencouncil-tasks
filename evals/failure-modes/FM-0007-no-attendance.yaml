@@ -1,0 +1,19 @@
+id: FM-0007
+slug: no_attendance
+title: Decision extraction finds no attendance
+definition: >
+  The whole-document decision extraction returns neither present nor absent members, so no attendance can be recorded for the decision.
+  The pipeline's own NO_ATTENDANCE warning (validateRawExtraction / validateProcessedDecision), run as a check.
+boundary: >
+  Only the whole-document read (label decision-extraction) is checked: partial, continuation and closing reads of long documents leave fields empty by instruction, and their merged result is not a single call.
+suite: decisions.extraction
+scope: call
+severity: degraded
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/decisionValidationCodes.ts
+  export: NO_ATTENDANCE
+decision: monitor
+alert: "fail rate per city > 3× its 30-day baseline, min 5 decision-extraction calls"

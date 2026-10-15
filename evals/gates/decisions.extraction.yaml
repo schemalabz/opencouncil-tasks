@@ -1,0 +1,20 @@
+# Gate for `eval gate decisions.extraction <runA> <runB>`. Omitted keys fall back to the default gate.
+
+# Cases whose majority-over-repeats outcome on an adjudicated/imported holdout value may go from
+# agree to disagree/missing. Any more fails the gate, unless the field's regressions are within noiseFloorPp
+# of its scored units.
+maxHumanHoldoutRegressions: 0
+
+# Regressions as a share of the field's scored units, in percentage points, treated as
+# repeat-to-repeat noise; regressions inside it don't fail.
+noiseFloorPp: 0
+
+# Largest allowed increase in cost per attempt over run A, in percent.
+maxCostIncreasePct: 10
+
+# A guarded failure mode that fires more often in run B fails the gate when its exact McNemar p is below this.
+maxModeFireIncreaseP: 0.05
+
+# Fields reported but never deciding the gate. excerpt's labels are a drafted baseline (a previous
+# model's excerpt), so a difference there says the output changed, not that it got worse.
+ignoreFields: [excerpt]

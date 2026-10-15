@@ -1,0 +1,110 @@
+{
+  "id": "decisions.extraction/ΨΞΩΜΩ6Μ-Ω4Ξ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΞΩΜΩ6Μ-Ω4Ξ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΞΩΜΩ6Μ-Ω4Ξ",
+    "city": "athens",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 53,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "substitute=yes",
+        "rollCallLayout=narrative_only"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3578,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "narrative_only",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Γ.Κ.ΓΙΑΝΝΑΡΟΣ",
+          "Θ.ΓΕΩΡΓΙΑΔΗΣ",
+          "Κ.ΓΙΑΝΝΟΠΟΥΛΟΥ",
+          "Π.Π.ΧΑΡΛΑΥΤΗΣ",
+          "Ε.ΖΩΝΤΗΡΟΥ",
+          "Μ.ΕΥΑΓΓΕΛΙΔΟΥ"
+        ],
+        "absentMembers": [
+          "Ο.ΔΟΥΡΟΥ",
+          "Ν.ΑΒΡΑΜΙΔΗΣ",
+          "Ε.ΚΟΛΛΑΤΟΣ",
+          "Ε.ΚΑΛΑΜΠΟΚΑΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/Δημοτική Επιτροπή",
+  "tags": [
+    "athens",
+    "substitute=yes",
+    "rollCallLayout=narrative_only"
+  ]
+}

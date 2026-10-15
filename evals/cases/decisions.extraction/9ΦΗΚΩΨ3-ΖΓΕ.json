@@ -1,0 +1,122 @@
+{
+  "id": "decisions.extraction/9ΦΗΚΩΨ3-ΖΓΕ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΦΗΚΩΨ3-ΖΓΕ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΗΚΩΨ3-ΖΓΕ",
+    "city": "argithea",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "substitute=yes",
+        "voteTally=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 422,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Μ έ λ η",
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 7,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Καραγεώργος Αθανάσιος",
+          "Πούλιος Χαράλαμπος",
+          "Κορλού Όλγα",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": true,
+        "review": [
+          {
+            "what": "vote tally dropped",
+            "verdict": "survey is right",
+            "note": "but wat survey and extraction got is esentially the same, right?"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "«ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ» carries no tally; survey flag was wrong"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτική Επιτροπή",
+  "tags": [
+    "argithea",
+    "rollCallLayout=present_and_absent",
+    "substitute=yes",
+    "voteTally=yes"
+  ]
+}
