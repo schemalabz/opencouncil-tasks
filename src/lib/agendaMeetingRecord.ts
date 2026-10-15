@@ -1,7 +1,7 @@
 import { PDFDocument } from "pdf-lib";
 import { aiChat, type UsageStats } from "./ai.js";
 import { extractPdfPageSet } from "../tasks/utils/pdfPages.js";
-import type { AgendaDocument } from "./documentConversion.js";
+import { fetchAgendaDocument, type AgendaDocument } from "./documentConversion.js";
 import { bodyTypeOfLabel, sameBody } from "../tasks/utils/decisionPartition.js";
 import type { AdministrativeBodyType, AgendaMeeting, AgendaMeetingRecord, MeetingFormat, MeetingKind, TaskWarning } from "../types.js";
 
@@ -181,6 +181,27 @@ export async function extractAgendaMeetings(
         ...pickMeeting(meetings, meeting),
         extraction: { usage: result.usage, resolvedModel: result.resolvedModel, batchMode: result.batchMode },
     };
+}
+
+/** One meeting of the export that opencouncil's scripts/meeting-record-export.ts writes. */
+export interface MeetingRecordExportRow {
+    cityId: string;
+    meetingId: string;
+    /** The meeting's calendar date in the city's time (YYYY-MM-DD). */
+    date: string;
+    /** The meeting's start in the city's time (HH:MM). */
+    time?: string;
+    agendaUrl: string;
+    administrativeBody: { name: string; type: AdministrativeBodyType } | null;
+}
+
+/**
+ * The backfill's reading of one exported meeting (`read-meeting-records`, and
+ * the `agenda.meetingRecord` eval suite). A meeting with no body is the council's.
+ */
+export async function readExportedMeeting(row: MeetingRecordExportRow): Promise<AgendaMeetingsReading> {
+    const document = await fetchAgendaDocument(row.agendaUrl);
+    return extractAgendaMeetings(document, { body: row.administrativeBody ?? { type: 'council' }, time: row.time, date: row.date });
 }
 
 /**

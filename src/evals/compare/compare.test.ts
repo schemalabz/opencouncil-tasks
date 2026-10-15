@@ -287,10 +287,11 @@ describe('expectations changed since a run', () => {
         expect(formatComparison(cmp)).toContain('! B (run-B) was scored against expectations that have changed since');
     });
 
-    it('ignores what scoring does not read: history and a value restamped unchanged', () => {
+    it('ignores what scoring does not read: history, notes, and a value restamped unchanged', () => {
         const annotated = structuredClone(ranCases);
         annotated[5].history = [{ at: '2026-10-25', change: 'note added' }];
-        annotated[5].expect.date = { ...annotated[5].expect.date, at: '2026-10-25', source: 'review:rv-1' };
+        annotated[5].note = 'checked against the minutes';
+        annotated[5].expect.date = { ...annotated[5].expect.date, at: '2026-10-25', source: 'review:rv-1', evidence: 'p. 3' };
         expect(compareRuns(a, b, annotated).staleExpectations).toEqual([]);
     });
 

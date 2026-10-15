@@ -83,7 +83,7 @@ export function stemOf(c: Pick<Case, 'id' | 'suite'>): string {
 }
 
 function orderExpected(e: Expected): Expected {
-    return { value: e.value, tier: e.tier, by: e.by, at: e.at, source: e.source, signal: e.signal, reason: e.reason };
+    return { value: e.value, tier: e.tier, by: e.by, at: e.at, source: e.source, signal: e.signal, reason: e.reason, evidence: e.evidence };
 }
 
 /** Keys in a fixed order so a rewrite of an unchanged case is byte-identical. */
@@ -100,6 +100,7 @@ export function serializeCase(c: Case): string {
         cluster: c.cluster,
         tags: c.tags,
         guards: c.guards,
+        note: c.note,
         history: c.history,
     };
     return JSON.stringify(ordered, null, 2) + '\n';
@@ -114,7 +115,7 @@ export function writeCase(c: Case, root?: string): string {
 
 /**
  * A case built again from its source, over the copy already on disk. The copy keeps its
- * split (lint refuses a changed one), history, tags and guards, and every value a person
+ * split (lint refuses a changed one), history, tags, guards and note, and every value a person
  * settled; a fresh value replaces one only when it is drafted-over-drafted or a person
  * settled it later.
  */
@@ -125,7 +126,7 @@ export function regenerateCase<I>(fresh: Case<I>, existing: Case | null | undefi
         const next = fresh.expect[field];
         if (settledByPerson(kept) && !(next && settledByPerson(next) && next.at > kept.at)) expect[field] = kept;
     }
-    return { ...fresh, split: existing.split, history: existing.history, tags: existing.tags, guards: existing.guards, expect };
+    return { ...fresh, split: existing.split, history: existing.history, tags: existing.tags, guards: existing.guards, note: existing.note, expect };
 }
 
 /** Deterministic, so a case keeps its split however many times it is regenerated. */

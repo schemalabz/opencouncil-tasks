@@ -12,7 +12,7 @@ import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions } from './tasks/pollDecisions.js';
 import { extractAgenda, processAgenda } from './tasks/processAgenda.js';
-import { extractAgendaMeetings } from './lib/agendaMeetingRecord.js';
+import { extractAgendaMeetings, readExportedMeeting, type MeetingRecordExportRow } from './lib/agendaMeetingRecord.js';
 import { fetchAgendaDocument } from './lib/documentConversion.js';
 import { extractDecisionFromPdf, adaToPdfUrl, allowLocalPdfFiles, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { readDecisionDocument } from './tasks/utils/readDecisionDocument.js';
@@ -1214,18 +1214,6 @@ program
         }
     });
 
-/** One meeting of the export that opencouncil's scripts/meeting-record-export.ts writes. */
-interface MeetingRecordExportRow {
-    cityId: string;
-    meetingId: string;
-    /** The meeting's calendar date in the city's time (YYYY-MM-DD). */
-    date: string;
-    /** The meeting's start in the city's time (HH:MM). */
-    time?: string;
-    agendaUrl: string;
-    administrativeBody: { name: string; type: AdministrativeBodyType } | null;
-}
-
 interface MeetingRecordRead {
     cityId: string;
     meetingId: string;
@@ -1285,9 +1273,7 @@ program
                     const row = pending[next++];
                     const base = { cityId: row.cityId, meetingId: row.meetingId, agendaUrl: row.agendaUrl, body: bodyOf(row), time: row.time ?? null };
                     try {
-                        const document = await fetchAgendaDocument(row.agendaUrl);
-                        // A meeting with no body is the council's.
-                        const result = await extractAgendaMeetings(document, { body: row.administrativeBody ?? { type: 'council' }, time: row.time, date: row.date });
+                        const result = await readExportedMeeting(row);
                         input += result.extraction.usage.input_tokens;
                         output += result.extraction.usage.output_tokens;
                         done.set(key(row), {
@@ -1314,57 +1300,6 @@ program
         } finally {
             server.close();
         }
-    });
-
-/** A hand label of one invitation: what the sitting is, read by a person (or a careful reader) from the document. */
-interface MeetingRecordLabel {
-    key: string;
-    kind: AgendaMeetingRecord['kind'];
-    urgent: boolean;
-    sessionNumber: number | null;
-    format: AgendaMeetingRecord['format'];
-    confidence?: 'high' | 'low';
-    note?: string;
-}
-
-program
-    .command('evaluate-meeting-records <labelsFile> <recordsFile>')
-    .description('Score a read-meeting-records output against hand labels: per field, how often the record equals the label (null included), and every disagreement. Label keys are <cityId>__<meetingId>.')
-    .option('--high-only', 'Leave out the labels marked low confidence')
-    .action((labelsFile: string, recordsFile: string, options: { highOnly?: boolean }) => {
-        const labels = (JSON.parse(fs.readFileSync(labelsFile, 'utf8')) as MeetingRecordLabel[])
-            .filter(l => !options.highOnly || l.confidence !== 'low');
-        const records = new Map((JSON.parse(fs.readFileSync(recordsFile, 'utf8')) as { meetings: MeetingRecordRead[] }).meetings
-            .map(r => [`${r.cityId}__${r.meetingId}`, r]));
-        const fields = ['kind', 'urgent', 'sessionNumber', 'format'] as const;
-        const score = Object.fromEntries(fields.map(f => [f, { equal: 0, total: 0, falseValue: 0, missed: 0 }])) as
-            Record<typeof fields[number], { equal: number; total: number; falseValue: number; missed: number }>;
-        const disagreements: string[] = [];
-        const unread: string[] = [];
-        for (const label of labels) {
-            const read = records.get(label.key);
-            // A failed read is a run to repeat, not an answer to score.
-            if (!read || read.error) { unread.push(`${label.key}: ${read?.error ?? 'no record'}`); continue; }
-            for (const field of fields) {
-                const want = label[field] ?? null;
-                const got = read.record?.[field] ?? null;
-                const s = score[field];
-                s.total++;
-                if (want === got) { s.equal++; continue; }
-                // A wrong value would be written; a missing one (or an unread urgency) only leaves the field to a person.
-                if (got !== null && got !== false) s.falseValue++; else s.missed++;
-                const evidence = read.record?.[`${field}Evidence` as const];
-                disagreements.push(`${label.key} ${field}: label ${want ?? '-'}, read ${got ?? '-'}${evidence ? ` «${evidence}»` : ''}${label.note ? `  [label note: ${label.note}]` : ''}`);
-            }
-        }
-        console.log(`${labels.length} labels${options.highOnly ? ' (low-confidence labels left out)' : ''}\n`);
-        for (const field of fields) {
-            const s = score[field];
-            console.log(`${field.padEnd(14)} ${s.equal}/${s.total} equal (${(100 * s.equal / Math.max(1, s.total)).toFixed(1)}%), ${s.falseValue} wrong value, ${s.missed} missed`);
-        }
-        if (unread.length > 0) console.log(`\nNot scored, not read (${unread.length}):\n${unread.map(u => `  ${u}`).join('\n')}`);
-        if (disagreements.length > 0) console.log(`\nDisagreements (${disagreements.length}):\n${disagreements.map(d => `  ${d}`).join('\n')}`);
-        server.close();
     });
 
 registerEvalCommands(program);

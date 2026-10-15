@@ -1,4 +1,5 @@
 import { agendaContext, agendaExtraction } from './agenda.js';
+import { agendaMeetingRecord } from './agendaMeetingRecord.js';
 import { decisionsExtraction } from './decisionsExtraction.js';
 import { decisionsMatching } from './decisionsMatching.js';
 import { fixSpeakerId } from './fixSpeakerId.js';
@@ -17,6 +18,7 @@ export const SUITES: Record<string, Suite<any, any>> = {
     [summarizeE2e.id]: summarizeE2e,
     [agendaExtraction.id]: agendaExtraction,
     [agendaContext.id]: agendaContext,
+    [agendaMeetingRecord.id]: agendaMeetingRecord,
     [fixTranscriptSuite.id]: fixTranscriptSuite,
 };
 

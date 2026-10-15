@@ -100,7 +100,7 @@ describe('regenerateCase', () => {
     it('lets a fresh value replace a drafted one, or a person\'s value only when a person settled it later', () => {
         const at = (day: string, tier: Case['expect'][string]['tier'], value: unknown) => ({ value, tier, by: 'x', at: day, source: 's' });
         const existing = sampleCase({
-            split: 'holdout', tags: ['person-tag'], guards: ['FM-0001'],
+            split: 'holdout', tags: ['person-tag'], guards: ['FM-0001'], note: 'labeller note',
             expect: { drafted: at('2026-09-01', 'drafted', 'old'), reviewed: at('2026-10-01', 'adjudicated', 'mine'), reimported: at('2026-09-01', 'imported', 'old') },
         });
         const fresh = sampleCase({
@@ -108,6 +108,6 @@ describe('regenerateCase', () => {
         });
         const c = regenerateCase(fresh, existing);
         expect(Object.fromEntries(Object.entries(c.expect).map(([k, e]) => [k, e.value]))).toEqual({ drafted: 'new', reviewed: 'mine', reimported: 'new' });
-        expect([c.split, c.tags, c.guards]).toEqual(['holdout', ['person-tag'], ['FM-0001']]);
+        expect([c.split, c.tags, c.guards, c.note]).toEqual(['holdout', ['person-tag'], ['FM-0001'], 'labeller note']);
     });
 });
