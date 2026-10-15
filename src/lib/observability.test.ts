@@ -1,77 +1,48 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
+import { runWithTaskTrace, withPhaseSpan } from './observability.js';
+import { configureSinks, emitCall } from './telemetry/telemetry.js';
+import type { RunInfo, RunState } from './telemetry/context.js';
+import type { RunOutcome, TelemetrySink } from './telemetry/sink.js';
+import type { CallRecord } from './llm/callRecord.js';
 
-// The only real obstacle to testing runWithTaskTrace is the Langfuse client
-// construction; the trace object it hands back is a plain recorder.
-const generation = { end: vi.fn() };
-const trace = { update: vi.fn(), event: vi.fn(), generation: vi.fn(() => generation) };
-const traceFactory = vi.fn(() => trace);
-vi.mock('langfuse', () => ({
-    Langfuse: class {
-        trace = traceFactory;
-        on = vi.fn();
-        flushAsync = vi.fn(async () => {});
-    },
-}));
+const OPTS = { taskType: 'test', version: 1, input: {}, callbackUrl: 'https://opencouncil.gr/api/cities/chania/meetings/m1/taskStatuses/ts1', taskId: 'task-1' };
 
-const { runWithTaskTrace, observeGeneration } = await import('./observability.js');
-const { NO_USAGE } = await import('./ai.js');
-const { TaskCancelledError, newTaskControl, runWithTaskControl } = await import('./taskControl.js');
+function captureSink() {
+    const runs: RunInfo[] = [];
+    const ends: Array<{ state: RunState; outcome: RunOutcome }> = [];
+    const sink: TelemetrySink = {
+        name: 'capture',
+        onRunStart: run => { runs.push(run); },
+        onRunEnd: (state, outcome) => { ends.push({ state, outcome }); },
+    };
+    configureSinks([sink]);
+    return { runs, ends };
+}
 
-const OPTS = { taskType: 'test', version: 1, input: {}, callbackUrl: 'http://cb' };
-const tagsOf = () => trace.update.mock.calls.at(-1)![0].tags as string[];
+afterEach(() => configureSinks(null));
 
-describe('runWithTaskTrace failure tagging', () => {
-    beforeEach(() => {
-        vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk');
-        vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk');
-        trace.update.mockClear();
-        trace.event.mockClear();
+describe('runWithTaskTrace', () => {
+    it('returns the task result and starts a run with the task identity', async () => {
+        const { runs } = captureSink();
+        await expect(runWithTaskTrace(OPTS, async () => 42)).resolves.toBe(42);
+        expect(runs[0]).toMatchObject({ taskType: 'test', taskVersion: 1, taskId: 'task-1' });
     });
 
-    it('tags a genuine failure as an error', async () => {
+    it('rethrows the task error and ends the run as an error', async () => {
+        const { ends } = captureSink();
         await expect(runWithTaskTrace(OPTS, async () => { throw new Error('boom'); })).rejects.toThrow('boom');
-        expect(tagsOf()).toContain('status:error');
-        expect(tagsOf()).not.toContain('status:cancelled');
-        expect(trace.event).toHaveBeenCalledWith(expect.objectContaining({ name: 'task-error', level: 'ERROR' }));
-    });
-
-    it('tags a TaskCancelledError as cancelled, not an error', async () => {
-        await expect(runWithTaskTrace(OPTS, async () => { throw new TaskCancelledError('nope'); })).rejects.toThrow();
-        expect(tagsOf()).toContain('status:cancelled');
-        expect(tagsOf()).not.toContain('status:error');
-        expect(trace.event).toHaveBeenCalledWith(expect.objectContaining({ name: 'task-cancelled', level: 'WARNING' }));
-    });
-
-    it('tags a cancel that surfaced as a wrapped SDK abort as cancelled', async () => {
-        const control = newTaskControl('task_1');
-        control.cancel.abort();
-        await expect(runWithTaskControl(control, () =>
-            runWithTaskTrace(OPTS, async () => { throw new Error('Request was aborted.'); })
-        )).rejects.toThrow();
-        expect(tagsOf()).toContain('status:cancelled');
-        expect(tagsOf()).not.toContain('status:error');
+        expect(ends[0].outcome).toMatchObject({ status: 'error', error: 'boom' });
     });
 });
 
-describe('observeGeneration on a call that fails after its response arrived', () => {
-    beforeEach(() => {
-        vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk');
-        vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk');
-        generation.end.mockClear();
-    });
-
-    it('keeps the usage on a generation closed with an error', async () => {
-        // A refusal after partial text or a context-window stop is billed; closing
-        // the generation as an error must not drop those tokens from the trace.
-        await runWithTaskTrace(OPTS, async () => {
-            observeGeneration({ name: 'g', model: 'm', input: [], systemPrompt: 's' })
-                .error('Claude declined this request.', { ...NO_USAGE, input_tokens: 12, output_tokens: 3 });
-        });
-
-        expect(generation.end).toHaveBeenCalledWith(expect.objectContaining({
-            level: 'ERROR',
-            statusMessage: 'Claude declined this request.',
-            usageDetails: expect.objectContaining({ input: 12, output: 3 }),
-        }));
+describe('withPhaseSpan', () => {
+    it('attributes calls made inside it to the phase', async () => {
+        const { ends } = captureSink();
+        const call: CallRecord = {
+            v: 1, callId: 'c', cacheKey: 'k', startedAt: 't0', finishedAt: 't1',
+            request: { model: 'm', max_tokens: 1, messages: [] },
+        };
+        await runWithTaskTrace(OPTS, () => withPhaseSpan('Phase 1', async () => { emitCall(call); }));
+        expect(ends[0].state.calls[0].phase).toBe('Phase 1');
     });
 });

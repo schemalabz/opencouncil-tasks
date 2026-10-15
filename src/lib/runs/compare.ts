@@ -10,9 +10,12 @@ function cleanRefs(text: string | null | undefined): string {
     return (text ?? '').replace(/\[([^\]]*)\]\(REF:[A-Z]+:[^)]+\)/g, '$1');
 }
 
-function toSubjectViews(result: SummarizeResult): SubjectView[] {
+/** A task result that carries subjects: summarize's, or processAgenda's, which has no utterance statuses. */
+export type SubjectsResult = Pick<SummarizeResult, 'subjects'> & Partial<Pick<SummarizeResult, 'utteranceDiscussionStatuses'>>;
+
+export function toSubjectViews(result: SubjectsResult): SubjectView[] {
     const statusesBySubject = new Map<string, Record<string, number>>();
-    for (const u of result.utteranceDiscussionStatuses) {
+    for (const u of result.utteranceDiscussionStatuses ?? []) {
         if (!u.subjectId) continue;
         const statuses = statusesBySubject.get(u.subjectId) ?? {};
         statuses[u.status] = (statuses[u.status] ?? 0) + 1;
@@ -60,7 +63,11 @@ function classifySubject(from: SubjectView, to: SubjectView): { verdict: Subject
     if (from.withdrawn !== to.withdrawn) { changes.push('withdrawn'); structural = true; }
     if (from.topicImportance !== to.topicImportance) changes.push('topicImportance');
     if (from.proximityImportance !== to.proximityImportance) changes.push('proximityImportance');
-    if (from.context !== to.context) changes.push('context');
+    if (from.context !== to.context) {
+        changes.push('context');
+        // Context appearing or vanishing is what a failed or refused search looks like, not rewording.
+        if (Boolean(from.context?.trim()) !== Boolean(to.context?.trim())) structural = true;
+    }
 
     const fromDesc = cleanRefs(from.description);
     const toDesc = cleanRefs(to.description);
@@ -185,11 +192,11 @@ function collectSegmentSamples(from: SummarizeResult, to: SummarizeResult): Segm
     return picked.sort((a, b) => a.index - b.index);
 }
 
-/** Build the full comparison between two runs of the same meeting. */
-export function compareRuns(from: RunWithResult, to: RunWithResult): ComparisonData {
-    const fromViews = toSubjectViews(from.result);
-    const toViews = toSubjectViews(to.result);
-
+/**
+ * Pairs the subjects of two runs of one meeting: by agenda index first, then by name
+ * for what is left, each pair with its verdict.
+ */
+export function matchSubjects(fromViews: SubjectView[], toViews: SubjectView[]): ComparisonData['subjects'] {
     const fromByIndex = new Map(fromViews.filter(v => v.agendaItemIndex !== null).map(v => [v.agendaItemIndex, v]));
     const toByIndex = new Map(toViews.filter(v => v.agendaItemIndex !== null).map(v => [v.agendaItemIndex, v]));
 
@@ -211,6 +218,14 @@ export function compareRuns(from: RunWithResult, to: RunWithResult): ComparisonD
     }
 
     matched.push(...matchLeftoversByName(fromOnly, toOnly));
+    return { matched, fromOnly, toOnly };
+}
+
+/** Build the full comparison between two runs of the same meeting. */
+export function compareRuns(from: RunWithResult, to: RunWithResult): ComparisonData {
+    const fromViews = toSubjectViews(from.result);
+    const toViews = toSubjectViews(to.result);
+    const { matched, fromOnly, toOnly } = matchSubjects(fromViews, toViews);
 
     const verdictSummary: Record<SubjectVerdict, number> = { identical: 0, cosmetic: 0, structural: 0 };
     for (const m of matched) verdictSummary[m.verdict]++;

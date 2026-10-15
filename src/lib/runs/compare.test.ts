@@ -124,4 +124,13 @@ describe('compareRuns', () => {
         const comparison = compareRuns(makeRun('t1', [from]), makeRun('t2', [to]));
         expect(comparison.subjects.matched[0].verdict).toBe('identical');
     });
+
+    it('treats context appearing or vanishing as structural, rewording as cosmetic', () => {
+        const ctx = (text: string) => ({ text, citationUrls: [] });
+        const base = makeSubject({ id: 'a', name: 'Θέμα 1', context: ctx('Το έργο χρηματοδοτείται από το ΕΣΠΑ.') });
+        const reworded = makeSubject({ id: 'b', name: 'Θέμα 1', context: ctx('Το έργο έχει χρηματοδότηση ΕΣΠΑ.') });
+        const lost = makeSubject({ id: 'c', name: 'Θέμα 1', context: null });
+        expect(compareRuns(makeRun('t1', [base]), makeRun('t2', [reworded])).subjects.matched[0].verdict).toBe('cosmetic');
+        expect(compareRuns(makeRun('t1', [base]), makeRun('t2', [lost])).subjects.matched[0].verdict).toBe('structural');
+    });
 });
