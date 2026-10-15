@@ -11,3 +11,12 @@ export const parseEnvOption = (value: string): RunEnv => {
     if (!isRunEnv(value)) throw new InvalidArgumentError(`expected one of ${RUN_ENVS.join(', ')}`);
     return value;
 };
+
+export const parseUsdOption = (value: string): number => {
+    const parsed = Number(value);
+    if (value.trim() === '' || !Number.isFinite(parsed) || parsed < 0) throw new InvalidArgumentError('expected an amount in USD');
+    return parsed;
+};
+
+/** For a repeatable option: each use adds one value. */
+export const collect = (value: string, previous: string[] = []): string[] => [...previous, value];
