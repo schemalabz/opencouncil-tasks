@@ -48,7 +48,9 @@ export async function extractPdfPageSet(source: PdfSource, pageIndices: number[]
         throw new Error(`No valid pages selected from a ${totalPages}-page PDF (asked for ${JSON.stringify(pageIndices)})`);
     }
 
-    const newDoc = await PDFDocument.create();
+    // pdf-lib stamps the current time into new documents by default; a slice must be
+    // byte-identical for the same pages, since its hash identifies the model request.
+    const newDoc = await PDFDocument.create({ updateMetadata: false });
     const copiedPages = await newDoc.copyPages(srcDoc, wanted);
     for (const page of copiedPages) {
         newDoc.addPage(page);
