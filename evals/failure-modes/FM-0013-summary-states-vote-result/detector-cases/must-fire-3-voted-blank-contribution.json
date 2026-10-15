@@ -1,0 +1,15 @@
+{
+  "kind": "must-fire",
+  "note": "Sentence from a production summarize run (Langfuse import, backfill 2026-10-15), placed in a minimal response",
+  "input": {
+    "label": "contributions:Θέμα",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"speakerContributions\": [{\"speakerId\": \"ab12cd34\", \"text\": \"Εξέφρασε επιφυλάξεις για το χρονοδιάγραμμα. Για τους λόγους αυτούς ψήφισε λευκό.\"}]}"
+    }
+  }
+}

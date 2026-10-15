@@ -1,0 +1,15 @@
+{
+  "kind": "must-fire",
+  "note": "Sentence from a production summarize run (Langfuse import, backfill 2026-10-15), placed in a minimal response",
+  "input": {
+    "label": "batch-processing:5/12",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Συζήτηση για την παραχώρηση χώρου. Εγκρίθηκε κατά πλειοψηφία, με κατά την Ανατρεπτική Συμμαχία και αποχή Αθήνα Ψηλά και Αθήνα Μας.\"}]}"
+    }
+  }
+}

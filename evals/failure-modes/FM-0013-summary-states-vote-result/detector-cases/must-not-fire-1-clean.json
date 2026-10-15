@@ -1,0 +1,15 @@
+{
+  "kind": "must-not-fire",
+  "note": "Sentence from a production summarize run (Langfuse import, backfill 2026-10-15), placed in a minimal response",
+  "input": {
+    "label": "batch-processing:1/1",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Αποδοχή δωρεάς έργων τέχνης στη μνήμη δύο μελών της ΕΠΟΝ. Η συζήτηση ανέδειξε την ανάγκη δημοτικής πινακοθήκης.\"}]}"
+    }
+  }
+}

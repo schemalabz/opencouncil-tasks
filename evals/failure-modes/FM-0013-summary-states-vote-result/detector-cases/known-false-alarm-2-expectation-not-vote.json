@@ -1,0 +1,15 @@
+{
+  "kind": "known-false-alarm",
+  "note": "Sentence from a production summarize run (Langfuse import, backfill 2026-10-15), placed in a minimal response; unanimity as an expectation, not a vote",
+  "input": {
+    "label": "contributions:Θέμα",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"speakerContributions\": [{\"speakerId\": \"ef56gh78\", \"text\": \"Περίμενε να εκφραστεί ομόφωνα η αντίθεση στη λογική της Περιφέρειας, αλλά αντ' αυτού η συζήτηση μετατράπηκε σε «κατηγορώ».\"}]}"
+    }
+  }
+}
