@@ -133,4 +133,16 @@ describe('compareRuns', () => {
         expect(compareRuns(makeRun('t1', [base]), makeRun('t2', [reworded])).subjects.matched[0].verdict).toBe('cosmetic');
         expect(compareRuns(makeRun('t1', [base]), makeRun('t2', [lost])).subjects.matched[0].verdict).toBe('structural');
     });
+
+    // Sectioned agendas restart their numbering: «Α. 1» and «Β. 1» are two subjects.
+    it('matches subjects that share an item number in different agenda sections', () => {
+        const sectioned = (id: string) => [
+            makeSubject({ id: `${id}1`, name: 'Έγκριση προϋπολογισμού', agendaItemIndex: 1, agendaSection: { index: 1, title: 'Α' } }),
+            makeSubject({ id: `${id}2`, name: 'Κοπή δέντρων', agendaItemIndex: 1, agendaSection: { index: 2, title: 'Β' } }),
+        ];
+        const comparison = compareRuns(makeRun('t1', sectioned('a')), makeRun('t2', sectioned('b')));
+        expect(comparison.subjects.matched.map(m => m.from.name).sort()).toEqual(['Έγκριση προϋπολογισμού', 'Κοπή δέντρων']);
+        expect(comparison.subjects.fromOnly).toEqual([]);
+        expect(comparison.subjects.toOnly).toEqual([]);
+    });
 });
