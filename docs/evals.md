@@ -4,6 +4,78 @@ Every LLM call a task makes is recorded, archived, and replayable. Evaluation is
 
 Agents run all of it. People only create truth that a gate relies on, and decide what ships.
 
+## How it works
+
+Three loops share one archive. The diagrams name the commands; the sections below explain each piece.
+
+### 1. Every LLM call is recorded
+
+```mermaid
+flowchart LR
+    subgraph run["A task run (server, CLI, or an eval suite)"]
+        T["task code<br/>(summarize, pollDecisions, …)"] --> A["aiChat()"]
+    end
+    A -- "live call" --> API[("Anthropic API")]
+    A -- "call record:<br/>request, response, usage" --> S{{"telemetry sinks"}}
+    S --> AR[("archive<br/>DO Spaces<br/>runs · blobs · responses")]
+    S -.-> LF["Langfuse<br/>(trace viewer)"]
+    S -.-> PH["PostHog<br/>(metrics, alerts)"]
+    AR -- "replay: the recorded<br/>response for the same request" --> A
+```
+
+The archive is the source of truth; Langfuse and PostHog are views on it. A recorded run can be **replayed** call by call with no network: the same request gets the recorded answer, and any change to a request (prompt, model, schema) **misses** instead of getting a stale one. A replay can keep chosen phases live (`--live 'contributions:*'`), so a change to one phase is tested for the cost of that phase alone.
+
+### 2. A change is evaluated before it ships
+
+```mermaid
+flowchart LR
+    C[("cases<br/>evals/cases/ (git)<br/>input + expectations + tier")] --> R
+    V["variant<br/>evals/variants/*.yaml<br/>or a code/prompt change"] --> R
+    AR[("archive:<br/>recordings")] -- "replay what didn't change" --> R
+    R["eval run"] --> RES["results<br/>per case, per field"]
+    RES --> CMP["eval compare<br/>paired stats, clusters"]
+    CMP --> G{"eval gate"}
+    G -- "PASS" --> PR["PR with the evidence"] --> H(["a person merges"])
+    G -- "FAIL / NEEDS_REVIEW" --> X(["stop, or review"])
+```
+
+A **case** is one input plus the expected value of each field, and each expected value has a **tier**: `adjudicated` or `imported` values come from a person and are what a gate trusts; `drafted` values are a recorded output, so they only say whether something **changed**. Cases are split once into `dev` (tune on it) and `holdout` (the gate reads it). `compare` reports per-field accuracy with confidence intervals that treat one body's cases as related, and names the clusters where regressions concentrate.
+
+### 3. Production is watched, and what it finds becomes cases
+
+```mermaid
+flowchart LR
+    P["production task run"] --> CK["post-task checks<br/>(failure-mode detectors)"]
+    CK --> AR[("archive<br/>checks/")]
+    CK --> PH["PostHog<br/>$ai_metric check:&lt;slug&gt;"]
+    PH --> AL{"alert"} --> D["Discord"]
+    AR --> HV["eval harvest<br/>monitoring · disagreement ·<br/>novelty · opencouncil signals"]
+    HV --> CAN["candidates"] --> RB["review batch<br/>(a page a person answers)"]
+    RB -- "eval review apply" --> REG[("cases and<br/>failure-mode registry<br/>(git, via PR)")]
+```
+
+A **failure mode** is a named way a task goes wrong (`evals/failure-modes/FM-*.yaml`) with a detector and labelled examples it must and must not fire on. Monitored modes run after every production task; their rates feed PostHog alerts, which post to Discord. What fires is harvested into candidates; a person settles them on a review page, and `apply` turns the answers into cases and detector examples.
+
+### Ten-minute tour
+
+```bash
+npx tsx src/cli.ts runs list --task summarize --env production --since 30     # what ran, and what it cost
+npx tsx src/cli.ts runs call <traceId> '#1' -p request -x                     # one call, prompts inlined
+npx tsx src/cli.ts eval run summarize.contributions --variant production --split all --replay --no-live   # a suite, replayed for $0
+npx tsx src/cli.ts eval checks backfill --since 365 --env production          # every detector over production history
+npx tsx src/cli.ts eval sync --plan                                           # the alerts the registry defines
+npx tsx src/cli.ts eval status                                                # review batches waiting on a person
+```
+
+### Testing a summarize change
+
+1. Make the change on a branch (a prompt, a model in a variant file, a new phase).
+2. `eval run summarize.e2e --variant production --split all --replay --no-live`: at $0 this proves the recordings still replay. A miss names the call whose request changed, which is the phase your change touches.
+3. Run the suite for that phase with only it live, e.g. `eval run summarize.contributions --variant <yours> --split all` (it replays everything else), and the same for `production`.
+4. `eval compare summarize.contributions <runA> <runB>`: which subjects changed, and how (identical, cosmetic, structural); the failure-mode fire rates for both.
+5. For quality, not just change: `eval review build pairwise --suite summarize.contributions --run <runA> --run <runB>` and `eval review open <batchId>`; a person picks the better output, blind.
+6. A prompt change makes the old recordings stale for every later call: re-record the cases' meetings with `eval task run summarize … --env development` and rebuild them with `eval cases from-run`.
+
 ## The pieces
 
 | Piece | Lives in | What it is |
@@ -106,7 +178,7 @@ npx tsx scripts/export-eval-signals.ts --db 'postgresql://reader@localhost:5495/
 npx tsx src/cli.ts eval harvest --source opencouncil --signals .eval-signals/signals/s.jsonl
 ```
 
-The cases hold production content, so they go to `.eval-signals/cases/<suite>/` (gitignored), which every case lookup reads beside `evals/cases`. Only writes a person makes count:
+Harvested cases go to `.eval-signals/cases/<suite>/` (gitignored), which every case lookup reads beside `evals/cases`; once reviewed they move into `evals/cases/` with the rest (the decision-matching and speaker-id cases have). Harvesting again, like `cases from-run` and `from-meeting`, keeps a case's split, history, tags and every value a person settled; a fresh value replaces a settled one only when a person settled it later. Only writes a person makes count:
 
 | Signal | Stored as | Why it is a person's |
 | --- | --- | --- |
@@ -116,7 +188,7 @@ The cases hold production content, so they go to `.eval-signals/cases/<suite>/` 
 | `speaker-tag` | `SpeakerTag.personSetBy = 'user'` | `assignSpeaker`, or the 2026-10-02 backfill of tags edited after import |
 | `utterance-edit` | `Utterance.lastModifiedBy = 'user'`; `before` from the preceding fixTranscript request | only `editUtterance` writes `'user'` |
 
-Left out: a decision a task made (`taskId` set), one created in the same instant as another (a bulk write), and an admin's reassignment (it keeps the holder's `taskId`, so it cannot be told apart). Deleting a `TaskStatus` nulls its decisions' `taskId`, which would make a task's link look like a person's; that risk is not measured. A person's link marks where the pipeline needed help, so imported matching values are harder than the meeting's other links: read recall on them as recall on the hard cases.
+Left out: a decision a task made (`taskId` set) and an admin's reassignment (it keeps the holder's `taskId`, so it cannot be told apart). A decision created in the same instant as another is a bulk write: kept, flagged `ids.bulk`, since an admin's reviewed bulk add is a person's decision. Deleting a `TaskStatus` nulls its decisions' `taskId`, which would make a task's link look like a person's; that risk is not measured. A person's link marks where the pipeline needed help, so imported matching values are harder than the meeting's other links: read recall on them as recall on the hard cases.
 
 ## Monitoring
 
@@ -158,7 +230,7 @@ npx tsx src/cli.ts runs call <traceId> '#1' -p request -x       # one call, prom
 - `decisions.matching` — a meeting's decision window (its poll request, links hidden) through phase-0 reading, partition and the resolvers. `link[<subjectId>]`: a person's link (`imported`), the task's own or no link (`drafted`); `reject[<ada>]`: a dismissed candidate must not be proposed again. Readings replay from recordings (an unrecorded one is read once); the resolvers stay live. `eval report` prints recall and precision. About $0.1–0.3 per meeting live, resolvers alone ~$0.03.
 - `fix.speaker-id` — speaker identification from the transcript text, one meeting per case (`eval cases from-meeting fix.speaker-id <city/meeting | payload.json>`, or harvested). `speaker[<tagId>]`: a reviewer's tag is `imported`, an untouched voiceprint match `drafted`. Variant `params`: `anchor`, `roster`, `chunkChars`; `eval report` prints the backtest tables ([speaker-identification-backtest.md](./speaker-identification-backtest.md)).
 - `summarize.contributions`, `summarize.context`, `summarize.e2e` — a case is a recorded summarize run (`replay: <traceId>`; its archived input is the request), cluster = city. `eval cases from-run <suite> <traceId…>` writes one. The phase suites replay the recording with only their own labels live (`contributions:*`, `subject-context-search:*`); `e2e` runs every phase live unless given `--replay --live`. Each subject is scored against the recording's own output (`drafted`) with the `runs compare` verdicts: `identical` and `cosmetic` agree, `structural` disagrees, a lost subject is missing. **These scores measure change against the recording, not correctness**: a structural change can be an improvement, which is what `pairwise` review is for. Cost: replaying everything is free; contributions live is about $0.1–1 per meeting.
-- `agenda.extraction` — processAgenda's extraction phase alone (agenda document → items, through `extractAgendaSubjects`; no enrichment runs). Each item, matched by section and number and then by title, is `identical`, `changed` (which of `title`, `number`, `section`, `kind` differ) or missing; `extra` disagrees when the output holds items the recording didn't. The document is downloaded from the request's `agendaUrl` on every run.
+- `agenda.extraction` — processAgenda's extraction phase alone (agenda document → items, through `extractAgenda`; no enrichment runs). Each item, matched by section and number and then by title, is `identical`, `changed` (which of `title`, `number`, `section`, `kind` differ) or missing; `extra` disagrees when the output holds items the recording didn't. The document is downloaded from the request's `agendaUrl` on every run.
 - `agenda.context` — processAgenda's subject context search, scored exactly as `summarize.context`; the context failure modes (FM-0001, FM-0002) list both suites, so one detector checks both.
 - `fix.transcript` — fixTranscript's text corrections alone (`transcript-fix`, through `correctTranscript`; the speaker identification that reads them is not run). One field per utterance of the request, `utterance[<utteranceId>]`, agreeing only when the output's text equals the expected text once whitespace and Unicode form are normalised; the detail gives the normalised edit distance and whether a miss moved toward the expected text from `before`. A run recorded without a meeting needs `eval cases from-run fix.transcript <traceId> --meeting <cityId/meetingId>`.
 
