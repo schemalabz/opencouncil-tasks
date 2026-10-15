@@ -6,6 +6,7 @@ import { pipeline, Task } from './tasks/pipeline.js';
 import { downloadYTV } from './tasks/downloadYTV.js';
 import { uploadToSpaces, deleteFromSpacesByPrefix, checkSpacesConnection } from './tasks/uploadToSpaces.js';
 import { transcribe } from './tasks/transcribe.js';
+import { parseEnvOption, parseIntOption } from './cliOptions.js';
 import fs from 'fs';
 import { diarize } from './tasks/diarize.js';
 import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js';
@@ -28,7 +29,11 @@ import { aiChat, formatUsage, HAIKU_MODEL, addUsage, NO_USAGE } from './lib/ai.j
 import { taskManager } from './lib/TaskManager.js';
 import { isObservabilityEnabled, withPhaseSpan } from './lib/observability.js';
 import { listRuns, fetchRun } from './lib/runs/fetch.js';
+import { openArchive } from './lib/archive/store.js';
+import type { RunEnv } from './lib/telemetry/context.js';
 import { showRun } from './lib/runs/show.js';
+import { expandRequest, findCall } from './lib/runs/call.js';
+import { requireArchivedRun } from './lib/runs/fetch.js';
 import { compareRuns } from './lib/runs/compare.js';
 import { renderComparisonHtml } from './lib/runs/html.js';
 import path from 'path';
@@ -783,32 +788,28 @@ program
 
 const runsCommand = program
     .command('runs')
-    .description('Inspect and compare traced task runs (requires Langfuse env vars)');
-
-const parseIntOption = (value: string): number => {
-    const parsed = parseInt(value, 10);
-    if (isNaN(parsed)) throw new InvalidArgumentError('expected a number');
-    return parsed;
-};
+    .description('Inspect and compare task runs from the archive');
 
 runsCommand
     .command('list')
-    .description('List traced runs, newest first')
-    .option('-t, --task <type>', 'Filter by task type', 'summarize')
+    .description('List archived runs, newest first')
+    .option('-t, --task <type>', 'Filter by task type, or "all"', 'summarize')
     .option('-m, --meeting <cityId/meetingId>', 'Filter by meeting')
-    .option('-s, --since <days>', 'Only runs from the last N days', parseIntOption)
+    .option('-s, --since <days>', 'Only runs from the last N days', parseIntOption, 30)
     .option('-l, --limit <n>', 'Maximum number of runs', parseIntOption, 30)
-    .action(async (options: { task: string; meeting?: string; since?: number; limit: number }) => {
+    .option('-e, --env <env>', 'Only runs from this environment', parseEnvOption)
+    .action(async (options: { task: string; meeting?: string; since: number; limit: number; env?: RunEnv }) => {
         try {
             const runs = await listRuns({
-                task: options.task,
+                task: options.task === 'all' ? undefined : options.task,
                 meeting: options.meeting,
                 sinceDays: options.since,
                 limit: options.limit,
+                env: options.env,
             });
 
             if (runs.length === 0) {
-                console.log('No traced runs found for these filters.');
+                console.log(`No runs found for these filters in ${openArchive().url}.`);
                 return;
             }
 
@@ -822,6 +823,8 @@ runsCommand
                     `${(run.env ?? '-').padEnd(12)} ${(run.promptsHash ?? '-').padEnd(13)} ${cost}${error}`
                 );
             }
+            const total = runs.reduce((sum, run) => sum + (run.totalCost ?? 0), 0);
+            console.log(`${runs.length} run${runs.length === 1 ? '' : 's'}, $${total.toFixed(2)} live spend${runs.length === options.limit ? ' (limit reached; raise --limit for the full total)' : ''}`);
         } catch (error) {
             console.error('Error listing runs:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
@@ -832,12 +835,32 @@ runsCommand
 
 runsCommand
     .command('show <traceId>')
-    .description('Show a traced run: tags, output stats, and the span/generation tree with usage and cost')
+    .description('Show a run: input, output stats, and its calls by phase with usage and cost')
     .action(async (traceId: string) => {
         try {
             await showRun(traceId);
         } catch (error) {
             console.error('Error showing run:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+runsCommand
+    .command('call <traceId> <selector>')
+    .description('Print one call record as JSON: selector is a call id, a label, or #N (1-based position)')
+    .option('-p, --part <part>', 'request, response, or all', 'all')
+    .option('-x, --expand', 'inline the system prompt and output schema stored by hash')
+    .action(async (traceId: string, selector: string, options: { part: string; expand?: boolean }) => {
+        try {
+            const store = openArchive();
+            const call = findCall(await requireArchivedRun(traceId, store), selector);
+            const request = options.expand ? await expandRequest(call.request, store) : call.request;
+            const out = options.part === 'request' ? request : options.part === 'response' ? call.response ?? call.error : { ...call, request };
+            console.log(JSON.stringify(out, null, 2));
+        } catch (error) {
+            console.error('Error reading call:', error instanceof Error ? error.message : error);
             process.exitCode = 1;
         } finally {
             server.close();

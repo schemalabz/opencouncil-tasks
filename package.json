@@ -17,6 +17,15 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.124.0",
+    "@langfuse/client": "^5.13.1",
+    "@langfuse/core": "^5.13.1",
+    "@langfuse/otel": "^5.13.1",
+    "@langfuse/tracing": "^5.13.1",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/core": "^2.12.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/otlp-exporter-base": "^0.223.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
     "@remotion/captions": "^4.0.516",
     "@schemalabs/diavgeia-cli": "^0.1.0",
     "aws-sdk": "^2.1687.0",
@@ -27,7 +36,6 @@
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "ffmpeg-static": "^5.2.0",
-    "langfuse": "^3.38.20",
     "mammoth": "^1.12.0",
     "mime": "^4.0.4",
     "multer": "^2.1.1",
@@ -39,6 +47,7 @@
     "typescript-json-schema": "^0.65.1",
     "underscore": "^1.13.7",
     "undici": "^6.26.0",
+    "yaml": "^2.9.1",
     "ytdlp-nodejs": "^2.3.5"
   },
   "devDependencies": {

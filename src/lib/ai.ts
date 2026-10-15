@@ -3,7 +3,14 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { promises as fs } from 'fs';
 import type { TaskTokenUsage } from '../types.js';
-import { observeGeneration, GenerationHandle } from './observability.js';
+import { randomUUID } from 'node:crypto';
+import { emitCall } from './telemetry/telemetry.js';
+import type { CallBlob, CallRecord } from './llm/callRecord.js';
+import { computeCacheKey, sanitizeParams } from './llm/cacheKey.js';
+import { BudgetExceededError, getCallPolicy, resolveOverrides, shouldReplay, ReplayMissError, UnpricedModelError } from './llm/callPolicy.js';
+import { callCostUsd, isPriced } from './pricing.js';
+import { getResponse, putResponse, responseKey, type StoredResponse } from './llm/responseStore.js';
+import { spoolWrite } from './archive/spool.js';
 import { TaskCancelledError, abortableSleep, getTaskControl, isCancellation, throwIfCancelled } from './taskControl.js';
 
 dotenv.config();
@@ -116,6 +123,9 @@ type AiChatOptions = {
     cacheSystemPrompt?: boolean;  // Enable prompt caching for system prompt
     batchFirst?: boolean;  // Skip streaming, go directly to Batches API (300K output limit)
     label?: string;  // Observability: generation name shown in Langfuse (defaults to "aiChat")
+    // Serve a recorded response for an identical request instead of calling the model
+    // (the decision readers did this with their own disk caches).
+    cache?: 'use';
 }
 
 export type TransientErrorKind = 'connection' | 'server' | false;
@@ -440,10 +450,47 @@ export function acceptsEffort(model: string): boolean {
     return major >= 5;
 }
 
-export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, effort, cacheSystemPrompt = false, batchFirst = false, label }: AiChatOptions): Promise<ResultWithUsage<T>> {
-    const maxTokens = maxTokensParam ?? 64000;
-    let generation: GenerationHandle | undefined;
+/** Only complete, healthy answers are reused; errors and paused or failed tool turns are recorded but never served again. */
+function isCacheable(message: Anthropic.Messages.Message): boolean {
+    // A max_tokens response is incomplete: served from cache, a structured-output caller would
+    // fail on it every time, where a fresh call might have finished.
+    if (!['end_turn', 'stop_sequence'].includes(message.stop_reason ?? '')) return false;
+    return !message.content.some(block => block.type === 'web_search_tool_result'
+        && !Array.isArray((block as Anthropic.Messages.WebSearchToolResultBlock).content));
+}
+
+/**
+ * Why a response cannot be the call's answer. The stops are checked before the content: either
+ * can arrive after partial text (the classifier cuts in mid-stream; the window fills mid-answer),
+ * and that fragment must not be parsed or returned as the answer. Left to the content check, an
+ * empty response surfaced as "Expected at least one text response", sending whoever is debugging
+ * after a parsing problem instead.
+ */
+function unusableResponse(message: Anthropic.Messages.Message): string | undefined {
+    if (message.stop_reason === "refusal") {
+        const details = message.stop_details;
+        const category = details?.category ? ` (category: ${details.category})` : '';
+        const explanation = details?.explanation ? `: ${details.explanation}` : '.';
+        return `Claude declined this request${category}${explanation}`;
+    }
+    if (message.stop_reason === "model_context_window_exceeded") {
+        return `Input plus output hit the model's context window; the response is truncated and the input has to be smaller.`;
+    }
+    if (!message.content.some(block => block.type === "text")) {
+        return "Expected at least one text response from claude, got " + message.content.map(c => c.type).join(", ");
+    }
+    return undefined;
+}
+
+export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystemResponse, continueFromPartial, prependToResponse, documentBase64, parseJson = true, maxTokens: maxTokensParam, tools, outputFormat, effort, cacheSystemPrompt = false, batchFirst = false, label, cache }: AiChatOptions): Promise<ResultWithUsage<T>> {
+    const policy = getCallPolicy();
+    const overrides = resolveOverrides(label, policy);
+    const maxTokens = overrides.maxTokens ?? maxTokensParam ?? 64000;
     const control = getTaskControl();
+    const callId = randomUUID();
+    const startedAt = new Date().toISOString();
+    let record: CallRecord | undefined;
+    let blobs: CallBlob[] = [];
     try {
         console.log(`Sending message to claude${batchFirst ? ' (batch-first)' : ''}...`);
         throwIfCancelled();
@@ -491,8 +538,9 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                   }]
                 : systemPrompt;
 
-        const resolvedModel = model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929";
-        const sentEffort = effort && acceptsEffort(resolvedModel) ? effort : undefined;
+        const resolvedModel = overrides.model ?? (model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929");
+        const resolvedEffort = overrides.effort ?? effort;
+        const sentEffort = resolvedEffort && acceptsEffort(resolvedModel) ? resolvedEffort : undefined;
         const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {
             model: resolvedModel,
             max_tokens: maxTokens,
@@ -504,17 +552,50 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             ...((outputFormat || sentEffort) && { output_config: { ...(sentEffort && { effort: sentEffort }), ...(outputFormat && { format: outputFormat }) } })
         };
 
-        generation = observeGeneration({
-            name: label || 'aiChat',
-            model: resolvedModel,
-            input: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt },
-                ...(prefillSystemResponse && !outputFormat ? [{ role: 'assistant', content: prefillSystemResponse }] : []),
-            ],
-            systemPrompt,
-            metadata: { batchFirst, cacheSystemPrompt, maxTokens, hasTools: Boolean(tools), hasDocument: Boolean(documentBase64) },
-        });
+        const sanitized = sanitizeParams(requestParams);
+        const request = sanitized.request;
+        blobs = sanitized.blobs;
+        const cacheKey = computeCacheKey(request);
+        record = { v: 1, callId, label, request, cacheKey, startedAt, finishedAt: startedAt };
+        const replay = shouldReplay(label, policy);
+        let stored: Anthropic.Messages.Message | undefined;
+        if (replay) {
+            stored = policy.cassette ? policy.cassette.take(cacheKey) : (await getResponse(cacheKey))?.message;
+            if (!stored && (policy.onMiss ?? 'error') === 'error') throw new ReplayMissError(cacheKey, label);
+        } else if ((policy.cacheRead ?? cache === 'use') && !tools) {
+            // Server-tool results (web search) go stale, so they are only ever replayed, never served from cache live.
+            stored = (await getResponse(cacheKey))?.message;
+        }
+        const emit = (message: Anthropic.Messages.Message, extra: { batchMode: boolean; promoted?: boolean; promotedReason?: string; cacheHit: boolean }) => {
+            const text = message.content.filter(b => b.type === 'text').map(b => (b as Anthropic.Messages.TextBlock).text).join('');
+            // Recorded as failed, so every sink marks it, though it has a response.
+            const unusable = unusableResponse(message);
+            record = {
+                ...record!,
+                finishedAt: new Date().toISOString(),
+                response: {
+                    servedModel: message.model,
+                    stopReason: message.stop_reason ?? 'unknown',
+                    text,
+                    content: message.content,
+                    usage: message.usage as unknown as Record<string, unknown>,
+                    latencyMs: Date.now() - Date.parse(startedAt),
+                    batchMode: extra.batchMode,
+                    ...(extra.promoted && { promoted: true, promotedReason: extra.promotedReason }),
+                    cacheHit: extra.cacheHit,
+                    ...(extra.cacheHit && replay && { replayed: true }),
+                },
+                ...(unusable && { error: { class: 'Error', message: unusable } }),
+            };
+            emitCall(record, { blobs });
+            if (!extra.cacheHit && !unusable && policy.cacheWrite && isCacheable(message)) {
+                const body: StoredResponse = { v: 1, cacheKey, message, callId, recordedAt: record.finishedAt };
+                putResponse(body)
+                    .catch(() => spoolWrite(responseKey(cacheKey, body.recordedAt, callId), Buffer.from(JSON.stringify(body)), 'application/json'))
+                    // An unhandled rejection would take the whole server down with it.
+                    .catch(e => console.error('Response store: write and spool both failed:', e instanceof Error ? e.message : e));
+            }
+        };
 
         // Carries the cancel signal into the SDK call itself, so an abort lands
         // mid-request instead of waiting for the next checkpoint.
@@ -556,83 +637,58 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
         };
 
         let response: Anthropic.Messages.Message;
-        let usedBatch = useBatch;
+        let usedBatch = false;
         // Distinguishes "promoted out of batch mid-call" from an ordinary
-        // streaming call (both end with batchMode:false) in the Langfuse trace.
+        // streaming call (both end with batchMode:false) in the trace.
         let promoted = false;
         let promotedReason: 'operator' | 'batch_rejected' | undefined;
-        if (useBatch) {
-            const outcome = await runBatch();
-            response = outcome.message;
-            usedBatch = !outcome.promoted;
-            promoted = outcome.promoted;
-            promotedReason = outcome.promotedReason;
+        if (stored) {
+            emit(stored, { batchMode: false, cacheHit: true });
+            // The record keeps the original usage; the caller is told nothing was billed.
+            response = { ...stored, usage: { ...NO_USAGE } };
         } else {
-            try {
-                response = await streamOnce();
-            } catch (e) {
-                // After promotion, the batch fallback would re-enter the queue the
-                // operator just escaped (and the aborted promote signal would bounce
-                // it straight back out) — so only fall back while in batch mode.
-                if (classifyTransientError(e) && control?.llmMode !== 'streaming') {
-                    console.log(`Streaming failed after retries, falling back to batch mode...`);
-                    const outcome = await runBatch();
-                    response = outcome.message;
-                    usedBatch = !outcome.promoted;
-                    promoted = outcome.promoted;
-                    promotedReason = outcome.promotedReason;
-                } else {
-                    throw e;
+            if (policy.budget && !isPriced(resolvedModel)) throw new UnpricedModelError(resolvedModel);
+            if (policy.budget && policy.budget.spentUsd >= policy.budget.limitUsd) {
+                throw new BudgetExceededError(policy.budget.limitUsd, policy.budget.spentUsd);
+            }
+            usedBatch = useBatch;
+            if (useBatch) {
+                const outcome = await runBatch();
+                response = outcome.message;
+                usedBatch = !outcome.promoted;
+                promoted = outcome.promoted;
+                promotedReason = outcome.promotedReason;
+            } else {
+                try {
+                    response = await streamOnce();
+                } catch (e) {
+                    // After promotion, the batch fallback would re-enter the queue the
+                    // operator just escaped (and the aborted promote signal would bounce
+                    // it straight back out) — so only fall back while in batch mode.
+                    if (classifyTransientError(e) && control?.llmMode !== 'streaming') {
+                        console.log(`Streaming failed after retries, falling back to batch mode...`);
+                        const outcome = await runBatch();
+                        response = outcome.message;
+                        usedBatch = !outcome.promoted;
+                        promoted = outcome.promoted;
+                        promotedReason = outcome.promotedReason;
+                    } else {
+                        throw e;
+                    }
                 }
             }
+            emit(response, { batchMode: usedBatch, promoted, promotedReason, cacheHit: false });
+            if (policy.budget) policy.budget.spentUsd += callCostUsd(record!) ?? 0;
         }
-
         console.log(`Claude stop_reason: ${response.stop_reason}, tokens: ${response.usage.output_tokens}/${maxTokens}`);
 
-        // Checked before the content checks: either stop can arrive after partial
-        // text (the classifier cuts in mid-stream; the window fills mid-answer), and
-        // that fragment must not be parsed or returned as the answer. Left to the
-        // content checks, an empty response surfaced as "Expected at least one text
-        // response", sending whoever is debugging after a parsing problem instead.
-        // Billed even though the call fails, so the usage goes on the generation
-        // here; the catch below then finds it already closed.
-        const stopError = (message: string) => {
-            generation?.error(message, response.usage);
-            return new Error(message);
-        };
-        if (response.stop_reason === "refusal") {
-            const details = response.stop_details;
-            const category = details?.category ? ` (category: ${details.category})` : '';
-            const explanation = details?.explanation ? `: ${details.explanation}` : '.';
-            throw stopError(`Claude declined this request${category}${explanation}`);
-        }
-        if (response.stop_reason === "model_context_window_exceeded") {
-            throw stopError(
-                `Input plus output hit the model's context window; the response is truncated and the input has to be smaller.`
-            );
-        }
-
-        // When using tools, response can have multiple content blocks
-        // Extract all text blocks
+        // Billed even though the call fails: the call record above already carries the usage.
+        const unusable = unusableResponse(response);
+        if (unusable) throw new Error(unusable);
         const textBlocks = response.content.filter(block => block.type === "text");
-
-        if (textBlocks.length === 0) {
-            throw new Error("Expected at least one text response from claude, got " + response.content.map(c => c.type).join(", "));
-        }
-
-        // For backward compatibility, if there's only one content block and it's not text, throw error
-        if (!tools && response.content.length === 1 && response.content[0].type !== "text") {
-            throw new Error("Expected text response from claude, got " + response.content[0].type);
-        }
 
         // Concatenate all text blocks
         let responseText = textBlocks.map(block => block.text).join("");
-
-        generation.end({
-            output: responseText,
-            usage: response.usage,
-            metadata: { batchMode: usedBatch, ...(promoted && { promoted: true, promotedReason }), stopReason: response.stop_reason },
-        });
 
         if (response.stop_reason === "max_tokens") {
             // Structured outputs are incompatible with the prefill-based continuation
@@ -663,7 +719,8 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                 maxTokens: maxTokensParam,
                 tools,
                 cacheSystemPrompt,  // Preserve caching on continuation
-                label: label ? `${label}:continuation` : undefined
+                label: label ? `${label}:continuation` : undefined,
+                cache,
             });
             return {
                 usage: addUsage(response.usage, response2.usage),
@@ -718,7 +775,10 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
             // classifyTransientError both walk the chain.
             err = Object.assign(new TaskCancelledError(`Task cancelled during LLM call`), { cause: e });
         }
-        generation?.error(err instanceof Error ? err.message : String(err));
+        if (record && !record.response) {
+            record = { ...record, finishedAt: new Date().toISOString(), error: { class: err instanceof Error ? err.name : 'Error', message: err instanceof Error ? err.message : String(err) } };
+            emitCall(record, { blobs });
+        }
         console.error(`Error in aiChat: ${err}`);
         // Log full error details for stream terminations to aid reproduction
         // (see https://github.com/anthropics/anthropic-sdk-typescript/issues/774)
