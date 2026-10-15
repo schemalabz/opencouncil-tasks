@@ -68,7 +68,7 @@ Full prompt/output text of a call: `curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_S
 
 ## Task versioning
 
-Tasks in `src/server.ts` have a `version` field in their `registerTask()` metadata. This version is sent with callbacks and stored on `TaskStatus` in the opencouncil database. Bump when consumers need to know results are different.
+Tasks in `src/tasks/registry.ts` (`TASKS`, which `src/server.ts` and the eval task runner both read) have a `version` field in their metadata. This version is sent with callbacks and stored on `TaskStatus` in the opencouncil database. Bump when consumers need to know results are different.
 
 ## External services
 

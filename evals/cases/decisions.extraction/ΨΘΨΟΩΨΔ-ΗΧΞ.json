@@ -1,0 +1,111 @@
+{
+  "id": "decisions.extraction/ΨΘΨΟΩΨΔ-ΗΧΞ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΘΨΟΩΨΔ-ΗΧΞ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΘΨΟΩΨΔ-ΗΧΞ",
+    "city": "argos",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 778,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 9,
+        "presentMembers": [
+          "Μαλτέζος Ιωάννης",
+          "Λιόλιος Αντώνιος",
+          "Αλεξανδρόπουλος Γεώργιος",
+          "Αναγνωστόπουλος Κώστας",
+          "Κολεβέντης Φώτης",
+          "Γάτσιου Δήμητρα",
+          "Πετσέλης Χρήστος",
+          "Σκούφης Παναγιώτης",
+          "Δελής Νικόλαος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 15,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 15,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argos/Δημοτική Επιτροπή",
+  "tags": [
+    "argos",
+    "rollCallLayout=present_and_absent",
+    "embeddedDecision=yes"
+  ]
+}

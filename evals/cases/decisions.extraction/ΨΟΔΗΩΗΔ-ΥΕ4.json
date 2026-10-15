@@ -1,0 +1,227 @@
+{
+  "id": "decisions.extraction/ΨΟΔΗΩΗΔ-ΥΕ4",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΟΔΗΩΗΔ-ΥΕ4",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΟΔΗΩΗΔ-ΥΕ4",
+    "city": "chalandri",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "mayorStated=yes",
+        "changeAnchor=session_phase",
+        "namedVoters=dissenters_only",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "phase",
+        "asExtracted": [
+          {
+            "name": "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Κατά τη διάρκεια της προ ημερησίας διάταξης συζήτηση προσήλθε ο κ. Α. Τσιαμπάς."
+          },
+          {
+            "name": "ΧΑΡΑΛΑΜΠΟΣ ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": "outOfAgenda"
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια συζήτησης του 1ου θέματος Ε.Η.Δ. αποχώρησαν οι κ.κ. Χ. Ρασσιάς (Ρώμας) και Ι. Παπαγεωργίου."
+          },
+          {
+            "name": "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": "outOfAgenda"
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια συζήτησης του 1ου θέματος Ε.Η.Δ. αποχώρησαν οι κ.κ. Χ. Ρασσιάς (Ρώμας) και Ι. Παπαγεωργίου."
+          },
+          {
+            "name": "ΧΡΗΣΤΟΣ ΚΙΑΚΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "κατά τη διάρκεια συζήτησης του 2ου θέματος της ημερήσιας διάταξης αποχώρησε ο κ. Χ. Κιάκος."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 748,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΚΩΝΣΤΑΝΤΙΝΑ - ΟΛΥΜΠΙΑ ΚΑΡΑΓΙΑΝΝΗ",
+          "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΕΡΟΛΥΜΑΤΟΣ",
+          "ΙΩΑΝΝΗΣ ΛΑΔΟΠΟΥΛΟΣ",
+          "ΙΩΑΝΝΑ ΑΘΑΝΑΣΑΤΟΥ",
+          "ΓΕΡΑΣΙΜΟΣ ΛΥΜΠΕΡΑΤΟΣ",
+          "ΧΡΙΣΤΙΝΑ ΜΑΧΑΙΡΑ",
+          "ΔΗΜΗΤΡΑ ΓΚΑΣΟΥΚΑ",
+          "ΑΛΕΞΙΟΣ ΜΑΥΡΑΓΑΝΗΣ",
+          "ΕΥΤΕΡΠΗ ΛΕΡΤΑ",
+          "ΕΥΘΥΜΙΟΣ ΚΟΥΡΑΣΗΣ",
+          "ΕΛΕΥΘΕΡΙΟΣ ΠΑΝΤΕΛΙΔΑΚΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΧΡΙΣΤΟΥΛΑΚΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΒΑΣΙΛΟΠΟΥΛΟΣ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΕΥΘΥΜΙΟΥ",
+          "ΣΠΥΡΙΔΩΝ ΦΩΤΕΙΝΟΣ",
+          "ΙΩΑΝΝΑ ΚΑΜΠΟΥΡΗ",
+          "ΑΝΝΑ ΣΟΥΣΟΥ",
+          "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ",
+          "ΠΑΝΑΓΙΩΤΗΣ ΛΑΜΠΡΟΠΟΥΛΟΣ",
+          "ΧΡΗΣΤΟΣ ΚΙΑΚΟΣ",
+          "ΘΕΟΔΩΡΑ ΑΛΕΞΑΝΔΡΗ",
+          "ΙΩΑΝΝΗΣ ΚΟΥΡΑΣΗΣ",
+          "ΧΑΡΑΛΑΜΠΟΣ ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)",
+          "ΠΑΡΑΣΚΕΥΗ ΖΟΡΜΠΑ",
+          "ΕΛΠΙΝΙΚΗ ΠΑΠΑΓΙΑΝΝΑΚΗ",
+          "ΕΙΡΗΝΗ ΚΑΛΛΗ",
+          "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ",
+          "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+          "ΕΜΜΑΝΟΥΗΛ ΚΡΑΝΙΔΗΣ"
+        ],
+        "absentMembers": [
+          "ΧΑΡΗΣ ΜΑΥΡΟΥΔΗΣ",
+          "ΧΡΥΣΑΥΓΗ ΑΛΟΥΠΗ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΑΒΡΑΣ",
+          "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 7,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 7,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "αποφασίζει κατά πλειοψηφία",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΠΑΝΑΓΙΩΤΗΣ ΛΑΜΠΡΟΠΟΥΛΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΘΕΟΔΩΡΑ ΑΛΕΞΑΝΔΡΗ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΙΩΑΝΝΗΣ ΚΟΥΡΑΣΗΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΠΑΡΑΣΚΕΥΗ ΖΟΡΜΠΑ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΕΛΠΙΝΙΚΗ ΠΑΠΑΓΙΑΝΝΑΚΗ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΕΙΡΗΝΗ ΚΑΛΛΗ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chalandri",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "mayorStated=yes",
+    "changeAnchor=session_phase",
+    "namedVoters=dissenters_only",
+    "correctedRepost=yes"
+  ]
+}

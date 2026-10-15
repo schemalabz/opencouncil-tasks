@@ -1,0 +1,213 @@
+{
+  "id": "decisions.extraction/ΨΑΣ8ΩΞΒ-ΗΑ3",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΑΣ8ΩΞΒ-ΗΑ3",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΑΣ8ΩΞΒ-ΗΑ3",
+    "city": "orestiada",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "perVoteAbsence=yes",
+        "namedVoters=dissenters_only",
+        "declaration=yes",
+        "voteTally=yes",
+        "arrival=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": "Present but not voting next to out of the room, in one paragraph: Τσελεμπής «δήλωσε ότι δεν συμμετέχει στην ψηφοφορία» (present, DID_NOT_VOTE, not an absence) and Σταματίου «απουσίαζε από την αίθουσα» (absent_for_vote). The schema has no separate \"present, did not vote\" value; DID_NOT_VOTE is the value the reader uses for it. Only Orestiada ΔΣ prints this in the 424-document per-vote absence study.",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ (Προσήλθε στο 1ο Θέμα)"
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ (Προσήλθε στο 1ο Θέμα)",
+          "ada": "ΨΑΣ8ΩΞΒ-ΗΑ3",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Δημήτριος Σταματίου"
+        ],
+        "asPrinted": "Κατά τη διάρκεια της ψήφισης του θέματος απουσίαζε από την αίθουσα ο Δημοτικός Σύμβουλος Δημήτριος Σταματίου,",
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Κατά τη διάρκεια της ψήφισης του θέματος απουσίαζε από την αίθουσα ο Δημοτικός Σύμβουλος Δημήτριος Σταματίου,",
+          "ada": "ΨΑΣ8ΩΞΒ-ΗΑ3",
+          "page": 3,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ",
+          "ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΕΜΜΑΝΟΥΗΛ",
+          "ΓΚΙΛΙΛΟΥΔΗ ΧΡΙΣΤΙΝΑ",
+          "ΤΣΕΛΕΜΠΗΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΑΣΤΕΡΙΑΔΗΣ ΜΑΡΓΑΡΙΤΗΣ",
+          "ΔΗΜΟΥΤΣΗΣ ΠΑΝΤΕΛΗΣ",
+          "ΧΑΤΖΗΧΑΡΑΛΑΜΠΟΥΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΑΔΟΓΛΟΥ ΓΕΩΡΓΙΟΣ",
+          "ΣΤΑΥΡΙΔΗΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΜΠΡΑΪΚΟΥΔΗ ΕΥΑΓΓΕΛΙΑ",
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΑΘΗΝΟΔΩΡΟΣ",
+          "ΜΑΝΑΒΗ ΜΑΡΙΑ",
+          "ΝΑΣΤΟΥΛΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΔΟΜΠΑΣ ΑΘΑΝΑΣΙΟΣ",
+          "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΕΡΙΣΤΕΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΑΡΓΥΡΙΑΔΗΣ ΠΕΤΡΟΣ",
+          "ΟΡΜΑΝΛΙΔΗΣ ΧΡΗΣΤΟΣ",
+          "ΜΙΧΑΗΛΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΑΖΑΛΤΖΗΣ ΧΡΗΣΤΟΣ",
+          "ΣΟΥΚΟΥΛΔΑΝΟΣ ΓΕΩΡΓΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΤΣΟΜΠΑΝΙΔΗΣ ΑΝΤΩΝΙΟΣ",
+          "ΣΕΜΕΝ ΘΕΟΔΩΡΑ",
+          "ΣΤΡΑΝΤΖΕΛΗΣ ΜΙΧΑΗΛ",
+          "ΠΑΠΑΛΑΜΠΙΔΗΣ ΖΗΣΗΣ",
+          "ΜΑΥΡΙΔΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΑΡΧΟΝΤΙΔΗΣ ΑΡΧΟΝΤΗΣ",
+          "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ",
+          "ΚΥΡΜΑΝΗ ΠΑΥΛΙΝΑ",
+          "ΑΓΓΕΛΑΚΟΥΔΗΣ ΗΛΙΑΣ"
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "επί του συνόλου των είκοσι εννέα (29) μελών έλαβαν μέρος τα είκοσι (20) μέλη",
+          "ada": "ΨΑΣ8ΩΞΒ-ΗΑ3",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "αναφερόμενη στο 1ο θέμα ημερήσιας διάταξης",
+          "ada": "ΨΑΣ8ΩΞΒ-ΗΑ3",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "με 15 ψήφους",
+        "phraseAsExtracted": "",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Καραγιάννης Γεώργιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Περιστεράκης Ιωάννης",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ορμανλίδης Χρήστος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μιχαηλίδης Κωνσταντίνος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Τσελεμπής Δημήτριος",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Κατά την ψήφιση του θέματος οι Δημοτικοί Σύμβουλοι, Καραγιάννης Γεώργιος, Περιστεράκης Ιωάννης, Ορμανλίδης Χρήστος και Μιχαηλίδης Κωνστανίνος για τους λόγους που αναφέρονται παραπάνω, καταψήφισαν την μοναδική πρόταση που κατατέθηκε για την 3η τροποποίηση του Τεχνικού Προγράμματος του 2026. Οπότε, προκύπτουν 4 ψήφοι κατά της μοναδικής πρότασης. Ο Δημοτικός Σύμβουλος Τσελεμπής Δημήτριος δήλωσε ότι δεν συμμετέχει στην ψηφοφορία για τους γνωστούς λόγους που έχει αναφέρει και σε άλλες αναμορφώσεις.",
+          "ada": "ΨΑΣ8ΩΞΒ-ΗΑ3",
+          "page": 3,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "orestiada/Δημοτικό Συμβούλιο",
+  "tags": [
+    "orestiada",
+    "rollCallLayout=present_and_absent",
+    "perVoteAbsence=yes",
+    "namedVoters=dissenters_only",
+    "declaration=yes",
+    "voteTally=yes",
+    "arrival=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

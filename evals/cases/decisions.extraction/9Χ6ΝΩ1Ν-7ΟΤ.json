@@ -1,0 +1,237 @@
+{
+  "id": "decisions.extraction/9Χ6ΝΩ1Ν-7ΟΤ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "9Χ6ΝΩ1Ν-7ΟΤ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Χ6ΝΩ1Ν-7ΟΤ",
+    "city": "sparta",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 35,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "mayorStated=yes",
+        "changeAnchor=session_phase",
+        "declaration=yes",
+        "namedVoters=dissenters_only",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode",
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Τσιρώνη Μαρία",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η δημοτική σύμβουλος Τσιρώνη Μαρία προσήλθε κατά τη διάρκεια των ανακοινώσεων (ώρα 17:15)"
+          },
+          {
+            "name": "Μπαρέλος Παναγιώτης",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο δημοτικός σύμβουλος Μπαρέλος Παναγιώτης προσήλθε κατά τη διάρκεια συζήτησης του 3ου θέματος της ημερήσιας διάταξης."
+          },
+          {
+            "name": "Κουρεμπής Γεώργιος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Κουρεμπής Γεώργιος Δούκας Πέτρος, Αρφάνης Δημήτριος αποσυνδέθηκαν από τη πλατφόρμα zoom κατά τη διάρκεια της συνεδρίασης."
+          },
+          {
+            "name": "Δούκας Πέτρος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Κουρεμπής Γεώργιος Δούκας Πέτρος, Αρφάνης Δημήτριος αποσυνδέθηκαν από τη πλατφόρμα zoom κατά τη διάρκεια της συνεδρίασης."
+          },
+          {
+            "name": "Αρφάνης Δημήτριος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Κουρεμπής Γεώργιος Δούκας Πέτρος, Αρφάνης Δημήτριος αποσυνδέθηκαν από τη πλατφόρμα zoom κατά τη διάρκεια της συνεδρίασης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 0,
+        "extractionFlaggedIncomplete": true,
+        "verified": true,
+        "review": [
+          {
+            "what": "no decision text",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "flagged truncated",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "the decision text is on the page; the document is long and extraction returned nothing"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Βρεττάκος Στέφανος",
+          "Δεδεδήμου Γεωργία",
+          "Κουρεμπής Γεώργιος",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Αρβανίτης Δημήτριος",
+          "Αρφάνης Δημήτριος",
+          "Βαγιακάκου-Δογαντζή Αδαμαντία",
+          "Βαλιώτης Ευάγγελος",
+          "Γιαννακόπουλος Παντελής",
+          "Γιαννόπουλος Δημήτριος",
+          "Γκολέμης Αναστάσιος",
+          "Δούκας Πέτρος",
+          "Ζαχαράκη Νίκη",
+          "Κακούρος Δημοσθένης",
+          "Καρμοίρης Ιωάννης",
+          "Κοκκορός Ευστράτιος",
+          "Κουλουβάκος Γεώργιος",
+          "Κουρτσούνης Παναγιώτης",
+          "Κυριακούλιας Δημήτριος",
+          "Λάζαρης Θεοφάνης",
+          "Μαλλιαρός Δημήτριος",
+          "Μπαρέλος Παναγιώτης",
+          "Μπεμπέτσος Παντελής",
+          "Παυλής Παναγιώτης",
+          "Σελίμος Σπυρίδων",
+          "Σοφού-Παπαστάθη Ευγενία",
+          "Τζανετέα Αδαμαντία",
+          "Τριτάκης Παναγιώτης",
+          "Τσιρώνη Μαρία",
+          "Τσούκλερης Νικόλαος"
+        ],
+        "absentMembers": [
+          "Κανελλάκης Ηλίας",
+          "Καρούνος Παναγιώτης",
+          "Κατσίχτης Θεόδωρος",
+          "Κανελλοπούλου Αναστασία",
+          "Φλώρος Νικόλαος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 8,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 8,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": null,
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Βαλιώτης Ευάγγελος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Δεδεδήμου Γεωργία",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Καρμοίρης Ιωάννης",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration dropped",
+            "verdict": "neither is right",
+            "note": "it says κατα πλειοψηφια but because this particual docuemtn has a lto of excerpts from other documetns im ight be confusing"
+          },
+          {
+            "what": "named voters dropped",
+            "verdict": "neither is right",
+            "note": "it sayss towards the end \"Αρνητικά ψήφισε ο ..\" και \"Απείψαν οι δημοτικοί σύμβουλοι ..\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "p.34: «Αρνητικά ψήφισε ο δημοτικός σύμβουλος Βαλιώτης Ευάγγελος. Απείχαν οι δημοτικοί σύμβουλοι Δεδεδήμου Γεωργία, Καρμοίρης Ιωάννης»; 35-page document, extraction never reached it"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "mayorStated=yes",
+    "changeAnchor=session_phase",
+    "declaration=yes",
+    "namedVoters=dissenters_only",
+    "embeddedDecision=yes"
+  ]
+}

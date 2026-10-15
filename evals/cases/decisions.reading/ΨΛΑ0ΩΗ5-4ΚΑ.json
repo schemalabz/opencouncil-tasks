@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/ΨΛΑ0ΩΗ5-4ΚΑ",
+  "suite": "decisions.reading",
+  "split": "holdout",
+  "input": {
+    "ada": "ΨΛΑ0ΩΗ5-4ΚΑ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΛΑ0ΩΗ5-4ΚΑ"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτικό Συμβούλιο",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "39",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2025-02-19",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "decision"
+  ]
+}

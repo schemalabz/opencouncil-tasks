@@ -1,0 +1,116 @@
+{
+  "id": "decisions.extraction/96Α6ΩΨ3-1ΩΒ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "96Α6ΩΨ3-1ΩΒ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/96Α6ΩΨ3-1ΩΒ",
+    "city": "argithea",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "partialVote=yes",
+        "voteTally=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 279,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Παπαδήμας Ηλίας",
+          "Καναβός Βασίλειος",
+          "Γραμμένος Κων/νος",
+          "Μερεντίτης Κων/νος",
+          "Καμπούρης Δημήτριος",
+          "Ποζιός Νικόλαος",
+          "Τουραλιάς Νικόλαος",
+          "Πούλιος Χαράλαμπος",
+          "Καραγεώργος Αθανάσιος",
+          "Καμζέλης Βασίλειος",
+          "Στεργίου Ηλίας",
+          "Κορλού Όλγα",
+          "Κούτσικος Κων/νος",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Κατά πλειοψηφία (12 ψήφοι)",
+        "carriesTally": true,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argithea",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "partialVote=yes",
+    "voteTally=yes"
+  ]
+}

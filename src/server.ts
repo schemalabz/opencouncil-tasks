@@ -3,23 +3,16 @@ enableLogPersistence();
 
 import express from 'express';
 import dotenv from 'dotenv';
-import { pipeline } from './tasks/pipeline.js';
 import cors from 'cors';
 import { taskManager } from './lib/TaskManager.js';
+import { TASKS } from './tasks/registry.js';
+import { startMonitoring } from './evals/monitor/postTask.js';
 import { getExpressAppWithCallbacks } from './utils.js';
 import { HealthResponse } from './types.js';
 import { authMiddleware, verifyBearerToken } from './lib/auth.js';
 import { logObservabilityStatus } from './lib/observability.js';
 import fs from 'fs';
 import { spawnSync } from 'child_process';
-import { summarize } from './tasks/summarize.js';
-import { splitMediaFile } from './tasks/splitMediaFile.js';
-import { fixTranscript } from './tasks/fixTranscript.js';
-import { processAgenda } from './tasks/processAgenda.js';
-import { generateVoiceprint } from './tasks/generateVoiceprint.js';
-import { generateHighlight } from './tasks/generateHighlight.js';
-import { pollDecisions } from './tasks/pollDecisions.js';
-import { devSlowTask } from './tasks/devSlowTask.js';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
 import swaggerUi from 'swagger-ui-express';
@@ -136,80 +129,20 @@ app.post('/tasks/:taskId/promote', (req, res) => {
 // ============================================================================
 // All task endpoints are defined here with their metadata for automatic Swagger generation
 
-app.post('/transcribe', taskManager.registerTask(pipeline, {
-    summary: 'Transcribe audio/video content',
-    description: 'Convert audio or video content to text using speech recognition',
-    // v3: speaker attribution uses pyannote's exclusive (non-overlapping) timeline,
-    // and utterances without a covering diarization segment are assigned to the
-    // nearest segment instead of being dropped
-    // v4: utterances carry minWordConfidence and totalConfidence alongside the
-    // existing mean confidence, all derived from Scribe's per-word logprobs
-    version: 4,
-}));
-
-app.post('/summarize', taskManager.registerTask(summarize, {
-    summary: 'Summarize transcript content',
-    description: 'Generate a summary of transcript content with subject extraction',
-    // v6: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
-    // v7: summaries no longer state vote results
-    version: 7,
-  }));
-
-app.post('/splitMediaFile', taskManager.registerTask(splitMediaFile, {
-  summary: 'Split media file into segments',
-  description: 'Split audio or video files into smaller segments based on specified time ranges'
-}));
-
-app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
-  summary: 'Fix transcript formatting',
-  description: 'Cleans and corrects transcription output for improved accuracy',
-  // v3: with the meeting's people in the request, the result carries speakerHints — who each
-  // diarization speaker is, judged from the transcript text alone, each marked
-  // with the kind of evidence and whether the task would act on it
-  version: 3,
-}));
-
-app.post('/processAgenda', taskManager.registerTask(processAgenda, {
-  summary: 'Process meeting agenda',
-  description: 'Extracts and structures agenda information from documents',
-  // v4: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
-  // v5: agendaItemTitle, the item as written on the agenda (schemalabz/opencouncil#616)
-  // v6: agendaSection per item, and agendaItemIndex is now the printed number, which repeats across sections (schemalabz/opencouncil#366)
-  // v7: meetingRecord, the kind, session number and format that the invitation states (schemalabz/opencouncil#150)
-  version: 7,
-}));
-
-app.post('/generateVoiceprint', taskManager.registerTask(generateVoiceprint, {
-  summary: 'Generate voiceprint',
-  description: 'Creates unique speaker voice fingerprints for identification'
-}));
-
-app.post('/generateHighlight', taskManager.registerTask(generateHighlight, {
-  summary: 'Generate video highlight',
-  description: 'Create video highlights from source media with visual enhancements',
-  // v2: word-timed animated ASS captions (forced alignment), restyled speaker chip
-  version: 2,
-}));
-
-app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
-  summary: 'Poll and extract decisions from Diavgeia',
-  description: 'Fetch decisions from the Greek Government Transparency portal, match them to meeting subjects, and extract structured data (excerpt, attendance, votes) from matched PDFs',
-  // 4: per-document facts only (roll call as printed, named votes, changes with anchors), no replayed snapshots; per-vote absence as an event pair (2026-09-17)
-  //    + actingSecretary and subjectHeading, both additive (2026-09-22); v4 has not shipped, so no bump
-  //    C1 (2026-09-25): the three meeting-level fields left the result and each page gained `nameMatches`. Both precede the first deploy of version 4, so the version stays 4.
-  //    C5 (2026-09-26): `absent_for_vote` is on the wire again, one entry with the anchor the page states (no departure/arrival pair), and the anchor gained `decisionNumberTo` for a range. Also before the first deploy of version 4.
-  version: 4,
-}));
+app.post('/transcribe', taskManager.registerTask(TASKS.transcribe.task, TASKS.transcribe.metadata));
+app.post('/summarize', taskManager.registerTask(TASKS.summarize.task, TASKS.summarize.metadata));
+app.post('/splitMediaFile', taskManager.registerTask(TASKS.splitMediaFile.task, TASKS.splitMediaFile.metadata));
+app.post('/fixTranscript', taskManager.registerTask(TASKS.fixTranscript.task, TASKS.fixTranscript.metadata));
+app.post('/processAgenda', taskManager.registerTask(TASKS.processAgenda.task, TASKS.processAgenda.metadata));
+app.post('/generateVoiceprint', taskManager.registerTask(TASKS.generateVoiceprint.task, TASKS.generateVoiceprint.metadata));
+app.post('/generateHighlight', taskManager.registerTask(TASKS.generateHighlight.task, TASKS.generateHighlight.metadata));
+app.post('/pollDecisions', taskManager.registerTask(TASKS.pollDecisions.task, TASKS.pollDecisions.metadata));
 
 // Matches the gate on the other dev routes below: NODE_ENV is unset in the
 // deployed environments, so anything but an explicit === 'development' would
 // register this in production too.
 if (process.env.NODE_ENV === 'development') {
-    app.post('/dev/slowTask', taskManager.registerTask(devSlowTask, {
-        summary: 'Dev-only slow task for testing cancellation and batch promotion',
-        description: 'Sleeps cooperatively for iterations×sleepMs, optionally makes one tiny batch-first LLM call.',
-        tags: ['Development'],
-    }));
+    app.post('/dev/slowTask', taskManager.registerTask(TASKS.devSlowTask.task, TASKS.devSlowTask.metadata));
 }
 
 // Resolve task paths from Express routes, then load API Documentation
@@ -277,6 +210,7 @@ const port = process.env.PORT || 3000;
 const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
     logObservabilityStatus();
+    startMonitoring();
 
     console.log('\nAvailable Endpoints:');
     (app as any)._router.stack.forEach((middleware: any) => {

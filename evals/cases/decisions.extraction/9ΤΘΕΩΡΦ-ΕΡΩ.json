@@ -1,0 +1,279 @@
+{
+  "id": "decisions.extraction/9ΤΘΕΩΡΦ-ΕΡΩ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΤΘΕΩΡΦ-ΕΡΩ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΤΘΕΩΡΦ-ΕΡΩ",
+    "city": "zografou",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": null,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "mayorMovement=arrival",
+        "reordering=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": true,
+      "reviewNote": "Added 2026-09-17 for the mayor's movement / the presiding member; labels seeded from the extractor, unreviewed except the mayor sentence (read on the page).",
+      "statedButUnstorable": [
+        "reordering"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 6,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 6ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ κ.κ. ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ) και ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ."
+          },
+          {
+            "name": "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 6,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 6ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ κ.κ. ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ) και ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ."
+          },
+          {
+            "name": "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 6,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 6ου τακτικού θέματος αποχώρησε η Δ.Σ. κ. ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)."
+          },
+          {
+            "name": "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 8ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ. κ.κ. ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ και ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ"
+          },
+          {
+            "name": "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 8ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ. κ.κ. ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ και ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ"
+          },
+          {
+            "name": "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος της ημερήσιας διάταξης προσήλθε ο Δ.Σ κ. ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ"
+          },
+          {
+            "name": "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος αποχώρησε ο Δ.Σ. κ. ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ."
+          },
+          {
+            "name": "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 2ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ και ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ."
+          },
+          {
+            "name": "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 2ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ και ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ."
+          },
+          {
+            "name": "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 9,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 9ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ), ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ) και ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ."
+          },
+          {
+            "name": "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 9,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 9ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ), ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ) και ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ."
+          },
+          {
+            "name": "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 9,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 9ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ), ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ) και ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ."
+          },
+          {
+            "name": "ΤΙΝΑ ΚΑΦΑΤΣΑΚΗ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Η Δήμαρχος απουσίαζε κατά την έναρξη της συνεδρίασης και προσήλθε στη λήξη της συζήτησης του 8ου θέματος της ημερήσιας διάταξης."
+          }
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1382,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "mayor": {
+      "value": {
+        "present": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+          "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ- ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΑΛΕΞΑΝΔΡΗ-ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+          "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+          "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+          "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+          "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+          "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+          "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+          "ΒΑΜΒΑΚΑ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+          "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)"
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 3,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 3,
+          "nonAgendaReason": null
+        },
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ομόφωνα",
+        "phraseAsExtracted": "ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "mayorMovement=arrival",
+    "reordering=yes"
+  ]
+}

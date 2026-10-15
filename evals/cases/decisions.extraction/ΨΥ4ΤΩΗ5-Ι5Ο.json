@@ -1,0 +1,141 @@
+{
+  "id": "decisions.extraction/ΨΥ4ΤΩΗ5-Ι5Ο",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΥ4ΤΩΗ5-Ι5Ο",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥ4ΤΩΗ5-Ι5Ο",
+    "city": "chania",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 8,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "mayorStated=yes",
+        "rollCallLayout=present_and_absent"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1981,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 43,
+        "presentMembers": [
+          "ΑΛΟΓΛΟΥ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΑΠΟΣΤΟΛΑΚΗ ΝΙΚΗ",
+          "ΒΑΡΔΑΚΗΣ ΑΝΤΩΝΙΟΣ-ΙΩΑΝΝΗΣ",
+          "ΒΟΥΛΓΑΡΙΔΗΣ ΜΗΝΑΣ",
+          "ΓΕΩΡΓΟΥΛΑ ΖΩΗ",
+          "ΓΙΑΝΝΑΚΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΓΟΥΛΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΕΛΕΥΘΕΡΙΑΔΟΥ-ΠΑΠΑΔΑΚΗ ΣΟΦΙΑ",
+          "ΖΕΡΒΑΚΗΣ ΣΤΥΛΙΑΝΟΣ",
+          "ΖΕΡΒΟΥΔΑΚΗ ΕΛΕΝΗ",
+          "ΗΛΙΑΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΚΑΛΙΤΣΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΚΑΡΑΓΙΑΝΝΑΚΗΣ ΕΜΜΑΝΟΥΗΛ",
+          "ΚΕΛΑΪΔΗΣ ΕΜΜΑΝΟΥΗΛ",
+          "ΚΛΩΝΙΖΑΚΗΣ ΜΙΛΤΙΑΔΗΣ",
+          "ΚΟΝΤΟΡΙΝΑΚΗΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΚΟΤΣΙΦΑΚΗΣ ΕΜΜΑΝΟΥΗΛ",
+          "ΚΩΝΣΤΑΝΤΑΡΑΚΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΛΕΚΚΑΣ ΕΜΜΑΝΟΥΗΛ",
+          "ΛΟΥΤΣΕΤΗΣ ΧΑΡΑΛΑΜΠΟΣ",
+          "ΜΑΝΙΜΑΝΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+          "ΜΑΥΡΙΔΑΚΗΣ ΖΑΧΑΡΗΣ",
+          "ΜΙΧΑΗΛΑΚΗΣ ΣΤΥΛΙΑΝΟΣ",
+          "ΜΠΟΜΠΟΛΑΚΗΣ ΦΩΤΗΣ",
+          "ΜΠΟΥΡΜΠΑΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΜΠΟΥΤΖΟΥΚΑΣ ΑΔΑΜ",
+          "ΝΙΚΗΦΟΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΠΕΤΡΑΝΤΩΝΑΚΗ-ΚΑΛΟΓΕΡΗ ΜΑΡΙΑ",
+          "ΠΕΤΡΟΥΛΑΚΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΣΦΥΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΣΧΟΙΝΑΣ ΜΙΧΑΗΛ",
+          "ΤΣΟΥΠΑΚΗΣ ΜΙΧΑΗΛ",
+          "ΧΑΖΙΡΑΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΧΑΤΖΑΚΗΣ ΙΩΑΝΝΗΣ"
+        ],
+        "absentMembers": [
+          "ΑΡΣΕΝΙΔΟΥ ΜΑΓΔΑΛΗΝΗ",
+          "ΒΑΛΥΡΑΚΗΣ ΣΤΥΛΙΑΝΟΣ",
+          "ΒΕΡΥΚΑΚΗ ΕΥΣΤΡΑΤΙΑ",
+          "ΔΡΑΚΑΚΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΔΡΑΚΑΚΗΣ ΠΕΤΡΟΣ",
+          "ΚΑΛΟΓΡΙΔΑΚΗΣ ΜΙΧΑΗΛ",
+          "ΚΟΚΟΓΙΑΝΝΑΚΗΣ ΕΛΕΥΘΕΡΙΟΣ",
+          "ΜΑΚΡΕΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΨΑΡΟΥΔΑΚΗΣ ΝΕΚΤΑΡΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Μυστική ψηφοφορία",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "mayorStated=yes",
+    "rollCallLayout=present_and_absent"
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "id": "decisions.extraction/9ΖΘΨΩ6Μ-Θ0Ζ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΖΘΨΩ6Μ-Θ0Ζ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΖΘΨΩ6Μ-Θ0Ζ",
+    "city": "athens",
+    "body": "4η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "namedVoters=all",
+        "unanimousAgainst=yes"
+      ],
+      "namedEdgeCase": "A unanimous rejection voted by name: the nine present members, the president included, are named ΚΑΤΑ, then «ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ Δεν εγκρίνει». Unanimous, and every vote is AGAINST the proposal; no one voted FOR. The maintainer settled it on 2026-09-26 (C1 decisions, NV-athens-4).",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [],
+        "absentMembers": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Βαρδή Πολυξένη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Αρβανίτη Ευανθία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Καρύδας Δημήτριος-Ευάγγελος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Κελεπούρη Αναστασία (Νατάσα)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Κολλιόπουλος Διονύσιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Λόκα Μαρία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μητροπούλου-Κατσίκη Γερασιμούλα (Μίνα)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μοναστηριώτης Αναστάσιος (Τάσος)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ψημμένου Γιαννούλα (Γιάννα)",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": true,
+        "evidence": {
+          "quote": "ΚΑΤΑ ψήφισαν η Πρόεδρος κα Βαρδή Πολυξένη και οι κ.κ. Σύμβουλοι: Αρβανίτη Ευανθία, Καρύδας Δημήτριος-Ευάγγελος, Κελεπούρη Αναστασία (Νατάσα), Κολλιόπουλος Διονύσιος, Λόκα Μαρία, Μητροπούλου-Κατσίκη Γερασιμούλα (Μίνα), Μοναστηριώτης Αναστάσιος (Τάσος), Ψημμένου Γιαννούλα (Γιάννα) και ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ Δεν εγκρίνει τη απομάκρυνση των καθιστικών σωμάτων",
+          "ada": "9ΖΘΨΩ6Μ-Θ0Ζ",
+          "page": 2,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/4η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "namedVoters=all",
+    "unanimousAgainst=yes"
+  ]
+}

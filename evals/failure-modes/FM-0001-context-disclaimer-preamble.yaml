@@ -1,0 +1,25 @@
+id: FM-0001
+slug: context_disclaimer_preamble
+title: Subject context opens with search-failure meta-commentary
+definition: >
+  The web-search context for a subject begins with the model talking about its search
+  («Δυστυχώς δεν μπόρεσα…», «Δεν βρέθηκαν…», «Με βάση τα αποτελέσματα της αναζήτησης…»,
+  «Βλέπω ότι…», «Θα ψάξω…») instead of the context itself. Citizens read it verbatim on the
+  meeting page.
+boundary: >
+  Not this mode: a context that mentions «δυστυχώς» or a missing source later in the text; a
+  context that is genuinely short; a context that cites its sources at the end; an empty
+  context (that is context_empty_after_error).
+suite: [summarize.context, agenda.context]
+scope: call
+severity: degraded
+impact: visible
+status: confirmed
+detector:
+  kind: code
+  module: src/evals/checks/contextDisclaimer.ts
+issue: schemalabz/opencouncil-tasks#75
+related:
+  - { type: similar, id: FM-0002 }
+decision: fix
+alert: "any fail: Discord immediately with the run's meeting and the failing subject"

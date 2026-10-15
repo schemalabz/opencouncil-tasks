@@ -1,0 +1,278 @@
+{
+  "id": "decisions.extraction/ΨΤΙΟΩΗ5-ΗΕΤ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΤΙΟΩΗ5-ΗΕΤ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΤΙΟΩΗ5-ΗΕΤ",
+    "city": "chania",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "perVoteAbsence=yes",
+        "departure=yes",
+        "changeAnchor=decision_number",
+        "namedVoters=dissenters_only"
+      ],
+      "namedEdgeCase": "Per-vote absence stated before the decision text: «Ο κ. Χατζάκης Ιωάννης απουσίαζε από την αίθουσα των ώρα της ψηφοφορίας» sits between the dissenters and «Εγκρίνει», on page 1 of 2. A per-vote absence, not a departure: the page lists every departure of the session by decision number and he is not among them. The body profile says Chania never states one (statesPerVoteAbsence false); none of 19 sampled Chania ΔΣ pages does, this reference page does.",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Βουλγαρίδης Μηνάς",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος."
+          },
+          {
+            "name": "Ζερβάκης Στυλιανός",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος."
+          },
+          {
+            "name": "Πετρουλάκης Βασίλειος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος."
+          },
+          {
+            "name": "Μπομπολάκης Φώτης",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος."
+          },
+          {
+            "name": "Γιαννακάκης Ιωάννης",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος."
+          },
+          {
+            "name": "Μακρέας Δημήτριος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος."
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Πριν την λήψη της 319/2026 απόφασης αποχώρησαν οι κ.κ. Βουλγαρίδης Μηνάς, Ζερβάκης Στυλιανός, μετά την 321/2026 αποχώρησε ο κ. Πετρουλάκης Βασίλειος, πριν την 323/2026 αποχώρησε ο κ. Μπομπολάκης Φώτης και πριν την 324/2026 αποχώρησαν οι κ.κ. Γιαννακάκης Ιωάννης και Μακρέας Δημήτριος.",
+          "ada": "ΨΤΙΟΩΗ5-ΗΕΤ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Χατζάκης Ιωάννης"
+        ],
+        "asPrinted": "Ο κ. Χατζάκης Ιωάννης απουσίαζε από την αίθουσα των ώρα της ψηφοφορίας.",
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Ο κ. Χατζάκης Ιωάννης απουσίαζε από την αίθουσα των ώρα της ψηφοφορίας.",
+          "ada": "ΨΤΙΟΩΗ5-ΗΕΤ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Αλόγλου Αναστάσιος",
+          "Αποστολάκη Νίκη",
+          "Αρσενίδου Μαγδαληνή",
+          "Βαλυράκης Στυλιανός",
+          "Βαρδάκης Αντώνιος-Ιωάννης",
+          "Βερυκάκη Ευστρατία",
+          "Βουλγαρίδης Μηνάς",
+          "Γεωργούλα Ζωή",
+          "Γιαννακάκης Ιωάννης",
+          "Δρακακάκης Ιωάννης",
+          "Δρακάκης Πέτρος",
+          "Ελευθεριάδου-Παπαδάκη Σοφία",
+          "Ζερβάκης Στυλιανός",
+          "Ζερβουδάκη Ελένη",
+          "Καλογριδάκης Μιχαήλ",
+          "Καραγιαννάκης Εμμανουήλ",
+          "Κελαϊδής Εμμανουήλ",
+          "Κλωνιζάκης Μιλτιάδης",
+          "Κοκογιαννάκης Ελευθέριος",
+          "Κοντορινάκης Αλέξανδρος",
+          "Κοτσιφάκης Εμμανουήλ",
+          "Λέκκας Εμμανουήλ",
+          "Λουτσέτης Χαράλαμπος",
+          "Μακρέας Δημήτριος",
+          "Μανιμανάκη Αικατερίνη",
+          "Μαυριδάκης Ζαχάρης",
+          "Μιχαηλάκης Στυλιανός",
+          "Μπομπολάκης Φώτης",
+          "Μπουρμπάκης Νικόλαος",
+          "Μπούτζουκας Αδάμ",
+          "Νικηφοράκης Ιωάννης",
+          "Πετραντωνάκη-Καλογερή Μαρία",
+          "Πετρουλάκης Βασίλειος",
+          "Σφυράκης Ιωάννης",
+          "Σχοινάς Μιχαήλ",
+          "Τσουπάκης Μιχαήλ",
+          "Χαζιράκης Νικόλαος",
+          "Χατζάκης Ιωάννης",
+          "Ψαρουδάκης Νεκτάριος"
+        ],
+        "absentMembers": [
+          "Γούλας Δημήτριος",
+          "Ηλιάκης Νικόλαος",
+          "Καλιτσάκης Ιωάννης",
+          "Κωνστανταράκης Βασίλειος"
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Απουσίαζαν καθ’ όλη τη διάρκεια της συνεδρίασης οι κ.κ. Γούλας Δημήτριος, Ηλιάκης Νικόλαος, Καλιτσάκης Ιωάννης και Κωνστανταράκης Βασίλειος.",
+          "ada": "ΨΤΙΟΩΗ5-ΗΕΤ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "ΑΡΙΘΜ. ΑΠΟΦ. 320 Στη συνέχεια εισάγεται και ανακοινώνεται προς το Σώμα",
+          "ada": "ΨΤΙΟΩΗ5-ΗΕΤ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Αρσενίδου Μαγδαληνή",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Βερυκάκη Ευστρατία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Γεωργούλα Ζωή",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ελευθεριάδου-Παπαδάκη Σοφία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Κλωνιζάκης Μιλτιάδης",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Λουτσέτης Χαράλαμπος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μακρέας Δημήτριος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μανιμανάκη Αικατερίνη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μπομπολάκης Φώτης",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Πετρουλάκης Βασίλειος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Σχοινάς Μιχαήλ",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ Μειοψηφούντων των κ.κ. Δημοτικών Συμβούλων Αρσενίδου Μαγδαληνής, Βερυκάκη Ευστρατίας, Γεωργούλα Ζωής, Ελευθεριάδου-Παπαδάκη Σοφίας, Κλωνιζάκη Μιλτιάδη, Λουτσέτη Χαράλαμπου, Μακρέα Δημήτριου, Μανιμανάκη Αικατερίνης, Μπομπολάκη Φώτη, Πετρουλάκη Βασίλειου και Σχοινά Μιχαήλ.",
+          "ada": "ΨΤΙΟΩΗ5-ΗΕΤ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "rollCallLayout=composition_and_absent",
+    "perVoteAbsence=yes",
+    "departure=yes",
+    "changeAnchor=decision_number",
+    "namedVoters=dissenters_only"
+  ]
+}

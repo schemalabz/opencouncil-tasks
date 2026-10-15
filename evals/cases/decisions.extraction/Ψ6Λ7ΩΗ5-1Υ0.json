@@ -1,0 +1,157 @@
+{
+  "id": "decisions.extraction/Ψ6Λ7ΩΗ5-1Υ0",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ6Λ7ΩΗ5-1Υ0",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6Λ7ΩΗ5-1Υ0",
+    "city": "chania",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "mayorStated=yes",
+        "outOfAgenda=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1836,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Αλόγλου Αναστάσιος",
+          "Αποστολάκη Νίκη",
+          "Βαρδάκης Αντώνιος-Ιωάννης",
+          "Γεωργούλα Ζωή",
+          "Γιαννακάκης Ιωάννης",
+          "Δρακακάκης Ιωάννης",
+          "Δρακάκης Πέτρος",
+          "Ελευθεριάδου-Παπαδάκη Σοφία",
+          "Ζερβουδάκη Ελένη",
+          "Καραγιαννάκης Εμμανουήλ",
+          "Κελαϊδής Εμμανουήλ",
+          "Κλωνιζάκης Μιλτιάδης",
+          "Κοκογιαννάκης Ελευθέριος",
+          "Κοντορινάκης Αλέξανδρος",
+          "Κοτσιφάκης Εμμανουήλ",
+          "Κωνστανταράκης Βασίλειος",
+          "Λέκκας Εμμανουήλ",
+          "Μακρέας Δημήτριος",
+          "Μαυριδάκης Ζαχάρης",
+          "Μιχαηλάκης Στυλιανός",
+          "Μπούτζουκας Αδάμ",
+          "Νικηφοράκης Ιωάννης",
+          "Πετραντωνάκη-Καλογερή Μαρία",
+          "Πετρουλάκης Βασίλειος",
+          "Σφυράκης Ιωάννης",
+          "Σχοινάς Μιχαήλ",
+          "Τσουπάκης Μιχαήλ",
+          "Χατζάκης Ιωάννης"
+        ],
+        "absentMembers": [
+          "Αρσενίδου Μαγδαληνή",
+          "Βαλυράκης Στυλιανός",
+          "Βερυκάκη Ευστρατία",
+          "Βουλγαρίδης Μηνάς",
+          "Γούλας Δημήτριος",
+          "Ζερβάκης Στυλιανός",
+          "Ηλιάκης Νικόλαος",
+          "Καλιτσάκης Ιωάννης",
+          "Καλογριδάκης Μιχαήλ",
+          "Λουτσέτης Χαράλαμπος",
+          "Μανιμανάκη Αικατερίνη",
+          "Μπομπολάκης Φώτης",
+          "Μπουρμπάκης Νικόλαος",
+          "Χαζιράκης Νικόλαος",
+          "Ψαρουδάκης Νεκτάριος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "neither is right",
+            "note": "there is no agenda number"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "page prints no item number; null is the answer"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "rollCallLayout=composition_and_absent",
+    "mayorStated=yes",
+    "outOfAgenda=yes"
+  ]
+}

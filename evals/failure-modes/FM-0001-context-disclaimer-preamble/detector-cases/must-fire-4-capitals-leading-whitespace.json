@@ -1,0 +1,16 @@
+{
+  "kind": "must-fire",
+  "note": "Capitals carry no accents; leading whitespace before the disclaimer",
+  "input": {
+    "label": "subject-context-search:ΚΕΠΕΔΙΧ",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "\n  ΔΥΣΤΥΧΩΣ η αναζήτηση δεν επέστρεψε αποτελέσματα για την ΚΕΠΕΔΙΧ. Η Κοινωφελής Επιχείρηση του Δήμου Χανίων παρέχει κοινωνικές υπηρεσίες.",
+      "stopReason": "end_turn"
+    }
+  }
+}

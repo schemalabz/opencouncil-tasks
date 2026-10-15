@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/Ψ6Τ9Ω1Ν-19Μ",
+  "suite": "decisions.reading",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ6Τ9Ω1Ν-19Μ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ6Τ9Ω1Ν-19Μ"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτική Επιτροπή",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "301/11-08-2026",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-08-11",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "sparta",
+    "decision"
+  ]
+}

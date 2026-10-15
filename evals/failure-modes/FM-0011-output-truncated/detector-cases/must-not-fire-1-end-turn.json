@@ -1,0 +1,20 @@
+{
+  "kind": "must-not-fire",
+  "input": {
+    "label": "decision-reading",
+    "request": {
+      "model": "claude-sonnet-4-6",
+      "max_tokens": 16000,
+      "messages": [],
+      "output_config": {
+        "format": {
+          "type": "json_schema"
+        }
+      }
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"name\": \"Έγκριση",
+      "stopReason": "end_turn"
+    }
+  }
+}

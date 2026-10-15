@@ -1,0 +1,323 @@
+{
+  "id": "decisions.extraction/ΡΠΕΜΩ6Μ-Α2Ο",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΡΠΕΜΩ6Μ-Α2Ο",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΠΕΜΩ6Μ-Α2Ο",
+    "city": "athens",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "arrival=yes",
+        "changeAnchor=decision_number",
+        "voteTally=yes",
+        "perVoteAbsence=yes"
+      ],
+      "namedEdgeCase": "A range that covers this page: decision 35/2026 («Α.Δ.Σ. 35/14-01-2026») prints «Εκτός αιθούσης στις με αρ. 31 – 40 ΑΔΣ ο κ. Εμμ. Βελεγράκης», so he is out for this page's own vote through the stated range. The label is one absent_for_vote anchored to decisions 31–40, not one on this decision. ΡΟΨΘΩ6Μ-2Υ8 (decision 3) is the same sentence outside the range. Only Athens ΔΣ states ranges in the per-vote absence study.",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Κολλάτος Ευγένιος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθε κατά τη συζήτηση των εκτός ημερήσιας διάταξης θεμάτων ο κ. Ευγ. Κολλάτος."
+          },
+          {
+            "name": "Σοφιανός Νικόλαος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 6,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε στη με αρ. 6 ΑΔΣ ο κ. Ν. Σοφιανός."
+          },
+          {
+            "name": "Τεντόμας Χρήστος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 17,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε στη με αρ. 17 ΑΔΣ ο κ. Χ. Τεντόμας."
+          },
+          {
+            "name": "Αγρογιάννη-Μουκριώτου Ζαχαρία",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 18,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε στη με αρ. 18 ΑΔΣ η κα Ζ. Αγρογιάννη – Μουκριώτου."
+          },
+          {
+            "name": "Χειμωνάς Αθανάσιος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 22,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 22 ΑΔΣ οι κ.κ. Αθ. Χειμωνάς, Κ. Ζαχαριάδης, Δ.-Α. Βουτυράκου."
+          },
+          {
+            "name": "Ζαχαριάδης Κωνσταντίνος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 22,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 22 ΑΔΣ οι κ.κ. Αθ. Χειμωνάς, Κ. Ζαχαριάδης, Δ.-Α. Βουτυράκου."
+          },
+          {
+            "name": "Βουτυράκου Διαλεκτή-Αθηνά",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 22,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 22 ΑΔΣ οι κ.κ. Αθ. Χειμωνάς, Κ. Ζαχαριάδης, Δ.-Α. Βουτυράκου."
+          },
+          {
+            "name": "Βουρδουμπάς Χαράλαμπος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 23,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 23 ΑΔΣ οι κ.κ. Χ. Βουρδουμπάς, Χ. Γιώτης."
+          },
+          {
+            "name": "Γιώτης Χαράλαμπος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 23,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 23 ΑΔΣ οι κ.κ. Χ. Βουρδουμπάς, Χ. Γιώτης."
+          },
+          {
+            "name": "Μπακογιάννης Κωνσταντίνος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 26,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 26 ΑΔΣ οι κ.κ. Κ. Μπακογιάννης, Ν. Αβραμίδης."
+          },
+          {
+            "name": "Αβραμίδης Νικόλαος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 26,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν στη με αρ. 26 ΑΔΣ οι κ.κ. Κ. Μπακογιάννης, Ν. Αβραμίδης."
+          },
+          {
+            "name": "Κολλάτος Ευγένιος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 27,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε στη με αρ. 27 ΑΔΣ ο κ. Ευγ. Κολλάτος."
+          },
+          {
+            "name": "Παπαδοπούλου Ελένη",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 38,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε στη με αρ. 38 ΑΔΣ η κα Ε. Παπαδοπούλου."
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Αποχώρησε στη με αρ. 38 ΑΔΣ η κα Ε. Παπαδοπούλου.",
+          "ada": "ΡΠΕΜΩ6Μ-Α2Ο",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [],
+        "byDecisionNumber": [
+          {
+            "name": "Βελεγράκης Εμμανουήλ",
+            "decisionNumber": "31",
+            "decisionNumberTo": "40"
+          }
+        ],
+        "asPrinted": "Εκτός αιθούσης στις με αρ. 31 – 40 ΑΔΣ ο κ. Εμμ. Βελεγράκης.",
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Εκτός αιθούσης στις με αρ. 31 – 40 ΑΔΣ ο κ. Εμμ. Βελεγράκης.",
+          "ada": "ΡΠΕΜΩ6Μ-Α2Ο",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Λιμνιωτάκη Δέσποινα",
+          "Τεντόμας Χρήστος",
+          "Αλεβυζάκη Δέσποινα",
+          "Αβραμίδης Νικόλαος",
+          "Αγρoγιάννη-Μουκριώτου Ζαχαρία (Ζαχαρούλα)",
+          "Αποστολόπουλος Γεώργιος",
+          "Βασιλείου Χριστίνα",
+          "Βελεγράκης Εμμανουήλ (Μανόλης)",
+          "Βουλγαράκης Γεώργιος",
+          "Βουρδουμπάς Χαράλαμπος (Χάρης)",
+          "Βουτυράκου Διαλεκτή-Αθηνά (Διάνα)",
+          "Γεννηματά Ιωάννα (Τζίνη)",
+          "Γεωργιάδης Θωμάς",
+          "Γιάννα Δέσποινα (Μπέττυ)",
+          "Γιάνναρος Γεώργιος-Κωνσταντίνος",
+          "Γιαννόπουλος Ευάγγελος",
+          "Γιαννοπούλου Καλλιόπη (Πόπη)",
+          "Γιώτης Χαράλαμπος",
+          "Γκαγκάκη-Δημητριάδου Αικατερίνη (Κατερίνα)",
+          "Γραμματικογιάννης Ανδρέας",
+          "Δούρου Όλγα",
+          "Ευαγγελίδου Μαρία (Μάρω)",
+          "Ζαχαριάδης Κωνσταντίνος",
+          "Ζωντήρου Ελένη",
+          "Καββαθάς Τρύφων",
+          "Κλείτσα Όλγα",
+          "Λαλιώτης Νικόλαος",
+          "Μαντζαβίνου Ελένη (Έλενα)",
+          "Μπακογιάννης Κωνσταντίνος",
+          "Μπάρκα Βασιλική",
+          "Μπέη-Καραμπότσου Ρωξάνη-Ευαγγελία",
+          "Παπαδοπούλου Ελένη",
+          "Σιδερή Δήμητρα",
+          "Σκιαδάς Ελευθέριος",
+          "Σκουμπουρδή Άρτεμις",
+          "Σοφιανός Νικόλαος",
+          "Στρατηγάκη Μαρία",
+          "Φούντζουλα Ασήμω (Μίνα)",
+          "Χαρλαύτης Παναγιώτης-Πάρης",
+          "Χειμωνάς Αθανάσιος",
+          "Χρυσόγελος Νικόλαος (Νίκος)"
+        ],
+        "absentMembers": [
+          "Καλαμπόκας Εμμανουήλ",
+          "Κολλάτος Ευγένιος"
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "απόντα 2 μέλη οι κ.κ. Εμμ. Καλαμπόκας, Ευγ. Κολλάτος.",
+          "ada": "ΡΠΕΜΩ6Μ-Α2Ο",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 32,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Εισάγεται από την Ημερήσια Διάταξη το 32ο θέμα αυτής",
+          "ada": "ΡΠΕΜΩ6Μ-Α2Ο",
+          "page": 2,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "επί συνόλου παρευρισκόμενων και ψηφισάντων 30 Δημοτικών Συμβούλων, εγκρίνεται ομόφωνα η μη επιβολή με ΥΠΕΡ 30 ψήφους",
+        "phraseAsExtracted": "",
+        "carriesTally": true,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "επί συνόλου παρευρισκόμενων και ψηφισάντων 30 Δημοτικών Συμβούλων, εγκρίνεται ομόφωνα η μη επιβολή με ΥΠΕΡ 30 ψήφους",
+          "ada": "ΡΠΕΜΩ6Μ-Α2Ο",
+          "page": 2,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "arrival=yes",
+    "changeAnchor=decision_number",
+    "voteTally=yes",
+    "perVoteAbsence=yes"
+  ]
+}

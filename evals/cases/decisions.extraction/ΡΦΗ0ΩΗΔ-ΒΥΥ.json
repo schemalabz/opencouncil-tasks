@@ -1,0 +1,177 @@
+{
+  "id": "decisions.extraction/ΡΦΗ0ΩΗΔ-ΒΥΥ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "ΡΦΗ0ΩΗΔ-ΒΥΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΦΗ0ΩΗΔ-ΒΥΥ",
+    "city": "chalandri",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 14,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "changeAnchor=agenda_item",
+        "mayorStated=yes",
+        "departure=yes",
+        "namedVoters=all"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Χ. Ρασσιάς (Ρώμας)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια συζήτησης του 1ου θέματος της ημερήσιας διάταξης αποχώρησαν οι κ.κ. Χ. Ρασσιάς (Ρώμας) και Ε. Παπαγιαννάκη."
+          },
+          {
+            "name": "Ε. Παπαγιαννάκη",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια συζήτησης του 1ου θέματος της ημερήσιας διάταξης αποχώρησαν οι κ.κ. Χ. Ρασσιάς (Ρώμας) και Ε. Παπαγιαννάκη."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 479,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΚΩΝΣΤΑΝΤΙΝΑ - ΟΛΥΜΠΙΑ ΚΑΡΑΓΙΑΝΝΗ",
+          "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΕΡΟΛΥΜΑΤΟΣ",
+          "ΙΩΑΝΝΗΣ ΛΑΔΟΠΟΥΛΟΣ",
+          "ΙΩΑΝΝΑ ΑΘΑΝΑΣΑΤΟΥ",
+          "ΓΕΡΑΣΙΜΟΣ ΛΥΜΠΕΡΑΤΟΣ",
+          "ΧΡΙΣΤΙΝΑ ΜΑΧΑΙΡΑ",
+          "ΔΗΜΗΤΡΑ ΓΚΑΣΟΥΚΑ",
+          "ΑΛΕΞΙΟΣ ΜΑΥΡΑΓΑΝΗΣ",
+          "ΕΥΤΕΡΠΗ ΛΕΡΤΑ",
+          "ΧΡΥΣΑΥΓΗ ΑΛΟΥΠΗ",
+          "ΕΥΘΥΜΙΟΣ ΚΟΥΡΑΣΗΣ",
+          "ΕΛΕΥΘΕΡΙΟΣ ΠΑΝΤΕΛΙΔΑΚΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΒΑΣΙΛΟΠΟΥΛΟΣ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΕΥΘΥΜΙΟΥ",
+          "ΣΠΥΡΙΔΩΝ ΦΩΤΕΙΝΟΣ",
+          "ΙΩΑΝΝΑ ΚΑΜΠΟΥΡΗ",
+          "ΑΝΝΑ ΣΟΥΣΟΥ",
+          "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ",
+          "ΠΑΝΑΓΙΩΤΗΣ ΛΑΜΠΡΟΠΟΥΛΟΣ",
+          "ΧΡΗΣΤΟΣ ΚΙΑΚΟΣ",
+          "ΘΕΟΔΩΡΑ ΑΛΕΞΑΝΔΡΗ",
+          "ΧΑΡΑΛΑΜΠΟΣ ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)",
+          "ΠΑΡΑΣΚΕΥΗ ΖΟΡΜΠΑ",
+          "ΕΛΠΙΝΙΚΗ ΠΑΠΑΓΙΑΝΝΑΚΗ",
+          "ΕΙΡΗΝΗ ΚΑΛΛΗ",
+          "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ",
+          "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+          "ΕΜΜΑΝΟΥΗΛ ΚΡΑΝΙΔΗΣ"
+        ],
+        "absentMembers": [
+          "ΧΑΡΗΣ ΜΑΥΡΟΥΔΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΧΡΙΣΤΟΥΛΑΚΗΣ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΑΒΡΑΣ",
+          "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ",
+          "ΙΩΑΝΝΗΣ ΚΟΥΡΑΣΗΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Κατά πλειοψηφία με δεκαεπτά (19) έγκυρες ψήφους υπέρ",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "unresolvable",
+        "review": [
+          {
+            "what": "named voters dropped",
+            "verdict": "neither is right",
+            "note": "at the end of the page it says \"Οι κ.κ. Κ.-Ο. Καραγιάννη, Ε. Χριστούλη, Κ. Γερολυμάτος, Ι. Λαδόπουλος, Ι. Αθανασάτου, Γ.\nΛυμπεράτος, Χ. Μαχαίρα, Δ. Γκασούκα, Α. Μαυραγάνης, Ε. Λέρτα, Χ. Αλούπη, Ε. Κουράσης, Ε.\nΠαντελιδάκης, Δ. Βασιλόπουλος, Κ. Ευθυμίου, Σ. Φωτεινός, Ι. Καμπούρη, Α. Σούσου και Ε.\nΚρανίδης ψήφισαν υπέρ του πίνακα στοχοθεσίας οικονομικών αποτελεσμάτων του Δήμου\nΈτους 2026.\" and \"Οι κ.κ. Χ. Αγαπητού, Κ. Αγγελής, Π. Λαμπρόπουλος, Χ. Κιάκος, Θ. Αλεξανδρή, Π. Ζορμπά, Ε.\nΚάλλη, Κ. Καρατζά και Ι. Παπαγεωργίου δεν ψήφισαν υπέρ του πίνακα στοχοθεσίας\nοικονομικών αποτελεσμάτων του Δήμου Έτους 2026.\""
+          },
+          {
+            "what": "unresolvable",
+            "verdict": null,
+            "note": "page names 19 who «ψήφισαν υπέρ» and 9 who «δεν ψήφισαν υπέρ»; the second group is neither ΚΑΤΑ nor ΛΕΥΚΟ and no vote value exists for it. Needs a storage decision, not a reading"
+          }
+        ]
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chalandri",
+    "rollCallLayout=present_and_absent",
+    "changeAnchor=agenda_item",
+    "mayorStated=yes",
+    "departure=yes",
+    "namedVoters=all"
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "id": "decisions.extraction/Ρ09ΤΩΨ3-ΘΤΝ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ρ09ΤΩΨ3-ΘΤΝ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ09ΤΩΨ3-ΘΤΝ",
+    "city": "argithea",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 51,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "departure=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": "51 pages. A departure after the 8th item, and the document where extraction emitted a bracketed placeholder instead of the decision content.",
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Κορλού Όλγα",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Τα μέλη της παράταξης της μειοψηφίας κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος μετά τη συζήτηση του 8ου θέματος της ημερήσιας διάταξης αποχώρησαν, διαμαρτυρόμενοι λέγοντας: « Οι εισηγήσεις είναι ελλιπείς και δεν παρίσταται η Τεχνική υπηρεσία στη συνεδρίαση για ανα απαντήσει στις ερωτήσεις που τέθηκαν»."
+          },
+          {
+            "name": "Θεοδωράκης Αθανάσιος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 8,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Τα μέλη της παράταξης της μειοψηφίας κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος μετά τη συζήτηση του 8ου θέματος της ημερήσιας διάταξης αποχώρησαν, διαμαρτυρόμενοι λέγοντας: « Οι εισηγήσεις είναι ελλιπείς και δεν παρίσταται η Τεχνική υπηρεσία στη συνεδρίαση για ανα απαντήσει στις ερωτήσεις που τέθηκαν»."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3452,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Μ έ λ η",
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Καραγεώργος Αθανάσιος",
+          "Γραμμένος Κωνσταντίνος",
+          "Κορλού Όλγα",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 10,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 10,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argithea",
+    "rollCallLayout=present_and_absent",
+    "departure=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

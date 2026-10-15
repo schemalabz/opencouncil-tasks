@@ -1,0 +1,143 @@
+{
+  "id": "decisions.extraction/6ΣΟΔΩ6Μ-Φ3Χ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΣΟΔΩ6Μ-Φ3Χ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΣΟΔΩ6Μ-Φ3Χ",
+    "city": "athens",
+    "body": "1η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "arrival=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Βέρα Λ.",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 5,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Η Σύμβουλος κ. Βέρα Λ. απεχώρησε στην 5 ΑΚΣ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1245,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ",
+          "ΤΑ ΜΕΛΗ ΤΟΥ ΣΥΜΒΟΥΛΙΟΥ ΤΗΣ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Ευαγγελία Λίλιαν Γαζή",
+          "Λυδία Βέρα",
+          "Σοφία Γαϊτάνη",
+          "Κωνσταντίνος Δεκαβάλλας",
+          "Μαρία Καζάντη",
+          "Παναγιώτης Κουφάκης",
+          "Παπαγεωργίου Χρυσούλα"
+        ],
+        "absentMembers": [
+          "Σπύρος (Σάκης) Αθανασάκης",
+          "Αικατερίνη Βαλσαμάκη",
+          "Γεώργιος Διαμάντης",
+          "Δημήτριος Ευθυμίου",
+          "Γεώργιος (Γιωργής) Νέτος",
+          "Παναγιώτης Ξυνέλης",
+          "Γεωργία Σμέρου",
+          "Χαμντί Ντάφερ"
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "present count disagrees",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "15-member composition (president + 14); absentees printed by surname and initial (e.g. «Αθανασάκης Σ.»), which the extractor failed to subtract from the composition and so returned all 15 as present; Βέρα departed at decision 5, after this one (1)"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "arrival=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

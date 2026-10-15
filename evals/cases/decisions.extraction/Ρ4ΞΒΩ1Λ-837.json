@@ -1,0 +1,110 @@
+{
+  "id": "decisions.extraction/Ρ4ΞΒΩ1Λ-837",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ρ4ΞΒΩ1Λ-837",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ4ΞΒΩ1Λ-837",
+    "city": "samothraki",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 9,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "outOfAgenda=yes",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 5216,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Βίτσας Αθανάσιος",
+          "Σκαρλατίδης Αθανάσιος",
+          "Καλαϊτζή Αικατερίνη",
+          "Θεοδώρου Ιωάννης"
+        ],
+        "absentMembers": [
+          "Γαλατούμος Νικόλαος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "samothraki/Δημοτική Επιτροπή",
+  "tags": [
+    "samothraki",
+    "rollCallLayout=present_and_absent",
+    "outOfAgenda=yes",
+    "correctedRepost=yes"
+  ]
+}

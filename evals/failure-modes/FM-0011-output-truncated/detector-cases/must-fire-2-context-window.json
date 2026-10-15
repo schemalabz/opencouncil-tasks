@@ -1,0 +1,15 @@
+{
+  "kind": "must-fire",
+  "input": {
+    "label": "summarize-batch",
+    "request": {
+      "model": "claude-sonnet-4-6",
+      "max_tokens": 16000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"name\": \"Έγκριση",
+      "stopReason": "model_context_window_exceeded"
+    }
+  }
+}

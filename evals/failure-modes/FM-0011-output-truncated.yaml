@@ -1,0 +1,19 @@
+id: FM-0011
+slug: output_truncated
+title: Model output cut off by the token or context limit
+definition: >
+  A call stopped with stop_reason model_context_window_exceeded, or with max_tokens on a
+  structured output. aiChat cannot continue either, so the caller got an error or a cut-off
+  answer.
+boundary: >
+  Not this mode: free text that hit max_tokens, which aiChat continues in a :continuation call.
+suite: "*"
+scope: call
+severity: major
+impact: silent
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/stopReasonTruncated.ts
+decision: monitor
+alert: "any fail on a structured-output label; daily digest grouped by label"

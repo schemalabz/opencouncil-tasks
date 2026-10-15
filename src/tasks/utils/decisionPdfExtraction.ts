@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { aiChat, ResultWithUsage, NO_USAGE, addUsage, HAIKU_MODEL } from '../../lib/ai.js';
+import { withoutCacheReads } from '../../lib/llm/callPolicy.js';
 import type { AttendancePhase, StatedName, StatedPresence, StatedPresentList } from '../../types.js';
 import { PDFDocument } from 'pdf-lib';
 import crypto from 'crypto';
@@ -50,32 +51,6 @@ export { extractPdfPages, extractPdfPageSet, headAndTailPages };
 // Caches Claude extraction results per PDF URL to avoid re-downloading and re-processing
 // during iterative development. Uses a fixed path so it persists across nix-shell sessions.
 
-const CACHE_DIR = '/tmp/opencouncil-decisions-cache';
-
-function getCachePath(pdfUrl: string, prefix: string): string {
-    const hash = crypto.createHash('sha256').update(pdfUrl).digest('hex').slice(0, 16);
-    return path.join(CACHE_DIR, `${prefix}${hash}.json`);
-}
-
-export function readCache<T>(pdfUrl: string, prefix = 'decision-'): T | null {
-    const cachePath = getCachePath(pdfUrl, prefix);
-    try {
-        const data = fs.readFileSync(cachePath, 'utf-8');
-        console.log(`Cache hit for ${pdfUrl}`);
-        return JSON.parse(data) as T;
-    } catch {
-        return null;
-    }
-}
-
-export function writeCache<T>(pdfUrl: string, data: T, prefix = 'decision-'): void {
-    try {
-        fs.mkdirSync(CACHE_DIR, { recursive: true });
-        fs.writeFileSync(getCachePath(pdfUrl, prefix), JSON.stringify(data, null, 2));
-    } catch (err) {
-        console.warn('Failed to write extraction cache:', err);
-    }
-}
 
 // --- PDF extraction types ---
 
@@ -991,50 +966,6 @@ function hasCountedTally(tally: RawExtractedDecision['voteTally'] | undefined): 
     return !!tally && Object.values(tally).some(v => v !== null);
 }
 
-/**
- * Bumped whenever the prompt or the output schema changes what a reading means,
- * so a reading in the old shape is never served to code expecting the new one.
- * v4 retired the `clock_time` and `session_phase` anchor kinds and the free-text
- * `phase` that came with them. v5 read the item heading and the acting
- * secretary, and nulled the item number when the heading came back empty; v6
- * keeps the number — the cache holds the normalised result, so the readings
- * v5 nulled had to be retired with it. v7 keys the cache on the mayor name as
- * well; a v6 entry cannot be told apart, because a caller that named the mayor
- * and a caller that did not wrote to the same key. v8 keeps the anchor the page
- * states for a per-vote absence (v7 forced «this document») and reads a range
- * of decision numbers. v9 reads the last pages of a document whose decision the
- * front pages reached, so a v8 reading of a long document may lack what its
- * closing states; it also tells the reader about bodies that name every voter
- * on a split vote only. v10 takes the member list and the counts from the
- * closing pages only when both reads print the same decision number, so a v9
- * entry of a document with an annex may hold the annex's list. v11 sizes the
- * tail windows to the pages the front read left, so a v10 entry of a 26-45
- * page document may be `incomplete` over pages that v11 reads. v12 reads the
- * last page of the front window and up to two pages after it when the front
- * read says the closing block runs past it, so a v11 entry of a long document
- * may lack the rest of its member list and named votes.
- */
-export const EXTRACTION_SCHEMA_VERSION = 12;
-
-/** Everything besides the document that steers a reading, and so has to key its cache entry. */
-export interface ExtractionSteering {
-    /** Steers mayorPresent and presidedBy: the prompt appends "The city mayor is: …". */
-    mayorName?: string;
-    /** The body's conventions, appended to the prompt verbatim. */
-    hints?: string;
-}
-
-/**
- * The cache key. Two callers read the same document with different steering —
- * `pollDecisions` names the mayor, the scorer does not — so the steering is part
- * of the key. Without it, whichever ran first owned the entry both read.
- */
-export function extractionCacheKey(pdfUrl: string, steering?: ExtractionSteering): string {
-    const versioned = `${pdfUrl}#v${EXTRACTION_SCHEMA_VERSION}`;
-    const parts = [steering?.mayorName, steering?.hints].filter(Boolean);
-    if (parts.length === 0) return versioned;
-    return `${versioned}#${crypto.createHash('sha256').update(parts.join('\n')).digest('hex').slice(0, 8)}`;
-}
 
 /** A phase as the retired `session_phase` anchor stated it: the block as the page printed it. */
 function phaseFromFreeText(raw: unknown): AttendancePhase | null {
@@ -1088,6 +1019,7 @@ function readPdfPart(userPrompt: string, documentBase64: string, label: string, 
         model: EXTRACTION_MODEL,
         maxTokens: EXTRACTION_MAX_TOKENS,
         label,
+        cache: 'use',
     });
 }
 
@@ -1105,15 +1037,13 @@ function continuationPagesNote(pageIndices: number[], totalPages: number, frontP
 }
 
 export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string, skipCache?: boolean, hints?: string): Promise<ResultWithUsage<RawExtractedDecision> & { fromCache: boolean; warnings?: DecisionWarning[] }> {
-    const cacheKey = extractionCacheKey(pdfUrl, { mayorName, hints });
-    if (!skipCache) {
-        // Entries written before the warnings were cached have none.
-        const cached = readCache<RawExtractedDecision & { warnings?: DecisionWarning[] }>(cacheKey);
-        if (cached) {
-            const { warnings, ...reading } = cached;
-            return { result: withDefaults(reading), usage: { ...NO_USAGE }, fromCache: true, ...(warnings?.length && { warnings }) };
-        }
-    }
+    if (skipCache) return withoutCacheReads(() => extractDecisionFromPdf(pdfUrl, mayorName, false, hints));
+    const out = await extractUncached(pdfUrl, mayorName, hints);
+    // A cache hit reports no usage, so an extraction that cost nothing came entirely from recordings.
+    return { ...out, fromCache: out.usage.input_tokens === 0 && out.usage.output_tokens === 0 };
+}
+
+async function extractUncached(pdfUrl: string, mayorName: string | undefined, hints: string | undefined): Promise<ResultWithUsage<RawExtractedDecision> & { fromCache: boolean; warnings?: DecisionWarning[] }> {
 
     const pdfBuffer = await downloadPdfAsBuffer(pdfUrl);
     const srcDoc = await PDFDocument.load(pdfBuffer);
@@ -1135,7 +1065,6 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
         const { result: raw, usage } = await readPdfPart(userPrompt, base64, 'decision-extraction');
 
         const result = normalizeExtraction(raw);
-        writeCache(cacheKey, result);
         return { result, usage, fromCache: false };
     }
 
@@ -1167,7 +1096,6 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             // The front window stops at the decision; what the page prints
             // after it can sit on pages the window never reached.
             if (actualPages >= totalPages) {
-                writeCache(cacheKey, result);
                 return { result, usage: totalUsage, fromCache: false };
             }
             const warnings: DecisionWarning[] = [];
@@ -1207,7 +1135,6 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
                 }
             }
             if (closingPages.length === 0) {
-                writeCache(cacheKey, { ...result, ...(warnings.length > 0 && { warnings }) });
                 return { result, usage: totalUsage, fromCache: false, ...(warnings.length > 0 && { warnings }) };
             }
             console.log(`  Reading the closing on pages ${describePageRanges(closingPages)} of ${totalPages}...`);
@@ -1232,13 +1159,11 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             totalUsage = addUsage(totalUsage, closingUsage);
             const withClosing = withClosingFacts(result, normalizeExtraction(closingRaw));
             console.log(`  Closing added ${withClosing.voteDetails.length - result.voteDetails.length} named votes and ${withClosing.attendanceChanges.length - result.attendanceChanges.length} attendance changes`);
-            writeCache(cacheKey, { ...withClosing, ...(warnings.length > 0 && { warnings }) });
             return { result: withClosing, usage: totalUsage, fromCache: false, ...(warnings.length > 0 && { warnings }) };
         }
         if (actualPages >= totalPages) {
             console.log(`  Extraction still incomplete after all ${totalPages} pages`);
             const exhausted = { ...result, incomplete: true };
-            writeCache(cacheKey, exhausted);
             return { result: exhausted, usage: totalUsage, fromCache: false };
         }
 
@@ -1291,7 +1216,6 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
             const withNames = adoptLaterVoteNames(merged, laterWindows);
             if (withNames !== merged) console.log(`  Named votes adopted from a later window (${withNames.voteDetails.length - merged.voteDetails.length} names added to ${merged.voteDetails.length} already read)`);
             console.log(`  Extraction complete from pages ${windowStart + 1}-${windowEnd} (merged with front-page attendance)`);
-            writeCache(cacheKey, withNames);
             return { result: withNames, usage: totalUsage, fromCache: false };
         }
         // Windows after the decision are kept: they may hold the vote's named lists.
@@ -1304,6 +1228,5 @@ export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string,
     const unread = windowEnd > MAX_FRONT_PAGES ? `, pages ${MAX_FRONT_PAGES + 1}-${windowEnd} not read` : '';
     console.log(`  Progressive extraction stopped (front ${MAX_FRONT_PAGES} and ${laterWindows.length} tail windows of ${totalPages} pages${unread}), returning partial data`);
     const bestResult: RawExtractedDecision = { ...lastFrontResult!, incomplete: true };
-    writeCache(cacheKey, bestResult);
     return { result: bestResult, usage: totalUsage, fromCache: false };
 }
