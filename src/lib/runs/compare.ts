@@ -27,6 +27,7 @@ export function toSubjectViews(result: SubjectsResult): SubjectView[] {
         name: s.name,
         description: s.description,
         agendaItemIndex: typeof s.agendaItemIndex === 'number' ? s.agendaItemIndex : null,
+        agendaSectionIndex: s.agendaSection?.index ?? null,
         nonAgendaReason: s.agendaItemIndex === 'BEFORE_AGENDA' ? 'beforeAgenda' as const
             : s.agendaItemIndex === 'OUT_OF_AGENDA' ? 'outOfAgenda' as const : null,
         topic: s.topicLabel,
@@ -192,24 +193,41 @@ function collectSegmentSamples(from: SummarizeResult, to: SummarizeResult): Segm
     return picked.sort((a, b) => a.index - b.index);
 }
 
+const itemKey = (v: SubjectView) => `${v.agendaSectionIndex ?? '-'}:${v.agendaItemIndex}`;
+
 /**
- * Pairs the subjects of two runs of one meeting: by agenda index first, then by name
- * for what is left, each pair with its verdict.
+ * Agenda items keyed by section and number. A key two subjects share (a run that numbered
+ * twice) leaves the extras to name matching rather than dropping them.
+ */
+function byItem(views: SubjectView[], leftovers: SubjectView[]): Map<string, SubjectView> {
+    const out = new Map<string, SubjectView>();
+    for (const v of views) {
+        if (v.agendaItemIndex === null) continue;
+        if (out.has(itemKey(v))) leftovers.push(v);
+        else out.set(itemKey(v), v);
+    }
+    return out;
+}
+
+/**
+ * Pairs the subjects of two runs of one meeting: by agenda section and item first, then by
+ * name for what is left, each pair with its verdict.
  */
 export function matchSubjects(fromViews: SubjectView[], toViews: SubjectView[]): ComparisonData['subjects'] {
-    const fromByIndex = new Map(fromViews.filter(v => v.agendaItemIndex !== null).map(v => [v.agendaItemIndex, v]));
-    const toByIndex = new Map(toViews.filter(v => v.agendaItemIndex !== null).map(v => [v.agendaItemIndex, v]));
-
     const matched: MatchedSubject[] = [];
     const fromOnly: SubjectView[] = fromViews.filter(v => v.agendaItemIndex === null);
     const toOnly: SubjectView[] = toViews.filter(v => v.agendaItemIndex === null);
+    const fromByItem = byItem(fromViews, fromOnly);
+    const toByItem = byItem(toViews, toOnly);
 
-    const allIndices = [...new Set([...fromByIndex.keys(), ...toByIndex.keys()])].sort((a, b) => a! - b!);
-    for (const index of allIndices) {
-        const f = fromByIndex.get(index);
-        const t = toByIndex.get(index);
+    const order = (key: string) => { const [section, item] = key.split(':'); return [section === '-' ? -1 : Number(section), Number(item)]; };
+    const allKeys = [...new Set([...fromByItem.keys(), ...toByItem.keys()])]
+        .sort((a, b) => { const [sa, ia] = order(a); const [sb, ib] = order(b); return sa - sb || ia - ib; });
+    for (const key of allKeys) {
+        const f = fromByItem.get(key);
+        const t = toByItem.get(key);
         if (f && t) {
-            matched.push({ agendaItemIndex: index!, matchedBy: 'index', from: f, to: t, ...classifySubject(f, t) });
+            matched.push({ agendaItemIndex: f.agendaItemIndex!, matchedBy: 'index', from: f, to: t, ...classifySubject(f, t) });
         } else if (f) {
             fromOnly.push(f);
         } else if (t) {

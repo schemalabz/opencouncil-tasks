@@ -27,6 +27,8 @@ export interface SubjectView {
     name: string;
     description: string;
     agendaItemIndex: number | null;
+    /** Sectioned agendas restart their numbering, so an item is identified by section and number. */
+    agendaSectionIndex: number | null;
     nonAgendaReason: 'beforeAgenda' | 'outOfAgenda' | null;
     topic: string | null;
     withdrawn: boolean;
