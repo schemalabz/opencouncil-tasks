@@ -156,6 +156,51 @@ export interface ProcessAgendaRequest extends TaskRequest {
     cityLanguage: CityLanguage;
     country?: CountryCode;
     date: string;
+    /**
+     * The body that holds the meeting, so its meeting can be told from another
+     * one in the same agenda. A meeting with no body is the council's: type
+     * only, no name.
+     */
+    administrativeBody?: { name?: string; type: AdministrativeBodyType };
+    /** The meeting's start in the city's time (HH:MM): two meetings of one body on one day differ by the hour. */
+    time?: string;
+}
+
+export type AdministrativeBodyType = 'council' | 'committee' | 'community';
+/** The kind of meeting the invitation names (opencouncil's MeetingKind). Urgency is not a kind: `urgent` holds it. */
+export type MeetingKind = 'ordinary' | 'special' | 'accountability' | 'activityReport' | 'budget' | 'presidencyElection' | 'financialAccounts';
+/** How the sitting is held (opencouncil's MeetingFormat). */
+export type MeetingFormat = 'inPerson' | 'remote' | 'hybrid' | 'byCirculation';
+
+/**
+ * A meeting as its invitation states it. Each value is null when the
+ * invitation does not state it, and carries the phrase it was read from.
+ */
+export interface AgendaMeetingRecord {
+    kind: MeetingKind | null;
+    kindEvidence: string | null;
+    /** Convened urgently («κατεπείγουσα», «έκτακτη»), for any kind; false when the invitation does not say so. */
+    urgent: boolean;
+    urgentEvidence: string | null;
+    sessionNumber: number | null;
+    sessionNumberEvidence: string | null;
+    format: MeetingFormat | null;
+    formatEvidence: string | null;
+}
+
+/** One of the meetings that an agenda calls: its record, and who holds it and when, as printed. */
+export interface AgendaMeeting extends AgendaMeetingRecord {
+    municipality: string | null;
+    bodyName: string | null;
+    /**
+     * Whether the printed body is the request's body (sameBody, else its kind
+     * of body); null when the body is not printed or the request names none.
+     */
+    ofThisBody: boolean | null;
+    /** YYYY-MM-DD */
+    date: string | null;
+    /** HH:MM */
+    time: string | null;
 }
 
 export interface SubjectContext {
@@ -242,6 +287,14 @@ export interface Subject {
 export interface ProcessAgendaResult {
     subjects: Subject[];
     warnings: TaskWarning[];
+    /** The request's meeting; null when the invitation could not be read. The subjects stand on their own. */
+    meetingRecord: AgendaMeetingRecord | null;
+    /**
+     * Every meeting the agenda calls, with how many of the subjects belong to
+     * it. More than one means the subjects of other meetings are among
+     * `subjects`: a record holds one meeting.
+     */
+    meetingsInAgenda: Array<AgendaMeeting & { subjectCount: number; isThisMeeting: boolean }>;
 }
 
 /*

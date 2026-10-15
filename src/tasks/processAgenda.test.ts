@@ -14,10 +14,13 @@ import {
     normalizeExtractedTitles,
     fillMissingAgendaIndices,
     normalizeExtractedSections,
+    separateMeetingSections,
+    assignMeetings,
     warnDuplicateAgendaPositions,
     getSystemPrompt,
     extractedSubjectToApiSubject,
-    extractAgendaSubjects,
+    extractAgenda,
+    processAgenda,
     AGENDA_EXTRACTION_SCHEMA,
     type ExtractedSubject,
 } from "./processAgenda.js";
@@ -88,15 +91,15 @@ describe("getSystemPrompt", () => {
 
 describe("AGENDA_EXTRACTION_SCHEMA", () => {
     it("declares agendaItemTitle as nullable and requires it", () => {
-        expect(AGENDA_EXTRACTION_SCHEMA.items.properties.agendaItemTitle).toEqual({ type: ["string", "null"] });
-        expect(AGENDA_EXTRACTION_SCHEMA.items.required).toContain("agendaItemTitle");
+        expect(AGENDA_EXTRACTION_SCHEMA.properties.subjects.items.properties.agendaItemTitle).toEqual({ type: ["string", "null"] });
+        expect(AGENDA_EXTRACTION_SCHEMA.properties.subjects.items.required).toContain("agendaItemTitle");
     });
 
     it("declares the section fields as nullable and requires them", () => {
-        expect(AGENDA_EXTRACTION_SCHEMA.items.properties.agendaSectionIndex).toEqual({ type: ["number", "null"] });
-        expect(AGENDA_EXTRACTION_SCHEMA.items.properties.agendaSectionTitle).toEqual({ type: ["string", "null"] });
-        expect(AGENDA_EXTRACTION_SCHEMA.items.required).toContain("agendaSectionIndex");
-        expect(AGENDA_EXTRACTION_SCHEMA.items.required).toContain("agendaSectionTitle");
+        expect(AGENDA_EXTRACTION_SCHEMA.properties.subjects.items.properties.agendaSectionIndex).toEqual({ type: ["number", "null"] });
+        expect(AGENDA_EXTRACTION_SCHEMA.properties.subjects.items.properties.agendaSectionTitle).toEqual({ type: ["string", "null"] });
+        expect(AGENDA_EXTRACTION_SCHEMA.properties.subjects.items.required).toContain("agendaSectionIndex");
+        expect(AGENDA_EXTRACTION_SCHEMA.properties.subjects.items.required).toContain("agendaSectionTitle");
     });
 });
 
@@ -131,6 +134,7 @@ describe("extractedSubjectToApiSubject", () => {
             topicLabel: null,
             topicImportance: "normal",
             proximityImportance: "none",
+            meetingIndex: 0,
         };
 
         await extractedSubjectToApiSubject(subject, "Αθήνα", "el", undefined, "2026-09-05");
@@ -156,6 +160,7 @@ describe("extractedSubjectToApiSubject", () => {
             topicLabel: null,
             topicImportance: "normal",
             proximityImportance: "none",
+            meetingIndex: 0,
         };
 
         await extractedSubjectToApiSubject(base, "Αθήνα", "el", undefined, "2026-09-05");
@@ -194,6 +199,7 @@ describe("extractAgendaSubjects", () => {
                 topicLabel: null,
                 topicImportance: "normal",
                 proximityImportance: "none",
+                meetingIndex: 0,
             },
             {
                 name: "Παρέα",
@@ -207,17 +213,18 @@ describe("extractAgendaSubjects", () => {
                 topicLabel: null,
                 topicImportance: "normal",
                 proximityImportance: "none",
+                meetingIndex: 0,
             },
         ];
         vi.mocked(fetchAgendaDocument).mockResolvedValue({ kind: "pdf", base64: "" });
         vi.mocked(aiChat).mockResolvedValue({
-            result: modelItems,
+            result: { meetings: [], subjects: modelItems },
             usage,
             resolvedModel: "m",
             batchMode: false,
-        } as ResultWithUsage<Omit<ExtractedSubject, "speakerContributions">[]>);
+        } as never);
 
-        const extraction = await extractAgendaSubjects({
+        const extraction = await extractAgenda({
             agendaUrl: "https://example.org/agenda.pdf",
             people: [],
             topicLabels: [],
@@ -237,8 +244,8 @@ describe("extractAgendaSubjects", () => {
         expect(extraction.extracted[0].agendaItemTitle).toBe("ΤΙΤΛΟΣ Α");
         // The second item's missing index is filled to 1, the first number
         // within its own (renumbered) section.
-        expect(extraction.warnings).toHaveLength(1);
-        expect(extraction.warnings[0].code).toBe("MISSING_AGENDA_ITEM_INDEX");
+        // No meeting was returned: the record is unread, the subjects stand.
+        expect(extraction.warnings.map(w => w.code)).toEqual(["MISSING_AGENDA_ITEM_INDEX", "MEETING_RECORD_UNREAD"]);
         expect(extraction.extracted.map(s => s.speakerContributions)).toEqual([[], []]);
         expect(extraction.extraction.usage).toEqual(usage);
     });
@@ -534,5 +541,123 @@ describe("fillMissingAgendaIndices", () => {
 
         expect(subjects.map(s => s.agendaItemIndex)).toEqual([1, 2, 2]);
         expect(warnings.map(w => w.code)).toEqual(["MISSING_AGENDA_ITEM_INDEX"]);
+    });
+});
+
+describe("processAgenda — the meetings of the agenda", () => {
+    const request = {
+        agendaUrl: "https://example.org/agenda.pdf",
+        callbackUrl: "http://localhost/cli/process-agenda",
+        people: [],
+        topicLabels: [],
+        cityName: "Ξυλόκαστρο",
+        cityLanguage: "el" as const,
+        date: "2026-02-25T18:00:00.000Z",
+        time: "20:00",
+        administrativeBody: { name: "Δημοτικό Συμβούλιο", type: "council" as const },
+    };
+    const usage = { input_tokens: 1, output_tokens: 1 } as Anthropic.Messages.Usage;
+    const meeting = (overrides: object) => ({
+        municipality: "ΔΗΜΟΣ ΞΥΛΟΚΑΣΤΡΟΥ - ΕΥΡΩΣΤΙΝΗΣ", bodyName: "Δημοτικό Συμβούλιο", date: "2026-02-25", time: "", kind: "ordinary", kindEvidence: "", urgent: false, urgentEvidence: "", sessionNumber: null,
+        sessionNumberEvidence: "", format: "inPerson", formatEvidence: "στην αίθουσα", ...overrides,
+    });
+    const subject = (name: string, meetingIndex: number) => ({
+        name, description: "", agendaItemTitle: name, agendaItemIndex: 1, agendaSectionIndex: null, agendaSectionTitle: null,
+        locationText: null, introducedByPersonId: null, topicLabel: null, topicImportance: "normal", proximityImportance: "none", meetingIndex,
+    });
+
+    it("reads the meetings and their subjects in one call, picks this meeting by its time, and says how many subjects each has", async () => {
+        vi.mocked(fetchAgendaDocument).mockResolvedValue({ kind: "pdf", base64: "" });
+        vi.mocked(enrichSubjectData).mockResolvedValue({ result: { location: null, context: null }, usage, resolvedModel: "m", batchMode: false } as never);
+        vi.mocked(aiChat).mockClear().mockResolvedValue({
+            result: {
+                meetings: [
+                    meeting({ time: "19:00", kind: "accountability", kindEvidence: "Ειδική Συνεδρίαση Λογοδοσίας" }),
+                    meeting({ time: "20:00", sessionNumber: 4, sessionNumberEvidence: "4η Συνεδρίαση" }),
+                ],
+                subjects: [subject("Απολογισμός δημοτικής αρχής", 0), subject("Έγκριση μελέτης", 1), subject("Κοπή δέντρων", 1)],
+            },
+            usage, resolvedModel: "m", batchMode: false,
+        } as never);
+
+        const result = await processAgenda(request, () => { });
+
+        expect(vi.mocked(aiChat)).toHaveBeenCalledTimes(1);
+        expect(result.meetingRecord).toMatchObject({ kind: "ordinary", urgent: false, sessionNumber: 4 });
+        expect(result.meetingsInAgenda.map(m => [m.kind, m.time, m.subjectCount, m.isThisMeeting])).toEqual([
+            ["accountability", "19:00", 1, false],
+            ["ordinary", "20:00", 2, true],
+        ]);
+        // All subjects are kept: a record holds one meeting, and a person is told.
+        expect(result.subjects).toHaveLength(3);
+        expect(result.warnings.map(w => w.code)).toContain("MULTIPLE_MEETINGS");
+    });
+});
+
+describe("separateMeetingSections", () => {
+    const meetings = [{ bodyName: "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ" }, { bodyName: "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ" }];
+
+    it("gives two invitations in one file a section each, so their numbers no longer collide (#366)", () => {
+        // Σπάρτη jan20_2026: two committee invitations, 08:30 and 08:35, each numbered from 1.
+        const subjects = [0, 0, 0, 1, 1].map((meetingIndex, i) => ({
+            name: `θέμα ${i}`, agendaItemIndex: [1, 2, 3, 1, 2][i], agendaSectionIndex: null, agendaSectionTitle: null, meetingIndex,
+        }));
+
+        separateMeetingSections(subjects, meetings);
+        const warnings = normalizeExtractedSections(subjects);
+        warnings.push(...warnDuplicateAgendaPositions(subjects));
+
+        expect(subjects.map(s => [s.agendaSectionIndex, s.agendaItemIndex])).toEqual([[1, 1], [1, 2], [1, 3], [2, 1], [2, 2]]);
+        expect(subjects.map(s => s.agendaSectionTitle)).toEqual(Array(5).fill("ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ"));
+        expect(warnings).toEqual([]);
+    });
+
+    it("leaves sections alone when no section holds two meetings", () => {
+        const subjects = [
+            { agendaSectionIndex: null, agendaSectionTitle: null, meetingIndex: 0 },
+            { agendaSectionIndex: 1, agendaSectionTitle: "Α. Θέματα", meetingIndex: 1 },
+            { agendaSectionIndex: 2, agendaSectionTitle: "Β. Τακτικά θέματα", meetingIndex: 1 },
+        ];
+        const before = structuredClone(subjects);
+
+        separateMeetingSections(subjects, meetings);
+
+        expect(subjects).toEqual(before);
+    });
+
+    it("does nothing for an agenda of one meeting", () => {
+        const subjects = [{ agendaSectionIndex: null, agendaSectionTitle: null, meetingIndex: 0 }];
+        separateMeetingSections(subjects, [{ bodyName: "Δημοτικό Συμβούλιο" }]);
+        expect(subjects[0].agendaSectionIndex).toBeNull();
+    });
+
+    it("titles a meeting's split section with its own body, and keeps each meeting's sections apart", () => {
+        // Meeting 0 has two sections of its own; meeting 1's items reuse section 1.
+        const subjects = [
+            { name: "α", agendaItemIndex: 1, agendaSectionIndex: 1, agendaSectionTitle: "Α. Τακτικά" as string | null, meetingIndex: 0 },
+            { name: "β", agendaItemIndex: 1, agendaSectionIndex: 2, agendaSectionTitle: "Β. Έκτακτα", meetingIndex: 0 },
+            { name: "γ", agendaItemIndex: 1, agendaSectionIndex: 1, agendaSectionTitle: null, meetingIndex: 1 },
+            { name: "δ", agendaItemIndex: 2, agendaSectionIndex: 1, agendaSectionTitle: null, meetingIndex: 1 },
+        ];
+        separateMeetingSections(subjects, [{ bodyName: "ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ" }, { bodyName: "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ" }]);
+        const warnings = normalizeExtractedSections(subjects);
+        warnings.push(...warnDuplicateAgendaPositions(subjects));
+
+        expect(subjects.map(s => [s.agendaSectionIndex, s.agendaSectionTitle, s.agendaItemIndex])).toEqual([
+            [1, "Α. Τακτικά", 1], [2, "Β. Έκτακτα", 1], [3, "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ", 1], [3, "ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ", 2],
+        ]);
+        expect(warnings).toEqual([]);
+    });
+});
+
+describe("assignMeetings", () => {
+    const subject = (meetingIndex: number | null, agendaSectionIndex: number | null) => ({
+        name: "θέμα", description: "", agendaItemTitle: null, agendaItemIndex: 1, agendaSectionIndex, agendaSectionTitle: null,
+        introducedByPersonId: null, locationText: null, topicLabel: null, topicImportance: "normal" as const, proximityImportance: "none" as const, meetingIndex,
+    });
+
+    it("gives a subject with a wrong meeting the meeting of its section, else the fallback, never a section of its own", () => {
+        const assigned = assignMeetings([subject(1, 2), subject(7, 2), subject(null, 5)], 2, 0);
+        expect(assigned.map(s => s.meetingIndex)).toEqual([1, 1, 0]);
     });
 });
