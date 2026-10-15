@@ -54,7 +54,7 @@ flowchart LR
     RB -- "eval review apply" --> REG[("cases and<br/>failure-mode registry<br/>(git, via PR)")]
 ```
 
-A **failure mode** is a named way a task goes wrong (`evals/failure-modes/FM-*.yaml`) with a detector and labelled examples it must and must not fire on. Monitored modes run after every production task; their rates feed PostHog alerts, which post to Discord. What fires is harvested into candidates; a person settles them on a review page, and `apply` turns the answers into cases and detector examples.
+A **failure mode** is a named way a task goes wrong (`evals/failure-modes/FM-*.yaml`) with a detector and labelled examples it must and must not fire on. Monitored modes run after every production task; their failures feed PostHog alerts, which post to Discord. What fires is harvested into candidates; a person settles them on a review page, and `apply` turns the answers into cases and detector examples.
 
 ### Ten-minute tour
 
@@ -123,11 +123,11 @@ npx tsx src/cli.ts eval gate decisions.reading <runA> <runB>
 
 Runs go to `.eval-runs/<suite>/<runId>/` and the archive. `--reps` takes fresh samples (cache reads are off for live suite runs). `--replay` serves a run from recordings with `--live <glob>` keeping chosen labels live, which is how a prompt change to one phase is tested without paying for the others. A phase suite keeps its own labels live unless told otherwise; `--replay --no-live` serves every call from the recording ($0), and a variant that changes a request then shows up as a replay miss in `errors.jsonl`, never as a scored row. `--resume <runId>` continues an interrupted run. The runner refuses a row whose served model differs from the one requested. `eval report <suite> <runId>` prints a suite's own summary of a run where it has one.
 
-`compare` pairs rows by case and repeat (item fields such as `subject[#3 …]` pool into one family, `subject`, whose units are case × item): per-field accuracy with exact McNemar tests, cluster bootstrap intervals (cases from one body are not independent), Holm correction, and the clusters where regressions concentrate. `gate` applies the suite's thresholds and names what failed. A gate never passes on drafted values alone: with no human-tier holdout values it prints `NEEDS_REVIEW`, as it does while fewer cases carry them than the gate's `minHumanHoldoutCases`. A human-tier holdout unit that A scored and B did not (B errored, was truncated or left it unscored) fails the gate: pairing would otherwise drop exactly the cases B breaks. A run scored against expectations its cases no longer hold (a value corrected or a tier changed since; its manifest's `caseSetSha` covers each case's id, split, and expected values with their tiers) prints `NEEDS_REVIEW`: re-run it against today's cases.
+`compare` pairs rows by case and repeat (item fields such as `subject[#3 …]` pool into one family, `subject`, whose units are case × item): per-field accuracy with exact McNemar tests, cluster bootstrap intervals (cases from one body are not independent), Holm correction, and the clusters where regressions concentrate. `gate` applies the suite's thresholds and names what failed. A gate never passes on drafted values alone: with no human-tier holdout values it prints `NEEDS_REVIEW`, as it does while fewer cases carry them than the gate's `minHumanHoldoutCases`. A human-tier holdout unit that A scored and B did not (B errored, was truncated or left it unscored) fails the gate: pairing would otherwise drop exactly the cases B breaks. A run scored against expectations its cases no longer hold (a value corrected or a tier changed since; its manifest's `caseSetSha` covers each case's id, split, and expected values with their tiers) prints `NEEDS_REVIEW`: re-run it against today's cases. So does an unfinished run (its manifest's status is not `complete`). A case counts as right only on a strict majority of its repeats.
 
 ## Add a case
 
-A case earns its place when it can break the task in a way no existing case covers. Write the file by hand or with `eval cases migrate`; `eval lint` checks the schema, that splits never change, and that human tiers carry who and when. Drafted expectations are fine to add freely; a gate only reads human tiers.
+A case earns its place when it can break the task in a way no existing case covers. Write the file by hand, or build it from a recorded run (`eval cases from-run`), a meeting (`eval cases from-meeting`), people's corrections (`eval harvest --source opencouncil`) or a review batch (`eval review apply`); `eval lint` checks the schema, that splits never change, and that human tiers carry who and when. Drafted expectations are fine to add freely; a gate only reads human tiers.
 
 ## Add a failure mode
 
@@ -169,7 +169,7 @@ Novelty is deterministic: a decision call whose city, or whose body in a covered
 
 ## Imported truth from opencouncil
 
-People's corrections in opencouncil are `imported` truth with no review. opencouncil's `scripts/export-eval-signals.ts` reads them from a **local copy** of its database (it refuses any URL that is not a socket or loopback host, and never reads `DATABASE_URL`) and writes JSONL signals `{kind, action, ids, before, after, by, at, evidence}`; `--contexts` adds what a case is rebuilt from (the meeting's poll request, its public payload, the fixTranscript request).
+People's corrections in opencouncil are `imported` truth with no review. opencouncil's `scripts/export-eval-signals.ts` (on its `feat/eval-signals` branch until it is merged) reads them from a **local copy** of its database (it refuses any URL that is not a socket or loopback host, and never reads `DATABASE_URL`) and writes JSONL signals `{kind, action, ids, before, after, by, at, evidence}`; `--contexts` adds what a case is rebuilt from (the meeting's poll request, its public payload, the fixTranscript request).
 
 ```bash
 # in opencouncil
@@ -178,7 +178,7 @@ npx tsx scripts/export-eval-signals.ts --db 'postgresql://reader@localhost:5495/
 npx tsx src/cli.ts eval harvest --source opencouncil --signals .eval-signals/signals/s.jsonl
 ```
 
-Harvested cases go to `.eval-signals/cases/<suite>/` (gitignored), which every case lookup reads beside `evals/cases`; once reviewed they move into `evals/cases/` with the rest (the decision-matching and speaker-id cases have). Harvesting again, like `cases from-run` and `from-meeting`, keeps a case's split, history, tags and every value a person settled; a fresh value replaces a settled one only when a person settled it later. Only writes a person makes count:
+Harvested cases go to `.eval-signals/cases/<suite>/` (gitignored), which every case lookup reads beside `evals/cases`; once reviewed they move into `evals/cases/` with the rest. Harvesting again, like `cases from-run` and `from-meeting`, keeps a case's split, history, tags and every value a person settled; a fresh value replaces a settled one only when a person settled it later. Only writes a person makes count:
 
 | Signal | Stored as | Why it is a person's |
 | --- | --- | --- |
@@ -203,7 +203,7 @@ After each successful non-eval task, the server runs the code detectors of every
 - **PostHog destination**: with `DISCORD_ALERT_WEBHOOK` set, one destination, `check alerts → Discord`, posts every firing `check:*` alert to Discord (scope `hog_function:write`). The webhook stays in the environment: only its hash is in the fingerprint. `--test-destination` sends a sample alert through it.
 - Nothing is ever deleted: orphaned objects are listed for a person. `--only langfuse|posthog` limits both plan and apply.
 
-The alert is an approximation of the text, printed per item: PostHog compares a period with the one before, not a 30-day baseline; a minimum volume is for the reader to check; whether a city-breakdown alert tests each city is unconfirmed; Langfuse alerts (no API) are set up by hand. Every alert reads the last completed interval, so an "any fail" alert reports within about 70 minutes: PostHog's `check_ongoing_interval` makes it read only the interval still filling up, which misses a fail from earlier in the previous hour.
+Every alert reads the last completed hour, so an "any fail" alert reports within about 70 minutes. Langfuse alerts have no API and are set up by hand.
 
 ```bash
 npx tsx src/cli.ts eval checks run <traceId> [--all-statuses] [--record] [-v]
@@ -221,7 +221,8 @@ npx tsx src/cli.ts runs call <traceId> '#1' -p request -x       # one call, prom
 | `ARCHIVE_URL` | `s3://bucket` or `file:///path`. Unset, nothing is archived and no responses are stored (a server must not fill its own disk); `eval` commands then default to `archive/` under the data dir. `ARCHIVE_S3_ENDPOINT` / `ARCHIVE_S3_KEY` / `ARCHIVE_S3_SECRET` for S3-compatible storage, falling back to the `DO_SPACES_*` credentials. `scripts/archive-minio.sh start` runs a local MinIO. |
 | `TELEMETRY_SINKS` | Comma list of `archive`, `langfuse`, `posthog` (default: all three; each is a no-op without its credentials). |
 | `LANGFUSE_*` | See [observability.md](./observability.md). |
-| `POSTHOG_PROJECT_TOKEN`, `POSTHOG_HOST` | PostHog ingestion (the `phc_` token). `eval telemetry verify` also needs `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`, `POSTHOG_API_HOST`. |
+| `POSTHOG_PROJECT_TOKEN`, `POSTHOG_HOST` | PostHog ingestion (the `phc_` token). `eval sync` and `eval telemetry verify` also need `POSTHOG_PERSONAL_API_KEY`, `POSTHOG_PROJECT_ID`, `POSTHOG_API_HOST`. |
+| `DISCORD_ALERT_WEBHOOK` | The Discord webhook `eval sync` points the PostHog alert destination at. |
 
 ## Suites
 
@@ -230,7 +231,7 @@ npx tsx src/cli.ts runs call <traceId> '#1' -p request -x       # one call, prom
 - `decisions.extraction` — attendance, votes and subject extracted from the minutes. Needs the conventions text production sends (`--hints-file`). Conventions: [decision-extraction-eval.md](./decision-extraction-eval.md).
 - `decisions.matching` — a meeting's decision window (its poll request, links hidden) through phase-0 reading, partition and the resolvers. `link[<subjectId>]`: a person's link (`imported`), the task's own or no link (`drafted`); `reject[<ada>]`: a dismissed candidate must not be proposed again. Readings replay from recordings (an unrecorded one is read once); the resolvers stay live. `eval report` prints recall and precision. About $0.1–0.3 per meeting live, resolvers alone ~$0.03.
 - `fix.speaker-id` — speaker identification from the transcript text, one meeting per case (`eval cases from-meeting fix.speaker-id <city/meeting | payload.json>`, or harvested). `speaker[<tagId>]`: a reviewer's tag is `imported`, an untouched voiceprint match `drafted`. Variant `params`: `anchor`, `roster`, `chunkChars`; `eval report` prints the backtest tables ([speaker-identification-backtest.md](./speaker-identification-backtest.md)).
-- `summarize.contributions`, `summarize.context`, `summarize.e2e` — a case is a recorded summarize run (`replay: <traceId>`; its archived input is the request), cluster = city. `eval cases from-run <suite> <traceId…>` writes one. The phase suites replay the recording with only their own labels live (`contributions:*`, `subject-context-search:*`); `e2e` runs every phase live unless given `--replay --live`. Each subject is scored against the recording's own output (`drafted`) with the `runs compare` verdicts: `identical` and `cosmetic` agree, `structural` disagrees, a lost subject is missing. **These scores measure change against the recording, not correctness**: a structural change can be an improvement, which is what `pairwise` review is for. Cost: replaying everything is free; contributions live is about $0.1–1 per meeting.
+- `summarize.contributions`, `summarize.context`, `summarize.e2e` — a case is a recorded summarize run (`replay: <traceId>`; its archived input is the request), cluster = city. `eval cases from-run <suite> <traceId…>` writes one. The phase suites replay the recording with only their own labels live (`contributions:*`, `subject-context-search:*`); `e2e` runs every phase live unless given `--replay --live`. Each subject is scored against the recording's own output (`drafted`) with the `runs compare` verdicts: `identical` and `cosmetic` agree, `structural` disagrees, a lost subject is missing; `extra` disagrees when the output holds subjects the recording didn't (invented or duplicated). **These scores measure change against the recording, not correctness**: a structural change can be an improvement, which is what `pairwise` review is for. Cost: replaying everything is free; contributions live is about $0.1–1 per meeting.
 - `agenda.extraction` — processAgenda's extraction phase alone (agenda document → items, through `extractAgenda`; no enrichment runs). Each item, matched by section and number and then by title, is `identical`, `changed` (which of `title`, `number`, `section`, `kind` differ) or missing; `extra` disagrees when the output holds items the recording didn't. The document is downloaded from the request's `agendaUrl` on every run.
 - `agenda.context` — processAgenda's subject context search, scored exactly as `summarize.context`; the context failure modes (FM-0001, FM-0002) list both suites, so one detector checks both.
 - `fix.transcript` — fixTranscript's text corrections alone (`transcript-fix`, through `correctTranscript`; the speaker identification that reads them is not run). One field per utterance of the request, `utterance[<utteranceId>]`, agreeing only when the output's text equals the expected text once whitespace and Unicode form are normalised; the detail gives the normalised edit distance and whether a miss moved toward the expected text from `before`. A run recorded without a meeting needs `eval cases from-run fix.transcript <traceId> --meeting <cityId/meetingId>`.
@@ -239,7 +240,7 @@ All three take their cases from recorded runs (`eval cases from-run`) and replay
 
 ### What's needed for gate-grade cases
 
-`evals/gates/agenda.extraction.yaml` and `evals/gates/fix.transcript.yaml` are only meaningful once each suite has at least five holdout cases carrying human-tier values (`minHumanHoldoutCases: 5`). Those values come from people's corrections in opencouncil, imported as `imported` expectations with `by`, `at`, `source` and `signal` (the opencouncil signal source, S5):
+`evals/gates/agenda.extraction.yaml` and `evals/gates/fix.transcript.yaml` are only meaningful once each suite has at least five holdout cases carrying human-tier values (`minHumanHoldoutCases: 5`). Those values come from people's corrections in opencouncil, imported as `imported` expectations with `by`, `at`, `source` and `signal` (the opencouncil signal source):
 
 | Suite | opencouncil signal | Becomes |
 | --- | --- | --- |
