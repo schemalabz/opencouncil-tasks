@@ -1,0 +1,15 @@
+{
+  "kind": "must-not-fire",
+  "note": "Sentence from a production summarize v7 run (zografou/oct13_(3)_2026, after #109), placed in a minimal response",
+  "input": {
+    "label": "contributions:Τέλη διαφήμισης 2027",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"speakerContributions\": [{\"speakerId\": \"ab12cd34\", \"text\": \"Η τροποποίηση είναι υποχρεωτική βάσει νόμου, καθώς η προηγούμενη απόφαση που είχε εγκριθεί ομόφωνα υπερέβαινε το νόμιμο όριο.\"}]}"
+    }
+  }
+}
