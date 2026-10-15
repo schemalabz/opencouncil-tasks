@@ -1,0 +1,15 @@
+{
+  "kind": "must-fire",
+  "note": "zografou/sep8_2026 recording before #109 (trace b0241d6e)",
+  "input": {
+    "label": "batch-processing:1/1",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Συμπληρωματική εξειδίκευση πίστωσης για τους 39ους Πανελλήνιους Θεατρικούς Αγώνες Ερασιτεχνικών Θιάσων. Εγκρίθηκε ομόφωνα.\"}]}"
+    }
+  }
+}

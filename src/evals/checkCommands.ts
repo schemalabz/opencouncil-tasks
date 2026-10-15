@@ -47,22 +47,23 @@ export function registerCheckCommands(evalCmd: Command): void {
     checks.command('backfill [slugs...]')
         .description("Run modes' detectors over archived runs, in one pass, to measure how often each fires before enabling an alert. No slugs: every monitored mode")
         .option('--all-statuses', 'with no slugs: candidate modes too')
-        .option('--since <days>', 'how far back', '90')
-        .option('--env <env>', `one of ${RUN_ENVS.join(', ')}`, 'production')
+        .option('--since <days>', 'how far back', parseIntOption, 90)
+        .option('--env <env>', `one of ${RUN_ENVS.join(', ')}`, parseEnvOption, 'production')
         .option('--task <taskType>', 'only runs of this task')
-        .option('--examples <n>', 'example trace ids to print per mode', '10')
-        .action(async (slugs: string[], o: { allStatuses?: boolean; since: string; env: string; task?: string; examples: string }) => {
+        .option('--examples <n>', 'example trace ids to print per mode', parseIntOption, 10)
+        .option('--evidence', "print each example's evidence (what the detector matched)")
+        .action(async (slugs: string[], o: { allStatuses?: boolean; since: number; env: RunEnv; task?: string; examples: number; evidence?: boolean }) => {
             const modes = slugs.length
                 ? slugs.map(slug => modeBySlug(slug) ?? (() => { throw new Error(`No failure mode with slug ${slug}`); })())
                 : (o.allStatuses ? loadModes() : monitoredModes());
             const tally = new Map(modes.map(m => [m.slug, { checked: 0, fired: 0, unknown: 0, examples: [] as string[], why: new Map<string, number>() }]));
             let runs = 0;
-            for await (const archived of iterateArchivedRuns({ sinceDays: Number(o.since), env: o.env as RunEnv, task: o.task })) {
+            for await (const archived of iterateArchivedRuns({ sinceDays: o.since, env: o.env, task: o.task })) {
                 runs++;
                 for (const r of await runChecksOnRun({ run: archived.run, calls: archived.calls, result: archived.result }, modes)) {
                     const t = tally.get(r.slug)!;
                     t.checked++;
-                    if (r.result === 'fail') { t.fired++; if (t.examples.length < Number(o.examples)) t.examples.push(`${r.traceId} ${r.label ?? ''}`); }
+                    if (r.result === 'fail') { t.fired++; if (t.examples.length < o.examples) t.examples.push(`${r.traceId} ${r.label ?? ''}${o.evidence && r.evidence ? `\n      ${r.evidence.slice(0, 240)}` : ''}`); }
                     if (r.result === 'unknown') {
                         t.unknown++;
                         // Evidence names the call's specifics after a colon; the reason is what precedes it.
