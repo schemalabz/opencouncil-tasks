@@ -88,6 +88,26 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
     }));
 }
 
+/**
+ * Keep an outcome that an earlier batch wrote. A batch writes an outcome only
+ * for a decision it shows, so a later batch that returns the same subject sends
+ * null. New text from a later batch replaces the earlier text. A withdrawn
+ * subject decided nothing and keeps null. Mutates `returned`; returns how many
+ * outcomes it kept.
+ */
+export function keepEarlierOutcomes(previous: SubjectInProgress[], returned: SubjectInProgress[]): number {
+    let kept = 0;
+    for (const subject of returned) {
+        if (subject.outcome || subject.withdrawn) continue;
+        const earlier = previous.find(s => s.id === subject.id)?.outcome;
+        if (earlier) {
+            subject.outcome = earlier;
+            kept++;
+        }
+    }
+    return kept;
+}
+
 // convertRangesToUtteranceStatuses function has been DELETED
 // Utterance statuses are now generated directly by the LLM in batch processing
 // No conversion from ranges is needed anymore

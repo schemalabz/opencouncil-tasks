@@ -4,8 +4,10 @@ import {
   buildUtteranceIndexMap,
   getStatusEmoji,
   splitTranscript,
-  initializeSubjectsFromExisting
+  initializeSubjectsFromExisting,
+  keepEarlierOutcomes
 } from './utils.js';
+import type { SubjectInProgress } from './types.js';
 
 describe('buildUtteranceIndexMap', () => {
   it('builds chronological index from transcript segments', () => {
@@ -138,6 +140,16 @@ describe('initializeSubjectsFromExisting', () => {
     expect(result[0].agendaItemIndex).toBe(1);
   });
 
+  it('starts every subject without an outcome, even one the app stored', () => {
+    // keepEarlierOutcomes never lets a later batch erase an outcome, so a stored one
+    // would outlive a re-run whose transcript no longer states it.
+    const base = { name: 'Budget', description: 'Annual budget', agendaItemIndex: 1, introducedByPersonId: null, locationText: null, topicLabel: null };
+
+    const result = initializeSubjectsFromExisting([{ ...base, id: 'subj-1', outcome: 'Εγκρίθηκε ο προϋπολογισμός.' }]);
+
+    expect(result[0].outcome).toBeUndefined();
+  });
+
   it('converts BEFORE_AGENDA string to BEFORE_AGENDA type', () => {
     const existing = [{
       id: 'subj-2',
@@ -251,5 +263,33 @@ describe('initializeSubjectsFromExisting', () => {
     const result = initializeSubjectsFromExisting(existing);
 
     expect(result[0].speakerContributions).toEqual([]);
+  });
+});
+
+describe('keepEarlierOutcomes', () => {
+  const subject = (over: Partial<SubjectInProgress>): SubjectInProgress => ({
+    id: 's1', type: 'IN_AGENDA', agendaItemIndex: 1, name: 'Budget', description: 'd',
+    topicImportance: 'normal', proximityImportance: 'none', introducedByPersonId: null,
+    locationText: null, topicLabel: null, discussedIn: null, speakerContributions: [], ...over,
+  });
+  const earlier = [subject({ outcome: 'Εγκρίθηκε ο προϋπολογισμός.' })];
+
+  it.each([
+    ['keeps the earlier outcome when the later batch sends null', { outcome: null }, 'Εγκρίθηκε ο προϋπολογισμός.', 1],
+    ['keeps the earlier outcome when the later batch sends none', {}, 'Εγκρίθηκε ο προϋπολογισμός.', 1],
+    ['takes new text from the later batch', { outcome: 'Απορρίφθηκε ο προϋπολογισμός.' }, 'Απορρίφθηκε ο προϋπολογισμός.', 0],
+    ['leaves a withdrawn subject without an outcome', { outcome: null, withdrawn: true }, null, 0],
+  ])('%s', (_, later, expected, kept) => {
+    const returned = [subject(later)];
+
+    expect(keepEarlierOutcomes(earlier, returned)).toBe(kept);
+    expect(returned[0].outcome ?? null).toBe(expected);
+  });
+
+  it('leaves a subject alone when no earlier batch wrote an outcome for it', () => {
+    const returned = [subject({ id: 's2', outcome: null })];
+
+    expect(keepEarlierOutcomes(earlier, returned)).toBe(0);
+    expect(returned[0].outcome).toBeNull();
   });
 });

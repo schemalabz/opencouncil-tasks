@@ -84,6 +84,7 @@ export const decompressIds = (
             ...s,
             id: idCompressor.getLongId(s.id),  // Decompress subject ID
             description: decompressReferencesInMarkdown(s.description, idCompressor),  // Decompress references in description
+            ...(s.outcome !== undefined ? { outcome: plainOutcome(s.outcome) } : {}),
             introducedByPersonId: decompressOrNull(s.introducedByPersonId, `introducedByPersonId of subject "${s.name}"`),
             discussedIn: decompressOrNull(s.discussedIn, `discussedIn of subject "${s.name}"`),
             speakerContributions: s.speakerContributions
@@ -126,6 +127,22 @@ export const decompressIds = (
         })
     };
 };
+
+/**
+ * The outcome as plain text. The prompt asks for no reference links and no
+ * markdown, but the model writes descriptions in that format right beside it
+ * and sometimes carries it over; the public table prints the outcome verbatim.
+ */
+export function plainOutcome(outcome: string | null | undefined): string | null {
+    if (!outcome) return null;
+    const plain = outcome
+        .replace(/\[([^\]]*)\]\(REF:[^)]*\)/g, '$1')
+        .replace(/\*\*([^*]*)\*\*/g, '$1')
+        .replace(/<\/?u>/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    return plain || null;
+}
 
 /**
  * Decompress references in markdown text from compressed IDs back to long IDs.

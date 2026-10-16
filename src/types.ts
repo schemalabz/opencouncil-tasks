@@ -250,6 +250,14 @@ export interface Subject {
     name: string;
     description: string;  // Markdown with special reference links: [text](REF:UTTERANCE:id), [text](REF:PERSON:id), [text](REF:PARTY:id)
     /**
+     * What the body decided on the subject, as the transcript states it: one or
+     * two plain sentences, no reference links, no markdown (schemalabz/opencouncil#873).
+     * summarize sets it for every subject; null when the transcript shows no
+     * outcome. processAgenda never sends it, and an absent field leaves the
+     * stored value alone.
+     */
+    outcome?: string | null;
+    /**
      * The item as written on the official agenda (schemalabz/opencouncil#616).
      * processAgenda sets it for every subject. summarize never sets it.
      * When the field is absent, the app keeps the stored value.

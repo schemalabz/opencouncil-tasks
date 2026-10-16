@@ -286,6 +286,7 @@ async function enrichSubject(
     const input: EnrichmentInput = {
         name: subject.name,
         description: subject.description,
+        outcome: subject.outcome ?? null,
         locationText: subject.locationText,
         topicImportance: subject.topicImportance,
         proximityImportance: subject.proximityImportance,
