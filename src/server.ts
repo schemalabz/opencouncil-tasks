@@ -148,6 +148,7 @@ app.post('/transcribe', taskManager.registerTask(TASKS.transcribe.task, TASKS.tr
 app.post('/summarize', taskManager.registerTask(TASKS.summarize.task, TASKS.summarize.metadata));
 app.post('/splitMediaFile', taskManager.registerTask(TASKS.splitMediaFile.task, TASKS.splitMediaFile.metadata));
 app.post('/fixTranscript', taskManager.registerTask(TASKS.fixTranscript.task, TASKS.fixTranscript.metadata));
+app.post('/fixFromMinutes', taskManager.registerTask(TASKS.fixFromMinutes.task, TASKS.fixFromMinutes.metadata));
 app.post('/processAgenda', taskManager.registerTask(TASKS.processAgenda.task, TASKS.processAgenda.metadata));
 app.post('/generateVoiceprint', taskManager.registerTask(TASKS.generateVoiceprint.task, TASKS.generateVoiceprint.metadata));
 app.post('/generateHighlight', taskManager.registerTask(TASKS.generateHighlight.task, TASKS.generateHighlight.metadata));
