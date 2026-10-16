@@ -193,7 +193,7 @@ export const convertDocxToHtml = async (docx: Buffer): Promise<string> => {
  * Downloads with a hard byte ceiling, aborting mid-stream rather than
  * buffering an entire oversized response first.
  */
-const downloadBounded = async (url: string, maxBytes: number): Promise<Buffer> => {
+export const downloadBounded = async (url: string, maxBytes: number): Promise<Buffer> => {
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Failed to download document from ${url}: ${response.status} ${response.statusText}`);
