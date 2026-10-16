@@ -1,0 +1,107 @@
+{
+  "id": "decisions.extraction/994ΞΩΨ3-Λ30",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "994ΞΩΨ3-Λ30",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/994ΞΩΨ3-Λ30",
+    "city": "argithea",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 8,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "namedVoters=dissenters_only",
+        "perLineVote=yes"
+      ],
+      "namedEdgeCase": "The minority votes «Υπέρ» the revenue table and some expense lines and «καταψηφίζουν» the rest of a decision taken ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ. It is two AGAINST, not two FOR: the partial ΥΠΕΡ is what makes them dissenters. The maintainer settled it on 2026-09-26 (C1 decisions, NV-argithea-de).",
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [],
+        "absentMembers": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "Κορλού Όλγα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Θεοδωράκης Αθανάσιος",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": true,
+        "evidence": {
+          "quote": "Τα μέλη της παράταξης της μειοψηφίας κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος, ψηφίζουν ως εξής: « Υπέρ του πίνακα εσόδων και των α/α 3,5,6,7,9,10,11,12,13,14,15 του πίνακα δαπανών και καταψηφίζουν όλους τους υπόλοιπους α/α του ανωτέρω πίνακα ».",
+          "ada": "994ΞΩΨ3-Λ30",
+          "page": 5,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτική Επιτροπή",
+  "tags": [
+    "argithea",
+    "namedVoters=dissenters_only",
+    "perLineVote=yes"
+  ]
+}

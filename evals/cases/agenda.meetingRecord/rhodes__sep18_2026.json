@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/rhodes__sep18_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "rhodes",
+    "meetingId": "sep18_2026",
+    "date": "2026-09-18",
+    "time": "17:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/rhodes_sep18_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "kind": {
+      "value": "accountability",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Αναβολή συνεδρίασης της 4ης Ειδικής Συνεδρίασης λογοδοσίας της Δημοτικής Αρχής"
+    },
+    "sessionNumber": {
+      "value": 4,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "4ης Ειδικής Συνεδρίασης λογοδοσίας"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "rhodes/Δημοτικό Συμβούλιο",
+  "tags": [
+    "rhodes",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Document is a postponement notice (from 16/9 to Fri 18/09/2026 17:00), not the original invitation; it gives no manner/place of the sitting."
+}

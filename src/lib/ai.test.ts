@@ -623,7 +623,7 @@ describe('stop reasons that end the response early', () => {
     let respond: () => Response;
     // Stands in for the Langfuse generation so what aiChat reports on failure
     // can be asserted; outside a traced run the real one is a no-op.
-    const generationHandle = { end: vi.fn(), error: vi.fn() };
+    const recorded: import('./llm/callRecord.js').CallRecord[] = [];
 
     /** The event stream a refusal or an overflow actually produces: a normal
      *  message_start, a text block only if the stop came mid-answer, and the
@@ -654,36 +654,32 @@ describe('stop reasons that end the response early', () => {
     beforeAll(async () => {
         vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => respond()));
         process.env.ANTHROPIC_API_KEY = 'sk-ant-wire-probe';
-        vi.doMock('./observability.js', async (importOriginal) => ({
-            ...(await importOriginal<typeof import('./observability.js')>()),
-            observeGeneration: vi.fn(() => generationHandle),
-        }));
         vi.resetModules();
         ({ aiChat } = await import('./ai.js'));
+        const telemetry = await import('./telemetry/telemetry.js');
+        telemetry.configureSinks([{ name: 'capture', onCall: (_run, call) => { recorded.push(call); } }]);
     });
 
     beforeEach(() => {
-        generationHandle.end.mockClear();
-        generationHandle.error.mockClear();
+        recorded.length = 0;
     });
 
     afterAll(() => {
         vi.unstubAllGlobals();
-        vi.doUnmock('./observability.js');
         vi.resetModules();
         if (originalApiKey === undefined) delete process.env.ANTHROPIC_API_KEY;
         else process.env.ANTHROPIC_API_KEY = originalApiKey;
     });
 
-    it('closes the generation as an error carrying the billed usage', async () => {
+    it('records the billed usage of a call that ends in a refusal', async () => {
         // A mid-stream refusal bills the input and the text already streamed, so
-        // the usage has to reach the trace even though the call rejects.
+        // the usage has to reach the record even though the call rejects.
         respond = stopped('refusal', { type: 'refusal', category: 'cyber', explanation: null }, 'Here is how to');
-        const err = await aiChat({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
+        await aiChat({ systemPrompt: 's', userPrompt: 'u', parseJson: false })
             .then(() => { throw new Error('expected a rejection'); }, (e: Error) => e);
 
-        expect(generationHandle.error).toHaveBeenCalledWith(err.message, expect.objectContaining({ input_tokens: 1 }));
-        expect(generationHandle.end).not.toHaveBeenCalled();
+        expect(recorded).toHaveLength(1);
+        expect(recorded[0].response).toMatchObject({ stopReason: 'refusal', usage: expect.objectContaining({ input_tokens: 1 }) });
     });
 
     it('names the refusal and its category instead of blaming the content', async () => {

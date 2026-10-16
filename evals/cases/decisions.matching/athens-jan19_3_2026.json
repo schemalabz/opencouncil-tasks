@@ -1,0 +1,177 @@
+{
+  "id": "decisions.matching/athens-jan19_3_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jan19_3_2026",
+    "meetingDate": "2026-01-19",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085603"
+    ],
+    "administrativeBodyName": "4η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-02-02",
+      "fromDate": "2026-01-19"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmq0l762e07ft6iuztu2b5iru",
+        "name": "Παράταση ωραρίου μουσικής - κατάστημα HOME",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0l763a07gw6iuz6y3eejra",
+        "name": "Παραχώρηση θέσης ΑμεΑ - Βορείου Ηπείρου 18",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq0l764007h66iuzll9k8uz6",
+        "name": "Παραχώρηση θέσης ΑμεΑ - Πρεβέζης 84-86",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmlhap9xo025yb8q8cmgwht0i",
+        "name": "Χορήγηση ή μη παράταση ωραρίου λειτουργίας μουσικής ή μουσικών οργάνων στο Κ.Υ.Ε. «ΣΝΑΚ ΜΠΑΡ ΜΕ ΠΑΡΑΣΚΕΥΑΣΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ» της GRADINARIU VALERIA επί της οδού Άργους με αριθμ. 63 (Σχετ.: Το με Α.Π. 331474/30-12-2025 αίτημα)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhap9vv0250b8q8brsa7ecg",
+        "name": "Χορήγηση ή μη παράταση ωραρίου λειτουργίας μουσικής ή μουσικών οργάνων στο Κ.Υ.Ε. «ΣΝΑΚ ΜΠΑΡ ΜΕ ΠΑΡΑΣΚΕΥΑΣΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ» της GRADINARIU VALERIA επί της οδού Άργους με αριθμ. 63 (Σχετ.: Το με Α.Π. 331474/30-12-2025 αίτημα)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhap9yi0274b8q8gttxv1md",
+        "name": "Χορήγηση ή μη παράταση ωραρίου λειτουργίας μουσικής ή μουσικών οργάνων στο Κ.Υ.Ε. «ΚΑΦΕΝΕΙΟ - ΣΝΑΚ ΜΠΑΡ» του ΛΥΚΟΥΡΓΟΥ ΦΕΣΣΑΡΑ επί της οδού Τριπόλεως με αριθμ. 61 (Σχετ.: Το με Α.Π. 5599/ 12-01-2026 αίτημα)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhap9x0025nb8q848qf97gh",
+        "name": "Χορήγηση ή μη παράταση ωραρίου λειτουργίας μουσικής ή μουσικών οργάνων στο Κ.Υ.Ε. «ΚΑΦΕΝΕΙΟ - ΣΝΑΚ ΜΠΑΡ» του ΛΥΚΟΥΡΓΟΥ ΦΕΣΣΑΡΑ επί της οδού Τριπόλεως με αριθμ. 61 (Σχετ.: Το με Α.Π. 5599/ 12-01-2026 αίτημα)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhap9za027hb8q850z8lefv",
+        "name": "Λήψη απόφασης σε αίτημα μετατόπισης περιπτέρου από την οδό Λεωφ. Αθηνών 118 σε υφιστάμενη θέση επί της οδού Πλατεία Αγίου Μελετίου & Βορείου Ηπείρου εν. 157",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhapa070287b8q871069ghs",
+        "name": "Λήψη απόφασης σε αίτημα μετατόπισης περιπτέρου από την οδό Σπύρου Μερκούρη 24 σε υφιστάμενη θέση επί της οδού Αχαρνών 309",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhapa0w028ib8q8yhhxq6bc",
+        "name": "Συζήτηση και προτάσεις σχετικά με τις αποκριάτικες δράσεις στην 4η Δημοτική Κοινότητα του Δήμου Αθηναίων. (Πιθανή συνεργασία με Πολιτιστικούς, Λαογραφικούς, Χορευτικούς Συλλόγους και Σχολεία)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmlhap9vv0250b8q8brsa7ecg]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmlhap9x0025nb8q848qf97gh]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmlhap9xo025yb8q8cmgwht0i]": {
+      "value": "9ΧΩ0Ω6Μ-ΨΧΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhap9yi0274b8q8gttxv1md]": {
+      "value": "6ΜΙ6Ω6Μ-5ΤΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhap9za027hb8q850z8lefv]": {
+      "value": "62ΜΠΩ6Μ-ΦΝΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhapa070287b8q871069ghs]": {
+      "value": "908ΖΩ6Μ-Φ9Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhapa0w028ib8q8yhhxq6bc]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmq0l762e07ft6iuztu2b5iru]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmq0l763a07gw6iuz6y3eejra]": {
+      "value": "9ΛΥΘΩ6Μ-ΝΔΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0l764007h66iuzll9k8uz6]": {
+      "value": "656ΙΩ6Μ-5Α7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[68ΗΜΩ6Μ-ΦΘΑ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgmbf0b6v7xm4yb3b2u97"
+    },
+    "reject[ΨΨΑΦΩ6Μ-ΝΧ2]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgmbl0b6x7xm4jp7spdx3"
+    }
+  },
+  "cluster": "athens/4η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

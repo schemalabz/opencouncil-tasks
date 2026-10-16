@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/Ρ4ΙΚΩΡΦ-6Φ0",
+  "suite": "decisions.reading",
+  "split": "holdout",
+  "input": {
+    "ada": "Ρ4ΙΚΩΡΦ-6Φ0",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ4ΙΚΩΡΦ-6Φ0"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτικό Συμβούλιο",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "59",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-04-24",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "decision"
+  ]
+}

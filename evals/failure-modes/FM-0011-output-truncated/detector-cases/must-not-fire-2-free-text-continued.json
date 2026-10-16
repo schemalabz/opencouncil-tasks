@@ -1,0 +1,16 @@
+{
+  "kind": "must-not-fire",
+  "note": "Boundary: aiChat continues free text in a :continuation call",
+  "input": {
+    "label": "subject-context-search:x",
+    "request": {
+      "model": "claude-sonnet-4-6",
+      "max_tokens": 16000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"name\": \"Έγκριση",
+      "stopReason": "max_tokens"
+    }
+  }
+}

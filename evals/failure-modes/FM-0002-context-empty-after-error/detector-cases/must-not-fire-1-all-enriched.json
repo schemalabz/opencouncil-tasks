@@ -1,0 +1,41 @@
+{
+  "kind": "must-not-fire",
+  "input": {
+    "run": {
+      "traceId": "00000000000000000000000000000000",
+      "taskType": "summarize",
+      "taskVersion": null,
+      "taskId": "t",
+      "meeting": "chania/oct29_2025",
+      "env": "production",
+      "startedAt": "2026-06-14T10:00:00Z"
+    },
+    "calls": [],
+    "result": {
+      "subjects": [
+        {
+          "id": "Έγκριση προϋπολογισμού ΔΕΥΑΧ",
+          "name": "Έγκριση προϋπολογισμού ΔΕΥΑΧ",
+          "description": "Συζήτηση για Έγκριση προϋπολογισμού ΔΕΥΑΧ.",
+          "context": {
+            "text": "Η ΔΕΥΑΧ είναι η δημοτική επιχείρηση ύδρευσης.",
+            "citationUrls": [
+              "https://www.chania.gr/"
+            ]
+          }
+        },
+        {
+          "id": "Ονοματοδοσία οδού",
+          "name": "Ονοματοδοσία οδού",
+          "description": "Συζήτηση για Ονοματοδοσία οδού.",
+          "context": {
+            "text": "Οι ονοματοδοσίες οδών αποφασίζονται από το δημοτικό συμβούλιο.",
+            "citationUrls": [
+              "https://www.chania.gr/"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/rhodes__aug7_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "rhodes",
+    "meetingId": "aug7_2026",
+    "date": "2026-08-07",
+    "time": "10:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/rhodes_aug7_2026_agenda.docx",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "με μικτό τρόπο (Δια ζώσης ... και με τηλεδιάσκεψη μέσω της εφαρμογής Zoom)"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "36η ΕΚΤΑΚΤΗ ΣΥΝΕΔΡΙΑΣΗ"
+    },
+    "sessionNumber": {
+      "value": 36,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στην 36η ΕΚΤΑΚΤΗ συνεδρίαση Δημοτικής Επιτροπής"
+    },
+    "urgent": {
+      "value": true,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "rhodes/Δημοτική Επιτροπή",
+  "tags": [
+    "rhodes",
+    "committee"
+  ],
+  "note": "docx; read from document.xml."
+}

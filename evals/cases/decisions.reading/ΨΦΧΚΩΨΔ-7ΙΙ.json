@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/ΨΦΧΚΩΨΔ-7ΙΙ",
+  "suite": "decisions.reading",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΦΧΚΩΨΔ-7ΙΙ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΦΧΚΩΨΔ-7ΙΙ"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτική Επιτροπή",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "322/2026",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-07-14",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "argos/Δημοτική Επιτροπή",
+  "tags": [
+    "argos",
+    "decision"
+  ]
+}

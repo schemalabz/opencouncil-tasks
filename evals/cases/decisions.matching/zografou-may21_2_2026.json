@@ -1,0 +1,180 @@
+{
+  "id": "decisions.matching/zografou-may21_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "zografou/may21_2_2026",
+    "meetingDate": "2026-05-21",
+    "diavgeiaUid": "6104",
+    "diavgeiaUnitIds": [
+      "81689"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-06-21",
+      "fromDate": "2026-05-21"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmp86pd9b1dkaz3nx2hwpd9al",
+        "name": "Ανακοινώσεις – Ερωτήσεις – Επιτροπές",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pd9p1dkbz3nxqhuq9w55",
+        "name": "Ψήφισμα για λειτουργία Κέντρου Πρόληψης",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pd9w1dkcz3nx1ac0zerx",
+        "name": "Απολογισμός Μουσείου Γουναρόπουλου 2024",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pda61dkdz3nxrl8o6o1v",
+        "name": "Τροποποίηση Οργανισμού Εσωτερικής Υπηρεσίας",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdam1dkez3nxwjnvxymk",
+        "name": "Παραχώρηση ακινήτου στο Μουσείο Γουναρόπουλου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdb51dkfz3nxunzfpjcc",
+        "name": "Νέα ειδικότητα στο 1ο ΕΠΑΛ Ζωγράφου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdbi1dkgz3nxygcp4oeg",
+        "name": "Summer camp 2026 στα γήπεδα Γουδί",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdbx1dkhz3nxbtscyz1y",
+        "name": "Εκδήλωση ενόργανης στο γήπεδο Ωρίωνος",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdc71dkiz3nxdfo04ykm",
+        "name": "Αντικατάσταση χρηστών ΔΙΑΣ Portal",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdck1dkjz3nx5lyfq840",
+        "name": "Είσοδος-Έξοδος στη Γρ. Κουσίδη 45",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp86pdcs1dkkz3nxjdjo5ucj",
+        "name": "Παραχώρηση τάφου οικογενειακού",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmp86pd9b1dkaz3nx2hwpd9al]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmp86pd9p1dkbz3nxqhuq9w55]": {
+      "value": "ΨΓΖΣΩΡΦ-ΝΓΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pd9w1dkcz3nx1ac0zerx]": {
+      "value": "9Ρ21ΩΡΦ-6ΝΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pda61dkdz3nxrl8o6o1v]": {
+      "value": "Ψ74ΜΩΡΦ-ΝΙΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdam1dkez3nxwjnvxymk]": {
+      "value": "9Ε1ΦΩΡΦ-ΧΞ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdb51dkfz3nxunzfpjcc]": {
+      "value": "ΡΡΑ2ΩΡΦ-Θ8Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdbi1dkgz3nxygcp4oeg]": {
+      "value": "9ΟΤ8ΩΡΦ-2ΚΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdbx1dkhz3nxbtscyz1y]": {
+      "value": "Ψ1Ζ0ΩΡΦ-ΛΦ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdc71dkiz3nxdfo04ykm]": {
+      "value": "ΨΤΡΝΩΡΦ-3ΥΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdck1dkjz3nx5lyfq840]": {
+      "value": "ΨΑΝΝΩΡΦ-ΑΡΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp86pdcs1dkkz3nxjdjo5ucj]": {
+      "value": "Ρ7ΗΑΩΡΦ-3Ο2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[Ψ33ΣΩΡΦ-ΕΑΑ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtjsmvfv0hix9208zduly13x"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

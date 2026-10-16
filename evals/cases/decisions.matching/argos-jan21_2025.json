@@ -1,0 +1,86 @@
+{
+  "id": "decisions.matching/argos-jan21_2025",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "argos/jan21_2025",
+    "meetingDate": "2025-01-21",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-02-04",
+      "fromDate": "2025-01-21"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb5a9x105xvpn1t7wh56hzv",
+        "name": "Προϋπολογισμός Δήμου 2025",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5a9xb05xwpn1tbr0aziik",
+        "name": "Στοχοθεσία οικονομικών αποτελεσμάτων 2025",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqbj7uj904y6pa0su2p9t9xg",
+        "name": "Παραίτηση Προέδρου Δημοτικού Συμβουλίου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb5a9x105xvpn1t7wh56hzv]": {
+      "value": "9Κ8ΙΩΨΔ-2ΟΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5a9xb05xwpn1tbr0aziik]": {
+      "value": "Ψ38ΩΩΨΔ-1ΤΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqbj7uj904y6pa0su2p9t9xg]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[9ΚΞ9ΩΨΔ-8ΒΡ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5q7wl08k37xm4pvl3chnj"
+    },
+    "reject[ΨΡΛΔΩΨΔ-Β9Ξ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5q7vw08jv7xm4qas2ppf5"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

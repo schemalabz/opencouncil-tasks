@@ -1,0 +1,125 @@
+{
+  "id": "decisions.extraction/6ΥΙΡΩΨ3-9ΟΨ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "6ΥΙΡΩΨ3-9ΟΨ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΥΙΡΩΨ3-9ΟΨ",
+    "city": "argithea",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 5,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "departure=yes",
+        "changeAnchor=decision_number",
+        "outOfAgenda=yes"
+      ],
+      "namedEdgeCase": "The only Argithea committee document recording any attendance change: two members withdraw after the urgency vote, pinned to a decision number.",
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Κορλού Όλγα",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Μετά τη συζήτηση της περί έγκρισης της κατεπείγουσας συνεδρίασης κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος αποχώρησαν από τη συνεδρίαση."
+          },
+          {
+            "name": "Θεοδωράκης Αθανάσιος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Μετά τη συζήτηση της περί έγκρισης της κατεπείγουσας συνεδρίασης κ. Κορλού Όλγα και κ. Θεοδωράκης Αθανάσιος αποχώρησαν από τη συνεδρίαση."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1465,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Μερεντίτης Κωνσταντίνος",
+          "Γραμμένος Κωνσταντίνος",
+          "Κορλού Όλγα",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": true,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτική Επιτροπή",
+  "tags": [
+    "argithea",
+    "rollCallLayout=present_and_absent",
+    "departure=yes",
+    "changeAnchor=decision_number",
+    "outOfAgenda=yes"
+  ]
+}

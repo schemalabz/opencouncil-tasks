@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/vrilissia__sep30_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "vrilissia",
+    "meetingId": "sep30_2026",
+    "date": "2026-09-30",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/vrilissia_sep30_2026_agenda_2.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "kind": {
+      "value": "accountability",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Ειδική Συνεδρίαση του Δημοτικού Συμβουλίου / 4η/2026 Λογοδοσία Δημοτικής Αρχής"
+    },
+    "sessionNumber": {
+      "value": 26,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Για την 26η/2026 Ειδική Συνεδρίαση του Δημοτικού Συμβουλίου"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "vrilissia",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Document is the list of submitted topics (ΟΡΘΗ ΕΠΑΝΑΛΗΨΗ), not the convening invitation; no place/manner stated. Two numbers: 26η/2026 attached to Συνεδρίαση, 4η/2026 attached to Λογοδοσία — chose 26 per the 'attached to συνεδρίαση' rule."
+}

@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/papagos-cholargos__sep29_2_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "papagos-cholargos",
+    "meetingId": "sep29_2_2026",
+    "date": "2026-09-29",
+    "time": "18:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/papagos-cholargos_sep29_2026_agenda_2.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "remote",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "θα πραγματοποιηθεί με τηλεδιάσκεψη μέσω «e:Presence.gov.gr»"
+    },
+    "kind": {
+      "value": "financialAccounts",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "sessionNumber": {
+      "value": 18,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Συνεδρίαση : 18η / 2026"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "papagos-cholargos",
+    "council",
+    "low-confidence"
+  ],
+  "note": "«Ειδική Συνεδρίαση» whose sole item is «Έγκριση Ισολογισμού και Αποτελεσμάτων Χρήσεως 2025» (balance sheet/financial statements). Not budget/accountability; arguably close to annualReport (απολογισμός) but the invitation does not call it απολογισμός, so null. YouTube streaming is not teleconference."
+}

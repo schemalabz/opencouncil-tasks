@@ -1,0 +1,25 @@
+id: FM-0012
+slug: contributions_unknown_speaker
+title: Speaker contributions name a speaker who did not speak on the subject
+definition: >
+  A contributions call answers with a speakerId that is not among the speakers whose utterances
+  it was given for the subject (the «**Speaker: …**» lists in its prompt): an invented or
+  misspelled key, another subject's speaker, or a person the discussion only mentions.
+  generateAllSpeakerContributionsInOneCall drops such contributions, so the output loses them
+  silently, and what the speaker actually said may go unsummarised.
+boundary: >
+  Not this mode: a contribution that mentions, quotes or links (REF:PERSON) another person in
+  its text; a speaker given in the prompt who gets no contribution; a contribution under the
+  right key that summarises another speaker's utterances (a known miss: the key is valid). The
+  summarize result's contributions carried over from the app's existing subjects are not
+  checked: that needs the run's transcript, which runs imported from Langfuse do not keep.
+suite: summarize.contributions
+scope: call
+severity: minor
+impact: silent
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/contributionsUnknownSpeaker.ts
+decision: monitor
+alert: "any fail per city per week; daily digest"

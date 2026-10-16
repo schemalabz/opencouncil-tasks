@@ -1,0 +1,15 @@
+{
+  "kind": "known-false-alarm",
+  "note": "Sentence from a production summarize run (Langfuse import, backfill 2026-10-15), placed in a minimal response; a previous session's decision, not this vote",
+  "input": {
+    "label": "batch-processing:2/13",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Συνέχεια του θέματος. Είχε προηγηθεί ομόφωνη απόφαση στην 5η συνεδρίαση της 18/5.\"}]}"
+    }
+  }
+}

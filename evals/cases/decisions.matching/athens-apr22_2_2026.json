@@ -1,0 +1,197 @@
+{
+  "id": "decisions.matching/athens-apr22_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/apr22_2_2026",
+    "meetingDate": "2026-04-22",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100022189"
+    ],
+    "administrativeBodyName": "1η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-05-06",
+      "fromDate": "2026-04-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmojquzxr0a4knkwnlttqofls",
+        "name": "Κανονισμός ηλεκτρικών πατινιών",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmo9rk1mn00299y78l3nbqzqp",
+        "name": "«ΣΝΑΚ ΜΠΑΡ» της ¨COULTOURA Ε.Ε.¨, επί της οδού ΚΑΡΑΓΙΩΡΓΗ ΣΕΡΒΙΑΣ 10 (κατάστημα N 17) (ΑΡ. ΠΡΩΤ.: 46078/18-2-26), (επανεισαγωγή)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1my002a9y787vdu6ul9",
+        "name": "«ΑΝΑΨΥΚΤΗΡΙΟ-ΚΑΦΕ ΜΠΑΡ-ΚΑΤΑΣΤΗΜΑ ΛΙΑΝΙΚΗΣ ΔΙΑΘΕΣΗΣ ΤΡΟΦΙΜΩΝ ΚΑΙ ΠΟΤΩΝ» της ¨ΦΡΑΝΤΖΕΣΚΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ & ΣΙΑ Ο.Ε.¨, επί της οδού ΜΙΛΤΙΑΔΟΥ 19 (ΑΡ. ΠΡΩΤ.: 70748/13-3-26)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1n8002b9y78z42ifnom",
+        "name": "«ΑΝΑΨΥΚΤΗΡΙΟ-ΣΝΑΚ ΜΠΑΡ» της ¨ΚΑΡΜΙΝΙΟ ATHENS Ε.Ε.¨, στη συμβολή των οδών ΒΕΙΚΟΥ 86 & ΜΑΤΡΩΖΟΥ (ΑΡ. ΠΡΩΤ.: 82357/26-3-26)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1ni002c9y78hfpulrvc",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ» της ¨PR BISTRO Ε.Ε.¨, στη συμβολή των οδών ΣΙΝΑ 17 & ΣΚΟΥΦΑ (ΑΡ. ΠΡΩΤ.: 82937/27-3-26)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1ns002d9y7802a8eqfz",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ-ΚΑΦΕΤΕΡΙΑ» της ¨ERMOU ROOFGARDEN Ε.Ε.¨, στη συμβολή των οδών ΕΡΜΟΥ 18 & ΔΙΟΜΕΙΑΣ 2-4 (ΑΡ. ΠΡΩΤ.: 84475/30-3-26)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1o1002e9y78uzn3rr09",
+        "name": "«ΑΝΑΨΥΚΤΗΡΙΟ - ΣΝΑΚ ΜΠΑΡ ΧΩΡΙΣ ΠΑΡΑΣΚΕΥΑΣΤΗΡΙΟ» του ΣΩΤΗΡΙΟΥ ΠΑΠΑΓΕΩΡΓΑΚΗ, επί της ΛΕΩΦ. ΑΛΕΞΑΝΔΡΑΣ 56 (ΑΡ. ΠΡΩΤ.: 84751/30-3-26)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1oa002f9y780nda79kf",
+        "name": "«ΑΝΑΨΥΚΤΗΡΙΟ» της ΚΑΛΛΙΡΡΟΗΣ ΠΑΝΑΓΙΩΤΟΠΟΥΛΟΥ, στη συμβολή των οδών ΑΓ. ΑΝΑΡΓΥΡΩΝ 41 & ΛΟΥΚΑ ΝΙΚΑ 11 (ΑΡ. ΠΡΩΤ.: 85349/30-3-26)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1ok002g9y78olgehfck",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ-ΚΑΦΕΤΕΡΙΑ -ΜΠΑΡ» της ¨FOODISIMO Ε.Ε.¨, στην οδό ΚΑΛΑΜΙΩΤΟΥ 2 (ΑΡ. ΠΡΩΤ.: 85410/30-3-26)",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1ot002h9y78z44g5p8a",
+        "name": "Επανεισαγωγή και λήψη απόφασης για την έγκριση ή μη της \"Μελέτης Κυκλοφοριακών ρυθμίσεων για την αναβάθμιση της βιώσιμης κινητικότητας και της πρόσβασης πεζών στην Περιφερειακή Οδό και στο Λόφο Λυκαβηττού και τη βελτίωση της σύνδεσης του λόφου με τον περιβάλλοντα αστικό ιστό\"",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1p3002i9y785q13bzgb",
+        "name": "Συζήτηση και λήψη απόφασης για την έγκριση ή μη προσωρινής κατάληψης 24 μηνών, τμήματος κοινόχρηστου χώρου με παρτέρι και καθιστικό (παγκάκι) μεταξύ των οικοδομικών τετραγώνων Ο.Τ. 55065Α και Ο.Τ. 55065 για οικοδομικές εργασίες, σε ακίνητο με ΚΑΕΚ 050097408003 εντός του Ο.Τ. 55065, επί της οδού Φαλήρου στον αρ. 55 & Συγγρού 74 και μετέπειτα αποκατάστασή του στην πρότερη μορφή του",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1pd002j9y78urlmb1b5",
+        "name": "Συζήτηση και λήψη απόφασης για την έγκριση ή μη απομάκρυνσης δυο (2) δένδρων, είδος Προύνος & Λιγούστρο ηλικίας 10 ετών περίπου, για την αποκατάσταση της προσβασιμότητας του πεζοδρομίου επί της οδού Αλωπεκής 1-3, σύμφωνα με το αίτημα του κ. Ζαρίφη Γ",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo9rk1pm002k9y78m1h9qz34",
+        "name": "Συζήτηση και λήψη απόφασης για την έγκριση ή μη της μελέτης και κατασκευής επίστρωσης πεζόδρομου παρόδου Αδριανού 102 στην Πλάκα Ο.Τ. 60041 με πρόθεση δωρεάς της μελέτης και της κατασκευής από τον κ. Α. Λαμπρόπουλο",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmo9rk1mn00299y78l3nbqzqp]": {
+      "value": "ΡΠΡΖΩ6Μ-72Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1my002a9y787vdu6ul9]": {
+      "value": "ΡΧΔΛΩ6Μ-4ΔΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1n8002b9y78z42ifnom]": {
+      "value": "ΡΠΗΘΩ6Μ-ΤΗ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1ni002c9y78hfpulrvc]": {
+      "value": "Ρ4Ε3Ω6Μ-Ι4Ο",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1ns002d9y7802a8eqfz]": {
+      "value": "6ΝΙ1Ω6Μ-ΤΒΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1o1002e9y78uzn3rr09]": {
+      "value": "Ψ5Α7Ω6Μ-ΧΒΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1oa002f9y780nda79kf]": {
+      "value": "9Φ53Ω6Μ-1ΩΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1ok002g9y78olgehfck]": {
+      "value": "ΨΥΩΡΩ6Μ-ΚΟΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1ot002h9y78z44g5p8a]": {
+      "value": "ΕΘΠΛΩ6Μ-Υ6Μ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtyp2elm0jn61etfjleftumf"
+    },
+    "link[cmo9rk1p3002i9y785q13bzgb]": {
+      "value": "93Τ7Ω6Μ-0Θ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo9rk1pd002j9y78urlmb1b5]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo9rk1pm002k9y78m1h9qz34]": {
+      "value": "90ΡΒΩ6Μ-Χ4Κ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmojquzxr0a4knkwnlttqofls]": {
+      "value": "ΕΣ6ΨΩ6Μ-ΜΨΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

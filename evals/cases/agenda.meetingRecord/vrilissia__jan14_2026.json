@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/vrilissia__jan14_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "vrilissia",
+    "meetingId": "jan14_2026",
+    "date": "2026-01-14",
+    "time": "09:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/vrilissia_jan14_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα πραγματοποιηθεί δια ζώσης, στο Δημοτικό Κατάστημα"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Για την 2 /2026 Τακτική Συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": 2,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Για την 2 /2026 Τακτική Συνεδρίαση"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "vrilissia",
+    "committee"
+  ],
+  "note": "Printed as '2η/2026' with superscript η (pdftotext splits it)."
+}

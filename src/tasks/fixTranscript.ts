@@ -115,10 +115,18 @@ export function applyCorrections(
     });
 }
 
-export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
-    const { transcript, cityName, cityLanguage, agendaItems } = request;
+/** The text corrections alone, one call per speaker segment: the first half of fixTranscript. */
+export async function correctTranscript(
+    request: FixTranscriptRequest,
+    onProgress: (stage: string, progress: number) => void = () => {}
+): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
     // A caller that predates `people` still sends them grouped by party.
     const partiesWithPeople = request.people ? groupPeopleByParty(request.people) : request.partiesWithPeople ?? [];
+    return fixSpeakerSegments(request.transcript, request.cityName, request.cityLanguage, partiesWithPeople, request.agendaItems ?? [], onProgress);
+}
+
+export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
+    const { transcript, cityName, cityLanguage } = request;
     console.log(`Fixing transcript for ${cityName} (${cityLanguage}) with ${transcript.length} segments`);
     const inputUtterances = transcript.flatMap(s => s.utterances.map(u => u.text)).length;
 
@@ -126,7 +134,7 @@ export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = as
     // produce. Raw transcription mangles names, and names are what the
     // identification goes by. The corrected text is also what readers and
     // reviewers see, so the quotes in the hints match the transcript.
-    const allResults = await fixSpeakerSegments(transcript, cityName, cityLanguage, partiesWithPeople, agendaItems ?? [], onProgress);
+    const allResults = await correctTranscript(request, onProgress);
     onProgress("identifying speakers", 0);
     const speakerHints = await identifyTranscriptSpeakers({ ...request, transcript: applyCorrections(transcript, allResults.result) });
     const usage = addUsage(allResults.usage, speakerHints.usage);

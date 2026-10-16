@@ -1,0 +1,26 @@
+{
+  "kind": "must-fire",
+  "input": {
+    "run": {
+      "traceId": "00000000000000000000000000000000",
+      "taskType": "processAgenda",
+      "taskVersion": null,
+      "taskId": "t",
+      "meeting": "chania/oct29_2025",
+      "env": "production",
+      "startedAt": "2026-06-14T10:00:00Z"
+    },
+    "calls": [],
+    "result": {
+      "subjects": [
+        {
+          "id": "Παραχώρηση χώρου",
+          "name": "Παραχώρηση χώρου",
+          "description": "Συζήτηση για Παραχώρηση χώρου.",
+          "context": null
+        }
+      ],
+      "warnings": []
+    }
+  }
+}

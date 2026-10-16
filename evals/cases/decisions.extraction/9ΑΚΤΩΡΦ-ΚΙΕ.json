@@ -1,0 +1,123 @@
+{
+  "id": "decisions.extraction/9ΑΚΤΩΡΦ-ΚΙΕ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΑΚΤΩΡΦ-ΚΙΕ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΑΚΤΩΡΦ-ΚΙΕ",
+    "city": "zografou",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": null,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "presiding=yes",
+        "substitution=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": true,
+      "reviewNote": "Added 2026-09-17 for the mayor's movement / the presiding member; labels seeded from the extractor, unreviewed except the mayor sentence (read on the page).",
+      "statedButUnstorable": [
+        "presiding",
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1915,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "mayor": {
+      "value": {
+        "present": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "explicit_present_absent",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ – ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ"
+        ],
+        "absentMembers": [
+          "ΤΙΝΑ ΚΑΦΑΤΣΑΚΗ",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)"
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 4,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 4,
+          "nonAgendaReason": null
+        },
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτική Επιτροπή",
+  "tags": [
+    "zografou",
+    "presiding=yes",
+    "substitution=yes"
+  ]
+}

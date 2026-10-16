@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/sparta__jul13_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "sparta",
+    "meetingId": "jul13_2026",
+    "date": "2026-07-13",
+    "time": "18:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/sparta_jul13_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "τόσο δια ζώσης (στο Δημαρχιακό Μέγαρο ...) όσο και με τηλεδιάσκεψη"
+    },
+    "kind": {
+      "value": "activityReport",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "ειδική δημόσια συνεδρίαση ... με μοναδικό θέμα: «Απολογισμός πεπραγμένων Δημοτικής Αρχής»"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "council"
+  ],
+  "note": "«ΠΡΟΣΚΛΗΣΗ (Αριθ. 22/2026)» is invitation number, not session number."
+}

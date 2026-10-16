@@ -1,0 +1,311 @@
+{
+  "id": "decisions.matching/athens-jan22_3_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jan22_3_2026",
+    "meetingDate": "2026-01-22",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100010590"
+    ],
+    "administrativeBodyName": "5η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-02-05",
+      "fromDate": "2026-01-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmq0rpvyy0hck3dbk12jguis3",
+        "name": "Επανεπιβολή απαλλοτρίωσης Ιωάννη Φωκά 17, Ριζούπολη",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmlhav2jb02htb8q8eac7m5tq",
+        "name": "Στρατηγικό σχέδιο - Επιχειρησιακό πρόγραμμα Δήμου Αθηναίων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhav2k602iwb8q8ywdt7yaj",
+        "name": "Φροντίδα Πάρκου Ποδονίφτη",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhav2kz02jfb8q803v6fdjc",
+        "name": "Αφαίρεση δέντρου Κυπαρίσσου Στεφάνου 2",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhav2lq02k6b8q84216vht5",
+        "name": "Θέση στάθμευσης ΑμεΑ Χατζηδάκη Ιωάννου 7",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhav2m302k7b8q8gaf8yzjq",
+        "name": "Θέση στάθμευσης ΑμεΑ Χρυσοστόμου Σμύρνης 40-42",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhav2mi02k8b8q8xg0ldrta",
+        "name": "Θέση στάθμευσης ΑμεΑ Σάφα 6",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlhav2n402kfb8q8twsesyb8",
+        "name": "Παρατάσεις ωραρίου μουσικών οργάνων σε καταστήματα",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmlhav2jb02htb8q8eac7m5tq]": {
+      "value": "6ΜΣ1Ω6Μ-ΞΕΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhav2k602iwb8q8ywdt7yaj]": {
+      "value": "ΡΟ0ΒΩ6Μ-Ψ1Δ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhav2kz02jfb8q803v6fdjc]": {
+      "value": "ΡΞΑΒΩ6Μ-7ΔΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhav2lq02k6b8q84216vht5]": {
+      "value": "9ΞΕΗΩ6Μ-2ΩΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhav2m302k7b8q8gaf8yzjq]": {
+      "value": "94Α0Ω6Μ-1ΔΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhav2mi02k8b8q8xg0ldrta]": {
+      "value": "9ΙΝΔΩ6Μ-ΔΛΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlhav2n402kfb8q8twsesyb8]": {
+      "value": "93ΓΦΩ6Μ-8Θ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq0rpvyy0hck3dbk12jguis3]": {
+      "value": "9ΜΠΖΩ6Μ-ΠΜΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[63Β2Ω6Μ-Ω58]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj7m08x1u36ps9p77136"
+    },
+    "reject[63ΠΥΩ6Μ-39Π]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8608xbu36p2xdlvju8"
+    },
+    "reject[6Υ5ΟΩ6Μ-ΧΑΓ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj9y08y3u36pi11ehtgw"
+    },
+    "reject[6ΧΩΓΩ6Μ-ΨΚΒ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgjak08ybu36pofl15lmz"
+    },
+    "reject[94Ω0Ω6Μ-502]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8p08xlu36pryqjt6hr"
+    },
+    "reject[98ΘΗΩ6Μ-ΗΛ9]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8d08xfu36p7w618zn4"
+    },
+    "reject[9ΑΖ2Ω6Μ-ΟΘΩ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj7q08x3u36p9wfhqjii"
+    },
+    "reject[9ΓΕΓΩ6Μ-5Γ3]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj7u08x5u36peohe1367"
+    },
+    "reject[9ΣΒΨΩ6Μ-ΔΟΖ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8h08xhu36po7vhffs5"
+    },
+    "reject[9ΨΧΗΩ6Μ-3ΓΥ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj9o08xzu36p37k93lo3"
+    },
+    "reject[Ρ0ΧΟΩ6Μ-69Υ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8308x9u36p58oe8pe4"
+    },
+    "reject[Ρ79ΘΩ6Μ-Η00]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj9k08xxu36pp2oc4yy0"
+    },
+    "reject[ΡΖ55Ω6Μ-5ΗΖ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj9608xru36pr2pvkr1t"
+    },
+    "reject[ΡΗΤΥΩ6Μ-ΜΥΙ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj9a08xtu36pqvy25gwz"
+    },
+    "reject[ΡΣ4ΘΩ6Μ-2Χ2]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj9f08xvu36pphwx6kes"
+    },
+    "reject[Ψ0ΤΒΩ6Μ-ΓΓΙ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj7z08x7u36pkcwip6cl"
+    },
+    "reject[Ψ5ΒΤΩ6Μ-ΡΟ5]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8a08xdu36poi1eca11"
+    },
+    "reject[ΨΥ83Ω6Μ-ΙΓΟ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjgj8l08xju36p3n5n8y63"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

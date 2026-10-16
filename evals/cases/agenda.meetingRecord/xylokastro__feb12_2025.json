@@ -1,0 +1,53 @@
+{
+  "id": "agenda.meetingRecord/xylokastro__feb12_2025",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "xylokastro",
+    "meetingId": "feb12_2025",
+    "date": "2025-02-12",
+    "time": "00:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/959d6bc2-048a-408c-96a1-0db720cbddf0.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "σε δια ζώσης συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "xylokastro/Δημοτική Επιτροπή",
+  "tags": [
+    "xylokastro",
+    "committee"
+  ],
+  "note": "Sitting on 12 Feb 2025 (input date 2025-02-11 off by one). Word τακτική absent; nothing marks urgent/special."
+}

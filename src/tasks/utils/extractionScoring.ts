@@ -2,7 +2,7 @@ import { normalizeGreekName, changeAnchor, sameGreekPerson, type AgendaItemRef, 
 import { sameDecisionNumber } from './decisionNumberCompare.js';
 
 /**
- * Scores the production extractor against `fixtures/extraction-golden.json`.
+ * Scores the production extractor against the `decisions.extraction` cases in `evals/cases/`.
  *
  * One outcome per field, never one per document: a page whose roll call is
  * right and whose votes are wrong is one of each, and the aggregate has to say
@@ -392,14 +392,17 @@ export function scoreExcerpt(label: ExtractionLabel['excerpt'], got: RawExtracte
     return { outcome: problems.length ? 'disagree' : 'agree', detail: problems.join('; ') };
 }
 
-export function scoreDocument(label: ExtractionLabel, got: RawExtractedDecision | null): DocumentScore {
+const UNLABELLED: FieldScore = { outcome: 'unlabelled', detail: '' };
+
+/** A case proposed from one production call labels only the fields a person confirmed; the rest are unlabelled. */
+export function scoreDocument(label: Partial<ExtractionLabel>, got: RawExtractedDecision | null): DocumentScore {
     return {
-        rollCall: scoreRollCall(label.rollCall, got),
-        attendanceChanges: scoreAttendanceChanges(label.attendanceChanges, got),
+        rollCall: label.rollCall ? scoreRollCall(label.rollCall, got) : UNLABELLED,
+        attendanceChanges: label.attendanceChanges ? scoreAttendanceChanges(label.attendanceChanges, got) : UNLABELLED,
         perVoteAbsence: scorePerVoteAbsence(label.perVoteAbsence, got),
-        votes: scoreVotes(label.votes, got),
-        subject: scoreSubject(label.subject, got),
-        excerpt: scoreExcerpt(label.excerpt, got),
+        votes: label.votes ? scoreVotes(label.votes, got) : UNLABELLED,
+        subject: label.subject ? scoreSubject(label.subject, got) : UNLABELLED,
+        excerpt: label.excerpt ? scoreExcerpt(label.excerpt, got) : UNLABELLED,
         mayor: scoreMayor(label.mayor, got),
         presidedBy: scorePresidedBy(label.presidedBy, got),
         decisionAttendance: scoreDecisionAttendance(label.decisionAttendance, got),

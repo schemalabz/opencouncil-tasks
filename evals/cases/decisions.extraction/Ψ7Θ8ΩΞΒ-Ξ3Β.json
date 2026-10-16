@@ -1,0 +1,198 @@
+{
+  "id": "decisions.extraction/Ψ7Θ8ΩΞΒ-Ξ3Β",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ7Θ8ΩΞΒ-Ξ3Β",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ7Θ8ΩΞΒ-Ξ3Β",
+    "city": "orestiada",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "perVoteAbsence=yes",
+        "departure=yes",
+        "namedVoters=dissenters_only",
+        "voteTally=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "perVoteAbsence",
+        "participationMode"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": true,
+        "review": [
+          {
+            "what": "attendance change dropped",
+            "verdict": "neither is right",
+            "note": "at the end of the document it has a line that says \"Κατά την διάρκεια της ψήφισης του θέματος απουσίαζαν από την αίθουσα οι Δημοτικοί Σύμβουλοι\nΑρχοντίδης και Σταματίου.\" whch is a hint that for this particual body and city the attendance changes might go per decision at the end"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "not an arrival or departure: a per-vote absence printed after the decision"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 697,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Αρχοντίδης",
+          "Σταματίου"
+        ],
+        "asPrinted": "Κατά την διάρκεια της ψήφισης του θέματος απουσίαζαν από την αίθουσα οι Δημοτικοί Σύμβουλοι Αρχοντίδης και Σταματίου.",
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ",
+          "ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΕΜΜΑΝΟΥΗΛ",
+          "ΓΚΙΛΙΛΟΥΔΗ ΧΡΙΣΤΙΝΑ",
+          "ΤΣΟΜΠΑΝΙΔΗΣ ΑΝΤΩΝΙΟΣ",
+          "ΤΣΕΛΕΜΠΗΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΑΣΤΕΡΙΑΔΗΣ ΜΑΡΓΑΡΙΤΗΣ",
+          "ΔΗΜΟΥΤΣΗΣ ΠΑΝΤΕΛΗΣ",
+          "ΧΑΤΖΗΧΑΡΑΛΑΜΠΟΥΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΑΔΟΓΛΟΥ ΓΕΩΡΓΙΟΣ",
+          "ΣΤΑΥΡΙΔΗΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΠΑΠΑΛΑΜΠΙΔΗΣ ΖΗΣΗΣ",
+          "ΜΠΡΑΪΚΟΥΔΗ ΕΥΑΓΓΕΛΙΑ",
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΑΘΗΝΟΔΩΡΟΣ",
+          "ΜΑΝΑΒΗ ΜΑΡΙΑ",
+          "ΝΑΣΤΟΥΛΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΜΑΥΡΙΔΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΕΡΙΣΤΕΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΑΡΓΥΡΙΑΔΗΣ ΠΕΤΡΟΣ",
+          "ΑΡΧΟΝΤΙΔΗΣ ΑΡΧΟΝΤΗΣ",
+          "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ",
+          "ΟΡΜΑΝΛΙΔΗΣ ΧΡΗΣΤΟΣ",
+          "ΜΙΧΑΗΛΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΑΖΑΛΤΖΗΣ ΧΡΗΣΤΟΣ",
+          "ΣΟΥΚΟΥΛΔΑΝΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΛΕΒΕΝΤΗΣ ΧΡΗΣΤΟΣ",
+          "ΚΥΡΓΙΑΝΝΗΣ ΑΘΑΝΑΣΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΣΕΜΕΝ ΘΕΟΔΩΡΑ",
+          "ΣΤΡΑΝΤΖΕΛΗΣ ΜΙΧΑΗΛ",
+          "ΔΟΜΠΑΣ ΑΘΑΝΑΣΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 3,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 3,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "με 17 ψήφους",
+        "phraseAsExtracted": "Κατά πλειοψηφία με 17 ψήφους υπέρ και 7 κατά",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΜΑΥΡΙΔΗΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΠΕΡΙΣΤΕΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΑΡΓΥΡΙΑΔΗΣ ΠΕΤΡΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΟΡΜΑΝΛΙΔΗΣ ΧΡΗΣΤΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΜΙΧΑΗΛΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΥΡΓΙΑΝΝΗΣ ΑΘΑΝΑΣΙΟΣ",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "orestiada/Δημοτική Επιτροπή",
+  "tags": [
+    "orestiada",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "perVoteAbsence=yes",
+    "departure=yes",
+    "namedVoters=dissenters_only",
+    "voteTally=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

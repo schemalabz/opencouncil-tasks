@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/athens__oct6_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "oct6_2026",
+    "date": "2026-10-06",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/athens_oct6_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "2η Δημοτική Κοινότητα",
+      "type": "community"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα πραγματοποιηθεί με μικτό τρόπο, δια ζώσης ... και με τηλεδιάσκεψη"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Σας προσκαλούμε να συμμετέχετε στην 9η Συνεδρίαση του Συμβουλίου"
+    },
+    "sessionNumber": {
+      "value": 9,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "9η Συνεδρίαση του Συμβουλίου της 2ης Δημοτικής Κοινότητας"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "athens/2η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "community"
+  ]
+}

@@ -1,0 +1,297 @@
+{
+  "id": "decisions.matching/athens-may7_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/may7_2026",
+    "meetingDate": "2026-05-11",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100022189"
+    ],
+    "administrativeBodyName": "1η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-05-25",
+      "fromDate": "2026-05-11"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmp58vsro0r0i32lspz2a17tv",
+        "name": "Επανεξέταση της υπ' αρ. 23/26-1-26 απόφασης του Συμβουλίου της 1ης Δημοτικής Κοινότητας που αφορά τη χορήγηση παράτασης ωραρίου χρήσης μουσικής ή μουσικών οργάνων στο κατάστημα υγειονομικού ενδιαφέροντος «ΚΑΦΕΤΕΡΙΑ - ΣΝΑΚ ΜΠΑΡ» της \"WINELOVERS ΥΠΗΡΕΣΙΕΣ ΕΣΤΙΑΣΗΣ Ι.Κ.Ε.'', επί της οδού ΚΑΛΛΙΔΡΟΜΙΟΥ 17 & ΜΑΥΡΟΜΙΧΑΛΗ, κατόπιν της υπ' αρ. πρωτ. 63194/6-3-26 αίτησης θεραπείας του επιχειρηματία",
+        "agendaItemIndex": 23,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vskv0qzx32lsd7bm2c2v",
+        "name": "«ΚΑΦΕΝΕΙΟ – ΟΥΖΕΡΙ - ΜΠΑΡ» της \"MORGAN ALL JEANS E.E.'' , επί της οδού ΟΔΥΣΣΕΩΣ 16 (ΑΡ. ΠΡΩΤ.: 22787/27-1-26), από αναβολή",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsl80qzy32ls3k4350bo",
+        "name": "«ΚΑΦΕΝΕΙΟ-ΑΝΑΨΥΚΤΗΡΙΟ» της ¨ DINEX GROUP Ε.Ε.¨, επί της οδού ΚΑΡΥΤΣΗ 3Γ (ΑΡ. ΠΡΩΤ.: 84843/30-3-26)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vslk0qzz32lsha2ouxzz",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ» της ¨TEX MEX ΕΡΜΟΥ Ε.Ε.¨, στη συμβολή των οδών ΕΡΜΟΥ 18 & ΔΙΟΜΕΙΑΣ 2-6 (ΑΡ. ΠΡΩΤ.: 88025/1-4-26)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vslx0r0032lswslq27ah",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ - ΨΗΤΟΠΩΛΕΙΟ» της ¨ΔΟΥΡΕΙΟΣ ΙΠΠΟΣ PROJECT Ε.Ε.¨, στη συμβολή των οδών ΛΕΠΕΝΙΩΤΟΥ 1 & ΝΑΥΑΡΧΟΥ ΑΠΟΣΤΟΛΗ 2 (ΑΡ. ΠΡΩΤ.: 88288/1-4-26)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsmk0r0232ls6y4ykoaq",
+        "name": "«ΣΝΑΚ ΜΠΑΡ-ΚΑΦΕΤΕΡΙΑ-ΜΠΑΡ (χωρίς μουσικό και καλλιτεχνικό πρόγραμμα)» της ¨ΔΟΥΡΕΙΟΣ ΙΠΠΟΣ PROJECT Ε.Ε.¨, στη συμβολή των οδών ΑΓΑΘΑΡΧΟΥ 15, ΛΕΠΕΝΙΩΤΟΥ 2 & ΤΑΚΗ 24 (ΑΡ. ΠΡΩΤ.: 88331/1-4-26)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsn60r0432lstqs8yb3l",
+        "name": "«ΚΑΦΕΝΕΙΟ - ΑΝΑΨΥΚΤΗΡΙΟ» της ¨KARYTSI ATHENS E.E.¨, επί της οδού ΚΑΡΥΤΣΗ 3Α (ΑΡ. ΠΡΩΤ.: 92003/6-4-26)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsng0r0532lsgfx32jrn",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ-ΑΝΑΨΥΚΤΗΡΙΟ-ΜΠΑΡ» της ¨B.B. CONCEPTS ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.¨, επί της οδού ΔΡΑΓΑΤΣΑΝΙΟΥ 8 (ΑΡ. ΠΡΩΤ.: 93245/7-4-26)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsnt0r0632lsptyblbty",
+        "name": "Συζήτηση και λήψη απόφασης με έκφραση γνώμης της Κοινότητας και παραπομπή του αιτήματος χορήγησης παράτασης ωραρίου χρήσης μουσικής ή μουσικών οργάνων για το έτος 2026 στο κατάστημα υγειονομικού ενδιαφέροντος «ΕΣΤΙΑΤΟΡΙΟ» της ¨ARIA HOTELS ΞΕΝΟΔΟΧΕΙΑΚΗ ΙΔΙΟΚΤΗΣΙ ΚΑΙ ΕΚΜΕΤΑΛΛΕΥΣΗ ΑΚΙΝΗΤΩΝ Α.Ε.¨, εντός τουριστικού καταλύματος, στη συμβολή της ΠΛ. ΑΓ. ΕΙΡΗΝΗΣ με την οδό ΑΘΗΝΑΙΔΟΣ 10, στη Δημοτική Επιτροπή, λόγω αρμοδιότητας. (ΑΡ. ΠΡΩΤ.: 94810/8-4-26)",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsog0r0832lsxxi68lsb",
+        "name": "«ΑΝΑΨΥΚΤΗΡΙΟ ΧΩΡΙΣ ΠΑΡΑΣΚΕΥΑΣΤΗΡΙΟ - ΚΑΦΕΝΕΙΟ» της LARYSA SLOBODIAN, επί της οδού ΕΜ. ΜΠΕΝΑΚΗ 67 (ΑΡ. ΠΡΩΤ.: 99941/16-4-26)",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsor0r0932lsqdkmvxjj",
+        "name": "«ΚΑΦΕΤΕΡΙΑ-ΜΠΑΡ-EΣΤΙΑΤΟΡΙΟ πλην κέντρων διασκέδασης» της ¨THIS IS LOCO GROUP Ι.Κ.Ε.¨, επί της οδού ΦΑΛΗΡΟΥ 47 (ΑΡ. ΠΡΩΤ.: 103584/21-4-26)",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsp20r0a32lsoff1vu03",
+        "name": "«ΕΣΤΙΑΤΟΡΙΟ-ΜΠΑΡ-ΚΑΦΕΤΕΡΙΑ-ΛΙΑΝΙΚΗ ΔΙΑΘΕΣΗ ΤΡΟΦΙΜΩΝ ΚΑΙ ΠΟΤΩΝ χωρίς καλλιτεχνικό ή μουσικό πρόγραμμα», της ¨ΛΟΥ ΣΟΥ Ε.Ε.¨, επί της οδού ΜΕΛΑΝΘΙΟΥ 8 (ΑΡ. ΠΡΩΤ.: 103801/21-4-26)",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vspd0r0b32lsoil400qc",
+        "name": "«ΑΝΑΨΥΚΤΗΡΙΟ – ΚΑΦΕΤΕΡΙΑ – ΜΠΑΡ» του ΠΑΥΛΟΥ ΣΚΑΜΑΝΤΖΟΥΡΑ, επί της οδού ΠΡΑΞΙΤΕΛΟΥΣ 5 (ΑΡ. ΠΡΩΤ.: 109916/28-4-26)",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vspo0r0c32lshsb4h42u",
+        "name": "«ΖΑΧΑΡΟΠΛΑΣΤΕΙΟ-ΠΡΑΤΗΡΙΟ ΑΡΤΟΥ ΚΑΙ ΕΙΔΩΝ ΖΑΧΑΡΟΠΛΑΣΤΙΚΗΣ» της ¨ΡΟΖΕ ΜΙΝΙΟΝ Ε.Ε.¨, επί της οδού ΚΑΨΑΛΗ 3 (ΑΡ. ΠΡΩΤ.: 108106/24-4-26)",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vspz0r0d32lsx2oq2ek0",
+        "name": "«ΚΑΦΕΤΕΡΙΑ-ΜΠΑΡ-ΕΣΤΙΑΤΟΡΙΟ» της ¨ΚΑΨΑΛΗ ΕΣΤΙΑΣΗ Ε.Ε.¨, επί της οδού ΚΑΨΑΛΗ 6 (ΑΡ. ΠΡΩΤ.: 108129/24-4-26)",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsqf0r0e32ls3tcms8b9",
+        "name": "«ΣΝΑΚ ΜΠΑΡ - ΚΑΦΕΤΕΡΙΑ» της ¨BAR DU MARCHE I.K.Ε.¨, στη συμβολή των οδών ΚΟΛΟΚΟΤΡΩΝΗ 59 & ΣΤΟΑ ΛΙΜΠΟΝΑ 9 (ΑΡ. ΠΡΩΤ.: 110405/28-4-26)",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsqq0r0f32ls827ejfc4",
+        "name": "Συζήτηση και λήψη απόφασης με έκφραση γνώμης της Κοινότητας και παραπομπή του αιτήματος χορήγησης παράτασης ωραρίου χρήσης μουσικής ή μουσικών οργάνων για το έτος 2026 στο κατάστημα υγειονομικού ενδιαφέροντος «ΚΑΦΕΤΕΡΙΑ-ΣΝΑΚ ΜΠΑΡ», εντός τουριστικού καταλύματος, της ¨Β. ΣΤΑΥΡΟΥ - Δ. ΖΙΑΚΑΣ Α.Ε.¨, επί της οδού ΑΙΣΧΥΛΟΥ 4, στη Δημοτική Επιτροπή, λόγω αρμοδιότητας (ΑΡ. ΠΡΩΤ.: 110441/28-4-26)",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsr10r0g32lskupfhlod",
+        "name": "Επανεξέταση της υπ' αρ. 75/26-1-26 απόφασης του Συμβουλίου της 1ης Δημοτικής Κοινότητας που αφορά τη χορήγηση παράτασης ωραρίου χρήσης μουσικής ή μουσικών οργάνων στο κατάστημα υγειονομικού ενδιαφέροντος «ΕΠΙΧΕΙΡΗΣΗ ΑΝΑΨΥΧΗΣ (ΚΑΦΕΤΕΡΙΑ)» της ΣΩΤΗΡΙΑΣ ΤΑΜΠΑΣΗ, επί της οδού ΟΔΥΣΣΕΩΣ 8, κατόπιν της από 13/3/26 ηλεκτρονικής αίτησης θεραπείας της επιχειρηματία",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vsre0r0h32lsapau7rau",
+        "name": "Επανεξέταση της υπ' αρ. 141/9-2-26 απόφασης του Συμβουλίου της 1ης Δημοτικής Κοινότητας που αφορά τη χορήγηση παράτασης ωραρίου χρήσης μουσικής ή μουσικών οργάνων στο κατάστημα υγειονομικού ενδιαφέροντος «ΑΝΑΨΥΚΤΗΡΙΟ – ΜΠΑΡ – ΚΑΦΕΤΕΡΙΑ» της ¨ΜΠΑΡ ΦΑΛΑΙΝΑ Ε.Ε.¨, στη συμβολή των οδών ΑΣΚΛΗΠΙΟΥ 39 & ΔΙΔΟΤΟΥ, κατόπιν της υπ' αρ. πρωτ. 70618/13-3-26 αίτησης θεραπείας του επιχειρηματία",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmp58vssb0r0k32ls43f54bjh",
+        "name": "Συζήτηση και λήψη απόφασης για την έγκριση ή μη απομάκρυνσης ενός (1) δένδρου, είδος Σοφόρα ηλικίας άνω των 20 ετών το οποίο αποκλείει την είσοδο σε χώρους στάθμευσης σε επταόροφη πολυκατοικία επί της οδού Ραβινέ 15, σύμφωνα με το αίτημα της κατασκευστικής εταιρίας ΕΠΙΛΟΓΗ ΚΤΙΡΙΩΝ-Κ.ΜΠΕΝΑΚΟΠΟΥΛΟΣ Α.Τ.Ο.Ξ.Ε . (Σχετ.: Το υπ' αρ. πρωτ. 96777/9-4-26 έγγραφο του Τμήματος Πρασίνου 1ης Δημοτικής Κοινότητας της Δ/νσης Πρασίνου & Αστικής Πανίδας)",
+        "agendaItemIndex": 25,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmp58vskv0qzx32lsd7bm2c2v]": {
+      "value": "ΚΡ5ΚΩ6Μ-Δ9Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsl80qzy32ls3k4350bo]": {
+      "value": "Κ6Ζ0Ω6Μ-726",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vslk0qzz32lsha2ouxzz]": {
+      "value": "ΕΕ2ΝΩ6Μ-606",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vslx0r0032lswslq27ah]": {
+      "value": "6Υ18Ω6Μ-2ΟΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsmk0r0232ls6y4ykoaq]": {
+      "value": "6ΥΗ2Ω6Μ-ΖΟΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsn60r0432lstqs8yb3l]": {
+      "value": "6ΥΤΛΩ6Μ-Α7Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsng0r0532lsgfx32jrn]": {
+      "value": "6ΥΔΓΩ6Μ-Σ8Ρ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsnt0r0632lsptyblbty]": {
+      "value": "ΨΕΧΦΩ6Μ-Ο9Ι",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsog0r0832lsxxi68lsb]": {
+      "value": "6Υ84Ω6Μ-ΚΞΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsor0r0932lsqdkmvxjj]": {
+      "value": "6ΤΟ4Ω6Μ-1ΨΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsp20r0a32lsoff1vu03]": {
+      "value": "6ΤΩ1Ω6Μ-0Χ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vspd0r0b32lsoil400qc]": {
+      "value": "6ΥΧΦΩ6Μ-ΖΒ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vspo0r0c32lshsb4h42u]": {
+      "value": "94ΞΜΩ6Μ-ΜΥΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vspz0r0d32lsx2oq2ek0]": {
+      "value": "6ΤΙΖΩ6Μ-ΠΣ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsqf0r0e32ls3tcms8b9]": {
+      "value": "6Τ7ΜΩ6Μ-ΗΙ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsqq0r0f32ls827ejfc4]": {
+      "value": "9948Ω6Μ-ΔΓΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsr10r0g32lskupfhlod]": {
+      "value": "6Υ84Ω6Μ-Ι2Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsre0r0h32lsapau7rau]": {
+      "value": "6Τ41Ω6Μ-ΙΩΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vsro0r0i32lspz2a17tv]": {
+      "value": "ΕΡΦΛΩ6Μ-ΕΛΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmp58vssb0r0k32ls43f54bjh]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[ΨΠΨ4Ω6Μ-ΓΔΔ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvkk1o6007s1etfkfir82w7"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

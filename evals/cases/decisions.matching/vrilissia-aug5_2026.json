@@ -1,0 +1,144 @@
+{
+  "id": "decisions.matching/vrilissia-aug5_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/aug5_2026",
+    "meetingDate": "2026-08-05",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "100085541"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-08-19",
+      "fromDate": "2026-08-05"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmsg3gnp6009fx9egpdk21965",
+        "name": "Απολογισμός Κοινωνικού Παντοπωλείου 1ου εξαμήνου 2026",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmsg3gnpz00a6x9egjfny42m7",
+        "name": "Ανάδοχος κλειστού γυμναστηρίου με θόλο",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmsg3gnqy00afx9egtq9zs5zw",
+        "name": "Αντικατάσταση μέλους επιτροπής κυλικείου 1ου Λυκείου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmsg3gnrp00arx9egj62nlpkj",
+        "name": "Κάλυψη δαπάνης διαλογής στην πηγή",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cms8racrl0dbwj26ruwpcghmk",
+        "name": "Λήψη απόφασης για την αποδοχή ή μη του υπ. αρ. πρωτ. 13308/13.7.2026 αιτήματος του κ. X.K. για εξώδικο συμβιβασμό για αποζημίωση βλάβης οχήματος, εξαιτίας πρόσκρουσης σε τρύπα οδοστρώματος",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8racsi0dbxj26r9wy17513",
+        "name": "Επικύρωση πρακτικών της επιτροπής διενέργειας του Ηλεκτρονικού Ανοικτού Διαγωνισμού \"κάτω των ορίων\" για την εκτέλεση της δημόσιας σύμβασης με τίτλο: «ΠΡΟΜΗΘΕΙΑ ΕΙΔΩΝ ΚΑΘΑΡΙΟΤΗΤΑΣ ΚΑΙ ΕΥΠΡΕΠΙΣΜΟΥ ΤΟΥ ΔΗΜΟΥ ΒΡΙΛΗΣΣΙΩΝ» - Ανάδειξη Προσωρινών Αναδόχων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8racvy0dbyj26rye9s2exe",
+        "name": "Επιστροφή αχρεωστήτως καταβληθέντων ποσού στην κα Ν.Λ.",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8racyr0dbzj26rzk4uft55",
+        "name": "Ανάκληση της 16/2026 Απόφασης Δημοτικής Επιτροπής για την Αποδοχή της συμμετοχής του Δήμου Βριλησσίων, στο Πρόγραμμα χρηματοδότησης με τίτλο «Παρεμβάσεις Ενεργειακής Αποδοτικότητας σε Δημοτικά Κτίρια - Νέες δράσεις - Ενεργώ για τον Δήμο» και την υποβολή αίτησης χρηματοδότησης της Πράξης «Ενεργειακή Αναβάθμιση στο 4ο Δημοτικό Σχολείο Βριλησσίων»",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8rad0c0dc0j26r8oxqi6ck",
+        "name": "Αποδοχή της συμμετοχής του Δήμου Βριλησσίων, στο Πρόγραμμα χρηματοδότησης με τίτλο «Παρεμβάσεις Ενεργειακής Αποδοτικότητας σε Δημοτικά Κτίρια - Νέες δράσεις - Ενεργώ για τον Δήμο» και την υποβολή αίτησης χρηματοδότησης της Πράξης «Ενεργειακή Αναβάθμιση στο 4ο Δημοτικό Σχολείο Βριλησσίων»",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cms8racrl0dbwj26ruwpcghmk]": {
+      "value": "Ρ4ΠΤΩ9Ρ-ΝΡΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8racsi0dbxj26r9wy17513]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cms8racvy0dbyj26rye9s2exe]": {
+      "value": "ΡΡΡΧΩ9Ρ-Ρ5Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8racyr0dbzj26rzk4uft55]": {
+      "value": "ΨΘΣΗΩ9Ρ-Μ5Δ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8rad0c0dc0j26r8oxqi6ck]": {
+      "value": "6Ζ5ΨΩ9Ρ-2ΜΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsg3gnp6009fx9egpdk21965]": {
+      "value": "6ΝΜΥΩ9Ρ-ΙΑ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsg3gnpz00a6x9egjfny42m7]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmsg3gnqy00afx9egtq9zs5zw]": {
+      "value": "Ψ0ΔΨΩ9Ρ-Μ5Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsg3gnrp00arx9egj62nlpkj]": {
+      "value": "6ΖΜΧΩ9Ρ-ΗΘΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

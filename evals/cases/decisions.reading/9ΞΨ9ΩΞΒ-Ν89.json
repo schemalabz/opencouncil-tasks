@@ -1,0 +1,40 @@
+{
+  "id": "decisions.reading/9ΞΨ9ΩΞΒ-Ν89",
+  "suite": "decisions.reading",
+  "split": "holdout",
+  "input": {
+    "ada": "9ΞΨ9ΩΞΒ-Ν89",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΞΨ9ΩΞΒ-Ν89",
+    "meta": {
+      "notes": "oath summons (ΚΛΗΣΗ ΓΙΑ ΟΡΚΩΜΟΣΙΑ), not a decision"
+    }
+  },
+  "expect": {
+    "decisionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "other",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "orestiada/other",
+  "tags": [
+    "orestiada",
+    "other"
+  ]
+}

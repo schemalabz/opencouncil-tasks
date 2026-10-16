@@ -1,0 +1,162 @@
+{
+  "id": "decisions.extraction/6ΝΛΕΩ6Μ-ΛΣΤ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΝΛΕΩ6Μ-ΛΣΤ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΝΛΕΩ6Μ-ΛΣΤ",
+    "city": "athens",
+    "body": "3η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "namedVoters=dissenters_only",
+        "changeAnchor=session_phase",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Μαρίνα Ζώντου",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε κατά τη συζήτηση του τελευταίου θέματος της Συνεδρίασης, ήτοι το μεταφερθέν 1ο Θέμα της Ημερήσιας Διάταξης, η κα. Μαρίνα Ζώντου."
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Αποχώρησε κατά τη συζήτηση του τελευταίου θέματος της Συνεδρίασης, ήτοι το μεταφερθέν 1ο Θέμα της Ημερήσιας Διάταξης, η κα. Μαρίνα Ζώντου.",
+          "ada": "6ΝΛΕΩ6Μ-ΛΣΤ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-18T14:25:24.476Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-18",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1226,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΠΡΟΕΔΡΟΣ",
+          "ΜΕΛΗ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Φίλιππος Κέγκος",
+          "Παναγιώτα Αμανατίδου",
+          "Πέτρος Δεδούσης",
+          "Μαρία Δεπούντη",
+          "Βασίλειος Δήμου",
+          "Μαρίνα Ζώντου",
+          "Γεώργιος Κόρκας",
+          "Μαρία Μαργαρίτα (Μαρίτα) Μελέτη",
+          "Πρόδρομος Πέρδικος"
+        ],
+        "absentMembers": [
+          "Νίκη Ανδρικοπούλου",
+          "Ιωάννης Φελέκης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 7,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 7,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Βασίλειος Δήμου",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαρία Μαργαρίτα (Μαρίτα) Μελέτη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Παναγιώτα Αμανατίδου",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration stored as a vote",
+            "verdict": "extraction is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "reviewer: what the page prints are votes, not declarations"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "namedVoters=dissenters_only",
+    "changeAnchor=session_phase",
+    "declaration=yes"
+  ]
+}

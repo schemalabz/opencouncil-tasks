@@ -1,0 +1,102 @@
+{
+  "id": "decisions.matching/athens-jun17_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jun17_2026",
+    "meetingDate": "2026-06-17",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085601"
+    ],
+    "administrativeBodyName": "3η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-07-03",
+      "fromDate": "2026-06-17"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmq9wqsef0g562ectflzvh4g5",
+        "name": "Συζήτηση και έκφραση γνώμης για τις προτεινόμενες κυκλοφοριακές ρυθμίσεις στις οδούς Πτώου, Μεσσαπίου, Πραμάντων και Αγνάντων πέριξ της οδού Ρούμελης. (Σχετ.: το με Α.Π. 151488/09-06-2026 έγγραφο του Τμήματος Βιώσιμης Κινητικότητας της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq9wqsfg0g582ectmvvafas6",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ\", με την επωνυμία \"Φ. ΞΥΝΟΣ & ΣΙΑ Ο.Ε.\", στην οδό ΑΓΑΘΗΜΕΡΟΥ 1. (Σχετ.: η με Α.Π. 143131/29-05-2026 αίτηση)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq9wqsfv0g592ect91wf7qez",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ - ΚΑΦΕΤΕΡΙΑ - ΜΠΑΡ\", με την επωνυμία \"Felicita (Aperitivo & Wine Bar) Ο.Ε.\", στην οδό ΜΕΓΑΛΟΥ ΒΑΣΙΛΕΙΟΥ 40. (Σχετ.: η με Α.Π. 134607/21-05-2026 αίτηση)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmq9wqsg90g5a2ect6futbet0",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ - ΑΝΑΨΥΚΤΗΡΙΟ\", με την επωνυμία \"ΜΠΑΡΗΜΠΑΠΑ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ ΕΣΤΙΑΣΗΣ\", στην οδό ΤΡΩΩΝ 49. (Σχετ.: η με Α.Π. 134913/21-05-2026 αίτηση)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmql1bc9e00x410a1xb65e669",
+        "name": "Ανάπλαση πλατείας Ράμνες",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmq9wqsef0g562ectflzvh4g5]": {
+      "value": "9ΦΧΑΩ6Μ-ΕΙ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq9wqsfg0g582ectmvvafas6]": {
+      "value": "ΨΘΞ9Ω6Μ-ΡΝΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq9wqsfv0g592ect91wf7qez]": {
+      "value": "91ΒΡΩ6Μ-ΣΔ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq9wqsg90g5a2ect6futbet0]": {
+      "value": "Ψ9Ω0Ω6Μ-ΤΗΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmql1bc9e00x410a1xb65e669]": {
+      "value": "Ρ7Ε7Ω6Μ-57Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΕΠ3Ω6Μ-ΩΟ9]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvm79u700nk1etfzxdf28my"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

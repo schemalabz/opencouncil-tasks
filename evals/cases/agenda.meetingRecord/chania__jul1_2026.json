@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/chania__jul1_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "chania",
+    "meetingId": "jul1_2026",
+    "date": "2026-07-06",
+    "time": "17:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/chania_jul6_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Καλείστε σε ειδική δημόσια δια ζώσης συνεδρίαση"
+    },
+    "kind": {
+      "value": "presidencyElection",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "ειδική δημόσια δια ζώσης συνεδρίαση για την ανάδειξη νέου Προεδρείου Δημοτικού Συμβουλίου"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "council"
+  ],
+  "note": "Sitting on 6-7-2026 (key says jul1). Also elects Δημοτική Επιτροπή members."
+}

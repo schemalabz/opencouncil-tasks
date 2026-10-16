@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/sparta__dec9_2025",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "sparta",
+    "meetingId": "dec9_2025",
+    "date": "2025-12-09",
+    "time": "08:45",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/sparta_dec9_2025_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα γίνει στο Δημοτικό Κατάστημα (Δημαρχιακό Μέγαρο ... αίθουσα συνεδριάσεων)"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Καλείστε σε τακτική συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "sparta",
+    "committee"
+  ],
+  "note": "pdftotext has broken Greek glyphs but text is readable. «ΑΡΙΘ. ΠΡΟΣΚΛΗΣΕΩΣ: 65» is the invitation number."
+}

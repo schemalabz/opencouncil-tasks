@@ -1,9 +1,7 @@
-import crypto from "node:crypto";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-const { mockAiChat, NO_USAGE_MOCK, mockGetPageCount, cacheFiles } = vi.hoisted(() => ({
+const { mockAiChat, NO_USAGE_MOCK, mockGetPageCount } = vi.hoisted(() => ({
     mockAiChat: vi.fn(),
-    cacheFiles: new Map<string, string>(),
     NO_USAGE_MOCK: { input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 },
     mockGetPageCount: vi.fn().mockReturnValue(3), // Default: small PDF (≤10 pages)
 }));
@@ -36,37 +34,6 @@ vi.mock("pdf-lib", () => {
     };
 });
 
-// Keep the extraction cache in memory, so no test reads or writes the on-disk one
-vi.mock("node:fs", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("node:fs")>();
-    const isCache = (p: unknown) => typeof p === 'string' && p.includes('opencouncil-decisions-cache');
-    return {
-        ...actual,
-        default: {
-            ...actual,
-            readFileSync: (...args: Parameters<typeof actual.readFileSync>) => {
-                if (isCache(args[0])) {
-                    const data = cacheFiles.get(args[0] as string);
-                    if (data === undefined) throw new Error('cache miss (mocked)');
-                    return data;
-                }
-                return actual.readFileSync(...args);
-            },
-            writeFileSync: (...args: Parameters<typeof actual.writeFileSync>) => {
-                if (isCache(args[0])) {
-                    cacheFiles.set(args[0] as string, String(args[1]));
-                    return;
-                }
-                return actual.writeFileSync(...args);
-            },
-            mkdirSync: (...args: Parameters<typeof actual.mkdirSync>) => {
-                if (isCache(args[0])) return undefined;
-                return actual.mkdirSync(...args);
-            },
-        },
-    };
-});
-
 import {
     extractDecisionFromPdf,
     normalizeGreekName,
@@ -78,8 +45,7 @@ import {
     sameGreekPerson,
     greekNameInList,
     withDefaults,
-    extractionCacheKey,
-    EXTRACTION_SCHEMA_VERSION, adoptLaterVoteNames, withClosingFacts, withContinuationFacts, normalizeExtraction } from './decisionPdfExtraction.js';
+    adoptLaterVoteNames, withClosingFacts, withContinuationFacts, normalizeExtraction } from './decisionPdfExtraction.js';
 import { PDFDocument } from 'pdf-lib';
 import type { RawExtractedDecision, AttendanceAnchor } from './decisionPdfExtraction.js';
 import type { AttendanceAnchorKind, AttendancePhase } from '../../types.js';
@@ -408,33 +374,6 @@ describe('normalizeExtraction', () => {
     });
 });
 
-describe('extractionCacheKey', () => {
-    it('versions the key, so a reading written by an older prompt is never found', () => {
-        expect(extractionCacheKey('https://example.com/a.pdf')).toBe(`https://example.com/a.pdf#v${EXTRACTION_SCHEMA_VERSION}`);
-        expect(extractionCacheKey('https://example.com/a.pdf')).not.toBe('https://example.com/a.pdf');
-    });
-
-    it('keeps a hinted reading apart from a plain one, both under the version', () => {
-        const plain = extractionCacheKey('https://example.com/a.pdf');
-        const hinted = extractionCacheKey('https://example.com/a.pdf', { hints: 'the body prints ΣΥΝΘΕΣΗ' });
-        expect(hinted).not.toBe(plain);
-        expect(hinted.startsWith(`${plain}#`)).toBe(true);
-    });
-
-    // pollDecisions names the mayor and the scorer does not. Sharing a key meant
-    // whichever ran first owned the entry both read, and the name steers
-    // mayorPresent and presidedBy.
-    it('keeps a reading steered by a mayor name apart from every other', () => {
-        const url = 'https://example.com/a.pdf';
-        const plain = extractionCacheKey(url);
-        const withMayor = extractionCacheKey(url, { mayorName: 'Μαρία Μ' });
-        const otherMayor = extractionCacheKey(url, { mayorName: 'Γιώργος Γ' });
-        const mayorAndHints = extractionCacheKey(url, { mayorName: 'Μαρία Μ', hints: 'ΣΥΝΘΕΣΗ' });
-
-        expect(new Set([plain, withMayor, otherMayor, mayorAndHints]).size).toBe(4);
-    });
-});
-
 describe('withDefaults', () => {
     const WIRE_KINDS: AttendanceAnchorKind[] = ['agenda_item', 'decision_number', 'subject', 'phase', 'session_start', 'session_end'];
     const WIRE_PHASES: (AttendancePhase | null)[] = ['pre_agenda', 'out_of_agenda', null];
@@ -502,7 +441,6 @@ describe('withDefaults', () => {
 describe('extractDecisionFromPdf', () => {
     beforeEach(() => {
         mockAiChat.mockReset();
-        cacheFiles.clear();
     });
 
     it('returns extracted data from AI response', async () => {
@@ -962,42 +900,31 @@ describe('extractDecisionFromPdf', () => {
         mockGetPageCount.mockReturnValue(3);
     });
 
-    it('returns the warnings of a cached reading on a cache hit', async () => {
-        mockGetPageCount.mockReturnValue(154);
+    it('asks for recorded responses on every call, and reads none with skipCache', async () => {
+        const { getCallPolicy } = await import('../../lib/llm/callPolicy.js');
+        const policies: Array<boolean | undefined> = [];
+        mockAiChat.mockImplementation(async (opts: { cache?: string }) => {
+            expect(opts.cache).toBe('use');
+            policies.push(getCallPolicy().cacheRead);
+            return { result: { presentMembers: [], absentMembers: [], decisionExcerpt: 'ΑΠΟΦΑΣΙΖΕΙ', decisionNumber: '1/2025', references: '', voteResult: 'Ομόφωνα', voteDetails: [], attendanceChanges: [], incomplete: false }, usage: NO_USAGE_MOCK };
+        });
         const fetchSpy = mockFetch();
-        mockAiChat
-            .mockResolvedValueOnce(argosFront(true))          // pages 1-5
-            .mockResolvedValueOnce(argosContinuation(true))   // pages 5-7
-            .mockResolvedValueOnce(annexClosing);             // pages 152-154
+        mockFetch();
 
-        const first = await extractDecisionFromPdf('https://example.com/continuation-cut-cached.pdf');
-        const second = await extractDecisionFromPdf('https://example.com/continuation-cut-cached.pdf');
+        await extractDecisionFromPdf('https://example.com/policy.pdf');
+        await extractDecisionFromPdf('https://example.com/policy.pdf', undefined, true);
 
-        expect(mockAiChat).toHaveBeenCalledTimes(3);
-        expect(second.fromCache).toBe(true);
-        expect(second.warnings).toEqual(first.warnings);
-        expect(second.warnings).toEqual([expect.objectContaining({ code: 'CLOSING_BLOCK_CUT' })]);
-        expect(second.result.decisionAttendance).toEqual(first.result.decisionAttendance);
-        expect(second.result.voteDetails).toEqual(first.result.voteDetails);
-        expect(second.result).not.toHaveProperty('warnings');
+        expect(policies).toEqual([undefined, false]);
         fetchSpy.mockRestore();
-        mockGetPageCount.mockReturnValue(3);
+        mockAiChat.mockReset();
     });
 
-    it('returns no warnings on a hit of a reading cached without them', async () => {
-        const url = 'https://example.com/cached-before-warnings.pdf';
-        const hash = crypto.createHash('sha256').update(extractionCacheKey(url)).digest('hex').slice(0, 16);
-        cacheFiles.set(`/tmp/opencouncil-decisions-cache/decision-${hash}.json`, JSON.stringify({
-            presentMembers: ['Μέλος 1'], absentMembers: [], decisionExcerpt: 'ΑΠΟΦΑΣΙΖΕΙ', decisionNumber: '1/2025',
-            references: '', voteResult: 'Ομόφωνα', voteDetails: [], attendanceChanges: [], incomplete: false,
-        }));
-
-        const { result, warnings, fromCache } = await extractDecisionFromPdf(url);
-
+    it('reports a reading that cost nothing as served from recordings', async () => {
+        mockAiChat.mockResolvedValueOnce({ result: { presentMembers: [], absentMembers: [], decisionExcerpt: 'ΑΠΟΦΑΣΙΖΕΙ', decisionNumber: '2/2025', references: '', voteResult: 'Ομόφωνα', voteDetails: [], attendanceChanges: [], incomplete: false }, usage: NO_USAGE_MOCK });
+        const fetchSpy = mockFetch();
+        const { fromCache } = await extractDecisionFromPdf('https://example.com/free.pdf');
         expect(fromCache).toBe(true);
-        expect(mockAiChat).not.toHaveBeenCalled();
-        expect(warnings).toBeUndefined();
-        expect(result.decisionNumber).toBe('1/2025');
+        fetchSpy.mockRestore();
     });
 
     const WHOLE_READ_FIELDS = [
@@ -1380,12 +1307,6 @@ describe('withContinuationFacts', () => {
 
     it('rejects a continuation that prints another decision number', () => {
         expect(withContinuationFacts(base, { ...continuation, decisionNumber: '360/2025' })).toBe(base);
-    });
-});
-
-describe('EXTRACTION_SCHEMA_VERSION', () => {
-    it('retires the readings made before the continuation read', () => {
-        expect(EXTRACTION_SCHEMA_VERSION).toBe(12);
     });
 });
 

@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/ΨΑΛΞΩ1Λ-Β6Β",
+  "suite": "decisions.reading",
+  "split": "holdout",
+  "input": {
+    "ada": "ΨΑΛΞΩ1Λ-Β6Β",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΑΛΞΩ1Λ-Β6Β"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτικό Συμβούλιο",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "84",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-07-06",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "samothraki/Δημοτικό Συμβούλιο",
+  "tags": [
+    "samothraki",
+    "decision"
+  ]
+}

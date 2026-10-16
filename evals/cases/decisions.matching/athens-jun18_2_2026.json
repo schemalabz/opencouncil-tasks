@@ -1,0 +1,50 @@
+{
+  "id": "decisions.matching/athens-jun18_2_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "athens/jun18_2_2026",
+    "meetingDate": "2026-06-18",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100010590"
+    ],
+    "administrativeBodyName": "5η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-07-02",
+      "fromDate": "2026-06-18"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqgdswy907ij148d97p0v8w4",
+        "name": "Συζήτηση και λήψη απόφασης για την έγκριση της μελέτης «Διαμόρφωση πλατείας Ιερού Ναού Αγίας Βαρβάρας, Άνω Πατησίων» στο πλαίσιο του χρηματοδοτούμενου έργου Cooling Havens (σχετ. το με Α.Π. 151983-09/06/2026 έγγραφο της Δ/νσης Οδοποιίας, Αποχέτευσης & Κοινοχρήστων Χώρων Τμήμα Μελετών, Τεκμηρίωσης & Προγραμματισμού)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqgdswy907ij148d97p0v8w4]": {
+      "value": "9ΧΩ6Ω6Μ-ΚΗΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΡΩΗΓΩ6Μ-99Φ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvf2fji00tod1y2ehptshgv"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

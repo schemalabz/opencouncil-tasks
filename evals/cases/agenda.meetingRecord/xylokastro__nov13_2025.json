@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/xylokastro__nov13_2025",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "xylokastro",
+    "meetingId": "nov13_2025",
+    "date": "2025-11-13",
+    "time": "11:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/xylokastro_nov13_2025_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "remote",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "έκτακτη/κατεπείγουσα/με τηλεδιάσκεψη συνεδρίαση"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "έκτακτη/κατεπείγουσα/με τηλεδιάσκεψη συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "urgent": {
+      "value": true,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "xylokastro/Δημοτική Επιτροπή",
+  "tags": [
+    "xylokastro",
+    "committee",
+    "low-confidence"
+  ],
+  "note": "The invitation reads literally «έκτακτη/κατεπείγουσα/με τηλεδιάσκεψη» — looks like an unedited template listing options; urgent is clear, teleconference format is less certain."
+}

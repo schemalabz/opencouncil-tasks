@@ -1,0 +1,141 @@
+{
+  "id": "decisions.matching/sparta-dec30_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/dec30_2025",
+    "meetingDate": "2025-12-30",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-01-31",
+      "fromDate": "2025-12-30"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb8hjro00zjepq2h45tihms",
+        "name": "Απαλλαγή υπολόγου Παγίας Αγίου Κωνσταντίνου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb8hjs600zkepq2yhzdgx4k",
+        "name": "Αναμόρφωση προϋπολογισμού 2025 - απευθείας αναθέσεις",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb5bkpi03dp5kc9eilec8f8",
+        "name": "Οδοποιία Χρυσαφάς 2025",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bkpv03dq5kc9jfhfpxsb",
+        "name": "Απαλλαγή υπολόγου Παγίας Μυστρά",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bkq603dr5kc9kkwh2v8c",
+        "name": "Απαλλαγή υπολόγου Παγίας Ποταμιάς",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bkqj03ds5kc9tqepesml",
+        "name": "Απαλλαγή υπολόγου Παγίας Σκούρας",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bkqr03dt5kc9i3m362e6",
+        "name": "Έγκριση κίνησης οχημάτων Δήμου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5bkqy03du5kc9a7jr36n2",
+        "name": "Παράταση υπηρεσιών ειδικού ελέγχου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb5bkpi03dp5kc9eilec8f8]": {
+      "value": "9ΚΧΛΩ1Ν-Ε67",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bkpv03dq5kc9jfhfpxsb]": {
+      "value": "Ψ13ΧΩ1Ν-ΤΩΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bkq603dr5kc9kkwh2v8c]": {
+      "value": "9Θ59Ω1Ν-ΞΞΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bkqj03ds5kc9tqepesml]": {
+      "value": "92ΠΨΩ1Ν-4ΛΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bkqr03dt5kc9i3m362e6]": {
+      "value": "9ΝΘΦΩ1Ν-2ΨΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5bkqy03du5kc9a7jr36n2]": {
+      "value": "ΕΩΩΛΩ1Ν-ΧΓΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb8hjro00zjepq2h45tihms]": {
+      "value": "Ψ4Ε1Ω1Ν-ΡΑΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb8hjs600zkepq2yhzdgx4k]": {
+      "value": "63Τ2Ω1Ν-ΟΒΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[99ΩΣΩ1Ν-Ο7Δ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1wysu03n3u36p0d1o1wov"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "id": "decisions.matching/chalandri-feb11_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chalandri/feb11_2026",
+    "meetingDate": "2026-02-11",
+    "diavgeiaUid": "6314",
+    "diavgeiaUnitIds": [
+      "79311"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-02-25",
+      "fromDate": "2026-02-11"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmq73kk320snx6iuzmw65t0e3",
+        "name": "Καθορισμός ΑΛΕ προϋπολογισμού 2026",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq73kk3b0sny6iuzv30com35",
+        "name": "Παραχώρηση χώρου στο Σώμα Ελληνικού Οδηγισμού",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmq73kk3n0snz6iuze1fxdb1q",
+        "name": "Ορισμός εκπροσώπου στην Κυβέλη ΑΕ",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmlkso3hm05v5wvnfjgqebtk6",
+        "name": "Ορισμός Δημοτικού Συμβούλου για επιτροπή εκκαθάρισης",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3i005v6wvnfwcyvx3my",
+        "name": "Τροποποίηση επιτροπών Διαχείρισης Απορριμμάτων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3i905v7wvnfnb0s6caa",
+        "name": "Τροποποίηση επιτροπής Τεχνικών Υπηρεσιών",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3ih05v8wvnfd3kp0h3k",
+        "name": "Επέκταση παραχώρησης χώρου σε σχολείο",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3iq05v9wvnf01h7dxm1",
+        "name": "Συμμετοχή σε πρόγραμμα ανακύκλωσης λιπαντικών",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3js05vlwvnf8sdrkwg5",
+        "name": "Παράταση μίσθωσης περιπτέρου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3k905vmwvnfi99ai3bm",
+        "name": "Κοπή πεύκου Γλαύκης 42",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3kn05vnwvnfbbiqw3j9",
+        "name": "Κοπή πεύκου Κονίτσης 29",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3kx05vowvnf7a5r3vu5",
+        "name": "Παραχώρηση χώρου για παιχνίδια με κερματοδέκτη",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlkso3l405vpwvnfs8ifuljb",
+        "name": "Παραχώρηση χώρου για τραπεζοκαθίσματα NAYELI EE",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmlkso3hm05v5wvnfjgqebtk6]": {
+      "value": "9ΔΤ4ΩΗΔ-74Ζ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3i005v6wvnfwcyvx3my]": {
+      "value": "Ψ1Δ8ΩΗΔ-3ΚΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3i905v7wvnfnb0s6caa]": {
+      "value": "Ψ46ΦΩΗΔ-Λ7Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3ih05v8wvnfd3kp0h3k]": {
+      "value": "Ρ317ΩΗΔ-ΨΝΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3iq05v9wvnf01h7dxm1]": {
+      "value": "ΨΝΘΦΩΗΔ-ΙΦΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3js05vlwvnf8sdrkwg5]": {
+      "value": "96Β4ΩΗΔ-0ΑΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3k905vmwvnfi99ai3bm]": {
+      "value": "ΨΚΜΦΩΗΔ-8Ν5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3kn05vnwvnfbbiqw3j9]": {
+      "value": "ΨΩΕΝΩΗΔ-ΝΤ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlkso3kx05vowvnf7a5r3vu5]": {
+      "value": "Ψ31ΗΩΗΔ-2ΛΤ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu47sn5e0ah6mpr0qyqo4y94"
+    },
+    "link[cmlkso3l405vpwvnfs8ifuljb]": {
+      "value": "ΨΒ49ΩΗΔ-14Λ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq73kk320snx6iuzmw65t0e3]": {
+      "value": "ΨΙΔΛΩΗΔ-3Κ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmq73kk3b0sny6iuzv30com35]": {
+      "value": "Ρ1ΔΨΩΗΔ-ΚΥΦ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu47sqy70ah9mpr02wgvgbrp"
+    },
+    "link[cmq73kk3n0snz6iuze1fxdb1q]": {
+      "value": "ΨΗΒΘΩΗΔ-ΕΛ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

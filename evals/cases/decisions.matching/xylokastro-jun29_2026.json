@@ -1,0 +1,50 @@
+{
+  "id": "decisions.matching/xylokastro-jun29_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "xylokastro/jun29_2026",
+    "meetingDate": "2026-06-29",
+    "diavgeiaUid": "6222",
+    "diavgeiaUnitIds": [
+      "87737"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-24",
+      "fromDate": "2026-06-29"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqhucsbn00ojxz74s34lrbwc",
+        "name": "Ειδική Συνεδρίαση Λογοδοσίας Δημοτικής Αρχής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqhucsbn00ojxz74s34lrbwc]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[9ΡΕΗΩΞΠ-Φ35]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-26",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5bdmx06jwu36pac6n01n7"
+    }
+  },
+  "cluster": "xylokastro/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

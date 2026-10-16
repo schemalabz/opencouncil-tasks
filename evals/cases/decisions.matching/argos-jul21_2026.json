@@ -1,0 +1,115 @@
+{
+  "id": "decisions.matching/argos-jul21_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/jul21_2026",
+    "meetingDate": "2026-07-21",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "100087485"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-08-04",
+      "fromDate": "2026-07-21"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrswemcb00ebui73k27c8ciz",
+        "name": "Αποτύπωση Δημοτικής Αγοράς Άργους",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrswemd300ecui73rd37ckda",
+        "name": "Οδοποιία Αχλαδοκάμπου 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrswemdj00edui73l0dr4v1e",
+        "name": "Φεστιβάλ ΚΙΑΝΑ 2026 & πολιτιστικές εκδηλώσεις",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrswemdu00eeui73syd4argl",
+        "name": "Συντήρηση σχολικών κτιρίων Άργους",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrsweme500efui732lyjzywn",
+        "name": "Αποκατάσταση οδοστρώματος Δ.Ε. Άργους",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrswemeg00egui73j0fnae9w",
+        "name": "Ακινησία δημοτικού φορτηγού",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrswemcb00ebui73k27c8ciz]": {
+      "value": "637ΕΩΨΔ-Ω62",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrswemd300ecui73rd37ckda]": {
+      "value": "ΨΧΑΥΩΨΔ-ΖΙΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrswemdj00edui73l0dr4v1e]": {
+      "value": "ΨΦΠΧΩΨΔ-ΝΞΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrswemdu00eeui73syd4argl]": {
+      "value": "62ΩΞΩΨΔ-Θ4Κ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrsweme500efui732lyjzywn]": {
+      "value": "9ΖΨ6ΩΨΔ-41Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrswemeg00egui73j0fnae9w]": {
+      "value": "ΡΗ1ΞΩΨΔ-ΘΧΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[Ψ1ΙΘΩΨΔ-ΠΣ2]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5o2o507v17xm4r3t8stoh"
+    }
+  },
+  "cluster": "argos/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "id": "decisions.extraction/ΡΔΖΔΩΨ3-8ΒΖ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΡΔΖΔΩΨ3-8ΒΖ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΔΖΔΩΨ3-8ΒΖ",
+    "city": "argithea",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 6,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1892,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Σακκάς Νικόλαος",
+          "Μερεντίτης Κωνσταντίνος",
+          "Γραμμένος Κωνσταντίνος",
+          "Κορλού Όλγα",
+          "Θεοδωράκης Αθανάσιος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ομόφωνα / κατά πλειοψηφία",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "Κορλού Όλγα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Θεοδωράκης Αθανάσιος",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argithea/Δημοτική Επιτροπή",
+  "tags": [
+    "argithea",
+    "rollCallLayout=present_and_absent",
+    "partialVote=yes"
+  ]
+}

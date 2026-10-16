@@ -1,0 +1,5 @@
+# Decision reading on claude-sonnet-5-5; everything else as in production.
+name: sonnet-5-5-reading
+overrides:
+  "decision-reading":
+    model: claude-sonnet-5-5

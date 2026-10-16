@@ -1,0 +1,110 @@
+{
+  "id": "decisions.matching/athens-jul3_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/jul3_2026",
+    "meetingDate": "2026-07-03",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "78341"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-19",
+      "fromDate": "2026-07-03"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmr1rugn006gf12ol1ckn0qba",
+        "name": "Εκλογή των μελών του Προεδρείου του Δημοτικού Συμβουλίου και της Δημοτικής Επιτροπής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmr1rugn006gf12ol1ckn0qba]": {
+      "value": "6Α80Ω6Μ-Θ6Ι",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[95ΛΠΩ6Μ-Φ68]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0roh10k6sipx6gz32hqqp"
+    },
+    "reject[9Δ67Ω6Μ-8ΨΣ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0rogw0k6qipx6z3cfkutv"
+    },
+    "reject[9ΝΖ0Ω6Μ-ΤΣΡ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0rogr0k6oipx64eit0rec"
+    },
+    "reject[ΕΒΧ4Ω6Μ-ΜΛΕ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0roha0k6wipx65yzlpgcs"
+    },
+    "reject[ΛΠ4ΦΩ6Μ-ΗΩΨ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0roh50k6uipx63i9uv7lw"
+    },
+    "reject[Ρ3ΧΖΩ6Μ-Θ7Γ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0rog20k6iipx6znpqz78w"
+    },
+    "reject[ΨΧΞ2Ω6Μ-Β24]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0roga0k6kipx6ldghq4yz"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -29,6 +29,15 @@ describe('IdCompressor', () => {
     expect(unique.size).toBe(50);
   });
 
+  // Short IDs appear in summarize's prompts; random ones made every prompt unique, so no
+  // run could be replayed or served from the response cache.
+  it('gives the same long IDs the same short IDs in every compressor', () => {
+    const ids = ['seg-1', 'utt-2', 'subject-3'];
+    const a = new IdCompressor(); const b = new IdCompressor();
+    expect(ids.map(id => a.addLongId(id))).toEqual(ids.map(id => b.addLongId(id)));
+    expect(a.addLongId('seg-1')).toMatch(/^[a-z0-9]{8}$/);
+  });
+
 });
 
 describe('validateUrl', () => {

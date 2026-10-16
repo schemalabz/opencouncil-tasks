@@ -1,0 +1,129 @@
+{
+  "id": "decisions.extraction/9ΞΒ9ΩΞΒ-ΝΤΑ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΞΒ9ΩΞΒ-ΝΤΑ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΞΒ9ΩΞΒ-ΝΤΑ",
+    "city": "orestiada",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2756,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ",
+          "ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΕΜΜΑΝΟΥΗΛ",
+          "ΓΚΙΛΙΛΟΥΔΗ ΧΡΙΣΤΙΝΑ",
+          "ΤΣΟΜΠΑΝΙΔΗΣ ΑΝΤΩΝΙΟΣ",
+          "ΤΣΕΛΕΜΠΗΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΑΣΤΕΡΙΑΔΗΣ ΜΑΡΓΑΡΙΤΗΣ",
+          "ΣΕΜΕΝ ΘΕΟΔΩΡΑ",
+          "ΔΗΜΟΥΤΣΗΣ ΠΑΝΤΕΛΗΣ",
+          "ΧΑΤΖΗΧΑΡΑΛΑΜΠΟΥΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΑΔΟΓΛΟΥ ΓΕΩΡΓΙΟΣ",
+          "ΣΤΑΥΡΙΔΗΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΜΠΡΑΪΚΟΥΔΗ ΕΥΑΓΓΕΛΙΑ",
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΑΘΗΝΟΔΩΡΟΣ",
+          "ΜΑΝΑΒΗ ΜΑΡΙΑ",
+          "ΝΑΣΤΟΥΛΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΔΟΜΠΑΣ ΑΘΑΝΑΣΙΟΣ",
+          "ΜΑΥΡΙΔΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΠΕΡΙΣΤΕΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΑΡΓΥΡΙΑΔΗΣ ΠΕΤΡΟΣ",
+          "ΑΡΧΟΝΤΙΔΗΣ ΑΡΧΟΝΤΗΣ",
+          "ΟΡΜΑΝΛΙΔΗΣ ΧΡΗΣΤΟΣ",
+          "ΜΙΧΑΗΛΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΑΖΑΛΤΖΗΣ ΧΡΗΣΤΟΣ",
+          "ΣΟΥΚΟΥΛΔΑΝΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΥΡΜΑΝΗ ΠΑΥΛΙΝΑ",
+          "ΑΓΓΕΛΑΚΟΥΔΗΣ ΗΛΙΑΣ"
+        ],
+        "absentMembers": [
+          "ΣΤΡΑΝΤΖΕΛΗΣ ΜΙΧΑΗΛ",
+          "ΠΑΠΑΛΑΜΠΙΔΗΣ ΖΗΣΗΣ",
+          "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "orestiada/Δημοτικό Συμβούλιο",
+  "tags": [
+    "orestiada",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "partialVote=yes"
+  ]
+}

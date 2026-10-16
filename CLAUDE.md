@@ -30,17 +30,19 @@ npm test                              # unit tests (vitest)
 
 **Before committing, always run:** `npm run typecheck && npm test`
 
-## Debugging LLM calls (Langfuse)
+## Debugging and evaluating LLM calls
 
-Task runs are traced to Langfuse (needs `LANGFUSE_*` env vars — see [docs/observability.md](./docs/observability.md)): verbatim prompts, outputs, token usage, and cost for every call. Debug LLM behavior from the trace, not from logs.
+Every task run is archived with every call's verbatim request and response (`ARCHIVE_URL`), and also traced to Langfuse and PostHog when configured — see [docs/evals.md](./docs/evals.md) and [docs/observability.md](./docs/observability.md). Debug LLM behavior from the run, not from logs. The `runs` commands read the archive.
 
 ```bash
 npm run cli -- runs list --task summarize --meeting <cityId/meetingId>  # find runs
 npm run cli -- runs show <traceId>                                      # phase/call tree with usage & cost
+npm run cli -- runs call <traceId> '#1' -p request -x                   # one call, prompts inlined
 npm run cli -- runs compare --meeting <cityId/meetingId>                # diff two summarize runs
+npm run cli -- eval task run <task> --request req.json --cassette <traceId>  # replay a run offline
 ```
 
-Full prompt/output text of a call: `curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_SECRET_KEY" "$LANGFUSE_BASEURL/api/public/traces/<traceId>"`
+Model or prompt changes are evaluated with `eval run` / `eval compare` / `eval gate` against the cases in `evals/cases/` — never by eyeballing one run.
 
 ## Code conventions
 
@@ -68,7 +70,7 @@ Full prompt/output text of a call: `curl -s -u "$LANGFUSE_PUBLIC_KEY:$LANGFUSE_S
 
 ## Task versioning
 
-Tasks in `src/server.ts` have a `version` field in their `registerTask()` metadata. This version is sent with callbacks and stored on `TaskStatus` in the opencouncil database. Bump when consumers need to know results are different.
+Tasks in `src/tasks/registry.ts` (`TASKS`, which `src/server.ts` and the eval task runner both read) have a `version` field in their metadata. This version is sent with callbacks and stored on `TaskStatus` in the opencouncil database. Bump when consumers need to know results are different.
 
 ## External services
 

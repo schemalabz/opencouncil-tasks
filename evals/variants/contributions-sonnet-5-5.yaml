@@ -1,0 +1,5 @@
+# Speaker contributions (Phase 2 of summarize) on claude-sonnet-5-5 instead of Opus 4.6; everything else as in production.
+name: contributions-sonnet-5-5
+overrides:
+  "contributions:*":
+    model: claude-sonnet-5-5

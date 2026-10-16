@@ -1,0 +1,180 @@
+{
+  "id": "decisions.matching/athens-mar18_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/mar18_2026",
+    "meetingDate": "2026-03-18",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085601"
+    ],
+    "administrativeBodyName": "3η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-04-03",
+      "fromDate": "2026-03-18"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmmoq5hhu0ayxq4wlfwrp0nkq",
+        "name": "Ενημέρωση για τη Στεγαστική Πολιτική του Δήμου Αθηναίων από την κα. Νικολέττα Κανελλοπούλου, Διεύθυνση Κοινωνικής & Προσιτής Στέγασης της ΔΑΕΜ Α.Ε., τον κ. Λάζαρο Πετρομελίδη, Γραφείο Δημάρχου, Πολιτικές Στέγης και την κα Δήμητρα Σιατίτσα, αρχιτέκτων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hig0ayyq4wl139g4dgp",
+        "name": "Συζήτηση για το χώρο λειτουργίας της λαϊκής αγοράς Πετραλώνων και τη διατύπωση πιθανών προτάσεων για μετακίνησης της. (Σχετ.: το με Α.Π. 55627/27-02-2026 έγγραφο του Γραφείου Αντιπεριφερειάρχη Κεντρικού Τομέα Αθηνών, της Περιφέρειας Αττικής και το με Α.Π. 57886/03-03-2026 του Φορέα Λειτουργίας Λαϊκών Αγορών Περιφέρειας Αττικής ΝΠΔΔ)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hiw0ayzq4wlo9djdmlk",
+        "name": "Μετονομασία του τελικού τμήματος της οδού Αρακύνθου σε οδό «Δόρας Στράτου». (Σχετ.: το με Α.Π. 28788/02-02-2026 έγγραφο του Τμήματος Πολεοδομικών Εφαρμογών και Απαλλοτριώσεων της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hjb0az0q4wl4jz2f346",
+        "name": "Παραχώρηση θέσης στάθμευσης για το με αρ. κυκλοφορίας ΙΤΡ 2316 όχημα ατόμου με αναπηρία, στην οδό Δαιδαλιδών 20. (Σχετ.: το με Α.Π. 57584/02-03-2026 έγγραφο του Τμήματος Βιώσιμης Κινητικότητας της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hjo0az1q4wlji1sei64",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"Χ ΜΗΤΡΟΠΟΥΛΟΣ Κ ΣΙΑ ΟΕ\", στην οδό ΑΡΚΑΔΩΝ 4. (Σχετ.: η με Α.Π. 328004/23-12-2025 αίτηση, ΑΠΟ ΑΝΑΒΟΛΗ, ΠΡΑΞΗ 6/2026)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hk00az2q4wlh60ui3zu",
+        "name": "\"ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"CINAPOS ΕΤΕΡΟΡΡΥΘΜΗ ΕΤΑΙΡΕΙΑ\", στην οδό ΗΡΑΚΛΕΙΔΩΝ 10. (Σχετ.: η με Α.Π. 8822/14-01-2026 αίτηση, ΑΠΟ ΑΝΑΒΟΛΗ, ΠΡΑΞΗ 7/2026)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hkc0az3q4wlxvbfouuh",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"POLIS NEW AGE RESTAURANT ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.\", στην οδό ΠΕΡΣΕΦΟΝΗΣ 29 & ΙΑΚΧΟΥ, ΙΣΟΓΕΙΟ ΜΕ ΠΑΤΑΡΙ & Α ΟΡΟΦΟΣ. (Σχετ.: η με Α.Π. 31830/04-02-2026 αίτηση, ΑΠΟ ΑΝΑΒΟΛΗ, ΠΡΑΞΗ 69/2026)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hko0az4q4wlz02cisa5",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"POLIS NEW AGE RESTAURANT ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.\", στην οδό ΠΕΡΣΕΦΟΝΗΣ 29 & ΙΑΚΧΟΥ, ΙΣΟΓΕΙΟ ΜΕ ΥΠΟΓΕΙΟ. (Σχετ.: η με Α.Π. 31821/04-02-2026 αίτηση, ΑΠΟ ΑΝΑΒΟΛΗ, ΠΡΑΞΗ 70/2026)",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hl20az5q4wldu2uqu1m",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ – ΚΑΦΕΤΕΡΙΑ - ΜΠΑΡ\", με την επωνυμία \"ΖΩΝΤΟΣ ΑΝΤΩΝΙΟΣ\", στην οδό ΕΥΡΥΣΘΕΩΣ 4. (Σχετ.: η με Α.Π. 6530/12-01-2026 αίτηση)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hld0az6q4wluanhu61t",
+        "name": "\"ΚΥΛΙΚΕΙΟ\", με την επωνυμία \"FABRICA ATHENS ΑΣΤΙΚΗ ΜΗ ΚΕΡΔΟΣΚΟΠΙΚΗ ΕΤΑΙΡΕΙΑ\", στην οδό ΜΕΓΑΛΟΥ ΑΛΕΞΑΝΔΡΟΥ 125. (Σχετ.: η με Α.Π. 45500/17-02-2026 αίτηση)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmoq5hlo0az7q4wl3k28kpa2",
+        "name": "\"ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"ΠΑΠΑΝΙΚΟΛΑΟΥ - ΑΝΑΓΝΩΣΤΟΠΟΥΛΟΣ ΚΑΙ ΣΙΑ ΕΕ\", στην οδό ΣΦΑΚΤΗΡΙΑΣ 21. (Σχετ.: η με Α.Π. 55784/27-02-2026 αίτηση)",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmmoq5hhu0ayxq4wlfwrp0nkq]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmmoq5hig0ayyq4wl139g4dgp]": {
+      "value": "6Μ1ΨΩ6Μ-ΖΤΠ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu4342tm0a83mpr07levdawx"
+    },
+    "link[cmmoq5hiw0ayzq4wlo9djdmlk]": {
+      "value": "90Η6Ω6Μ-ΛΒΤ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu434nik0a86mpr0p7be6uqy"
+    },
+    "link[cmmoq5hjb0az0q4wl4jz2f346]": {
+      "value": "92ΕΩΩ6Μ-ΜΧΝ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu435gdo00c2y5k2lwumdf8m"
+    },
+    "link[cmmoq5hjo0az1q4wlji1sei64]": {
+      "value": "9Δ73Ω6Μ-ΝΤ9",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu436el50a8cmpr0vkci8vzw"
+    },
+    "link[cmmoq5hk00az2q4wlh60ui3zu]": {
+      "value": "ΨΧ82Ω6Μ-Θ6Ε",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu436zht0a8lmpr097a3pcco"
+    },
+    "link[cmmoq5hkc0az3q4wlxvbfouuh]": {
+      "value": "93Κ2Ω6Μ-ΙΩ1",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu433aen0a7xmpr0vvvyd05a"
+    },
+    "link[cmmoq5hko0az4q4wlz02cisa5]": {
+      "value": "6ΑΚΞΩ6Μ-Γ2Φ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu433kaw0a80mpr0reyz3qgp"
+    },
+    "link[cmmoq5hl20az5q4wldu2uqu1m]": {
+      "value": "91ΥΞΩ6Μ-4ΥΜ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu4378h300c5y5k2sk86l5lg"
+    },
+    "link[cmmoq5hld0az6q4wluanhu61t]": {
+      "value": "6Α00Ω6Μ-ΚΣΔ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu431c3w0a7umpr09w4xzioy"
+    },
+    "link[cmmoq5hlo0az7q4wl3k28kpa2]": {
+      "value": "9ΙΦΔΩ6Μ-2Γ7",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu435rib0a89mpr0tyvrxgpd"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

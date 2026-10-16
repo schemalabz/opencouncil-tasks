@@ -53,25 +53,35 @@ export async function resolveUploadKey(
     return { fileName: `${stem}_${crypto.randomUUID()}${ext}`, reuse: false };
 }
 
-export function createSpacesClient(): aws.S3 {
+export interface SpacesClientConfig {
+    endpoint?: string;
+    key?: string;
+    secret?: string;
+    forcePathStyle?: boolean;
+}
+
+export function createSpacesClient(config: SpacesClientConfig = {}): aws.S3 {
+    const forcePathStyle = config.forcePathStyle ?? isUsingMinIO();
     return new S3({
-        endpoint: process.env.DO_SPACES_ENDPOINT,
-        accessKeyId: process.env.DO_SPACES_KEY,
-        secretAccessKey: process.env.DO_SPACES_SECRET,
+        endpoint: config.endpoint ?? process.env.DO_SPACES_ENDPOINT,
+        accessKeyId: config.key ?? process.env.DO_SPACES_KEY,
+        secretAccessKey: config.secret ?? process.env.DO_SPACES_SECRET,
         region: "fra1",
-        // Only add MinIO-specific config when needed
-        ...(isUsingMinIO() && {
+        ...(forcePathStyle && {
             s3ForcePathStyle: true,
             signatureVersion: "v4",
         }),
     });
 }
 
-/** S3 reports an absent object as a `NotFound` code, or as a bare 404 on some endpoints. */
+/**
+ * S3 reports an absent object as a `NotFound` (head) or `NoSuchKey` (get) code, or as a
+ * bare 404 on some endpoints.
+ */
 export function isMissingObjectError(error: unknown): boolean {
     if (typeof error !== 'object' || error === null) return false;
     const { code, statusCode } = error as Partial<AWSError>;
-    return code === 'NotFound' || statusCode === 404;
+    return code === 'NotFound' || code === 'NoSuchKey' || statusCode === 404;
 }
 
 async function headExistingObject(client: aws.S3, bucket: string, key: string): Promise<ExistingObject | null> {

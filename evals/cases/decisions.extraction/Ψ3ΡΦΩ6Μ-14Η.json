@@ -1,0 +1,158 @@
+{
+  "id": "decisions.extraction/Ψ3ΡΦΩ6Μ-14Η",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ3ΡΦΩ6Μ-14Η",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ3ΡΦΩ6Μ-14Η",
+    "city": "athens",
+    "body": "2η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=dissenters_only",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1457,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 2ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Τσουκάτου Αγγελική",
+          "Τσαλίκη Νερατζούλα",
+          "Μαγείρου Ελένη",
+          "Ζωντήρος Παναγιώτης",
+          "Βλάχου Αγορή",
+          "Ζαχαράκης Μελέτης",
+          "Φωτάκη Κωνσταντινιά",
+          "Πλατανιάς Αθανάσιος",
+          "Σιδέρης Κωνσταντίνος",
+          "Αργυρέλλη Ιωάννα"
+        ],
+        "absentMembers": [
+          "Σακελλαρίου Θεοπίστη",
+          "Ιατρού Δήμητρα",
+          "Κανελλοπούλου Θεοδώρα",
+          "Πολυζώη Ελένη",
+          "Μπάσιος Φώτιος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Τσουκάτου Αγγελική",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Τσαλίκη Νερατζούλα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαγείρου Ελένη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Βλάχου Αγορή",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ζαχαράκης Μελέτης",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Φωτάκη Κωνσταντινιά",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Πλατανιάς Αθανάσιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Σιδέρης Κωνσταντίνος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Αργυρέλλη Ιωάννα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ζωντήρος Παναγιώτης",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/2η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=dissenters_only",
+    "declaration=yes"
+  ]
+}

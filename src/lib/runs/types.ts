@@ -1,21 +1,21 @@
 import { SummarizeResult } from '../../types.js';
 
-/** Metadata of a traced task run, derived from a Langfuse trace. */
+/** Metadata of an archived task run. */
 export interface RunInfo {
     traceId: string;
     timestamp: string;
     name: string;
     meeting: string | null;     // "cityId/meetingId"
-    version: string | null;     // task version tag
+    version: string | null;     // task version
     env: string | null;
-    promptsHash: string | null; // composite prompt fingerprint tag
+    promptsHash: string | null; // fingerprint of the distinct system prompts the run's calls used
     isError: boolean;
     isCancelled: boolean;
     totalCost: number | null;
     latencySeconds: number | null;
 }
 
-/** A run's metadata plus its full result payload (the trace output). */
+/** A run's metadata plus its full result payload. */
 export interface RunWithResult {
     info: RunInfo;
     result: SummarizeResult;
@@ -27,6 +27,8 @@ export interface SubjectView {
     name: string;
     description: string;
     agendaItemIndex: number | null;
+    /** Sectioned agendas restart their numbering, so an item is identified by section and number. */
+    agendaSectionIndex: number | null;
     nonAgendaReason: 'beforeAgenda' | 'outOfAgenda' | null;
     topic: string | null;
     withdrawn: boolean;

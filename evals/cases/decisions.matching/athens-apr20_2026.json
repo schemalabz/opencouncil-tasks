@@ -1,0 +1,128 @@
+{
+  "id": "decisions.matching/athens-apr20_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/apr20_2026",
+    "meetingDate": "2026-04-20",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "78341"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-05-04",
+      "fromDate": "2026-04-20"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmo2k2kyw047l1klywpjo2zj6",
+        "name": "Σχετικά με την καθυστέρηση στην ολοκλήρωση των εργασιών στη Γραμμή 4 του Μετρό",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2k2kzd047m1klyeymc72tu",
+        "name": "Σχετικά με ενέργειες για την υλοποίηση δικτύου κίνησης ποδηλάτου στο Δήμο Αθηναίων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2k2kzm047n1kly9h9bifcj",
+        "name": "Σχετικά με την πορεία του έργου αναβάθμισης του δικτύου ηλεκτροφωτισμού της Αθήνας",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2k2l02047o1klyqw83sytb",
+        "name": "Σχετικά με διαμόρφωση κοινόχρηστου χώρου πρασίνου στο λόφο της Γκράβας",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2k2l0j047p1klyi1v1t194",
+        "name": "Σχετικά με την κατάσταση που επικρατεί στην Τεχνόπολη του Δήμου Αθηναίων ως προς την λογική της εμπορευματοποίησης δράσεων, την έλλειψη προσωπικού και την απουσία συμβάσεων στις προμήθειες του τομέα εστίασης",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2k2l0z047q1klyfozcffdm",
+        "name": "Ερώτημα αναφορικά με το σχεδιασμό (μεσοπρόθεσμο ή μακροπρόθεσμο) της Δημοτικής Αρχής για την διάσωση των δένδρων γειτονιάς και του πρασίνου στους λόφους της Αθήνας",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2k2l18047r1kly1ur54bb0",
+        "name": "Ερώτημα σχετικά με τη λειτουργία καταστημάτων υγειονομικού ενδιαφέροντος",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmo2k2kyw047l1klywpjo2zj6]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2k2kzd047m1klyeymc72tu]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2k2kzm047n1kly9h9bifcj]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2k2l02047o1klyqw83sytb]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2k2l0j047p1klyi1v1t194]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2k2l0z047q1klyfozcffdm]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2k2l18047r1kly1ur54bb0]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[9ΑΗΖΩ6Μ-2ΕΕ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0tidw0kqzipx695oqy069"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

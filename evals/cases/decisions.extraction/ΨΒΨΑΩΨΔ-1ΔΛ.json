@@ -1,0 +1,220 @@
+{
+  "id": "decisions.extraction/ΨΒΨΑΩΨΔ-1ΔΛ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΒΨΑΩΨΔ-1ΔΛ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΒΨΑΩΨΔ-1ΔΛ",
+    "city": "argos",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 6,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "namedVoters=dissenters_only",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "this_document",
+        "asExtracted": [
+          {
+            "name": "Χ. Πετσέλης",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Γίνεται μνεία ότι ο Δημοτικός Σύμβουλος κ. Χ. Πετσέλης κατά την συζήτηση του 3ου θέματος αποβλήθηκε από τον κ. Πρόεδρο από την συνέχεια της συνεδρίασης λόγω ανάρμοστης συμπεριφοράς προς τον κ. Δήμαρχο."
+          },
+          {
+            "name": "Π. Σκούφης",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Επίσης κατά την λήψη της παρούσας απόφασης είχαν αποχωρήσει και ήταν εκτός της αιθούσης οι Δημοτικοί Σύμβουλοι κ.κ. Π. Σκούφης, Ν. Δελής, Ι. Αθανασόπουλος και Π. Μπουλούκος.",
+            "anchor": {
+              "kind": "this_document",
+              "agendaItem": null,
+              "decisionNumber": null,
+              "phase": null,
+              "timing": null
+            }
+          },
+          {
+            "name": "Ν. Δελής",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Επίσης κατά την λήψη της παρούσας απόφασης είχαν αποχωρήσει και ήταν εκτός της αιθούσης οι Δημοτικοί Σύμβουλοι κ.κ. Π. Σκούφης, Ν. Δελής, Ι. Αθανασόπουλος και Π. Μπουλούκος.",
+            "anchor": {
+              "kind": "this_document",
+              "agendaItem": null,
+              "decisionNumber": null,
+              "phase": null,
+              "timing": null
+            }
+          },
+          {
+            "name": "Ι. Αθανασόπουλος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Επίσης κατά την λήψη της παρούσας απόφασης είχαν αποχωρήσει και ήταν εκτός της αιθούσης οι Δημοτικοί Σύμβουλοι κ.κ. Π. Σκούφης, Ν. Δελής, Ι. Αθανασόπουλος και Π. Μπουλούκος.",
+            "anchor": {
+              "kind": "this_document",
+              "agendaItem": null,
+              "decisionNumber": null,
+              "phase": null,
+              "timing": null
+            }
+          },
+          {
+            "name": "Π. Μπουλούκος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Επίσης κατά την λήψη της παρούσας απόφασης είχαν αποχωρήσει και ήταν εκτός της αιθούσης οι Δημοτικοί Σύμβουλοι κ.κ. Π. Σκούφης, Ν. Δελής, Ι. Αθανασόπουλος και Π. Μπουλούκος.",
+            "anchor": {
+              "kind": "this_document",
+              "agendaItem": null,
+              "decisionNumber": null,
+              "phase": null,
+              "timing": null
+            }
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Επίσης κατά την λήψη της παρούσας απόφασης είχαν αποχωρήσει και ήταν εκτός της αιθούσης οι Δημοτικοί Σύμβουλοι κ.κ. Π. Σκούφης, Ν. Δελής, Ι. Αθανασόπουλος και Π. Μπουλούκος.",
+          "ada": "ΨΒΨΑΩΨΔ-1ΔΛ",
+          "page": 5,
+          "adjudicatedAt": "2026-09-19"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-19",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 4896,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Α. Βαρδάκας",
+          "Α. Αργυροπούλου",
+          "Π. Μπουλούκος",
+          "Χ. Φλεβάρης",
+          "Κ. Αδρακτάς",
+          "Χ. Σελλής",
+          "Κ. Αναγνωστόπουλος",
+          "Γ. Αλεξανδρόπουλος",
+          "Α. Λιόλιος",
+          "Φ. Κολεβέντης",
+          "Φ. Ξηνταροπούλου",
+          "Χ. Πούλος",
+          "Γ. Δημάκης",
+          "Α. Αθανασόπουλος",
+          "Δ. Γάτσιου",
+          "Β. Καραβίδας",
+          "Χ. Πετσέλης",
+          "Π. Σκούφης",
+          "Ν. Δελής",
+          "Ι. Αθανασόπουλος",
+          "Γ. Γρίβας",
+          "Π. Δούρος"
+        ],
+        "absentMembers": [
+          "Γ. Κωτσονάρος",
+          "Σ. Δαμάλας",
+          "Μ. Ζουλούμη",
+          "Π. Καμπόσος",
+          "Γ. Σελλής",
+          "Δ. Καμπόσος",
+          "Γ. Σαρρής",
+          "Π.-Μ. Ρέσκος",
+          "Ι. Νώτης",
+          "Π. Χασάπης",
+          "Μ. Παναγιώτου",
+          "Π. Παπαϊωάννου",
+          "Π. Διολίτσης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "Γ. Γρίβας",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argos",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "namedVoters=dissenters_only",
+    "partialVote=yes"
+  ]
+}

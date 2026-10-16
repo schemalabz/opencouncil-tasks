@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/chalandri__jul16_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "chalandri",
+    "meetingId": "jul16_2026",
+    "date": "2026-07-16",
+    "time": "13:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/chalandri_jul16_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στο Δημοτικό Κατάστημα (Αγ. Γεωργίου 30 - Γραφείο Δημάρχου)"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "καλεί σε συνεδρίαση τα τακτικά μέλη της Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "chalandri/Δημοτική Επιτροπή",
+  "tags": [
+    "chalandri",
+    "committee"
+  ],
+  "note": "'28η ΠΡΟΣΚΛΗΣΗ' is an invitation number. Item 1 is vice-president election among other regular items. 'τακτικά μέλη' refers to members, not sitting type."
+}

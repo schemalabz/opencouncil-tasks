@@ -1,0 +1,94 @@
+{
+  "id": "decisions.matching/vrilissia-aug26_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "vrilissia/aug26_2026",
+    "meetingDate": "2026-08-26",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "100085541"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-09-09",
+      "fromDate": "2026-08-26"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmt47rkkl03d998hhe529wm5e",
+        "name": "Έγκριση δαπανών και 2η αποκατάσταση πάγιας προκαταβολής της παρ. 9 του άρθρου 487 του ν. 5314/2026, για το έτος 2026, με υπόλογο - διαχειρίστρια τη Διευθύντρια του 3ου Δημοτικού Βριλησσίων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt47rkl303da98hhvz7hsb6e",
+        "name": "Έγκριση δαπανών και 2η αποκατάσταση πάγιας προκαταβολής της παρ. 9 του άρθρου 487 του ν. 5314/2026, για το έτος 2026, με υπόλογο - διαχειρίστρια τη Διευθύντρια του 2ου Λυκείου Βριλησσίων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt47rkld03db98hhzhtz0vnv",
+        "name": "Καθορισμός γενικού, αντικειμενικού πλαισίου κριτηρίων για τη χορήγηση διευκολύνσεων τμηματικής καταβολής βεβαιωμένων οφειλών προς τον Δήμο Βριλησσίων, σύμφωνα με το άρθρο 513 του Ν. 5314/2026 (ΦΕΚ Α΄103/29.06.2026)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt47rkln03dc98hhjgwqtn3f",
+        "name": "Λήψη απόφασης για συμμετοχή του Δήμου Βριλησσίων στο «Πρόγραμμα επιχορήγησης για την απασχόληση ανέργων ηλικίας 55 άνω, σε φορείς του δημόσιου τομέα όπως αυτός οριοθετείται με την περ. α` της παρ. 1 του άρθρου 14 του ν. 4270/2014 (Α` 143) και ειδικότερα: α) σε κάθε είδους κάθε είδους Νομικά Πρόσωπα Δημοσίου Δικαίου (ΝΠΔΔ), τους ΟΤΑ α΄και β΄ βαθμού, τις Αποκεντρωμένες Διοικήσεις, αποκεντρωμένες Υπηρεσίες ή/και περιφερειακές Διευθύνσεις των φορέων Κεντρικής Διοίκησης β) σε επιχειρήσεις, φορείς και οργανισμούς του δημοσίου τομέα, που ασκούν τακτικά οικονομική δραστηριότητα, και γ) σε επιχειρήσεις της τοπικής αυτοδιοίκησης πρώτου και δεύτερου βαθμού (Δήμων και Περιφερειών) του ν. 3852/2010 (Α΄ 87) που ασκούν τακτικά οικονομική δραστηριότητα, για πρόσληψη δεκαοκτώ (18) υπαλλήλων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmt47rklw03dd98hh8grubmrp",
+        "name": "Έγκριση πρόσληψης προσωπικού ιδιωτικού δικαίου ορισμένου χρόνου χρονικής διάρκειας οκτώ (8) μηνών για την κάλυψη των αναγκών των ανταποδοτικών υπηρεσιών του Δήμου Βριλησσίων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmt47rkkl03d998hhe529wm5e]": {
+      "value": "9Φ29Ω9Ρ-5ΞΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt47rkl303da98hhvz7hsb6e]": {
+      "value": "Ρ787Ω9Ρ-ΝΡΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt47rkld03db98hhzhtz0vnv]": {
+      "value": "ΨΨΕΔΩ9Ρ-ΑΧΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmt47rkln03dc98hhjgwqtn3f]": {
+      "value": "ΡΩΖΗΩ9Ρ-Χ0Π",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:ca5ea07c63b4b424584419b6e3063444d"
+    },
+    "link[cmt47rklw03dd98hh8grubmrp]": {
+      "value": "6Δ1ΑΩ9Ρ-ΔΑΠ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:cbde35b2a214544e08c1055a12bee2fa5"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

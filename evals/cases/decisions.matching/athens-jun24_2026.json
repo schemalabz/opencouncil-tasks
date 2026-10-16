@@ -1,0 +1,138 @@
+{
+  "id": "decisions.matching/athens-jun24_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "athens/jun24_2026",
+    "meetingDate": "2026-06-24",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "78341"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-08",
+      "fromDate": "2026-06-24"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqhv8ur102eskn9at1d1no0k",
+        "name": "Ειδική Συνεδρίαση Λογοδοσίας",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqtn1ee60071w4924loeevye",
+        "name": "Εξελίξεις Δημοτικής Συγκοινωνίας Αθήνας",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqtn1ees007sw492q9mlcx8s",
+        "name": "Διαχείριση θορύβου και έλεγχος ηχορύπανσης",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqtn1efe008bw492hfvzazuw",
+        "name": "Άρδευση αστικού πρασίνου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqtn1ebz004sw492a3jaogm5",
+        "name": "Ανάγκη νέων βρεφονηπιακών σταθμών",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqtn1ecz005rw492y41wqa0y",
+        "name": "Πρόγραμμα κοινωνικής κατοικίας",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqtn1edl006lw49260st6on7",
+        "name": "Κατάσταση πεζοδρομίων και αναπλάσεις",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqhv8ur102eskn9at1d1no0k]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqtn1ebz004sw492a3jaogm5]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqtn1ecz005rw492y41wqa0y]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqtn1edl006lw49260st6on7]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqtn1ee60071w4924loeevye]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqtn1ees007sw492q9mlcx8s]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqtn1efe008bw492hfvzazuw]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[ΡΗΩΣΩ6Μ-4ΩΟ]": {
+      "value": {
+        "subjectId": "cmqovqpuu01txc32r1lx2pjpz"
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-02",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:9e1caa98-cae4-4653-acda-1096a603abc8"
+    },
+    "reject[ΨΦΩ8Ω6Μ-Ζ29]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0sj090kdoipx6vvkgwc0l"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

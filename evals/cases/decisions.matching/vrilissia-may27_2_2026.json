@@ -1,0 +1,175 @@
+{
+  "id": "decisions.matching/vrilissia-may27_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/may27_2_2026",
+    "meetingDate": "2026-05-27",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-06-10",
+      "fromDate": "2026-05-27"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmpqq8v8900x1aoez7mu54zsy",
+        "name": "Δημοσίευση στο ΦΕΚ της απόφασης για ΣΒΑΚ",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmpi5mjkm0044anhjz2rdkezn",
+        "name": "Συγκρότηση Ειδικής Επιτροπής Αξιολόγησης αιτήσεων εγγραφών βρεφών στα βρεφικά τμήματα των Βρεφονηπιακών Σταθμών για τη σχολική χρονιά 2026 –2027",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjl10045anhjk8juisim",
+        "name": "Συγκρότηση Ειδικής Επιτροπής Αξιολόγησης αιτήσεων εγγραφών νηπίων στα παιδικά τμήματα των Βρεφονηπιακών Σταθμών για τη σχολική χρονιά 2026 –2027",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjl70046anhjja8wgjqp",
+        "name": "Συγκρότηση Ειδικής Επιτροπής Επαναξιολόγησης αιτήσεων για την απαλλαγή ή τον επαναπροσδιορισμό της Οικονομικής Εισφοράς στους Βρεφονηπιακούς Σταθμούς για την σχολική χρονιά 2026 – 2027",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjle0047anhjxgazyyyi",
+        "name": "Συγκρότηση Επιτροπής Εξέτασης ενστάσεων επί των προσωρινών πινάκων μοριοδότησης αιτήσεων Εγγραφών παιδιών στους Βρεφονηπιακούς Σταθμούς για τη σχολική χρονιά 2026 – 2027",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjlk0048anhji8uvffzu",
+        "name": "Εισήγηση για σύσταση επιτροπής αξιολόγησης για την άρση κυκλοφορίας οχημάτων λόγω ακαταλληλότητας ή ασύμφορου κυκλοφορίας",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjlr0049anhjij2lc7gs",
+        "name": "Παραχωρήσεις χώρων",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjm6004aanhj9x5rkqvu",
+        "name": "Λήψη απόφασης για την έγκριση ή μη δωρεάν παραχώρησης χρήσης ως έδρα δημοτικού ακινήτου επί της οδού Αθανασίου Διάκου αρ. 16- Βριλήσσια στο νομικό πρόσωπο «ΟΡΙΖΟΝΤΕΣ ΠΟΛΙΤΙΣΜΟΥ ΚΑΙ ΠΑΡΑΔΟΣΗΣ (Ο.Π.ΠΑ.)» με κοινωφελή ή/και προάγουσα τα τοπικά συμφέροντα δραστηριότητα",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjmg004banhjra7zb3x7",
+        "name": "Aπομάκρυνση ξερών και επικίνδυνων δένδρων για λόγους ασφαλείας",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjmm004canhjcmtk69wf",
+        "name": "Τρίτη (3η) τροποποίηση τεχνικού προγράμματος έτους 2026",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpi5mjmt004danhjkvzqn52c",
+        "name": "Έγκριση τρίτης (3ης) αναμόρφωσης προϋπολογισμού οικονομικού έτους 2026",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmpi5mjkm0044anhjz2rdkezn]": {
+      "value": "98ΠΧΩ9Ρ-ΠΛ6",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:cebb6f99b381f49b6a76f113118cf755e"
+    },
+    "link[cmpi5mjl10045anhjk8juisim]": {
+      "value": "ΨΑΡΟΩ9Ρ-511",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c94fb7215cecd4c9993c95c3a46337807"
+    },
+    "link[cmpi5mjl70046anhjja8wgjqp]": {
+      "value": "ΨΤΥΣΩ9Ρ-ΗΗ1",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c40db9f678be248e6aa23e8b2ec956a3c"
+    },
+    "link[cmpi5mjle0047anhjxgazyyyi]": {
+      "value": "Ψ46ΕΩ9Ρ-ΡΤΕ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c75e5444ae7d74a03b37722e27fb7f2fa"
+    },
+    "link[cmpi5mjlk0048anhji8uvffzu]": {
+      "value": "ΡΒΧΠΩ9Ρ-ΠΦΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpi5mjlr0049anhjij2lc7gs]": {
+      "value": "ΨΘΥ7Ω9Ρ-ΚΚ6",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c24c8d8fd033845e086c1829ba8a89b3b"
+    },
+    "link[cmpi5mjm6004aanhj9x5rkqvu]": {
+      "value": "Ψ20ΦΩ9Ρ-Σ39",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpi5mjmg004banhjra7zb3x7]": {
+      "value": "ΨΨΝΝΩ9Ρ-ΒΝΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpi5mjmm004canhjcmtk69wf]": {
+      "value": "ΡΞΙΨΩ9Ρ-ΟΜΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpi5mjmt004danhjkvzqn52c]": {
+      "value": "9ΜΡ7Ω9Ρ-ΘΣΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpqq8v8900x1aoez7mu54zsy]": {
+      "value": "Ψ109Ω9Ρ-8ΤΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

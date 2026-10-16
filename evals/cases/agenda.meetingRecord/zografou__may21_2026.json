@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/zografou__may21_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "zografou",
+    "meetingId": "may21_2026",
+    "date": "2026-05-21",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/zografou_may21_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "kind": {
+      "value": "special",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "ΕΙΔΙΚΗ ΣΥΝΕΔΡΙΑΣΗ (5η) ... 1. Έκθεση Πεπραγμένων Δημοτικής Επιτροπής Έτους 2025"
+    },
+    "sessionNumber": {
+      "value": 5,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Σας προσκαλούμε σε ΕΙΔΙΚΗ ΣΥΝΕΔΡΙΑΣΗ (5η)"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Ειδική sitting whose only item is the annual report (Έκθεση Πεπραγμένων) of the Δημοτική Επιτροπή for 2025, not of the δημοτική αρχή; could arguably be null. No place or manner stated. [relabelled null: annualReport is the δημοτική αρχή's απολογισμός only]"
+}

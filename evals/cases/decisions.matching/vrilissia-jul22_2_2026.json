@@ -1,0 +1,211 @@
+{
+  "id": "decisions.matching/vrilissia-jul22_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/jul22_2_2026",
+    "meetingDate": "2026-07-22",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-08-05",
+      "fromDate": "2026-07-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrqbuttl0g7id1iaukfog04w",
+        "name": "Συγχωνεύσεις τμημάτων στα Νηπιαγωγεία Βριλησσίων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrz6dyx608tk6c6lymz7mquo",
+        "name": "Ανάθεση υπηρεσιών καθαριότητας σε ιδιώτη",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmrz6dyy108uz6c6li8de3crl",
+        "name": "Ορισμός υπευθύνων λογαριασμού για ΠΔΕ",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmrqbutt40g7hd1iapdnxtzfc",
+        "name": "Απομάκρυνση ξερών και επικίνδυνων δένδρων για λόγους ασφάλειας",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbuttu0g7jd1iagd18p187",
+        "name": "Ορισμός δικαιούχων αποζημίωσης λόγω συμμετοχής σε συνεδριάσεις του ΔΣ και προσδιορισμός ύψους της εν λόγω καταβαλλόμενης αποζημίωσης σύμφωνα με τις διατάξεις των παρ. 1α και 1β του άρθρου 299, του ν.5314/2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutu20g7kd1iaa45x8lbb",
+        "name": "Ορισμός δικαιούχων αποζημίωσης λόγω συμμετοχής σε συνεδριάσεις της Δημοτικής Επιτροπής και προσδιορισμός ύψους της εν λόγω καταβαλλόμενης αποζημίωσης» σύμφωνα με τις διατάξεις της παρ. 1γ. του άρθρου 299, του ν. 5314/2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutu90g7ld1iains8nfhl",
+        "name": "1. Ανάκληση της υπ' αριθμ. 19/2026 Απόφασης του Δημοτικού Συμβουλίου, 2. Συγκρότηση της Επιτροπής Συμβιβαστικής Επίλυσης Φορολογικών Διαφορών και Αμφισβητήσεων έτους 2026 σύμφωνα με τις διατάξεις του άρθρου 433 του ν. 5314/2026",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutui0g7md1iadf5a3nig",
+        "name": "1. Ανάκληση της υπ' αριθμ. 143/2026 Απόφασης του Δημοτικού Συμβουλίου, 2. Συγκρότηση της Επιτροπής Αξιολόγησης περιουσιακών στοιχείων-Επιτροπή εκτίμησης ακινήτων έτους 2026 σύμφωνα με τις διατάξεις του άρθρου 563 του ν. 5314/2026",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutup0g7nd1iazzmsj0s8",
+        "name": "1. Ανάκληση της υπ' αριθμ. 144/2026 Απόφασης του Δημοτικού Συμβουλίου, 2. Συγκρότηση της Επιτροπής Αξιολόγησης περιουσιακών στοιχείων-Επιτροπή εκτίμησης των προς εκποίηση κινητών πραγμάτων του Δήμου έτους 2026, σύμφωνα με τις διατάξεις του άρθρου 563, του ν. 5314/2026",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutuw0g7od1ia7x64pqva",
+        "name": "1. Ανάκληση της υπ' αριθμ. 145/2026 Απόφασης του Δημοτικού Συμβουλίου, 2. Συγκρότηση της Επιτροπής γνωμοδότησης για την καταστροφή αντικειμένων που δεν έχουν αξία-κινητών πραγμάτων, για το έτος 2026 σύμφωνα με τις διατάξεις του άρθρου 560, του ν. 5314/2026",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutv40g7pd1iaw89i005g",
+        "name": "Έγκριση πέμπτης (5ης) αναμόρφωσης προϋπολογισμού Δήμου Βριλησσίων, οικονομικού έτους 2026",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutvb0g7qd1iacelx6v7d",
+        "name": "Συγκρότηση γνωμοδοτικής επιτροπής κοινωνικής συνοχής, συμπερίληψης και ισότητας των φύλων του Δήμου Βριλησσίων, σύμφωνα με τις διατάξεις του άρθρου 153, του ν. 5314/2026",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrqbutvh0g7rd1iazm7sru1g",
+        "name": "Συγκρότηση γνωμοδοτικής επιτροπής για την υποστήριξή και εύρυθμη λειτουργία των σχολικών μονάδων της Πρωτοβάθμιας και Δευτεροβάθμιας εκπαίδευσης του Δήμου Βριλησσίων, σύμφωνα με τις διατάξεις του άρθρου 153, του ν. 5314/2026",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrz6dywe08t26c6lp2vmgdrf",
+        "name": "Ενίσχυση αποστολής συλλόγου Βριλησσός στο Αγαθονήσι",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrqbutt40g7hd1iapdnxtzfc]": {
+      "value": "ΨΟΨ9Ω9Ρ-ΛΧΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbuttl0g7id1iaukfog04w]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrqbuttu0g7jd1iagd18p187]": {
+      "value": "9ΨΜΘΩ9Ρ-7ΞΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutu20g7kd1iaa45x8lbb]": {
+      "value": "6ΣΖ8Ω9Ρ-ΤΚΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutu90g7ld1iains8nfhl]": {
+      "value": "6ΤΔΣΩ9Ρ-ΧΗΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutui0g7md1iadf5a3nig]": {
+      "value": "6Τ7ΘΩ9Ρ-Ε9Χ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutup0g7nd1iazzmsj0s8]": {
+      "value": "Ψ2ΦΛΩ9Ρ-ΘΑΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutuw0g7od1ia7x64pqva]": {
+      "value": "9ΚΣΩΩ9Ρ-ΠΛ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutv40g7pd1iaw89i005g]": {
+      "value": "9ΞΓΣΩ9Ρ-Γ91",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutvb0g7qd1iacelx6v7d]": {
+      "value": "ΡΓΘΠΩ9Ρ-Α7Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrqbutvh0g7rd1iazm7sru1g]": {
+      "value": "ΨΡΞΚΩ9Ρ-42Ι",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrz6dywe08t26c6lp2vmgdrf]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrz6dyx608tk6c6lymz7mquo]": {
+      "value": "Ψ2ΖΧΩ9Ρ-ΒΡΝ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cbe1e8254fb204890a024eb70ff874b01"
+    },
+    "link[cmrz6dyy108uz6c6li8de3crl]": {
+      "value": "6Χ8ΙΩ9Ρ-ΡΚΔ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c760ff78a3bb942b49fc8282c25b51a03"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}
