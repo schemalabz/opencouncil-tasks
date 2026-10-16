@@ -392,7 +392,7 @@ describe('llmMatchMembers', () => {
 describe('normalizeExtraction', () => {
     const llm = (over: Partial<Parameters<typeof normalizeExtraction>[0]>) => normalizeExtraction({
         attendanceFormat: 'explicit_present_absent', compositionMembers: [], presentMembers: [], absentMembers: [], mayorPresent: false,
-        decisionExcerpt: '', decisionNumber: '', references: '', voteResult: '', voteDetails: [], attendanceChanges: [], discussionOrder: null,
+        decisionExcerpt: '', summary: '', decisionNumber: '', references: '', voteResult: '', voteDetails: [], attendanceChanges: [], discussionOrder: null,
         subjectInfo: { agendaItemIndex: 1, nonAgendaReason: null }, incomplete: false, presidedBy: { name: '', rawText: '' },
         actingSecretary: { name: '', rawText: '' }, subjectHeading: '', decisionAttendance: { present: [], rawText: '' },
         voteTally: { FOR: -1, AGAINST: -1, ABSTAIN: -1, PRESENT: -1, DID_NOT_VOTE: -1 }, ...over,
@@ -405,6 +405,11 @@ describe('normalizeExtraction', () => {
     it('keeps the acting secretary only when the page names one', () => {
         expect(llm({}).actingSecretary).toBeNull();
         expect(llm({ actingSecretary: { name: 'Αικατερίνη Γκούμα', rawText: 'Η εκτελούσα χρέη Γραμματέα Αικατερίνη Γκούμα' } }).actingSecretary?.name).toBe('Αικατερίνη Γκούμα');
+    });
+    it('keeps the summary as a plain sentence and reads "" as none', () => {
+        expect(llm({ summary: '' }).summary).toBeNull();
+        expect(llm({ summary: '  ' }).summary).toBeNull();
+        expect(llm({ summary: ' Εγκρίνει την παράταση της σύμβασης καθαριότητας έως 31/12/2026. ' }).summary).toBe('Εγκρίνει την παράταση της σύμβασης καθαριότητας έως 31/12/2026.');
     });
 });
 
@@ -998,11 +1003,12 @@ describe('extractDecisionFromPdf', () => {
         expect(mockAiChat).not.toHaveBeenCalled();
         expect(warnings).toBeUndefined();
         expect(result.decisionNumber).toBe('1/2025');
+        expect(result.summary).toBeNull();
     });
 
     const WHOLE_READ_FIELDS = [
         'attendanceFormat', 'compositionMembers', 'presentMembers', 'absentMembers',
-        'mayorPresent', 'decisionExcerpt', 'decisionNumber', 'references',
+        'mayorPresent', 'decisionExcerpt', 'summary', 'decisionNumber', 'references',
         'voteResult', 'voteDetails', 'attendanceChanges', 'discussionOrder',
         'subjectInfo', 'incomplete', 'presidedBy', 'actingSecretary', 'subjectHeading', 'voteTally', 'decisionAttendance',
     ];
@@ -1173,7 +1179,7 @@ describe('extractDecisionFromPdf', () => {
 });
 
 describe('adoptLaterVoteNames', () => {
-    const base = { attendanceFormat: 'explicit_present_absent' as const, compositionMembers: null, presentMembers: [], absentMembers: [], mayorPresent: null, decisionExcerpt: 'x',
+    const base = { attendanceFormat: 'explicit_present_absent' as const, compositionMembers: null, presentMembers: [], absentMembers: [], mayorPresent: null, decisionExcerpt: 'x', summary: null,
         decisionNumber: null, references: '', attendanceChanges: [], discussionOrder: null, subjectInfo: null, incomplete: false, presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null };
     const tally = (FOR: number | null) => ({ FOR, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null });
     const names = (n: number, vote: 'FOR' | 'PRESENT') => Array.from({ length: n }, (_, i) => ({ name: `${vote} ${i}`, vote }));
@@ -1221,7 +1227,7 @@ describe('adoptLaterVoteNames', () => {
 
 describe('withClosingFacts', () => {
     const base: RawExtractedDecision = { attendanceFormat: 'explicit_present_absent', compositionMembers: null, presentMembers: ['Αθανάσιος Αυγουρόπουλος'], absentMembers: [],
-        mayorPresent: null, decisionExcerpt: 'ΑΠΟΦΑΣΙΣΕ ΟΜΟΦΩΝΑ', decisionNumber: null, references: '', voteResult: 'Ομόφωνα', voteDetails: [], attendanceChanges: [],
+        mayorPresent: null, decisionExcerpt: 'ΑΠΟΦΑΣΙΣΕ ΟΜΟΦΩΝΑ', summary: null, decisionNumber: null, references: '', voteResult: 'Ομόφωνα', voteDetails: [], attendanceChanges: [],
         discussionOrder: null, subjectInfo: null, incomplete: false, presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
         voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null } };
     const absence = (name: string): RawExtractedDecision['attendanceChanges'][number] => ({
@@ -1324,7 +1330,7 @@ describe('withClosingFacts', () => {
 
 describe('withContinuationFacts', () => {
     const base: RawExtractedDecision = { attendanceFormat: 'explicit_present_absent', compositionMembers: null, presentMembers: ['Α. Αργυροπούλου'], absentMembers: [],
-        mayorPresent: null, decisionExcerpt: 'ΑΠΟΦΑΣΙΖΕΙ κατά πλειοψηφία', decisionNumber: '359/2025', references: '', voteResult: 'Κατά πλειοψηφία',
+        mayorPresent: null, decisionExcerpt: 'ΑΠΟΦΑΣΙΖΕΙ κατά πλειοψηφία', summary: null, decisionNumber: '359/2025', references: '', voteResult: 'Κατά πλειοψηφία',
         voteDetails: ARGOS_DISSENTERS, attendanceChanges: [], discussionOrder: null, subjectInfo: null, incomplete: false, presidedBy: null,
         actingSecretary: null, subjectHeading: '', voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
         decisionAttendance: { present: ARGOS_LIST.slice(0, 13), rawText: 'Τα Μέλη\n1. Α. Αργυροπούλου(Σύμβουλος)' } };
@@ -1384,8 +1390,8 @@ describe('withContinuationFacts', () => {
 });
 
 describe('EXTRACTION_SCHEMA_VERSION', () => {
-    it('retires the readings made before the continuation read', () => {
-        expect(EXTRACTION_SCHEMA_VERSION).toBe(12);
+    it('retires the readings made before the summary was read', () => {
+        expect(EXTRACTION_SCHEMA_VERSION).toBe(13);
     });
 });
 

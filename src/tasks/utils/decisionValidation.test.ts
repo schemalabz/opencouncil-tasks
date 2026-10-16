@@ -8,6 +8,7 @@ function makeRaw(overrides: Partial<RawExtractedDecision> = {}): RawExtractedDec
         absentMembers: ['Charlie'],
         mayorPresent: null,
         decisionExcerpt: 'Το Δ.Σ. αφού έλαβε υπόψη... ΑΠΟΦΑΣΙΖΕΙ...',
+        summary: null,
         decisionNumber: '42/2025',
         references: 'Ν. 3852/2010',
         voteResult: 'Ομόφωνα',

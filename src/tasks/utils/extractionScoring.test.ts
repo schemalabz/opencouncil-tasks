@@ -8,7 +8,7 @@ import {
 import type { RawExtractedDecision } from './decisionPdfExtraction.js';
 
 const extraction = (over: Partial<RawExtractedDecision> = {}): RawExtractedDecision => ({
-    presentMembers: [], absentMembers: [], mayorPresent: null, decisionExcerpt: '', decisionNumber: null,
+    presentMembers: [], absentMembers: [], mayorPresent: null, decisionExcerpt: '', summary: null, decisionNumber: null,
     references: '', voteResult: null, voteDetails: [], attendanceChanges: [], discussionOrder: null,
     subjectInfo: null, incomplete: false, attendanceFormat: 'explicit_present_absent', compositionMembers: null, presidedBy: null, actingSecretary: null, subjectHeading: '', decisionAttendance: null,
     voteTally: { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null }, ...over,

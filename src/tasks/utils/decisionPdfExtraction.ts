@@ -139,6 +139,8 @@ interface RawLlmExtraction {
     absentMembers: string[];
     mayorPresent: StatedPresence | null;
     decisionExcerpt: string;
+    /** One or two plain sentences of what the ΑΠΟΦΑΣΙΖΕΙ section decides; "" when the pages do not reach it. */
+    summary: string;
     decisionNumber: string | null;
     references: string;
     voteResult: string | null;
@@ -248,6 +250,7 @@ export function normalizeExtraction(raw: RawLlmExtraction): RawExtractedDecision
         voteTally,
         decisionAttendance: raw.decisionAttendance?.present?.length ? raw.decisionAttendance : null,
         decisionExcerpt: raw.decisionExcerpt,
+        summary: raw.summary?.trim() || null,
         decisionNumber: raw.decisionNumber,
         references: raw.references,
         voteResult: raw.voteResult,
@@ -266,6 +269,8 @@ export interface RawExtractedDecision {
     absentMembers: string[];
     mayorPresent: StatedPresence | null;
     decisionExcerpt: string;
+    /** What the ΑΠΟΦΑΣΙΖΕΙ section decides, in one or two plain sentences, as the read returned it; null when it returned none. Sent only for a read that `reachedTheDecision`. */
+    summary: string | null;
     decisionNumber: string | null;
     references: string;
     voteResult: string | null;
@@ -342,6 +347,8 @@ Extract the following information from the PDF:
 17. **voteTally**: The counts printed in the vote phrase, per value: FOR (υπέρ / θετικές ψήφοι), AGAINST (κατά / αρνητικές), ABSTAIN (λευκά), PRESENT (παρών), DID_NOT_VOTE (αποχή). Use -1 for every value the page does not count. «Κατά πλειοψηφία με 12 υπέρ και 3 κατά» → FOR 12, AGAINST 3, the rest -1. «Ομόφωνα» → all -1. Never count names yourself.
 
 18. **decisionAttendance**: Some bodies print, AFTER the decision text, the members present for THIS decision: a list headed ΤΑ ΜΕΛΗ / ΠΑΡΟΝΤΑ ΜΕΛΗ. Return {"present": the names in that list, "rawText": the heading and its first line}. A list of who had LEFT (ΑΠΟΧΩΡΗΣΑΝΤΕΣ) is not a present list: never put its names in "present". When the page prints no such list, return {"present": [], "rawText": ""}. Never copy the opening roll call (ΠΑΡΟΝΤΕΣ/ΣΥΝΘΕΣΗ at the top) here, and never remove anyone from presentMembers because of this list.
+
+19. **summary**: What this decision decides, in one or two plain sentences in Greek, read from the «ΑΠΟΦΑΣΙΖΕΙ» section of this decision only (the same one decisionExcerpt is taken from). Name the concrete object when that section states it: the amount, the contractor, the street, the number of positions, the item approved or rejected. Never summarise the preamble, the εισήγηση, or the «αφού έλαβε υπόψη» references: those say what was proposed, not what was decided. Plain text only: no markdown, no bullet points, no tables, no bold. Do not repeat the vote phrase, which voteResult holds. Return "" when incomplete is true or decisionExcerpt is "", that is, when the pages you see do not reach «ΑΠΟΦΑΣΙΖΕΙ».
 
 If a field cannot be found, use empty array for lists, empty string for text, and null where indicated.`;
 // The output shape itself is not described here — it is enforced by
@@ -710,6 +717,7 @@ const EXTRACTION_OUTPUT_SCHEMA = {
         absentMembers: { type: 'array', items: { type: 'string' } },
         mayorPresent: { anyOf: [STATED_PRESENCE_SCHEMA, { type: 'null' }] },
         decisionExcerpt: { type: 'string' },
+        summary: { type: 'string' },
         decisionNumber: { anyOf: [{ type: 'string' }, { type: 'null' }] },
         references: { type: 'string' },
         voteResult: { anyOf: [{ type: 'string' }, { type: 'null' }] },
@@ -768,7 +776,7 @@ const EXTRACTION_OUTPUT_SCHEMA = {
     },
     required: [
         'attendanceFormat', 'compositionMembers', 'presentMembers', 'absentMembers',
-        'mayorPresent', 'decisionExcerpt', 'decisionNumber', 'references',
+        'mayorPresent', 'decisionExcerpt', 'summary', 'decisionNumber', 'references',
         'voteResult', 'voteDetails', 'attendanceChanges', 'discussionOrder',
         'subjectInfo', 'incomplete', 'presidedBy', 'actingSecretary', 'subjectHeading', 'voteTally', 'decisionAttendance',
     ],
@@ -845,7 +853,7 @@ const CONTINUATION_PAGES = 3;
  * Sparta documents embed earlier decisions in the preamble, and the model
  * reports "complete" on those pages with an empty excerpt.
  */
-function reachedTheDecision(result: RawExtractedDecision): boolean {
+export function reachedTheDecision(result: RawExtractedDecision): boolean {
     return !result.incomplete && (result.decisionExcerpt?.trim().length ?? 0) > 0;
 }
 
@@ -1012,9 +1020,11 @@ function hasCountedTally(tally: RawExtractedDecision['voteTally'] | undefined): 
  * page document may be `incomplete` over pages that v11 reads. v12 reads the
  * last page of the front window and up to two pages after it when the front
  * read says the closing block runs past it, so a v11 entry of a long document
- * may lack the rest of its member list and named votes.
+ * may lack the rest of its member list and named votes. v13 reads `summary`,
+ * the plain-sentence reading of ΑΠΟΦΑΣΙΖΕΙ for the Πίνακας αποφάσεων
+ * (schemalabz/opencouncil#873), which a v12 entry does not hold.
  */
-export const EXTRACTION_SCHEMA_VERSION = 12;
+export const EXTRACTION_SCHEMA_VERSION = 13;
 
 /** Everything besides the document that steers a reading, and so has to key its cache entry. */
 export interface ExtractionSteering {
@@ -1072,6 +1082,7 @@ export function withDefaults(raw: RawExtractedDecision): RawExtractedDecision {
         actingSecretary: r.actingSecretary?.name ? r.actingSecretary : null,
         // A reading cached before the heading was read keeps its subjectInfo: "" here means "not read", not "no heading".
         subjectHeading: r.subjectHeading ?? '',
+        summary: r.summary ?? null,
         voteTally: r.voteTally ?? { FOR: null, AGAINST: null, ABSTAIN: null, PRESENT: null, DID_NOT_VOTE: null },
         decisionAttendance: r.decisionAttendance?.present?.length ? r.decisionAttendance : null,
         attendanceChanges: (r.attendanceChanges ?? []).map(c => c.anchor ? { ...c, anchor: migrateAnchor(c.anchor) } : c),
@@ -1094,14 +1105,14 @@ function readPdfPart(userPrompt: string, documentBase64: string, label: string, 
 /** What the model is told when it holds only the last pages of a document whose decision was read already. */
 function closingPagesNote(pageIndices: number[], totalPages: number): string {
     const pages = `${pageIndices.length === 1 ? 'page' : 'pages'} ${describePageRanges(pageIndices)}`;
-    return `Note: You are seeing ${pages} of a ${totalPages}-page document. The decision itself ("ΑΠΟΦΑΣΙΖΕΙ" and its text) was read from the earlier pages. From these pages report only what the document states after the decision: the vote phrase and its counts, every named vote or declaration, members absent for this decision's vote or who left before it, the list of members present for this decision, and the decision number («Η απόφαση έλαβε τον αριθμό …»). Return "" for decisionExcerpt and references, and set "incomplete" to false. If these pages belong to another document (an attached decision of another body, a study, a table), return empty lists and "" or null for every field.`;
+    return `Note: You are seeing ${pages} of a ${totalPages}-page document. The decision itself ("ΑΠΟΦΑΣΙΖΕΙ" and its text) was read from the earlier pages. From these pages report only what the document states after the decision: the vote phrase and its counts, every named vote or declaration, members absent for this decision's vote or who left before it, the list of members present for this decision, and the decision number («Η απόφαση έλαβε τον αριθμό …»). Return "" for decisionExcerpt, summary and references, and set "incomplete" to false. If these pages belong to another document (an attached decision of another body, a study, a table), return empty lists and "" or null for every field.`;
 }
 
 /** What the model is told when it holds the last page of a front window that ended inside the decision's closing block, and the pages after it. */
 function continuationPagesNote(pageIndices: number[], totalPages: number, frontPages: number, decisionNumber: string | null): string {
     const pages = `${pageIndices.length === 1 ? 'page' : 'pages'} ${describePageRanges(pageIndices)}`;
     const decision = statedText(decisionNumber) ? `decision ${decisionNumber}` : 'the decision';
-    return `Note: You are seeing ${pages} of a ${totalPages}-page document. The text of ${decision} was read from pages 1-${frontPages}, which end before its closing block does; these pages start at page ${frontPages}. From these pages report only that closing block: the whole list of members present for this decision (ΤΑ ΜΕΛΗ) as these pages print it, every named vote or declaration, members absent for this decision's vote or who left before it, and the decision number if these pages print it. Return "" for decisionExcerpt and references, and set "incomplete" to false. If these pages belong to another document (an attached decision of another body, a study, a table), return empty lists and "" or null for every field. Set "closingBlockContinues" to true if the closing block still continues past page ${pageIndices[pageIndices.length - 1] + 1}.`;
+    return `Note: You are seeing ${pages} of a ${totalPages}-page document. The text of ${decision} was read from pages 1-${frontPages}, which end before its closing block does; these pages start at page ${frontPages}. From these pages report only that closing block: the whole list of members present for this decision (ΤΑ ΜΕΛΗ) as these pages print it, every named vote or declaration, members absent for this decision's vote or who left before it, and the decision number if these pages print it. Return "" for decisionExcerpt, summary and references, and set "incomplete" to false. If these pages belong to another document (an attached decision of another body, a study, a table), return empty lists and "" or null for every field. Set "closingBlockContinues" to true if the closing block still continues past page ${pageIndices[pageIndices.length - 1] + 1}.`;
 }
 
 export async function extractDecisionFromPdf(pdfUrl: string, mayorName?: string, skipCache?: boolean, hints?: string): Promise<ResultWithUsage<RawExtractedDecision> & { fromCache: boolean; warnings?: DecisionWarning[] }> {

@@ -637,6 +637,12 @@ export interface ExtractedDecisionResult {
     excerpt: string;
     references: string;
     /**
+     * What the document decides, in one or two plain sentences read from its
+     * ΑΠΟΦΑΣΙΖΕΙ section, for the Πίνακας αποφάσεων (schemalabz/opencouncil#873).
+     * Null when the read did not reach ΑΠΟΦΑΣΙΖΕΙ: it is `incomplete`, or its excerpt is empty.
+     */
+    summary: string | null;
+    /**
      * The decision's own number (Αρ. Απόφασης / Πράξη), extracted from the document.
      * Never Diavgeia's protocol number — that field is municipality-defined and is
      * mirrored separately at match time.
