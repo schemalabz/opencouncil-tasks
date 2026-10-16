@@ -15,6 +15,7 @@ import { spawnSync } from 'child_process';
 import { summarize } from './tasks/summarize.js';
 import { splitMediaFile } from './tasks/splitMediaFile.js';
 import { fixTranscript } from './tasks/fixTranscript.js';
+import { fixFromMinutes } from './tasks/fixFromMinutes.js';
 import { processAgenda } from './tasks/processAgenda.js';
 import { generateVoiceprint } from './tasks/generateVoiceprint.js';
 import { generateHighlight } from './tasks/generateHighlight.js';
@@ -167,6 +168,12 @@ app.post('/fixTranscript', taskManager.registerTask(fixTranscript, {
   // diarization speaker is, judged from the transcript text alone, each marked
   // with the kind of evidence and whether the task would act on it
   version: 3,
+}));
+
+app.post('/fixFromMinutes', taskManager.registerTask(fixFromMinutes, {
+  summary: 'Correct a transcript from the municipal minutes',
+  description: "Reads the municipality's verbatim minutes, aligns their speaker turns with the transcript, corrects misheard words from them and names the speakers from their labels (schemalabz/opencouncil#876)",
+  version: 1,
 }));
 
 app.post('/processAgenda', taskManager.registerTask(processAgenda, {
