@@ -457,6 +457,93 @@ export interface FixTranscriptResult {
 }
 
 /*
+ * Fix From Minutes (schemalabz/opencouncil#876)
+ *
+ * Corrects a transcript from the municipality's own verbatim minutes and
+ * names the speakers from the labels of those minutes. The shapes below are
+ * the contract with opencouncil's result handler: change them together.
+ */
+
+export interface FixFromMinutesRequest extends RequestOnTranscript {
+    /** The municipality's minutes document, a PDF or a DOCX. */
+    municipalMinutesUrl: string;
+    /** YYYY-MM-DD in the city's time zone, to pick the meeting inside a document that holds several. */
+    meetingDate: string;
+    /** As the municipality prints it. Null when the record has none: the date alone picks the section. */
+    sessionNumber: number | null;
+}
+
+/** Where a correction's wording came from: the turn of the minutes that aligned with the utterance. */
+export interface MinutesSource {
+    /** 1-based page of the document the turn starts on; 1 for a document without pages (DOCX). */
+    page: number;
+    /** The speaker label of the turn as the minutes print it. */
+    label: string;
+    /** 0-based index of the turn in the section, after the model check. */
+    turnIndex: number;
+}
+
+export interface FixFromMinutesReport {
+    document: {
+        /** The section of the document that was read; null when the document holds one meeting only. */
+        section: { page: number; pages: number } | null;
+        /** Share (0–1) of the section's text that falls inside a speaker turn, after the model check. */
+        coverage: number;
+        /** Turn starts the model check added to the parser's. */
+        checkAdded: number;
+        /** Parser labels the model check removed as not a speaker. */
+        checkRemoved: number;
+        /** Model answers the code could not locate in the text, and so ignored. */
+        checkDropped: number;
+        /** Model calls that failed. The parser's turns stand in their range. */
+        checkFailedChunks: number;
+    };
+    alignment: {
+        turns: number;
+        /** Turns with at least one aligned utterance. */
+        alignedTurns: number;
+        /** Aligned turns whose match rate is under the verbatim gate; they correct nothing. */
+        turnsUnderGate: number;
+        /** Utterances with no aligned word in the minutes. */
+        utterancesUnmatched: number;
+    };
+    corrections: {
+        utterancesChanged: number;
+        substitutions: number;
+        /** Words only the minutes have, counted and never written. */
+        insertionsSkipped: number;
+        /** Words only our transcript has, counted and never removed. */
+        deletionsSkipped: number;
+    };
+    speakers: {
+        /** Speaker tags with an actionable `minutes` opinion. */
+        actionable: number;
+        /** Tags the minutes give to more than one person, or to one person below the purity floor. */
+        contested: { speakerTagId: string; people: { personId: string; share: number; from: number; to: number }[] }[];
+        /** Tags where the minutes' actionable opinion contradicts the speaker the request carries. */
+        disagreements: { speakerTagId: string; opinions: { method: 'voiceprint' | 'transcript' | 'minutes'; personId: string }[] }[];
+        /** Speaker labels of the minutes that resolved to nobody on the roster. */
+        unresolvedLabels: string[];
+    };
+}
+
+export interface FixFromMinutesResult {
+    updateUtterances: {
+        utteranceId: string;
+        text: string;
+        markUncertain: false;
+        source: MinutesSource;
+    }[];
+    /**
+     * One per speaker tag the minutes name. Same shape as the transcript hints;
+     * confidence is the purity. Absent when the request had no `people` or no
+     * speaker tag ids: the pass did not run, and the app keeps what it has.
+     */
+    speakerHints?: SpeakerHint[];
+    report: FixFromMinutesReport;
+}
+
+/*
  * Summarize
  */
 
