@@ -38,6 +38,7 @@ function makeRaw(overrides: Partial<RawExtractedDecision> = {}): RawExtractedDec
         absentMembers: ['Νίκος Αλεξίου'],
         mayorPresent: null,
         decisionExcerpt: 'Το Δ.Σ. αφού έλαβε υπόψη... ΑΠΟΦΑΣΙΖΕΙ...',
+        summary: 'Εγκρίνει την 5η αναμόρφωση του προϋπολογισμού 2025.',
         decisionNumber: '42/2025',
         references: 'Ν. 3852/2010',
         voteResult: 'Ομόφωνα',
@@ -304,5 +305,51 @@ describe('extractDecisionsFromPdfs — a session whose roll calls split', () => 
             { name: 'Κων/νος Παπαδόπουλος', personId: 'p1', method: 'llm' },
             { name: 'Άγνωστος Χ', personId: null, method: null },
         ]));
+    });
+});
+
+describe('extractDecisionsFromPdfs — summary', () => {
+    beforeEach(() => {
+        mockExtractDecisionFromPdf.mockReset();
+        mockMatchPersonByName.mockReset();
+        mockLlmMatchMembers.mockReset();
+        mockMatchPersonByName.mockImplementation((name: string) => people.find(p => p.name === name)?.id ?? null);
+    });
+
+    it('puts the plain-sentence reading of ΑΠΟΦΑΣΙΖΕΙ on the wire beside the excerpt', async () => {
+        mockExtractDecisionFromPdf.mockResolvedValueOnce({
+            result: makeRaw({ summary: 'Εγκρίνει την παράταση της σύμβασης καθαριότητας έως 31/12/2026.' }),
+            usage: noUsage,
+            fromCache: false,
+        });
+
+        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+
+        expect(result.decisions[0].summary).toBe('Εγκρίνει την παράταση της σύμβασης καθαριότητας έως 31/12/2026.');
+        expect(result.decisions[0].excerpt).toBe('Το Δ.Σ. αφού έλαβε υπόψη... ΑΠΟΦΑΣΙΖΕΙ...');
+    });
+
+    // Pages that did not reach ΑΠΟΦΑΣΙΖΕΙ can only summarise the preamble or a decision embedded in it.
+    it.each([
+        ['the read is incomplete', { incomplete: true }],
+        ['the read says complete but holds no excerpt', { incomplete: false, decisionExcerpt: '' }],
+    ])('sends null when %s, whatever the reading holds', async (_, over) => {
+        mockExtractDecisionFromPdf.mockResolvedValueOnce({
+            result: makeRaw({ ...over, summary: 'Εισηγείται την έγκριση της μελέτης.' }),
+            usage: noUsage,
+            fromCache: false,
+        });
+
+        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+
+        expect(result.decisions[0].summary).toBeNull();
+    });
+
+    it('sends null when the reading holds no summary', async () => {
+        mockExtractDecisionFromPdf.mockResolvedValueOnce({ result: makeRaw({ summary: null }), usage: noUsage, fromCache: false });
+
+        const result = await extractDecisionsFromPdfs([makeSubject()], people, noopProgress);
+
+        expect(result.decisions[0].summary).toBeNull();
     });
 });

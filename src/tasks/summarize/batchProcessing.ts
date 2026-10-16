@@ -18,6 +18,7 @@ import {
 import {
     splitTranscript,
     initializeSubjectsFromExisting,
+    keepEarlierOutcomes,
     getStatusEmoji
 } from "./utils.js";
 
@@ -250,6 +251,10 @@ export async function processBatchesWithState(
                     subject.introducedByPersonId = previousSubject.introducedByPersonId;
                 }
             }
+        }
+        const keptOutcomes = keepEarlierOutcomes(previousSubjects, batchResult.subjects);
+        if (keptOutcomes > 0) {
+            console.log(`   🔒 Kept ${keptOutcomes} outcome(s) that earlier batches wrote`);
         }
 
         // VALIDATION: Verify ALL utterance status subject IDs are registered in IdCompressor
@@ -640,6 +645,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 agendaItemIndex: { type: ["number", "string"] },
                                 name: { type: "string" },
                                 description: { type: "string" },
+                                outcome: { type: ["string", "null"] },
                                 topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
                                 proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
                                 introducedByPersonId: { type: ["string", "null"] },
@@ -649,7 +655,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 withdrawn: { type: "boolean" }
                                 // speakerContributions is generated in Phase 2; including it here wasted tokens and triggered degenerate output.
                             },
-                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "discussedIn"],
+                            required: ["id", "type", "agendaItemIndex", "name", "description", "outcome", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "discussedIn"],
                             additionalProperties: false
                         }
                     },

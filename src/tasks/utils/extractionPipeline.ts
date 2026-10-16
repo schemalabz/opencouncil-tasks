@@ -7,6 +7,7 @@ import {
     matchPersonByName,
     llmMatchMembers,
     PersonForMatching,
+    reachedTheDecision,
 } from './decisionPdfExtraction.js';
 import { toDocumentEvents } from './meetingAttendance.js';
 import { validateRawExtraction, validateProcessedDecision, type DecisionWarning } from './decisionValidation.js';
@@ -205,6 +206,8 @@ export async function extractDecisionsFromPdfs(
             subjectId,
             excerpt: raw.decisionExcerpt || '',
             references: raw.references || '',
+            // Pages that did not reach ΑΠΟΦΑΣΙΖΕΙ can only summarise the preamble or a decision embedded in it.
+            summary: reachedTheDecision(raw) ? raw.summary : null,
             decisionNumber: raw.decisionNumber || null,
             subjectInfo: raw.subjectInfo
                 ? { number: raw.subjectInfo.agendaItemIndex, isOutOfAgenda: raw.subjectInfo.nonAgendaReason !== null }

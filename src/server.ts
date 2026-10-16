@@ -198,6 +198,7 @@ app.post('/pollDecisions', taskManager.registerTask(pollDecisions, {
   //    + actingSecretary and subjectHeading, both additive (2026-09-22); v4 has not shipped, so no bump
   //    C1 (2026-09-25): the three meeting-level fields left the result and each page gained `nameMatches`. Both precede the first deploy of version 4, so the version stays 4.
   //    C5 (2026-09-26): `absent_for_vote` is on the wire again, one entry with the anchor the page states (no departure/arrival pair), and the anchor gained `decisionNumberTo` for a range. Also before the first deploy of version 4.
+  //    2026-10-16: each decision gained `summary` (schemalabz/opencouncil#873). Additive, and the app reads it as optional, so the version stays 4.
   version: 4,
 }));
 

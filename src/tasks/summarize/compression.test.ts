@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { IdCompressor } from '../../utils.js';
-import { compressIds, decompressIds, decompressReferencesInMarkdown } from './compression.js';
+import { compressIds, decompressIds, decompressReferencesInMarkdown, plainOutcome } from './compression.js';
 import { DiscussionStatus, Subject } from '../../types.js';
 
 describe('compressIds', () => {
@@ -752,5 +752,57 @@ describe('compressIds → decompressIds round-trip', () => {
     const decompressed = decompressIds(result, idCompressor);
 
     expect(decompressed.subjects[0].withdrawn).toBeUndefined();
+  });
+
+  const subjectWithOutcome = (idCompressor: IdCompressor, outcome: string | null | undefined) => ({
+    speakerSegmentSummaries: [],
+    subjects: [{
+      id: idCompressor.addLongId('subj-outcome'),
+      name: 'Budget',
+      description: 'Annual budget',
+      agendaItemIndex: 1,
+      introducedByPersonId: null,
+      speakerContributions: [],
+      topicImportance: 'normal' as const,
+      proximityImportance: 'none' as const,
+      location: null,
+      topicLabel: null,
+      context: null,
+      discussedIn: null,
+      ...(outcome !== undefined ? { outcome } : {})
+    }],
+    utteranceDiscussionStatuses: []
+  });
+
+  it('keeps the outcome as plain text and strips a reference link the model carried over', () => {
+    const idCompressor = new IdCompressor();
+    const utteranceShort = idCompressor.addLongId('utt-long-1');
+    const result = subjectWithOutcome(idCompressor, `Το θέμα [εγκρίθηκε ομόφωνα](REF:UTTERANCE:${utteranceShort}) με **τροποποίηση**.`);
+
+    const decompressed = decompressIds(result, idCompressor);
+
+    expect(decompressed.subjects[0].outcome).toBe('Το θέμα εγκρίθηκε ομόφωνα με τροποποίηση.');
+  });
+
+  it('keeps a null outcome and omits the field when the subject has none', () => {
+    const idCompressor = new IdCompressor();
+
+    expect(decompressIds(subjectWithOutcome(idCompressor, null), idCompressor).subjects[0].outcome).toBeNull();
+    expect('outcome' in decompressIds(subjectWithOutcome(idCompressor, undefined), idCompressor).subjects[0]).toBe(false);
+  });
+});
+
+describe('plainOutcome', () => {
+  it.each([
+    [null, null],
+    [undefined, null],
+    ['', null],
+    ['   ', null],
+    ['Εγκρίθηκε ομόφωνα.', 'Εγκρίθηκε ομόφωνα.'],
+    ['  Εγκρίθηκε\n\nομόφωνα.  ', 'Εγκρίθηκε ομόφωνα.'],
+    ['[Εγκρίθηκε](REF:UTTERANCE:abc) η μελέτη', 'Εγκρίθηκε η μελέτη'],
+    ['Εγκρίθηκε από [το σώμα](REF:PARTY:p1) **ομόφωνα** και <u>χωρίς</u> αλλαγές', 'Εγκρίθηκε από το σώμα ομόφωνα και χωρίς αλλαγές'],
+  ])('%j → %j', (input, expected) => {
+    expect(plainOutcome(input)).toBe(expected);
   });
 });

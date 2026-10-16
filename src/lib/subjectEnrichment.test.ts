@@ -104,6 +104,37 @@ describe("enrichSubjectData", () => {
         expect("agendaItemTitle" in result).toBe(false);
     });
 
+    it("passes outcome through when the input defines it", async () => {
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(
+            input({ outcome: "Εγκρίθηκε ομόφωνα η ανάπλαση της πλατείας." }),
+            "abc123",
+            { cityName: "Αθήνα", date: "2026-09-05" }
+        );
+
+        expect(result.outcome).toBe("Εγκρίθηκε ομόφωνα η ανάπλαση της πλατείας.");
+    });
+
+    it("passes an explicit null outcome through", async () => {
+        // summarize sends null for a subject whose transcript shows no outcome; the app clears the stored value.
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(input({ outcome: null }), "abc123", { cityName: "Αθήνα", date: "2026-09-05" });
+
+        expect(result.outcome).toBeNull();
+        expect("outcome" in result).toBe(true);
+    });
+
+    it("omits outcome when the input does not define it", async () => {
+        // processAgenda never sets the field; the app keeps the stored value when it is absent.
+        mockedGeocode.mockResolvedValue(null);
+
+        const { result } = await enrichSubjectData(input(), "abc123", { cityName: "Αθήνα", date: "2026-09-05" });
+
+        expect("outcome" in result).toBe(false);
+    });
+
     it("passes agendaSection through when the input defines it", async () => {
         mockedGeocode.mockResolvedValue(null);
 

@@ -26,6 +26,8 @@ export interface SubjectInProgress {
     agendaItemIndex: number | "BEFORE_AGENDA" | "OUT_OF_AGENDA";  // Matches Subject type
     name: string;  // LLM can update
     description: string;  // LLM can update
+    // What the body decided, as the transcript states it; null until a batch shows it. keepEarlierOutcomes keeps it across batches. See Subject.outcome.
+    outcome?: string | null;
     topicImportance: 'doNotNotify' | 'normal' | 'high';
     proximityImportance: 'none' | 'near' | 'wide';
     introducedByPersonId: string | null;
