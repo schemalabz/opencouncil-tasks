@@ -73,14 +73,29 @@ export type Token = {
     norm: string;
     /** Position in the whitespace split of the text, punctuation-only pieces included, for writing the text back. */
     index: number;
+    /**
+     * The punctuation-only pieces that were left out between the token before
+     * and this one, joined; absent when there are none. A document can print a
+     * full stop apart from its word («ψηφίζουμε . Διευκρινίσεις»), and it ends
+     * the sentence all the same.
+     */
+    skipped?: string;
 };
 
 export function tokenize(text: string): Token[] {
     const tokens: Token[] = [];
     let index = 0;
+    let skipped = "";
     for (const match of text.matchAll(/\S+/g)) {
         const norm = normalizeToken(match[0]);
-        if (norm) tokens.push({ text: match[0], norm, index });
+        if (norm) {
+            const token: Token = { text: match[0], norm, index };
+            if (skipped) token.skipped = skipped;
+            tokens.push(token);
+            skipped = "";
+        } else {
+            skipped += match[0];
+        }
         index++;
     }
     return tokens;

@@ -32,6 +32,11 @@ describe("tokenize", () => {
         expect(tokens.map(t => t.index)).toEqual([0, 2, 3, 4]);
         expect(tokens.map(t => t.text)).toEqual(["Ωραία", "ευχαριστώ,", "κύριε", "Πρόεδρε."]);
     });
+
+    it("keeps the punctuation-only pieces it skips on the word after them", () => {
+        const tokens = tokenize("ψηφίζουμε » . Διευκρινίσεις θα");
+        expect(tokens.map(t => t.skipped)).toEqual([undefined, "».", undefined]);
+    });
 });
 
 describe("foldedWithOffsets", () => {
