@@ -88,6 +88,35 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
     }));
 }
 
+/**
+ * The subjects a batch's response left out, to carry into the next batch.
+ *
+ * A batch returns only the subjects its part of the transcript touches, so a
+ * subject it leaves out may well have been discussed in an earlier batch. A
+ * subject that some batch returned keeps the importance that the model gave
+ * it: the after-meeting notification reads that importance, and resetting it
+ * here dropped discussed subjects from it. A subject that no batch has
+ * returned so far gets no notification, whatever the agenda gave it.
+ */
+export function subjectsOmittedFromBatch(
+    previous: SubjectInProgress[],
+    returned: SubjectInProgress[],
+    returnedByModel: ReadonlySet<string>
+): SubjectInProgress[] {
+    const returnedIds = new Set(returned.map(s => s.id));
+    return previous
+        .filter(s => !returnedIds.has(s.id))
+        .map(s => ({
+            ...s,
+            discussedIn: s.discussedIn || null,
+            speakerContributions: [],
+            ...(returnedByModel.has(s.id) ? {} : {
+                topicImportance: 'doNotNotify' as const,
+                proximityImportance: 'none' as const
+            })
+        }));
+}
+
 // convertRangesToUtteranceStatuses function has been DELETED
 // Utterance statuses are now generated directly by the LLM in batch processing
 // No conversion from ranges is needed anymore
