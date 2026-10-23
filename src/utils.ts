@@ -1,6 +1,7 @@
 import fs from 'fs';
 import express, { Router } from 'express';
 import { CallbackServer } from './lib/CallbackServer.js';
+import { assertFetchableUrl } from './lib/fetchableUrl.js';
 import { createHash } from 'crypto';
 
 export const tryGetFromEnvOrFile = (key: string, path: string) => {
@@ -28,12 +29,44 @@ export const getFromEnvOrFile = (key: string, path: string) => {
 // query strings, so it rejected every callback URL carrying one.
 export const validateUrl = (url: string) => {
     try {
-        const { protocol } = new URL(url);
-        return protocol === 'http:' || protocol === 'https:';
+        assertFetchableUrl(url);
+        return true;
     } catch {
         return false;
     }
 };
+
+// The hosts a task may report to, comma-separated: the app's deployment
+// hosts. An entry `*.example.org` matches every subdomain, which is how the
+// PR previews (pr-N.opencouncil.dev) fit in one entry. Unset means any host,
+// which keeps a local setup working. Production sets it, so a request cannot
+// point the callback (and its payload) elsewhere.
+const callbackHostsAllowed = (): string[] | null => {
+    const raw = process.env.CALLBACK_HOSTS_ALLOWED?.trim();
+    if (!raw) {
+        return null;
+    }
+    return raw.split(',').map(host => host.trim().toLowerCase()).filter(Boolean);
+};
+
+const hostMatches = (hostname: string, entry: string): boolean =>
+    entry.startsWith('*.') ? hostname.endsWith(entry.slice(1)) : hostname === entry;
+
+export const validateCallbackUrl = (url: unknown): boolean => {
+    let parsed: URL;
+    try {
+        parsed = assertFetchableUrl(url);
+    } catch {
+        return false;
+    }
+    const allowed = callbackHostsAllowed();
+    if (allowed === null) {
+        return true;
+    }
+    const hostname = parsed.hostname.toLowerCase();
+    return allowed.some(entry => hostMatches(hostname, entry));
+};
+
 export const validateYoutubeUrl = (url: string) => /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/.test(url);
 
 /**
@@ -64,9 +97,11 @@ export const getExpressAppWithCallbacks = (): express.Express => {
     const app = express();
     const port = process.env.PORT || 3000;
 
-    app.use(express.json({ limit: '100mb' }));
-
+    // The callback route is public (the diarization service posts to it), so
+    // it parses small bodies only. The task routes parse their large bodies
+    // after authentication, in server.ts.
     const callbackRouter = Router();
+    callbackRouter.use(express.json({ limit: '1mb' }));
     const callbackServer = CallbackServer.getInstance(callbackRouter, '/callback');
     app.use('/callback', callbackRouter);
     return app;

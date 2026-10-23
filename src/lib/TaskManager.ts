@@ -5,7 +5,7 @@ import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
-import { validateUrl, extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
+import { validateCallbackUrl, extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
 import { postCallback, deliverTerminalCallback } from './callbackDelivery.js';
 import { LlmMode, TaskCancelledError, TaskControl, batchFirstEnabled, isCancellation, newTaskControl, runWithTaskControl } from './taskControl.js';
 
@@ -357,7 +357,7 @@ export class TaskManager {
 
             // Every task reports through its callback URL, so an unusable one
             // means the result would be produced and then have nowhere to go.
-            if (!validateUrl(req.body?.callbackUrl)) {
+            if (!validateCallbackUrl(req.body?.callbackUrl)) {
                 return res.status(400).json({ error: 'Invalid callback URL' });
             }
 

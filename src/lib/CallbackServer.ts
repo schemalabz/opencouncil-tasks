@@ -1,11 +1,14 @@
 import { Router, Request, Response } from 'express';
+import { randomUUID } from 'node:crypto';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 export class CallbackServer {
     private callbacks: Map<string, (data: any) => void> = new Map();
-    private methods = ['POST', 'GET', 'PUT'];
+    // The route is public. The payload comes in the body only, never in a
+    // query string, and the id is unguessable (see getCallback).
+    private methods = ['POST', 'PUT'];
 
     public static instance: CallbackServer | null = null;
 
@@ -30,8 +33,7 @@ export class CallbackServer {
 
             if (this.methods.includes(req.method) && this.callbacks.has(callbackId)) {
                 try {
-                    const data = req.method === 'GET' ? req.query : req.body;
-                    this.callbacks.get(callbackId)?.(data);
+                    this.callbacks.get(callbackId)?.(req.body);
                     res.status(200).json({ status: 'success' });
                 } catch (error) {
                     res.status(400).json({ status: 'error', message: 'Invalid data' });
@@ -43,7 +45,7 @@ export class CallbackServer {
     }
 
     public async getCallback<T>({ timeoutMinutes }: { timeoutMinutes: number }): Promise<{ callbackPromise: Promise<T>, url: string }> {
-        const callbackId = Math.random().toString(36).substring(2);
+        const callbackId = randomUUID();
         const publicUrl = process.env.PUBLIC_URL || `http://localhost:${process.env.PORT || '3000'}`;
         const url = `${publicUrl}${this.path}/${callbackId}`;
 

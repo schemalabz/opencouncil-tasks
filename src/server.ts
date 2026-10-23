@@ -54,27 +54,40 @@ app.use((req, res, next) => {
 // Apply authentication middleware
 app.use(authMiddleware);
 
+// Bodies are parsed after authentication, so an unauthenticated request
+// cannot make the server buffer 100 MB. A transcript needs the size.
+app.use(express.json({ limit: '100mb' }));
+
 // ============================================================================
 // PUBLIC ENDPOINTS (No Authentication Required)
 // ============================================================================
+
+const YTDLP_PROBE_TTL_MS = 60_000;
+let ytdlpProbe: { at: number; result: unknown } | null = null;
 
 app.get('/health', async (req: express.Request, res: express.Response<HealthResponse>) => {
     const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
     const services: { [key: string]: any } = {};
     const ytdlpBin = process.env.YTDLP_BIN_PATH || 'yt-dlp';
     
-    // Check yt-dlp availability/version
-    try {
-        const result = spawnSync(ytdlpBin, ['--version'], { encoding: 'utf8', timeout: 3000 });
-        if (result.error) {
-            services.ytdlp = { status: 'unhealthy' as const, error: result.error.message };
-        } else if (result.status === 0) {
-            services.ytdlp = { status: 'healthy' as const, version: (result.stdout || '').trim() };
-        } else {
-            services.ytdlp = { status: 'unhealthy' as const, error: `exit ${result.status}`, stdout: result.stdout, stderr: result.stderr };
+    // Check yt-dlp availability/version. /health is public and the probe
+    // spawns a process, so the answer is kept for a minute.
+    if (ytdlpProbe && Date.now() - ytdlpProbe.at < YTDLP_PROBE_TTL_MS) {
+        services.ytdlp = ytdlpProbe.result;
+    } else {
+        try {
+            const result = spawnSync(ytdlpBin, ['--version'], { encoding: 'utf8', timeout: 3000 });
+            if (result.error) {
+                services.ytdlp = { status: 'unhealthy' as const, error: result.error.message };
+            } else if (result.status === 0) {
+                services.ytdlp = { status: 'healthy' as const, version: (result.stdout || '').trim() };
+            } else {
+                services.ytdlp = { status: 'unhealthy' as const, error: `exit ${result.status}` };
+            }
+        } catch (error) {
+            services.ytdlp = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
         }
-    } catch (error) {
-        services.ytdlp = { status: 'unhealthy' as const, error: error instanceof Error ? error.message : 'Unknown' };
+        ytdlpProbe = { at: Date.now(), result: services.ytdlp };
     }
 
     
@@ -101,7 +114,8 @@ app.get('/health', async (req: express.Request, res: express.Response<HealthResp
 // List all running and queued tasks with their current state
 app.get('/tasks', (req, res) => {
     res.json({
-        running: taskManager.getTaskUpdates(),
+        // The callback URL carries the app's token for the task.
+        running: taskManager.getTaskUpdates().map(({ callbackUrl, ...task }) => task),
         queued: taskManager.getQueuedTaskSummaries(),
         maxParallelTasks: taskManager.getMaxParallelTasks(),
     });

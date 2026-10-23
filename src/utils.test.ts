@@ -1,5 +1,35 @@
-import { describe, it, expect } from 'vitest';
-import { IdCompressor, validateUrl, validateYoutubeUrl, formatTime, generateSubjectUUID, taskStatusIdFromUrl } from './utils.js';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+import { IdCompressor, validateUrl, validateCallbackUrl, validateYoutubeUrl, formatTime, generateSubjectUUID, taskStatusIdFromUrl } from './utils.js';
+
+describe('validateCallbackUrl', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('accepts any http(s) host when no allowlist is set', () => {
+    vi.stubEnv('CALLBACK_HOSTS_ALLOWED', '');
+    expect(validateCallbackUrl('https://anything.example/api/x?token=1')).toBe(true);
+    expect(validateCallbackUrl('ftp://anything.example/api/x')).toBe(false);
+    expect(validateCallbackUrl(undefined)).toBe(false);
+  });
+
+  it('accepts only the listed hosts when the allowlist is set', () => {
+    vi.stubEnv('CALLBACK_HOSTS_ALLOWED', 'opencouncil.gr, pr-5.opencouncil.dev');
+    expect(validateCallbackUrl('https://opencouncil.gr/api/cities/a/meetings/b/taskStatuses/c?token=t')).toBe(true);
+    expect(validateCallbackUrl('https://PR-5.opencouncil.dev/api/x')).toBe(true);
+    expect(validateCallbackUrl('https://evil.example/api/x')).toBe(false);
+    expect(validateCallbackUrl('http://localhost:3000/api/x')).toBe(false);
+    expect(validateCallbackUrl('https://opencouncil.gr.evil.example/api/x')).toBe(false);
+  });
+
+  it('matches every subdomain of a wildcard entry', () => {
+    vi.stubEnv('CALLBACK_HOSTS_ALLOWED', 'opencouncil.gr,*.opencouncil.dev');
+    expect(validateCallbackUrl('https://pr-912.opencouncil.dev/api/x')).toBe(true);
+    expect(validateCallbackUrl('https://opencouncil.dev/api/x')).toBe(false);
+    expect(validateCallbackUrl('https://pr-912.opencouncil.dev.evil.example/api/x')).toBe(false);
+    expect(validateCallbackUrl('https://notopencouncil.dev/api/x')).toBe(false);
+  });
+});
 
 describe('IdCompressor', () => {
   it('round-trips: add → getShort → getLong', () => {
