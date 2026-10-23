@@ -98,10 +98,12 @@ export const getExpressAppWithCallbacks = (): express.Express => {
     const port = process.env.PORT || 3000;
 
     // The callback route is public (the diarization service posts to it), so
-    // it parses small bodies only. The task routes parse their large bodies
-    // after authentication, in server.ts.
+    // it parses bounded bodies only. An identify result carries three segment
+    // arrays for the whole meeting, a few MB for the longest councils, so the
+    // bound leaves room. The task routes parse their 100 MB bodies after
+    // authentication, in server.ts.
     const callbackRouter = Router();
-    callbackRouter.use(express.json({ limit: '1mb' }));
+    callbackRouter.use(express.json({ limit: '25mb' }));
     const callbackServer = CallbackServer.getInstance(callbackRouter, '/callback');
     app.use('/callback', callbackRouter);
     return app;
