@@ -218,17 +218,24 @@ export function describePerson(person: MeetingApiData["people"][number], meeting
 }
 
 /**
+ * The roster as opencouncil sends it with a task request: the people who may
+ * speak at the meeting, described on the meeting date. A meeting with no body
+ * gets the whole city, as in opencouncil; so does `mode` "city".
+ */
+export function meetingRoster(data: MeetingApiData, mode: RosterMode = "meeting"): RosterPerson[] {
+    const meetingDate = new Date(data.meeting.dateTime);
+    const meetingBodyId = data.meeting.administrativeBodyId ?? null;
+    const people = mode === "meeting" && meetingBodyId ? data.people.filter(p => maySpeakAtMeeting(p, meetingBodyId, meetingDate)) : data.people;
+    return people.map(p => describePerson(p, meetingDate, meetingBodyId));
+}
+
+/**
  * Turns the meeting payload into identification input plus the stored truth.
  * Diarization labels are re-derived as S1, S2, ... in order of first speech,
  * so the model sees nothing of the stored tag labels or assignments.
  */
 export function buildBacktestInput(data: MeetingApiData, opts: { anchor: AnchorMode; roster?: RosterMode }): BacktestInput {
     const meetingDate = new Date(data.meeting.dateTime);
-    const meetingBodyId = data.meeting.administrativeBodyId ?? null;
-    // A meeting with no body gets the whole city, as in opencouncil.
-    const rosterPeople = (opts.roster ?? "meeting") === "meeting" && meetingBodyId
-        ? data.people.filter(p => maySpeakAtMeeting(p, meetingBodyId, meetingDate))
-        : data.people;
     const ordered = [...data.transcript].sort((a, b) => a.startTimestamp - b.startTimestamp);
 
     const speakersByTag = new Map<string, BacktestSpeaker>();
@@ -268,7 +275,7 @@ export function buildBacktestInput(data: MeetingApiData, opts: { anchor: AnchorM
         administrativeBodyName: data.meeting.administrativeBody?.name ?? null,
         language: data.city.language ?? "el",
         meetingDate: meetingDate.toISOString().slice(0, 10),
-        roster: rosterPeople.map(p => describePerson(p, meetingDate, meetingBodyId)),
+        roster: meetingRoster(data, opts.roster),
         cityPeople: data.people.length,
         segments,
         speakers,
