@@ -8,6 +8,9 @@ import {
   generateSocialFilter,
   generateBlurredMarginFilter,
   generateSolidMarginFilter,
+  assertFiniteNumber,
+  assertHexColor,
+  assertSocialOptions,
 } from './mediaOperations.js';
 
 describe('normalizeUtteranceTimestamps', () => {
@@ -86,6 +89,68 @@ describe('generateSocialFilter', () => {
     expect(filter).toContain('0xff0000');
     expect(filter).toContain('setdar=9/16');
   });
+
+  // The social options arrive in the request body. Anything that is not a
+  // plain color or a plain number must never reach the filter graph.
+  it.each([
+    'black',
+    '#fff',
+    "0x000000:x=1,drawtext=textfile=/proc/self/environ",
+    "#000000'",
+    '#000000;movie=/etc/passwd',
+    '',
+  ])('rejects backgroundColor %j', (backgroundColor) => {
+    expect(() => generateSocialFilter(
+      { marginType: 'solid', backgroundColor, zoomFactor: 0.8 },
+      1280, 720,
+    )).toThrow('backgroundColor must be a 6-digit hex color');
+  });
+
+  it('rejects a zoomFactor that is not a finite number in range', () => {
+    const bad = (zoomFactor: unknown) => () => generateSocialFilter(
+      { marginType: 'blur', backgroundColor: '#000000', zoomFactor: zoomFactor as number },
+      1280, 720,
+    );
+    expect(bad('0.8,drawtext=text=x')).toThrow('zoomFactor must be a finite number');
+    expect(bad(Number.NaN)).toThrow('zoomFactor must be a finite number');
+    expect(bad(0.5)).toThrow('zoomFactor must be between 0.6 and 1.0');
+    expect(bad(1.5)).toThrow('zoomFactor must be between 0.6 and 1.0');
+  });
+
+  it('rejects an unknown marginType', () => {
+    expect(() => generateSocialFilter(
+      { marginType: 'gradient' as 'blur', backgroundColor: '#000000', zoomFactor: 1.0 },
+      1280, 720,
+    )).toThrow("marginType must be 'blur' or 'solid'");
+  });
+});
+
+describe('assertSocialOptions', () => {
+  it('accepts a partial request with only valid fields', () => {
+    expect(() => assertSocialOptions({})).not.toThrow();
+    expect(() => assertSocialOptions({ marginType: 'blur', zoomFactor: 1.0 })).not.toThrow();
+    expect(() => assertSocialOptions({ backgroundColor: '#112233' })).not.toThrow();
+  });
+
+  it('rejects a bad field whichever other fields are present', () => {
+    expect(() => assertSocialOptions({ backgroundColor: 'black' })).toThrow('backgroundColor must be a 6-digit hex color');
+    expect(() => assertSocialOptions({ zoomFactor: 2 })).toThrow('zoomFactor must be between 0.6 and 1.0');
+    expect(() => assertSocialOptions({ marginType: 'solid', backgroundColor: '#000000;x' })).toThrow('backgroundColor');
+  });
+});
+
+describe('assertFiniteNumber / assertHexColor', () => {
+  it('returns the value when it is valid', () => {
+    expect(assertFiniteNumber(12.5, 'x')).toBe(12.5);
+    expect(assertHexColor('#A1b2C3', 'c')).toBe('#A1b2C3');
+    expect(assertHexColor('a1b2c3', 'c')).toBe('a1b2c3');
+  });
+
+  it('rejects numeric strings and non-finite numbers', () => {
+    expect(() => assertFiniteNumber('12', 'x')).toThrow('x must be a finite number');
+    expect(() => assertFiniteNumber(Infinity, 'x')).toThrow('x must be a finite number');
+    expect(() => assertFiniteNumber(null, 'x')).toThrow('x must be a finite number');
+  });
 });
 
 describe('generateBlurredMarginFilter', () => {
@@ -111,6 +176,8 @@ describe('generateSolidMarginFilter', () => {
 describe('downloadFile', () => {
   let tmpDir: string;
   let downloadFile: (url: string) => Promise<string>;
+  let downloadCachePath: (url: string) => string;
+  const CLIP_URL = 'https://example.com/clip.mp4';
 
   const bodyOf = (content: string): ReadableStream<Uint8Array> =>
     new ReadableStream({
@@ -212,7 +279,7 @@ describe('downloadFile', () => {
     tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'mediaops-download-'));
     process.env.DATA_DIR = tmpDir;
     vi.resetModules();
-    ({ downloadFile } = await import('./mediaOperations.js'));
+    ({ downloadFile, downloadCachePath } = await import('./mediaOperations.js'));
   });
 
   afterEach(async () => {
@@ -221,18 +288,37 @@ describe('downloadFile', () => {
     await fsp.rm(tmpDir, { recursive: true, force: true });
   });
 
+  // The cache name is a digest of the URL, never the URL's own file name: that
+  // name is caller-chosen, and it would let one request overwrite another
+  // request's media or the caption config in the data dir.
+  it('names the cache file by the whole URL, inside the data dir', () => {
+    const a = downloadCachePath('https://a.example/meeting.mp4');
+    const b = downloadCachePath('https://b.example/meeting.mp4');
+    expect(a).not.toBe(b);
+    expect(path.dirname(a)).toBe(tmpDir);
+    expect(path.basename(a)).toMatch(/^[0-9a-f]{32}\.mp4$/);
+    expect(path.basename(downloadCachePath('https://a.example/captions.json?x=1'))).toMatch(/^[0-9a-f]{32}\.json$/);
+    expect(path.basename(downloadCachePath('https://a.example/..'))).toMatch(/^[0-9a-f]{32}$/);
+    expect(path.basename(downloadCachePath('https://a.example/x.not-an-ext'))).toMatch(/^[0-9a-f]{32}$/);
+  });
+
+  it('refuses a source that is not an http(s) URL', async () => {
+    await expect(downloadFile('file:///etc/passwd')).rejects.toThrow(/^url must use http or https/);
+    await expect(downloadFile('/data/other.mp4')).rejects.toThrow(/^url is not a valid URL/);
+  });
+
   it('writes the body to the final path and leaves no .part file', async () => {
     vi.stubGlobal('fetch', respondWith('video-bytes'));
 
     const result = await downloadFile('https://example.com/clip.mp4');
 
-    expect(result).toBe(path.join(tmpDir, 'clip.mp4'));
+    expect(result).toBe(downloadCachePath(CLIP_URL));
     expect(await fsp.readFile(result, 'utf8')).toBe('video-bytes');
     expect(await partFiles()).toEqual([]);
   });
 
   it('reuses a cached file whose size matches the origin', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'video-bytes');
     const fetchMock = respondWith('video-bytes');
     vi.stubGlobal('fetch', fetchMock);
@@ -246,7 +332,7 @@ describe('downloadFile', () => {
   it('re-downloads a truncated cached file instead of trusting it', async () => {
     // Regression: an OOM-killed download left a 170 MiB stub of a 2.6 GB video that every
     // later highlight reused, so ffmpeg failed with "moov atom not found" forever.
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'trunc');
     vi.stubGlobal('fetch', respondWith('the-complete-video-bytes'));
 
@@ -257,7 +343,7 @@ describe('downloadFile', () => {
   });
 
   it('keeps the cached file when the origin reports no size', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'whatever');
     vi.stubGlobal('fetch', respondWith('whatever', { contentLength: null }));
 
@@ -276,7 +362,7 @@ describe('downloadFile', () => {
   });
 
   it('keeps a cached file when Content-Length is blank', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'video-bytes');
     const fetchMock = respondWith('video-bytes', { contentLength: '   ' });
     vi.stubGlobal('fetch', fetchMock);
@@ -300,7 +386,7 @@ describe('downloadFile', () => {
     expect(await fsp.readdir(tmpDir)).toEqual([]);
   });
   it('falls back to a ranged GET for the size when HEAD is rejected', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'trunc');
     vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'reject' }));
 
@@ -312,7 +398,7 @@ describe('downloadFile', () => {
   });
 
   it('falls back to a ranged GET when HEAD omits Content-Length', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'trunc');
     vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'no-length' }));
 
@@ -322,7 +408,7 @@ describe('downloadFile', () => {
   });
 
   it('keeps the cached file when neither HEAD nor the ranged GET reports a size', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'trunc');
     vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'reject', range: 'reject' }));
 
@@ -333,7 +419,7 @@ describe('downloadFile', () => {
   });
 
   it('uses the length from a 200 when the origin ignores the range, without reading the body', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'trunc');
     vi.stubGlobal('fetch', mockOrigin('the-complete-video-bytes', { head: 'reject', range: 'ignored' }));
 
@@ -346,7 +432,7 @@ describe('downloadFile', () => {
   });
 
   it('ignores a content-encoded length from the range probe', async () => {
-    const cached = path.join(tmpDir, 'clip.mp4');
+    const cached = downloadCachePath(CLIP_URL);
     await fsp.writeFile(cached, 'video-bytes');
     const fetchMock = mockOrigin('video-bytes', { head: 'reject', range: 'ignored-gzip' });
     vi.stubGlobal('fetch', fetchMock);

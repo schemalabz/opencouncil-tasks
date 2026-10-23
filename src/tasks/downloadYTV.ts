@@ -5,6 +5,8 @@ import fs from "fs";
 import cp from "child_process";
 import { promisify } from "util";
 import { ffmpegPath } from '../lib/ffmpegPath.js';
+import { childEnv } from '../lib/childEnv.js';
+import { assertFetchableUrl } from '../lib/fetchableUrl.js';
 import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 import { getMediaDurationSeconds } from "./utils/mediaOperations.js";
 import { isSpacesUrl } from "./utils/spacesUrl.js";
@@ -438,22 +440,33 @@ const extractFacebookVideoId = (url: URL, host: string): string | undefined => {
     return url.pathname.match(/\/(?:videos|reel)\/(?:[^/]+\/)?(\d+)(?=\/|$)/)?.[1];
 };
 
+const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be', 'www.youtu.be']);
+// A YouTube id is exactly 11 url-safe characters. The id names files in the data dir.
+const YOUTUBE_VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
+
 export const getVideoIdAndUrl = (mediaUrl: string) => {
-    if (mediaUrl.includes("youtube.com") || mediaUrl.includes("youtu.be")) {
+    // The string goes to yt-dlp as an argument and to fetch, so it must parse
+    // as an http(s) URL: an option-like string or a path never gets that far.
+    const parsed = assertFetchableUrl(mediaUrl, 'youtubeUrl');
+    const hostname = parsed.hostname.toLowerCase();
+
+    if (YOUTUBE_HOSTS.has(hostname)) {
         // Extract video ID from various YouTube URL formats
         let videoId: string | undefined;
 
-        if (mediaUrl.includes("youtube.com/watch")) {
-            const urlParams = new URL(mediaUrl).searchParams;
-            videoId = urlParams.get('v') || undefined;
-        } else if (mediaUrl.includes("youtu.be/")) {
-            videoId = mediaUrl.split("youtu.be/")[1]?.split(/[?&#/]/)[0];
-        } else if (mediaUrl.includes("youtube.com/embed/")) {
-            videoId = mediaUrl.split("youtube.com/embed/")[1]?.split(/[?&#/]/)[0];
+        if (hostname.endsWith('youtu.be')) {
+            videoId = parsed.pathname.split('/')[1];
+        } else if (parsed.pathname === '/watch' || parsed.pathname === '/watch/') {
+            videoId = parsed.searchParams.get('v') || undefined;
+        } else if (parsed.pathname.startsWith('/embed/')) {
+            videoId = parsed.pathname.split('/')[2];
         }
 
         if (!videoId || videoId.length === 0) {
             throw new Error(`Could not extract video ID from YouTube URL: ${mediaUrl}`);
+        }
+        if (!YOUTUBE_VIDEO_ID.test(videoId)) {
+            throw new Error('Invalid YouTube video ID');
         }
 
         return { videoId, videoUrl: mediaUrl, sourceType: 'YouTube', usesYtDlp: true };
@@ -553,6 +566,7 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
         const proc = cp.spawn(ffmpegBin, args, {
             windowsHide: true,
             stdio: ['pipe', 'pipe', 'pipe'],
+            env: childEnv(),
         });
 
         let stderr = '';
@@ -660,7 +674,8 @@ const extractSoundFromMP4 = async (inputPath: string, outputPath: string): Promi
     return new Promise<void>((resolve, reject) => {
         const ffmpegProcess = cp.spawn(ffmpegBin, args, {
             windowsHide: true,
-            stdio: ['pipe', 'pipe', 'pipe']
+            stdio: ['pipe', 'pipe', 'pipe'],
+            env: childEnv(),
         });
 
         let stdoutData = '';
@@ -718,6 +733,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
     let writer: fs.WriteStream | null = null;
     
     try {
+        assertFetchableUrl(url, 'youtubeUrl');
         const response = await fetch(url, { headers: HEADERS });
         
         if (!response.ok) {

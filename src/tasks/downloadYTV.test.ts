@@ -40,14 +40,46 @@ describe('getVideoIdAndUrl', () => {
   });
 
   it('strips query params from youtu.be links', () => {
-    const result = getVideoIdAndUrl('https://youtu.be/abc123?t=42');
-    expect(result.videoId).toBe('abc123');
+    const result = getVideoIdAndUrl('https://youtu.be/dQw4w9WgXcQ?t=42');
+    expect(result.videoId).toBe('dQw4w9WgXcQ');
+  });
+
+  it('accepts the mobile host', () => {
+    expect(getVideoIdAndUrl('https://m.youtube.com/watch?v=dQw4w9WgXcQ').videoId).toBe('dQw4w9WgXcQ');
   });
 
   it('throws on malformed YouTube URL with no video ID', () => {
     expect(() => getVideoIdAndUrl('https://youtube.com/watch')).toThrow(
       'Could not extract video ID',
     );
+  });
+
+  // The id becomes a file name in the data dir, so only the 11 url-safe
+  // characters of a real YouTube id pass.
+  it.each([
+    'https://www.youtube.com/watch?v=..%2F..%2Fetc%2Fcron.d%2Fx',
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ;rm',
+    'https://youtu.be/short',
+    'https://www.youtube.com/embed/dQw4w9WgXcQdQw4w9WgXcQ',
+  ])('rejects a YouTube id that is not 11 url-safe characters: %s', (url) => {
+    expect(() => getVideoIdAndUrl(url)).toThrow('Invalid YouTube video ID');
+  });
+
+  // yt-dlp gets the string as an argument, so a value that is not a URL
+  // (an option, a path, a data: URL) is refused before it gets there.
+  it.each([
+    '--exec "id" https://youtu.be/dQw4w9WgXcQ',
+    '-o /tmp/x youtube.com/watch?v=dQw4w9WgXcQ',
+    'file:///etc/passwd',
+    'data:text/plain,youtu.be/dQw4w9WgXcQ',
+    '/data/other-task.mp4',
+  ])('rejects a value that is not an http(s) URL: %s', (url) => {
+    expect(() => getVideoIdAndUrl(url)).toThrow(/^youtubeUrl /);
+  });
+
+  it('does not treat a host that only contains "youtube.com" as YouTube', () => {
+    const result = getVideoIdAndUrl('https://youtube.com.example.org/watch?v=dQw4w9WgXcQ');
+    expect(result.sourceType).toBe('Direct URL');
   });
 
   it('falls back to Direct URL for non-YouTube, non-CDN URLs', () => {
@@ -285,7 +317,7 @@ describe('downloadUntilComplete', () => {
   it('returns the raw download immediately when it is already complete (D ≈ M)', async () => {
     const deps = makeDeps();
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(result).toEqual(RAW);
     expect(deps.download).toHaveBeenCalledTimes(1);
@@ -300,7 +332,7 @@ describe('downloadUntilComplete', () => {
       .mockResolvedValueOnce(7200); // now complete
     const deps = makeDeps({ probeDurationSeconds });
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(result).toEqual(RAW);
     expect(deps.download).toHaveBeenCalledTimes(2);
@@ -319,7 +351,7 @@ describe('downloadUntilComplete', () => {
       .mockResolvedValueOnce(645); // complete vs fresh M=650; hopeless vs stale M=7200
     const deps = makeDeps({ getInfo, probeDurationSeconds });
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(result).toEqual(RAW);
     expect(deps.download).toHaveBeenCalledTimes(2);
@@ -341,7 +373,7 @@ describe('downloadUntilComplete', () => {
     const download = vi.fn().mockRejectedValue(new Error('yt-dlp download failed: ERROR: [youtube] x: Video unavailable'));
     const deps = makeDeps({ download });
 
-    const err = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {})
+    const err = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {})
       .catch((e) => e as Error) as Error;
 
     expect(err.message).toContain('Video unavailable');
@@ -355,7 +387,7 @@ describe('downloadUntilComplete', () => {
       .mockResolvedValueOnce(RAW);
     const deps = makeDeps({ download });
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(result).toEqual(RAW);
     expect(download).toHaveBeenCalledTimes(2);
@@ -367,7 +399,7 @@ describe('downloadUntilComplete', () => {
     const deps = makeDeps({ probeDurationSeconds: vi.fn().mockResolvedValue(600) }); // never completes
     const onProgress = vi.fn();
 
-    const err = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, onProgress)
+    const err = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, onProgress)
       .catch((e) => e as Error) as Error;
 
     expect(err.message).toMatch(/not downloadable within \d+min/);
@@ -402,7 +434,7 @@ describe('downloadUntilComplete', () => {
       probeDurationSeconds: vi.fn().mockResolvedValue(600),
     });
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(result).toEqual(RAW);
     expect(deps.download).toHaveBeenCalledTimes(1);
@@ -423,7 +455,7 @@ describe('downloadUntilComplete', () => {
       .mockResolvedValueOnce(7200); // attempt 3: complete
     const deps = makeDeps({ getInfo, probeDurationSeconds });
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(result).toEqual(RAW);
     expect(deps.download).toHaveBeenCalledTimes(3); // attempt 2 was rejected, not accepted
@@ -435,7 +467,7 @@ describe('downloadUntilComplete', () => {
       probeDurationSeconds: vi.fn().mockResolvedValue(900), // 100s short, below the 120s floor
     });
 
-    const result = await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    const result = await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(deps.download).toHaveBeenCalledTimes(1);
     expect(result).toEqual(RAW);
@@ -452,7 +484,7 @@ describe('downloadUntilComplete', () => {
       .mockResolvedValueOnce(7200); // attempt 2: complete
     const deps = makeDeps({ download, dropCachedMedia, probeDurationSeconds });
 
-    await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+    await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
     expect(order).toEqual(['download', 'drop', 'download']);
   });
@@ -473,7 +505,7 @@ describe('downloadUntilComplete', () => {
       const download = vi.fn(() => new Promise<RawVideo>((resolve) => { finishDownload = resolve; }));
       const deps = makeDeps({ download, getInfo });
 
-      const result = downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+      const result = downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
       await vi.advanceTimersByTimeAsync(0);                      // attempt-start getInfo, download begins
       await vi.advanceTimersByTimeAsync(CONFIG.pollIntervalMs);  // 1st mid-download sample
       await vi.advanceTimersByTimeAsync(CONFIG.pollIntervalMs);  // 2nd mid-download sample
@@ -501,7 +533,7 @@ describe('downloadUntilComplete', () => {
       const download = vi.fn(() => new Promise<RawVideo>((resolve) => { finishDownload = resolve; }));
       const deps = makeDeps({ download, getInfo, downloadedBytes });
 
-      const result = downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+      const result = downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
       await vi.advanceTimersByTimeAsync(0);
       await vi.advanceTimersByTimeAsync(CONFIG.pollIntervalMs); // sample: unchanged → heartbeat
       finishDownload(RAW);
@@ -532,7 +564,7 @@ describe('downloadUntilComplete', () => {
       const download = vi.fn(() => new Promise<RawVideo>((resolve) => { finishDownload = resolve; }));
       const deps = makeDeps({ download, getInfo });
 
-      const result = downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+      const result = downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
       await vi.advanceTimersByTimeAsync(0);
       await vi.advanceTimersByTimeAsync(CONFIG.pollIntervalMs); // sample fails → must be visible
       finishDownload(RAW);
@@ -592,7 +624,7 @@ describe('downloadUntilComplete', () => {
         .mockResolvedValueOnce(7200);
       const deps = makeDeps({ getInfo, probeDurationSeconds });
 
-      await downloadUntilComplete('https://youtu.be/x', deps, CONFIG, () => {});
+      await downloadUntilComplete('https://youtu.be/dQw4w9WgXcQ', deps, CONFIG, () => {});
 
       const logged = logSpy.mock.calls.map((args) => args.join(' ')).join('\n');
       expect(logged).toContain('live_status=post_live');

@@ -5,6 +5,7 @@ import { GenerateHighlightRequest, GenerateHighlightResult } from "../types.js";
 import { Task } from "./pipeline.js";
 import {
   splitAndUploadMedia,
+  assertSocialOptions,
   generateSocialFilter,
   getVideoResolution,
   downloadFile,
@@ -128,6 +129,11 @@ export const generateHighlight: Task<
 > = async (request, onProgress) => {
   const { media, parts, render } = request;
 
+  // Refuse a bad request before the source video is downloaded.
+  if (render.socialOptions) {
+    assertSocialOptions(render.socialOptions);
+  }
+
   const results: GenerateHighlightResult["parts"] = [];
 
   // Determine input video resolution once for the entire request
@@ -176,10 +182,11 @@ export const generateHighlight: Task<
     let baseFilter = '';
     if (isSocial) {
       const social = render.socialOptions || {};
+      // Defaults only: generateSocialFilter rejects a value outside its range.
       const socialOptions: Required<NonNullable<GenerateHighlightRequest['render']['socialOptions']>> = {
         marginType: social.marginType || 'blur',
         backgroundColor: social.backgroundColor || '#000000',
-        zoomFactor: Math.max(0.6, Math.min(1.0, social.zoomFactor || 1.0))
+        zoomFactor: social.zoomFactor ?? 1.0,
       };
       baseFilter = generateSocialFilter(socialOptions, inputVideoWidth || 1280, inputVideoHeight || 720);
       partProgress(15);

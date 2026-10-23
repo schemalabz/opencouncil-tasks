@@ -1,6 +1,9 @@
 import path from "path";
 import cp from "child_process";
+import crypto from "crypto";
 import { ffmpegPath } from '../../lib/ffmpegPath.js';
+import { childEnv } from '../../lib/childEnv.js';
+import { assertFetchableUrl } from '../../lib/fetchableUrl.js';
 import fs from "fs";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
@@ -10,7 +13,6 @@ import { uploadToSpaces } from "../uploadToSpaces.js";
 import { getDataDir } from '../../lib/dataDir.js';
 import { SplitMediaFileRequest, MediaType, GenerateHighlightRequest, AspectRatio } from "../../types.js";
 
-const execAsync = promisify(cp.exec);
 const execFileAsync = promisify(cp.execFile);
 
 /**
@@ -25,7 +27,7 @@ export async function getMediaDurationSeconds(filePath: string): Promise<number>
         '-show_entries', 'format=duration',
         '-of', 'csv=p=0',
         filePath,
-    ]);
+    ], { env: childEnv() });
     const duration = parseFloat(stdout.trim());
     if (!Number.isFinite(duration) || duration <= 0) {
         throw new Error(`Invalid media duration from ffprobe: "${stdout.trim()}" for ${filePath}`);
@@ -131,9 +133,13 @@ export async function getVideoResolution(videoPath: string): Promise<{width: num
         const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
         
         // Use ffprobe to get video stream dimensions
-        const command = `${ffprobePath} -v quiet -select_streams v:0 -show_entries stream=width,height -of csv=p=0 "${videoPath}"`;
-        
-        const { stdout, stderr } = await execAsync(command);
+        const { stdout, stderr } = await execFileAsync(ffprobePath, [
+            '-v', 'quiet',
+            '-select_streams', 'v:0',
+            '-show_entries', 'stream=width,height',
+            '-of', 'csv=p=0',
+            videoPath,
+        ], { env: childEnv() });
         
         if (stderr) {
             console.warn(`⚠️ ffprobe stderr: ${stderr}`);
@@ -163,6 +169,46 @@ export async function getVideoResolution(videoPath: string): Promise<{width: num
     }
 }
 
+// Caller values that land in an ffmpeg filter graph. The graph language has
+// its own separators and can chain a filter that reads a file, so a value is
+// accepted only when it is exactly a number or a 6-digit hex color. The
+// messages do not echo the value: they travel back to the caller.
+const HEX_COLOR = /^#?[0-9a-fA-F]{6}$/;
+
+export function assertHexColor(value: unknown, name: string): string {
+    if (typeof value !== 'string' || !HEX_COLOR.test(value)) {
+        throw new Error(`${name} must be a 6-digit hex color`);
+    }
+    return value;
+}
+
+export function assertFiniteNumber(value: unknown, name: string): number {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+        throw new Error(`${name} must be a finite number`);
+    }
+    return value;
+}
+
+/**
+ * The checks on the social options of a request. generateSocialFilter runs
+ * them, and the highlight task runs them first thing, so a request with a bad
+ * value is refused before the server downloads the source video.
+ */
+export function assertSocialOptions(options: NonNullable<GenerateHighlightRequest['render']['socialOptions']>): void {
+    if (options.marginType !== undefined && options.marginType !== 'blur' && options.marginType !== 'solid') {
+        throw new Error("marginType must be 'blur' or 'solid'");
+    }
+    if (options.zoomFactor !== undefined) {
+        const zoomFactor = assertFiniteNumber(options.zoomFactor, 'zoomFactor');
+        if (zoomFactor < 0.6 || zoomFactor > 1.0) {
+            throw new Error('zoomFactor must be between 0.6 and 1.0');
+        }
+    }
+    if (options.backgroundColor !== undefined) {
+        assertHexColor(options.backgroundColor, 'backgroundColor');
+    }
+}
+
 /**
  * Generate FFmpeg filter for social-9x16 transformation
  * Converts any input aspect ratio to 9:16 output with configurable margins and zoom
@@ -173,15 +219,15 @@ export function generateSocialFilter(
     inputVideoWidth: number,
     inputVideoHeight: number
 ): string {
+    assertSocialOptions(options);
     const { marginType, backgroundColor, zoomFactor } = options;
-    
+
     console.log(`🎬 Social filter: zoom=${zoomFactor}, marginType=${marginType}`);
-    
+
     if (marginType === 'blur') {
         return generateBlurredMarginFilter(zoomFactor, inputVideoWidth, inputVideoHeight);
-    } else {
-        return generateSolidMarginFilter(zoomFactor, backgroundColor, inputVideoWidth, inputVideoHeight);
     }
+    return generateSolidMarginFilter(zoomFactor, backgroundColor, inputVideoWidth, inputVideoHeight);
 }
 
 /**
@@ -194,8 +240,9 @@ export function generateSolidMarginFilter(
     inputVideoWidth: number,
     inputVideoHeight: number
 ): string {
-    // Normalize color for FFmpeg (support #RRGGBB and names)
-    const padColor = backgroundColor.startsWith('#') ? `0x${backgroundColor.slice(1)}` : backgroundColor;
+    // #RRGGBB only. The value lands in the filter graph as raw text, so a
+    // color name or any other form is rejected rather than passed through.
+    const padColor = `0x${assertHexColor(backgroundColor, 'backgroundColor').replace('#', '')}`;
     
     // Get social resolution from preset system
     const resolution = `${inputVideoWidth}x${inputVideoHeight}`;
@@ -366,6 +413,20 @@ const parseContentLength = (header: string | null): number | null => {
 };
 
 /**
+ * Where a downloaded URL is cached. The name is a digest of the whole URL,
+ * never the URL's own file name: that name is caller-chosen, and it would let
+ * one request overwrite another request's media, or the caption config, in
+ * the data dir. The extension is kept when it is a plain one, for ffmpeg.
+ */
+export const downloadCachePath = (url: string): string => {
+    const parsed = assertFetchableUrl(url);
+    const ext = path.extname(parsed.pathname).toLowerCase();
+    const safeExt = /^\.[a-z0-9]{1,5}$/.test(ext) ? ext : "";
+    const digest = crypto.createHash("sha256").update(parsed.href).digest("hex").slice(0, 32);
+    return path.join(dataDir, `${digest}${safeExt}`);
+};
+
+/**
  * Download a file from a URL.
  *
  * The body is streamed to a per-attempt `.part` file and renamed into place only once it
@@ -378,8 +439,7 @@ const parseContentLength = (header: string | null): number | null => {
  * re-downloaded.
  */
 export const downloadFile = async (url: string): Promise<string> => {
-    const fallbackRandomName = Math.random().toString(36).substring(2, 15);
-    const fileName = path.join(dataDir, url.split("/").pop() || fallbackRandomName);
+    const fileName = downloadCachePath(url);
 
     // Reuse a cached file only when we can confirm it is complete
     let cachedSize: number | null = null;
@@ -449,6 +509,15 @@ export const getFileParts = async (
     const randomId = Math.random().toString(36).substring(2, 15);
     const outputExt = type === "audio" ? "mp3" : "mp4";
     const outputFilePath = path.join(dataDir, `${randomId}.${outputExt}`);
+
+    // The timestamps come from the request body and land in trim=start:end.
+    for (const segment of segments) {
+        const start = assertFiniteNumber(segment.startTimestamp, 'segment.startTimestamp');
+        const end = assertFiniteNumber(segment.endTimestamp, 'segment.endTimestamp');
+        if (start < 0 || end < start) {
+            throw new Error('segment timestamps must satisfy 0 <= startTimestamp <= endTimestamp');
+        }
+    }
 
     const filterComplex = segments
         .map((segment, index) => {
@@ -527,6 +596,7 @@ export const getFileParts = async (
         const ffmpegProcess = cp.spawn(ffmpegBin, args, {
             windowsHide: true,
             stdio: ["pipe", "pipe", "pipe"],
+            env: childEnv(),
         });
 
         let stdoutData = "";
