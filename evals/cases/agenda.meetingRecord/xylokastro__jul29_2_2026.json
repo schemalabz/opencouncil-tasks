@@ -1,0 +1,58 @@
+{
+  "id": "agenda.meetingRecord/xylokastro__jul29_2_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "xylokastro",
+    "meetingId": "jul29_2_2026",
+    "date": "2026-07-29",
+    "time": "20:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/xylokastro_jul29_2026_agenda_2.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "δια ζώσης , στην αίθουσα συνεδριάσεων του Κέντρου Νεότητας Ξυλοκάστρου"
+    },
+    "kind": {
+      "value": "special",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "xylokastro/Δημοτικό Συμβούλιο",
+  "tags": [
+    "xylokastro",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Self-contradictory «ειδική τακτική συνεδρίαση», single item (enrolments in municipal nurseries), convened under άρθρο 124 (regular convening). Not one of the special purposes; labelled null — could be argued regular."
+}

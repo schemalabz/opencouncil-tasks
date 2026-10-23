@@ -1,0 +1,196 @@
+{
+  "id": "decisions.extraction/Ψ7ΠΥΩΞ1-ΘΩΧ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ7ΠΥΩΞ1-ΘΩΧ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ7ΠΥΩΞ1-ΘΩΧ",
+    "city": "papagos-cholargos",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "namedVoters=dissenters_only",
+        "mayorStated=yes",
+        "declaration=yes",
+        "partialVote=yes",
+        "perVoteAbsence=yes",
+        "departure=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "perVoteAbsence"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": true,
+        "review": [
+          {
+            "what": "attendance change dropped",
+            "verdict": "neither is right",
+            "note": "at the end of the page it says \"Κατά τη διαδικασία της ψηφοφορίας απουσίαζαν οι Δημοτικοί Σύμβουλοι κ.κ. Μαρία Αθανασάκου - Μουντάκη,\nΒασίλειος Σιαμάνης και Αντώνιος Ρεκλείτης.\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "not an arrival or departure: a per-vote absence printed after the decision"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3224,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Μαρία Αθανασάκου - Μουντάκη",
+          "Βασίλειος Σιαμάνης",
+          "Αντώνιος Ρεκλείτης"
+        ],
+        "asPrinted": "Κατά τη διαδικασία της ψηφοφορίας απουσίαζαν οι Δημοτικοί Σύμβουλοι κ.κ. Μαρία Αθανασάκου - Μουντάκη, Βασίλειος Σιαμάνης και Αντώνιος Ρεκλείτης.",
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "Μαρία Αθανασάκου - Μουντάκη",
+          "Αθανάσιος Αυγουρόπουλος",
+          "Μαρία Σιώτου",
+          "Βασίλειος Σιαμάνης",
+          "Γεωργία Παγώνη",
+          "Αναστασία Χαμηλοθώρη - Κουγιουμτζοπούλου",
+          "Νικόλαος Κουκής",
+          "Δήμητρα Ρουφογάλη",
+          "Αικατερίνη Τούτουζα",
+          "Μιχαήλ Τράκας",
+          "Κυριάκος Λινάκης",
+          "Δημήτριος Σκάρλος",
+          "Μιχαήλ Υφαντής",
+          "Δημήτριος Τσενεμπής",
+          "Νικόλαος Λινοξυλάκης",
+          "Αικατερίνη Γκούμα",
+          "Θεόδωρος Πουρσαϊτίδης",
+          "Αντώνιος Ρεκλείτης",
+          "Αθανάσιος Βαλυράκης",
+          "Δημήτριος Οικονόμου",
+          "Απόστολος Καρανικόλας",
+          "Ειρήνη Βεντουζά - Παπανικολάου",
+          "Αλέξανδρος Νομικός",
+          "Αγλαΐα Σουρανή",
+          "Γεώργιος Μάγκος"
+        ],
+        "absentMembers": [
+          "Χρυσούλα Παρίση",
+          "Γεωργία Ζώη",
+          "Γεώργιος Ρεμούνδος",
+          "Βικτωρία Νικάκη"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 8,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 8,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΣΕ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία (για Α. Κοινότητα Παπάγου) / Ομόφωνα επί των έγκυρων ψήφων (για Β. Κοινότητα Χολαργού)",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "Μαρία Σιώτου",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Αναστασία Χαμηλοθώρη - Κουγιουμτζοπούλου",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Απόστολος Καρανικόλας",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration stored as a vote",
+            "verdict": "neither is right",
+            "note": "what was extracted as against was abstain with the text \"«Λευκό» ψήφισαν οι Δημοτικοί Σύμβουλοι κ.κ. Μαρία Σιώτου και Αναστασία Χαμηλοθώρη -\nΚουγιουμτζοπούλου.\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "two-part vote. Part A (Παπάγου) ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ: «Μειοψήφησαν» Σιώτου and Χαμηλοθώρη-Κουγιουμτζοπούλου, «Λευκό» Καρανικόλας — which is exactly what was extracted. Part B (Χολαργού) ΟΜΟΦΩΝΑ with «Λευκό» Σιώτου and Χαμηλοθώρη. The reviewer's verdict looked at part B; the stored values match part A. One position per decision cannot hold both"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "papagos-cholargos",
+    "rollCallLayout=present_and_absent",
+    "namedVoters=dissenters_only",
+    "mayorStated=yes",
+    "declaration=yes",
+    "partialVote=yes",
+    "perVoteAbsence=yes",
+    "departure=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

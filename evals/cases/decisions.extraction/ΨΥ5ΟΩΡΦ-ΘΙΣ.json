@@ -1,0 +1,290 @@
+{
+  "id": "decisions.extraction/ΨΥ5ΟΩΡΦ-ΘΙΣ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΥ5ΟΩΡΦ-ΘΙΣ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΥ5ΟΩΡΦ-ΘΙΣ",
+    "city": "zografou",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": null,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "mayorMovement=departure"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": true,
+      "reviewNote": "Added 2026-09-17 for the mayor's movement / the presiding member; labels seeded from the extractor, unreviewed except the mayor sentence (read on the page).",
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ κ.κ. ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ, ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ και ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)."
+          },
+          {
+            "name": "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ κ.κ. ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ, ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ και ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)."
+          },
+          {
+            "name": "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ κ.κ. ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ, ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ και ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)."
+          },
+          {
+            "name": "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος της ημερήσιας διάταξης προσήλθαν οι Δ.Σ κ.κ. ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ, ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ και ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)."
+          },
+          {
+            "name": "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 2ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ."
+          },
+          {
+            "name": "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 2ου τακτικού θέματος αποχώρησαν οι Δ.Σ. κ.κ. ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ."
+          },
+          {
+            "name": "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 5,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 5ου τακτικού θέματος αποχώρησε ο Δ.Σ. κ. ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)."
+          },
+          {
+            "name": "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 9,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 9ου τακτικού θέματος αποχώρησε ο Δ.Σ. κ. ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ."
+          },
+          {
+            "name": "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 11,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 11ου τακτικού θέματος αποχώρησε ο Δ.Σ. κ. ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)."
+          },
+          {
+            "name": "ΤΙΝΑ ΚΑΦΑΤΣΑΚΗ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 4,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Η Δήμαρχος ήταν παρούσα κατά την έναρξη της συνεδρίασης και αποχώρησε μετά τη λήξη της συζήτησης του 4ου τακτικού θέματος."
+          }
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 9958,
+        "extractionFlaggedIncomplete": true,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "mayor": {
+      "value": {
+        "present": true,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+          "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ- ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+          "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+          "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+          "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+          "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+          "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+          "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+          "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΑΛΕΞΑΝΔΡΗ ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+          "ΒΑΜΒΑΚΑ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+          "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)"
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Κατά πλειοψηφία",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "mayorMovement=departure"
+  ]
+}

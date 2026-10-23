@@ -1,0 +1,159 @@
+{
+  "id": "decisions.matching/vrilissia-apr29_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/apr29_2_2026",
+    "meetingDate": "2026-04-29",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-05-13",
+      "fromDate": "2026-04-29"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmpaw45wp0zbs32lspflxxq8r",
+        "name": "• Διαθέτει σήμερα ο Δήμος Βριλησσίων εγκεκριμένο και χαρακτηρισμένο από το Υπουργείο Υποδομών και Μεταφορών Σχέδιο Βιώσιμης Αστικής Κινητικότητας (Σ.Β.Α.Κ.); • Είναι νομίμως θεσμοθετημένες και πλήρως σύμφωνες με το ισχύον θεσμικό πλαίσιο οι κυκλοφοριακές ρυθμίσεις που εφαρμόστηκαν από το 2021 και εφεξής στο Δήμο Βριλησσίων;",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45ww0zbt32lsw162xlj9",
+        "name": "Ψήφισμα Δήμου Βριλησσίων Για τη διασφάλιση της εργασίας του ΙΔΟΧ Προσωπικού και τη λειτουργία των κοινωνικών δομών (Παιδικοί Σταθμοί, ΚΔΑΠ 5-12, ΚΔΑΠ ΑμεΑ)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45wh0zbr32ls40uh0lf9",
+        "name": "Ενημέρωση σχετικά με το στρατηγικό σχεδιασμό αναφορικά με την καθαριότητα και την ενίσχυση της Διαλογής στην Πηγή",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpci4pw507xi11vdhmg8i30i",
+        "name": "Παράταση παράδοσης φωτοαντιγραφικών μηχανημάτων",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmpaw45vv0zbp32lsom8jtjjt",
+        "name": "Δεύτερη (2η) τροποποίηση τεχνικού προγράμματος έτους 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45w90zbq32lslvxdhyr2",
+        "name": "Έγκριση δεύτερης (2ης) αναμόρφωσης προϋπολογισμού οικονομικού έτους 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45xb0zbv32lsgzdafb3e",
+        "name": "Έγκριση υλοποίησης Δημοτικού καλοκαιρινού προγράμματος απασχόλησης παιδιών 5-12 έτους 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45xi0zbw32lsgaw9quq6",
+        "name": "Έγκριση νέου κανονισμού Κέντρου Ανοικτής Προστασίας Ηλικιωμένων (ΚΑΠΗ) Δήμου Βριλησσίων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45xo0zbx32lsg8zmfej5",
+        "name": "1) Αποδοχή της πρότασης συνεργασίας της ΙΚΕ «πeripatos» για τη δωρεάν υλοποίηση της δράσης «Move Game», 2)Σύναψη μνημονίου συνεργασίας με την ΙΚΕ «πeripatos», 3) Παραχώρηση χώρου/διευκολύνσεων και εποπτεία της δράσης από την Τεχνική Υπηρεσία",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpaw45xv0zby32lsgjb2goe1",
+        "name": "Κυκλοφοριακές ρυθμίσεις",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmpaw45vv0zbp32lsom8jtjjt]": {
+      "value": "ΡΙΤ1Ω9Ρ-ΕΤΙ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-04",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmutfstry0270dj9sr6m1fkkt"
+    },
+    "link[cmpaw45w90zbq32lslvxdhyr2]": {
+      "value": "62ΚΛΩ9Ρ-ΘΟΖ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-04",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmutfvz3d01cvhr3azzk5e03a"
+    },
+    "link[cmpaw45wh0zbr32ls40uh0lf9]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmpaw45wp0zbs32lspflxxq8r]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmpaw45ww0zbt32lsw162xlj9]": {
+      "value": "Ψ7ΚΔΩ9Ρ-ΩΝΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpaw45xb0zbv32lsgzdafb3e]": {
+      "value": "92ΞΡΩ9Ρ-1Τ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpaw45xi0zbw32lsgaw9quq6]": {
+      "value": "ΡΗΒΜΩ9Ρ-ΧΦ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpaw45xo0zbx32lsg8zmfej5]": {
+      "value": "ΡΙΥΖΩ9Ρ-28Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpaw45xv0zby32lsgjb2goe1]": {
+      "value": "ΨΟΧ1Ω9Ρ-Ρ43",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpci4pw507xi11vdhmg8i30i]": {
+      "value": "Ρ5ΝΤΩ9Ρ-ΒΛΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

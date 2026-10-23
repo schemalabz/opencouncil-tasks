@@ -1,0 +1,261 @@
+{
+  "id": "decisions.extraction/Ψ75ΤΩ6Μ-6ΔΡ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ75ΤΩ6Μ-6ΔΡ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ75ΤΩ6Μ-6ΔΡ",
+    "city": "athens",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=dissenters_only",
+        "declaration=yes",
+        "mayorStated=yes",
+        "arrival=yes",
+        "voteTally=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Λαλιώτης Νικόλαος",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Προσήλθαν κατά τη συζήτηση του μοναδικού θέματος της Ημερήσιας Διάταξης οι κ.κ. Ν. Λαλιώτης, Γ. Βουλγαράκης."
+          },
+          {
+            "name": "Βουλγαράκης Γεώργιος",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Προσήλθαν κατά τη συζήτηση του μοναδικού θέματος της Ημερήσιας Διάταξης οι κ.κ. Ν. Λαλιώτης, Γ. Βουλγαράκης."
+          },
+          {
+            "name": "Μπακογιάννης Κωνσταντίνος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν κατά τη συζήτηση του μοναδικού θέματος της Ημερήσιας Διάταξης οι κ.κ. Κ. Μπακογιάννης, Χ. Τεντόμας, Χ. Γιώτης."
+          },
+          {
+            "name": "Τεντόμας Χρήστος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν κατά τη συζήτηση του μοναδικού θέματος της Ημερήσιας Διάταξης οι κ.κ. Κ. Μπακογιάννης, Χ. Τεντόμας, Χ. Γιώτης."
+          },
+          {
+            "name": "Γιώτης Χαράλαμπος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησαν κατά τη συζήτηση του μοναδικού θέματος της Ημερήσιας Διάταξης οι κ.κ. Κ. Μπακογιάννης, Χ. Τεντόμας, Χ. Γιώτης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1997,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": 43,
+        "presentMembers": [
+          "Λιμνιωτάκη Δέσποινα",
+          "Τεντόμας Χρήστος",
+          "Αλεβυζάκη Δέσποινα",
+          "Αβραμίδης Νικόλαος",
+          "Αγρoγιάννη-Μουκριώτου Ζαχαρία",
+          "Αποστολόπουλος Γεώργιος",
+          "Βασιλείου Χριστίνα",
+          "Βελεγράκης Εμμανουήλ",
+          "Βουρδουμπάς Χαράλαμπος",
+          "Βουτυράκου Διαλεκτή-Αθηνά",
+          "Γεννηματά Ιωάννα",
+          "Γεωργιάδης Θωμάς",
+          "Γιάννα Δέσποινα",
+          "Γιάνναρος Γεώργιος-Κωνσταντίνος",
+          "Γιαννοπούλου Καλλιόπη",
+          "Γιώτης Χαράλαμπος",
+          "Γκαγκάκη-Δημητριάδου Αικατερίνη",
+          "Δούρου Όλγα",
+          "Ευαγγελίδου Μαρία",
+          "Ζαχαριάδης Κωνσταντίνος",
+          "Ζωντήρου Ελένη",
+          "Καββαθάς Τρύφων",
+          "Καλαμπόκας Εμμανουήλ",
+          "Κολλάτος Ευγένιος",
+          "Κωνσταντίνου Πέτρος",
+          "Μαντζαβίνου Ελένη",
+          "Μπακογιάννης Κωνσταντίνος",
+          "Μπάρκα Βασιλική",
+          "Μπέη-Καραμπότσου Ρωξάνη-Ευαγγελία",
+          "Παπαδοπούλου Ελένη",
+          "Σκιαδάς Ελευθέριος",
+          "Σκουμπουρδή Άρτεμις",
+          "Στρατηγάκη Μαρία",
+          "Φούντζουλα Ασήμω",
+          "Χαρλαύτης Παναγιώτης-Πάρης",
+          "Χειμωνάς Αθανάσιος"
+        ],
+        "absentMembers": [
+          "Βουλγαράκης Γεώργιος",
+          "Γιαννόπουλος Ευάγγελος",
+          "Γραμματικογιάννης Ανδρέας",
+          "Σιδερή Δήμητρα",
+          "Λαλιώτης Νικόλαος",
+          "Σοφιανός Νικόλαος",
+          "Χρυσόγελος Νικόλαος"
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Λιμνιωτάκη Δέσποινα (Πρόεδρος), Τεντόμας Χρήστος (Αντιπρόεδρος), Αλεβυζάκη Δέσποινα (Γραμματέας), Αβραμίδης Νικόλαος, Αγρoγιάννη-Μουκριώτου Ζαχαρία (Ζαχαρούλα), Αποστολόπουλος Γεώργιος, Βασιλείου Χριστίνα, Βελεγράκης Εμμανουήλ (Μανόλης), Βουλγαράκης Γεώργιος, Βουρδουμπάς Χαράλαμπος (Χάρης), Βουτυράκου Διαλεκτή-Αθηνά (Διάνα), Γεννηματά Ιωάννα (Τζίνη), Γεωργιάδης Θωμάς, Γιάννα Δέσποινα (Μπέττυ), Γιάνναρος Γεώργιος-Κωνσταντίνος, Γιαννόπουλος Ευάγγελος, Γιαννοπούλου Καλλιόπη (Πόπη), Γιώτης Χαράλαμπος, Γκαγκάκη-Δημητριάδου Αικατερίνη (Κατερίνα), Γραμματικογιάννης Ανδρέας, Δούρου Όλγα, Ευαγγελίδου Μαρία (Μάρω), Ζαχαριάδης Κωνσταντίνος, Ζωντήρου Ελένη, Καββαθάς Τρύφων, Καλαμπόκας Εμμανουήλ (Μανόλης), Κολλάτος Ευγένιος (Σάκης), Κωνσταντίνου Πέτρος, Λαλιώτης Νικόλαος, Μαντζαβίνου Ελένη (Έλενα), Μπακογιάννης Κωνσταντίνος, Μπάρκα Βασιλική, Μπέη-Καραμπότσου Ρωξάνη-Ευαγγελία, Παπαδοπούλου Ελένη, Σιδερή Δήμητρα, Σκιαδάς Ελευθέριος, Σκουμπουρδή Άρτεμις, Σοφιανός Νικόλαος, Στρατηγάκη Μαρία, Φούντζουλα Ασήμω (Μίνα), Χαρλαύτης Παναγιώτης-Πάρης, Χειμωνάς Αθανάσιος, Χρυσόγελος Νικόλαος (Νίκος).\n\nΟι απόντες Δημοτικοί Σύμβουλοι προσκλήθηκαν νόμιμα με την με αρ. 137012/25-05-2026 πρόσκληση και ήταν οι κ.κ. Ευαγγ. Γιαννόπουλος, Ανδρ. Γραμματικογιάννης, Δ. Σιδερή, Ν. Σοφιανός, Ν. Χρυσόγελος.",
+          "ada": "Ψ75ΤΩ6Μ-6ΔΡ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-18T14:27:58.194Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-18",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "extraction is right",
+            "note": "this was the only item of the agenda so the wording is different \"Εισάγεται από την Ημερήσια Διάταξη το μοναδικό θέμα αυτής που αφορά ...\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "single-item session («το μοναδικό θέμα»): #1 by the rule the reviewer applied on Ψ75ΤΩ6Μ-6ΔΡ"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "επί συνόλου παρευρισκόμενων 35 Δημοτικών Συμβούλων εγκρίνεται κατά πλειοψηφία το ανωτέρω θέμα, με ΥΠΕΡ 26 ψήφους ΚΑΤΑ 6 και ΑΠΟΧΗ 3",
+        "phraseAsExtracted": "Κατά πλειοψηφία με ΥΠΕΡ 26 ψήφους ΚΑΤΑ 6 και ΑΠΟΧΗ 3",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Αβραμίδης Νικόλαος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Γκαγκάκη-Δημητριάδου Αικατερίνη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Βουλγαράκης Γεώργιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Καλαμπόκας Εμμανουήλ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Σκιαδάς Ελευθέριος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Κολλάτος Ευγένιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Βουρδουμπάς Χαράλαμπος",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Κωνσταντίνου Πέτρος",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Παπαδοπούλου Ελένη",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=dissenters_only",
+    "declaration=yes",
+    "mayorStated=yes",
+    "arrival=yes",
+    "voteTally=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

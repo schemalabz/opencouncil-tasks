@@ -1,0 +1,362 @@
+{
+  "id": "decisions.matching/argos-jul14_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/jul14_2026",
+    "meetingDate": "2026-07-14",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "100087485"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-07-28",
+      "fromDate": "2026-07-14"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrkn3fnn0as2kcbgadz2onwb",
+        "name": "Εκλογή Αντιπροέδρου Δημοτικής Επιτροπής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fo40as3kcbg7nwknhuv",
+        "name": "Έκδοση εντάλματος προπληρωμής",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fol0as4kcbgs5f9etpm",
+        "name": "Δωρεά χρωμάτων γυμναστήριο Νέας Κίου",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fp10as5kcbg5t7t86zb",
+        "name": "Ρύθμιση κυκλοφορίας οδού Υψηλάντου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fpg0as6kcbgnu40lsz0",
+        "name": "Ρύθμιση κυκλοφορίας παρόδου Φείδωνος",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fpq0as7kcbg864tznby",
+        "name": "Τοποθέτηση καθρέφτη Μιαούλη 56",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fq00as8kcbg7veutw22",
+        "name": "Διαγωνισμός αδέσποτων ζώων συντροφιάς",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fqd0as9kcbgzh1e53hu",
+        "name": "Αναθεώρηση άδειας τομής Σκοτεινής",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fqs0asakcbgkjx43ag4",
+        "name": "Αναθεώρηση άδειας τομής Κεφαλαρίου",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fr70asbkcbgsinaukf8",
+        "name": "Οδοποιία Αχλαδοκάμπου 2026",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3frn0asckcbgnpzt6w3f",
+        "name": "Συντήρηση σχολικών κτηρίων Λέρνας-Κίου",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3frw0asdkcbghasnoju9",
+        "name": "Πρόσληψη εργατών καθαριότητας",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fsq0asgkcbgdmx27qc8",
+        "name": "Επιτροπή δημοπρασιών ακινήτων 2026",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3ft50ashkcbgyt7azo0f",
+        "name": "Εγκατάσταση αποθήκευσης αποβλήτων Φίχτια",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3ftk0asikcbgj3t9nizk",
+        "name": "Εργαστήριο ζωοτροφών Λίμνες",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fty0asjkcbg5jolfnge",
+        "name": "Βιομηχανικά πλυντήρια Νέα Κίος",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fud0askkcbg7e1hhoue",
+        "name": "Εκδήλωση Αγίας Παρασκευής Φρουσιούνας",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fun0aslkcbg91uws6xw",
+        "name": "Γνωμοδότηση αίτησης Δασκαλόπουλου",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fuw0asmkcbg0mtn4ygp",
+        "name": "Γνωμοδότηση αίτησης Στεφανόπουλου",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fv40asnkcbg4uh2v5e5",
+        "name": "Γνωμοδότηση αίτησης Γκαβούνου",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fvc0asokcbgloo1dnhj",
+        "name": "Γνωμοδότηση αίτησης Κουταβάκη Ο.Ε.",
+        "agendaItemIndex": 23,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fvk0aspkcbg69jwt2ls",
+        "name": "Έφεση κατά απόφασης Πρωτοδικείου",
+        "agendaItemIndex": 24,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fvs0asqkcbgghqtv0a8",
+        "name": "Υπεράσπιση Γεωργίου Δημάκη",
+        "agendaItemIndex": 25,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fw10asrkcbg512bohf9",
+        "name": "Έφεση κατά Περιφέρειας Πελοποννήσου",
+        "agendaItemIndex": 26,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrkn3fwj0astkcbg6fpjpvtp",
+        "name": "Αναίρεση κατά απόφασης Εφετείου",
+        "agendaItemIndex": 28,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrkn3fnn0as2kcbgadz2onwb]": {
+      "value": "ΨΦΦΔΩΨΔ-304",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fo40as3kcbg7nwknhuv]": {
+      "value": "9ΠΡΙΩΨΔ-Θ4Υ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fol0as4kcbgs5f9etpm]": {
+      "value": "ΨΓΠΓΩΨΔ-ΤΣ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fp10as5kcbg5t7t86zb]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fpg0as6kcbgnu40lsz0]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fpq0as7kcbg864tznby]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fq00as8kcbg7veutw22]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fqd0as9kcbgzh1e53hu]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fqs0asakcbgkjx43ag4]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fr70asbkcbgsinaukf8]": {
+      "value": "6ΤΞΜΩΨΔ-65Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3frn0asckcbgnpzt6w3f]": {
+      "value": "ΨΦΧΚΩΨΔ-7ΙΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3frw0asdkcbghasnoju9]": {
+      "value": "Ψ57ΙΩΨΔ-ΚΔΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fsq0asgkcbgdmx27qc8]": {
+      "value": "ΨΕΞ7ΩΨΔ-ΑΗΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3ft50ashkcbgyt7azo0f]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3ftk0asikcbgj3t9nizk]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fty0asjkcbg5jolfnge]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrkn3fud0askkcbg7e1hhoue]": {
+      "value": "Ρ204ΩΨΔ-Γ9Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fun0aslkcbg91uws6xw]": {
+      "value": "ΨΩ3ΩΩΨΔ-Τ69",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fuw0asmkcbg0mtn4ygp]": {
+      "value": "6ΣΗΙΩΨΔ-ΨΧ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fv40asnkcbg4uh2v5e5]": {
+      "value": "ΨΣΙ5ΩΨΔ-ΘΙΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fvc0asokcbgloo1dnhj]": {
+      "value": "ΨΟΝΥΩΨΔ-ΣΘΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fvk0aspkcbg69jwt2ls]": {
+      "value": "9ΜΓ5ΩΨΔ-ΙΟΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fvs0asqkcbgghqtv0a8]": {
+      "value": "Ρ9ΔΗΩΨΔ-3ΛΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fw10asrkcbg512bohf9]": {
+      "value": "9ΑΕΥΩΨΔ-ΗΑΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrkn3fwj0astkcbg6fpjpvtp]": {
+      "value": "ΨΓ87ΩΨΔ-6Μ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[Ψ1ΨΔΩΨΔ-5ΜΕ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5o2n707ur7xm4zzzwor3r"
+    }
+  },
+  "cluster": "argos/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

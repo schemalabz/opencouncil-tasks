@@ -1,0 +1,223 @@
+{
+  "id": "decisions.matching/chania-jul29_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "chania/jul29_2026",
+    "meetingDate": "2026-07-29",
+    "diavgeiaUid": "6318",
+    "diavgeiaUnitIds": [
+      "83115"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-08-29",
+      "fromDate": "2026-07-29"
+    },
+    "subjects": [
+      {
+        "subjectId": "cms904jwb00h0kioh4t76hxsd",
+        "name": "Επιχορήγηση Chania Rock Festival",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cms05h8lx0drwjy1k57vech4s",
+        "name": "Λευκή Νύχτα - Παράταση ωραρίου",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8mi0drxjy1ksp3ypde8",
+        "name": "Τριμηνιαία έκθεση εκτέλεσης προϋπολογισμού",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8mr0dryjy1kqc80yygp",
+        "name": "Τέλη αθλητικών εγκαταστάσεων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8nb0drzjy1kclz9thmj",
+        "name": "Παραχώρηση Γυμναστηρίου Καμπανίου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8nr0ds0jy1kltqbv1n4",
+        "name": "Δάνειο για χρηματοδότηση απαλλοτριώσεων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8o00ds1jy1kp7200man",
+        "name": "Παραχώρηση χώρων για εκδηλώσεις",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8o80ds2jy1k63a6zpk5",
+        "name": "Μετονομασία Σχολικής Μονάδας",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8om0ds3jy1k4hjeaqju",
+        "name": "Παράταση μελέτης Ειδικών Σχολείων Σούδας",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8oy0ds4jy1ka0ecx989",
+        "name": "Θέσεις στάθμευσης οχημάτων ΑΜΕΑ",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8pc0ds5jy1k47ceg46y",
+        "name": "Εσοχές στάσης στην Αγία Μαρίνα",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8pq0ds6jy1kp7vxrmun",
+        "name": "Προσκύρωση χώρου Πάνω Σούδα",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8q50ds7jy1ku8eo2sfe",
+        "name": "Τροποποίηση αποζημίωσης Κάλυκας ΙΙ",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8qi0ds8jy1knfjs00su",
+        "name": "Αποζημίωση απαλλοτρίωσης Χαλέπα",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms05h8qw0ds9jy1kqcznhjka",
+        "name": "Αποζημίωση ακινήτων Παχιανά ΙΙ",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cms05h8lx0drwjy1k57vech4s]": {
+      "value": "ΨΤΙΟΩΗ5-ΗΕΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8mi0drxjy1ksp3ypde8]": {
+      "value": "95ΥΛΩΗ5-ΦΕ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8mr0dryjy1kqc80yygp]": {
+      "value": "6ΑΑΟΩΗ5-0Ξ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8nb0drzjy1kclz9thmj]": {
+      "value": "9Ω7ΡΩΗ5-2ΛΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8nr0ds0jy1kltqbv1n4]": {
+      "value": "976ΟΩΗ5-ΛΨΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8o00ds1jy1kp7200man]": {
+      "value": "ΨΠΨΑΩΗ5-ΕΙΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8o80ds2jy1k63a6zpk5]": {
+      "value": "9ΗΡ0ΩΗ5-64Φ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-01",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtj0owbg0gi09208h2ysy9rp"
+    },
+    "link[cms05h8om0ds3jy1k4hjeaqju]": {
+      "value": "ΨΡ6ΠΩΗ5-ΚΡ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8oy0ds4jy1ka0ecx989]": {
+      "value": "ΡΞ8ΦΩΗ5-ΧΙ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8pc0ds5jy1k47ceg46y]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cms05h8pq0ds6jy1kp7vxrmun]": {
+      "value": "ΨΩΓΛΩΗ5-Μ2Κ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8q50ds7jy1ku8eo2sfe]": {
+      "value": "90ΓΕΩΗ5-Υ2Θ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8qi0ds8jy1knfjs00su]": {
+      "value": "Ψ703ΩΗ5-ΟΨΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms05h8qw0ds9jy1kqcznhjka]": {
+      "value": "Ψ2Ρ5ΩΗ5-6ΝΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms904jwb00h0kioh4t76hxsd]": {
+      "value": "90ΣΣΩΗ5-2ΩΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

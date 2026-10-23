@@ -1,0 +1,135 @@
+{
+  "id": "decisions.extraction/Λ2ΑΣΩΡΦ-Ψ70",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Λ2ΑΣΩΡΦ-Ψ70",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Λ2ΑΣΩΡΦ-Ψ70",
+    "city": "zografou",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": null,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "presiding=yes",
+        "substitution=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": true,
+      "reviewNote": "Added 2026-09-17 for the mayor's movement / the presiding member; labels seeded from the extractor, unreviewed except the mayor sentence (read on the page).",
+      "statedButUnstorable": [
+        "presiding",
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 11,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 11ου τακτικού θέματος της ημερήσιας διάταξης αποχώρησε ο Δ.Σ. κ. ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ."
+          }
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 755,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "mayor": {
+      "value": {
+        "present": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "explicit_present_absent",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ"
+        ],
+        "absentMembers": [
+          "ΤΙΝΑ ΚΑΦΑΤΣΑΚΗ",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)"
+        ],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 6,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 6,
+          "nonAgendaReason": null
+        },
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτική Επιτροπή",
+  "tags": [
+    "zografou",
+    "presiding=yes",
+    "substitution=yes"
+  ]
+}

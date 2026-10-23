@@ -83,18 +83,26 @@ export const yourTaskName: Task<YourTaskRequest, YourTaskResult> = async (reques
 - Call `onProgress` at meaningful stages
 - Log important info at start for debugging
 
-### 3. Register in Server (`src/server.ts`)
+### 3. Register the Task (`src/tasks/registry.ts`, `src/server.ts`)
 
-Add your task to the task registry:
+Add an entry to `TASKS`; the server and the eval task runner both read it:
 
 ```typescript
-import { yourTaskName } from "./tasks/yourTaskName.js";
+import { yourTaskName } from './yourTaskName.js';
 
-// In the taskRegistry object:
-const taskRegistry: TaskRegistry = {
+export const TASKS = {
     // ... existing tasks
-    yourTaskName: yourTaskName as Task<any, any>,
-};
+    yourTaskName: {
+        task: yourTaskName,
+        metadata: { summary: 'One line', description: 'What it does', version: 1 },
+    },
+} satisfies Record<string, RegisteredTask>;
+```
+
+Then expose its endpoint in `src/server.ts`:
+
+```typescript
+app.post('/yourTaskName', taskManager.registerTask(TASKS.yourTaskName.task, TASKS.yourTaskName.metadata));
 ```
 
 ### 4. Add CLI Support (`src/cli.ts`)
@@ -166,7 +174,7 @@ export const serviceClient = new ServiceClient();
 
 - [ ] Types defined in `src/types.ts`
 - [ ] Task implementation in `src/tasks/yourTaskName.ts`
-- [ ] Task registered in `src/server.ts`
+- [ ] Task in `TASKS` (`src/tasks/registry.ts`) and its endpoint in `src/server.ts`
 - [ ] CLI command added (if applicable)
 - [ ] Unit tests for pure functions
 - [ ] `npm run typecheck` passes

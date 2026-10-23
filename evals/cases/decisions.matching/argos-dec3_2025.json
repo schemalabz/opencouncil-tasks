@@ -1,0 +1,112 @@
+{
+  "id": "decisions.matching/argos-dec3_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/dec3_2025",
+    "meetingDate": "2025-12-03",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-12-17",
+      "fromDate": "2025-12-03"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb59clu05x0pn1tvu7osn96",
+        "name": "Κατάρτιση και έγκριση σχεδίου Επιχειρησιακού Σχεδιασμού στα πλαίσια κατάρτισης του Επιχειρησιακού Προγράμματος Δήμου Άργους – Μυκηνών για την περίοδο 2025-2028",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59cmf05x1pn1tyhrptk2y",
+        "name": "Περί ορισμού δύο (2) εκπροσώπων του Δήμου για την συγκρότηση του σχολικού συμβουλίου του 3ου Γυμνασίου Άργους (άρθρο 107 του Ν. 4823/2021)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59cmq05x2pn1twaepik1t",
+        "name": "Περί αύξησης ωραρίου εργασίας της Αθανασοπούλου Σταματίας, προσωπικού ΙΔΑΧ, μερικής απασχόλησης, κλάδου ΥΕ Προσωπικού Καθαριότητας Εξωτερικών Χώρων & ειδικότητας ΥΕ Προσωπικού Καθαριότητας Σχολικών Μονάδων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59cmy05x3pn1t9t6rzegw",
+        "name": "Περί αύξησης ωραρίου εργασίας της Χονδροπούλου Παρασκευής, προσωπικού ΙΔΑΧ, μερικής απασχόλησης, κλάδου ΥΕ Προσωπικού Καθαριότητας Εξωτερικών Χώρων & ειδικότητας ΥΕ Προσωπικού Καθαριότητας Σχολικών Μονάδων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59cna05x4pn1tl73etdb0",
+        "name": "Περί εκμίσθωσης της αίθουσας τέχνης και πολιτισμού «Μέγας Αλέξανδρος» σύμφωνα με το άρθρο 192 του Ν. 3463/2006 παρ. 2, όπως τροποποιήθηκε με το άρθρο 196 του Ν. 4555/2018 και ισχύει σήμερα κατά τις ημερομηνίες 6&7/12, 10/12,14/12,15/12,16/12,17/12 και 18/12/2025-",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb59clu05x0pn1tvu7osn96]": {
+      "value": "62ΟΒΩΨΔ-Ε7Π",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59cmf05x1pn1tyhrptk2y]": {
+      "value": "ΨΟ90ΩΨΔ-6ΜΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59cmq05x2pn1twaepik1t]": {
+      "value": "Ψ12ΤΩΨΔ-ΚΩΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59cmy05x3pn1t9t6rzegw]": {
+      "value": "6891ΩΨΔ-ΤΦ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59cna05x4pn1tl73etdb0]": {
+      "value": "ΨΒΨΑΩΨΔ-1ΔΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΕΤ0ΩΨΔ-ΥΜΧ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5penf07i6u36pe893h72v"
+    },
+    "reject[9Χ0ΦΩΨΔ-Υ1Τ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pekx07h0u36pfuyn3c0u"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

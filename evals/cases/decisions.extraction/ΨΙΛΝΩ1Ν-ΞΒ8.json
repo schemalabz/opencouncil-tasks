@@ -1,0 +1,226 @@
+{
+  "id": "decisions.extraction/ΨΙΛΝΩ1Ν-ΞΒ8",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΙΛΝΩ1Ν-ΞΒ8",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΙΛΝΩ1Ν-ΞΒ8",
+    "city": "sparta",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 5,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "changeAnchor=agenda_item",
+        "mayorStated=yes",
+        "reordering=yes"
+      ],
+      "namedEdgeCase": "The mayor is absent and RETURNS during item 3, and the same document records a change in discussion order. Two hard mechanisms in one page.",
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode",
+        "reordering"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Βαλιώτης Ευάγγελος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο δημοτικός σύμβουλος Βαλιώτης Ευάγγελος αποχώρησε κατά τη διάρκεια συζήτησης του 2ου θέματος της ημερήσιας διάταξης"
+          },
+          {
+            "name": "Δεδεδήμου Γεωργία",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Καρμοίρης Ιωάννης, Τσιρώνη Μαρία, αποχώρησαν κατά τη διάρκεια της συνεδρίασης"
+          },
+          {
+            "name": "Ζαχαράκη Νίκη",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Καρμοίρης Ιωάννης, Τσιρώνη Μαρία, αποχώρησαν κατά τη διάρκεια της συνεδρίασης"
+          },
+          {
+            "name": "Καρμοίρης Ιωάννης",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Καρμοίρης Ιωάννης, Τσιρώνη Μαρία, αποχώρησαν κατά τη διάρκεια της συνεδρίασης"
+          },
+          {
+            "name": "Τσιρώνη Μαρία",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι δημοτικοί σύμβουλοι Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Καρμοίρης Ιωάννης, Τσιρώνη Μαρία, αποχώρησαν κατά τη διάρκεια της συνεδρίασης"
+          },
+          {
+            "name": "Κανελλοπούλου Αναστασία",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 4,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Η δημοτική σύμβουλος Κανελλοπούλου Αναστασία αποχώρησε μετά τη συζήτηση του 4ου θέματος της ημερήσιας διάταξης"
+          },
+          {
+            "name": "Δούκας Πέτρος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 4,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο δημοτικός σύμβουλος Δούκας Πέτρος αποχώρησε (αποσυνδέθηκε από την πλατφόρμα zoom) κατά τη διάρκεια συζήτησης του 4ου θέματος της συνεδρίασης"
+          },
+          {
+            "name": "Αρφάνης Δημήτριος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 19,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Ο δημοτικός σύμβουλος Αρφάνης Δημήτριος αποχώρησε (αποσυνδέθηκε από την πλατφόρμα zoom) μετά τη συζήτηση του 19ου θέματος της ημερήσιας διάταξης"
+          },
+          {
+            "name": "Βακαλόπουλος Μιχαήλ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο Δήμαρχος κ.Βακαλόπουλος Μιχαήλ απουσιάζει και επανέρχεται στη διάρκεια συζήτησης του 3ου θέματος."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2336,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Βρεττάκος Στέφανος",
+          "Δεδεδήμου Γεωργία",
+          "Κουρεμπής Γεώργιος",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Αρβανίτης Δημήτριος",
+          "Αρφάνης Δημήτριος",
+          "Βαγιακάκου-Δογαντζή Αδαμαντία",
+          "Βαλιώτης Ευάγγελος",
+          "Γιαννόπουλος Δημήτριος",
+          "Γκολέμης Αναστάσιος",
+          "Δούκας Πέτρος",
+          "Ζαχαράκη Νίκη",
+          "Κακούρος Δημοσθένης",
+          "Κανελλοπούλου Αναστασία",
+          "Καρμοίρης Ιωάννης",
+          "Καρούνος Παναγιώτης",
+          "Κατσίχτης Θεόδωρος",
+          "Κοκκορός Ευστράτιος",
+          "Κουλουβάκος Γεώργιος",
+          "Κουρτσούνης Παναγιώτης",
+          "Λάζαρης Θεοφάνης",
+          "Μπαρέλος Παναγιώτης",
+          "Μπεμπέτσος Παντελής",
+          "Παυλής Παναγιώτης",
+          "Σελίμος Σπυρίδων",
+          "Σοφού-Παπαστάθη Ευγενία",
+          "Τζανετέα Αδαμαντία",
+          "Τριτάκης Παναγιώτης",
+          "Τσιρώνη Μαρία",
+          "Τσούκλερης Νικόλαος",
+          "Φλώρος Νικόλαος"
+        ],
+        "absentMembers": [
+          "Γιαννακόπουλος Παντελής",
+          "Κανελλάκης Ηλίας",
+          "Κυριακούλιας Δημήτριος",
+          "Μαλλιαρός Δημήτριος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 22,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 22,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "changeAnchor=agenda_item",
+    "mayorStated=yes",
+    "reordering=yes"
+  ]
+}

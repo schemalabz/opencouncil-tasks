@@ -1,0 +1,327 @@
+{
+  "id": "decisions.matching/zografou-jul23_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "zografou/jul23_2026",
+    "meetingDate": "2026-07-23",
+    "diavgeiaUid": "6104",
+    "diavgeiaUnitIds": [
+      "81689"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-08-23",
+      "fromDate": "2026-07-23"
+    },
+    "subjects": [
+      {
+        "subjectId": "cms0lvpoq012dzi3dc0qmhyp0",
+        "name": "Καταστροφή αρχειακού υλικού Τμήματος Εσόδων",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cms0lvpp1012ezi3dqv965zbk",
+        "name": "Συμμετοχή σε δράση προσχολικής/δημιουργικής απασχόλησης",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmroy0nyt0kbptn0qtkg50exe",
+        "name": "Ανακοινώσεις – Ερωτήσεις – Επιτροπές",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o2i0kbqtn0q9iydoh0g",
+        "name": "4η Αναμόρφωση προϋπολογισμού 2026",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o2s0kbrtn0qrnhp5qe9",
+        "name": "Τριμηνιαία έκθεση εκτέλεσης προϋπολογισμού Α' τριμήνου",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o300kbstn0qjbg4waon",
+        "name": "Αξιολόγηση στοχοθεσίας Α' τριμήνου 2026",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o3b0kbttn0qemnbfn71",
+        "name": "Αμοιβή Δημοτικών Συμβούλων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o440kbutn0qxumr8tvx",
+        "name": "Ανάθεση εργασιών καθαρισμού κοιμητηρίου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o4e0kbvtn0qv2k6nfs6",
+        "name": "Ανάθεση διαχείρισης αποβλήτων εκσκαφών",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o4u0kbwtn0q8wjqv7t6",
+        "name": "Παραχώρηση γηπέδων Γουδί σε ΑΡΙΑΔΝΗ",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o5b0kbxtn0qktyhoeo1",
+        "name": "Κοπή δένδρου στο Κοιμητήριο",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o6u0kbytn0qt3exoclg",
+        "name": "Κοπή δένδρων Μπισκίνη-Ισοκράτους-Σωσάνδρας",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o7f0kbztn0qi1sd709w",
+        "name": "Κοπή δένδρου Ξηρογιάννη 1",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o7r0kc0tn0qbrk6twfl",
+        "name": "Κοπή δένδρου Γεωργίου Παπανδρέου 52-54",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o840kc1tn0qcieq4ntd",
+        "name": "Κυκλοφοριακές ρυθμίσεις Γ. Παπανδρέου",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0o8d0kc2tn0qfq4906k7",
+        "name": "Παράρτημα 7ου Νηπιαγωγείου σε 3ο Δημοτικό",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0oab0kc3tn0q924cec2e",
+        "name": "Παράρτημα 8ου Νηπιαγωγείου σε 12ο Δημοτικό",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0oar0kc4tn0q0gess8uz",
+        "name": "Παράρτημα 11ου Νηπιαγωγείου Δημοκρατίας 38",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0oca0kc6tn0qnr9gjyea",
+        "name": "Ανανέωση σύμβασης ΚΕΠ Υγείας",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0ocj0kc7tn0q4xhpheb4",
+        "name": "Διαγραφή οφειλών ΕΜΠ",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0ocq0kc8tn0qlc2ip01r",
+        "name": "Ακαταλληλότητα οχημάτων Δήμου",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0ocy0kc9tn0q90okhkse",
+        "name": "Καταστροφή αχρήστων κάδων απορριμμάτων",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroy0od70kcatn0qiqt5dfg7",
+        "name": "Δικαίωμα διέλευσης οπτικών ινών UNITED FIBER",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmroy0nyt0kbptn0qtkg50exe]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmroy0o2i0kbqtn0q9iydoh0g]": {
+      "value": "Ρ5ΠΙΩΡΦ-Μ5Δ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o2s0kbrtn0qrnhp5qe9]": {
+      "value": "Ψ865ΩΡΦ-3Τ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o300kbstn0qjbg4waon]": {
+      "value": "ΨΛΙΗΩΡΦ-Ξ6Φ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o3b0kbttn0qemnbfn71]": {
+      "value": "ΡΛ5ΠΩΡΦ-Ξ75",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o440kbutn0qxumr8tvx]": {
+      "value": "ΡΛΨΜΩΡΦ-9ΗΠ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-26",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmui3doho101zwyspsyh5tfs1"
+    },
+    "link[cmroy0o4e0kbvtn0qv2k6nfs6]": {
+      "value": "ΨΖΤΠΩΡΦ-ΩΒΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o4u0kbwtn0q8wjqv7t6]": {
+      "value": "Ε98ΑΩΡΦ-ΗΦ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o5b0kbxtn0qktyhoeo1]": {
+      "value": "9ΙΙ7ΩΡΦ-Γ49",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o6u0kbytn0qt3exoclg]": {
+      "value": "6ΧΒΕΩΡΦ-ΨΞ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o7f0kbztn0qi1sd709w]": {
+      "value": "ΨΡΑΦΩΡΦ-ΜΛΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o7r0kc0tn0qbrk6twfl]": {
+      "value": "ΡΤΣΒΩΡΦ-ΣΞ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o840kc1tn0qcieq4ntd]": {
+      "value": "ΕΥΨ0ΩΡΦ-9ΓΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0o8d0kc2tn0qfq4906k7]": {
+      "value": "9Σ69ΩΡΦ-9ΦΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0oab0kc3tn0q924cec2e]": {
+      "value": "ΕΦΖΤΩΡΦ-7ΥΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0oar0kc4tn0q0gess8uz]": {
+      "value": "9ΗΚΡΩΡΦ-5Δ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0oca0kc6tn0qnr9gjyea]": {
+      "value": "ΡΓΨΙΩΡΦ-Ο37",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0ocj0kc7tn0q4xhpheb4]": {
+      "value": "Ρ72ΟΩΡΦ-ΝΤΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0ocq0kc8tn0qlc2ip01r]": {
+      "value": "9ΤΚΡΩΡΦ-ΙΘΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0ocy0kc9tn0q90okhkse]": {
+      "value": "9ΞΘΒΩΡΦ-ΝΚ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroy0od70kcatn0qiqt5dfg7]": {
+      "value": "ΨΙ8ΨΩΡΦ-1Σ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms0lvpoq012dzi3dc0qmhyp0]": {
+      "value": "96ΙΦΩΡΦ-4ΤΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms0lvpp1012ezi3dqv965zbk]": {
+      "value": "Ε3ΕΤΩΡΦ-ΤΦ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

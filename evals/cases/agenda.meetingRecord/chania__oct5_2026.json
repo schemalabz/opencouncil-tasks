@@ -1,0 +1,53 @@
+{
+  "id": "agenda.meetingRecord/chania__oct5_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "chania",
+    "meetingId": "oct5_2026",
+    "date": "2026-10-05",
+    "time": "09:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/chania_oct5_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα διεξαχθεί διά ζώσης στην αίθουσα Δημοτικού Συμβουλίου"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "σε τακτική δημόσια συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "chania/Δημοτική Επιτροπή",
+  "tags": [
+    "chania",
+    "committee"
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "id": "decisions.extraction/ΡΟ6ΜΩΞ1-Η3Τ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΡΟ6ΜΩΞ1-Η3Τ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΟ6ΜΩΞ1-Η3Τ",
+    "city": "papagos-cholargos",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 5,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "perVoteAbsence=yes",
+        "departure=yes",
+        "changeAnchor=nothing",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "perVoteAbsence",
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 878,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "Μαρία Αθανασάκου - Μουντάκη",
+          "Γεωργία Παγώνη",
+          "Αναστασία Χαμηλοθώρη - Κουγιουμτζοπούλου",
+          "Βασίλειος Σιαμάνης",
+          "Δήμητρα Ρουφογάλη",
+          "Γεώργιος Αυγερινός",
+          "Μιχαήλ Τράκας",
+          "Κυριάκος Λινάκης",
+          "Δημήτριος Σκάρλος",
+          "Μιχαήλ Υφαντής",
+          "Δημήτριος Τσενεμπής",
+          "Νικόλαος Λινοξυλάκης",
+          "Αικατερίνη Γκούμα",
+          "Θεόδωρος Πουρσαϊτίδης",
+          "Αντώνιος Ρεκλείτης",
+          "Χρυσούλα Παρίση",
+          "Δημήτριος Οικονόμου",
+          "Γεώργιος Ρεμούνδος",
+          "Αθανάσιος Βαλυράκης",
+          "Αλέξανδρος Νομικός",
+          "Νικόλαος Κουκής",
+          "Ειρήνη Βεντουζά - Παπανικολάου",
+          "Γεώργιος Μάγκος",
+          "Αθανάσιος Αυγουρόπουλος",
+          "Μαρία Σιώτου"
+        ],
+        "absentMembers": [
+          "Αγλαΐα Σουρανή",
+          "Άγγελα Γλύτση",
+          "Απόστολος Καρανικόλας",
+          "Βικτωρία Νικάκη"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΣΕ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "papagos-cholargos",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "perVoteAbsence=yes",
+    "departure=yes",
+    "changeAnchor=nothing",
+    "embeddedDecision=yes"
+  ]
+}

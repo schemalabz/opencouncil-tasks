@@ -1,0 +1,154 @@
+{
+  "id": "decisions.extraction/Ε9Θ0Ω6Μ-5ΡΥ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ε9Θ0Ω6Μ-5ΡΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ε9Θ0Ω6Μ-5ΡΥ",
+    "city": "athens",
+    "body": "6η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "namedVoters=all",
+        "rollCallLayout=narrative_only",
+        "departure=yes",
+        "changeAnchor=nothing"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "phase",
+        "asExtracted": [
+          {
+            "name": "Πρεζεράκου Καλλιόπη (Πόπη)",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Αμέσως μετά τη διαπίστωση της απαρτίας και πριν την έναρξη της συζήτησης των θεμάτων της ημερήσιας διάταξης, αποχώρησε το μέλος κα Πρεζεράκου Καλλιόπη (Πόπη)."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2885,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 6ης ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Παναγιώτα (Τέτα) Δρούλια",
+          "Αγγελιδάκης Παναγιώτης",
+          "Δήμου Δημήτριος",
+          "Ζαφείρης Ιωάννης",
+          "Μεγαλοοικονόμου Νάκου Ελένη",
+          "Πρεζεράκου Καλλιόπη (Πόπη)",
+          "Γιακουμάτου Ελένη"
+        ],
+        "absentMembers": [
+          "Γεωργάτος Ιατρίδης Δημήτριος",
+          "Καβέτσου Κωνσταντίνα (Ντιάνα)",
+          "Πρωτοψάλτης Ιωάννης",
+          "Χαλικιά Ειρήνη Αγλαϊα",
+          "Λαγός Ευστάθιος",
+          "Τσιμπλάκη Παναγιώτα (Γιώτα)",
+          "Αδαμοπούλου Μαριγώ (Μαίρη)",
+          "Αντωνάτος Αναστάσιος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία με 5 ψήφους υπέρ και 1 κατά",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Παναγιώτα (Τέτα) Δρούλια",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αγγελιδάκης Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Δήμου Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Ζαφείρης Ιωάννης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μεγαλοοικονόμου Νάκου Ελένη",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γιακουμάτου Ελένη",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/6η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "namedVoters=all",
+    "rollCallLayout=narrative_only",
+    "departure=yes",
+    "changeAnchor=nothing"
+  ]
+}

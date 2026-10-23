@@ -1,0 +1,53 @@
+{
+  "id": "agenda.meetingRecord/athens__feb19_3_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "feb19_3_2026",
+    "date": "2026-02-19",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/athens_feb19_3_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "5η Δημοτική Κοινότητα",
+      "type": "community"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στην αίθουσα συνεδριάσεων της 5ης Δημοτικής Κοινότητας, στην οδό Πατησίων 268"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "sessionNumber": {
+      "value": 2,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "συμμετάσχετε στην 2η Συνεδρίαση του Σώματος"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "community"
+  ]
+}

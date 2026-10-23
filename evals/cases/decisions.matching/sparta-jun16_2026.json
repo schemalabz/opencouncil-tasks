@@ -1,0 +1,141 @@
+{
+  "id": "decisions.matching/sparta-jun16_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/jun16_2026",
+    "meetingDate": "2026-06-16",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-07-18",
+      "fromDate": "2026-06-16"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqhprfcj029tkn9aftj1hic6",
+        "name": "Δαπάνη πολιτιστικών εκδηλώσεων Φάριδας",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqazvst002aepn1tvoj0ngig",
+        "name": "Συμπλήρωση απόφασης για ανάπλαση Παλαιολόγου",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazvstq02afpn1to02ahgt1",
+        "name": "Παραλαβή έργου δημοτικού φωτισμού",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazvsu702agpn1tkr4fd1s6",
+        "name": "Παιδική παράσταση στο Σαϊνοπούλειο",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazvsuj02ahpn1tqxylvqx0",
+        "name": "Τροποποίηση σύμβασης οστεοφυλακίων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazvsuq02aipn1tt9u0pqog",
+        "name": "Διαφημιστική προβολή Δήμου στο BEST TV",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazvsuy02ajpn1tz28puw3h",
+        "name": "Έγκριση κίνησης οχημάτων Δήμου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqazvsv502akpn1tncj6j00h",
+        "name": "Δαπάνες σχολικών μονάδων 2026",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqazvst002aepn1tvoj0ngig]": {
+      "value": "90ΘΜΩ1Ν-187",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazvstq02afpn1to02ahgt1]": {
+      "value": "Ρ7ΧΚΩ1Ν-1ΙΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazvsu702agpn1tkr4fd1s6]": {
+      "value": "9Θ9ΡΩ1Ν-Δ9Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazvsuj02ahpn1tqxylvqx0]": {
+      "value": "9Ζ8ΑΩ1Ν-Δ5Μ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazvsuq02aipn1tt9u0pqog]": {
+      "value": "Ψ77ΥΩ1Ν-8ΤΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazvsuy02ajpn1tz28puw3h]": {
+      "value": "9Ε3ΧΩ1Ν-ΠΤΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqazvsv502akpn1tncj6j00h]": {
+      "value": "9ΗΗΧΩ1Ν-ΟΦ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqhprfcj029tkn9aftj1hic6]": {
+      "value": "96ΓΨΩ1Ν-68Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΧΚ3Ω1Ν-4ΩΨ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1rwmg011au36p0xiwyfzk"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

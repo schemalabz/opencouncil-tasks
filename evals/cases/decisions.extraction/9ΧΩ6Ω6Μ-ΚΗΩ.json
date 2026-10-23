@@ -1,0 +1,141 @@
+{
+  "id": "decisions.extraction/9ΧΩ6Ω6Μ-ΚΗΩ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΧΩ6Ω6Μ-ΚΗΩ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΧΩ6Ω6Μ-ΚΗΩ",
+    "city": "athens",
+    "body": "5η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "arrival=yes",
+        "changeAnchor=session_phase",
+        "namedVoters=dissenters_only",
+        "voteTally=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά την διάρκεια της συνεδρίασης και πριν την ψηφοφορία του πρώτου θέματος προσήλθε η κοινοτική σύμβουλος κ. ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 741,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 5ης ΚΟΙΝΟΤΗΤΑΣ",
+          "ΟΙ ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "ΒΟΛΟΝΑΣΗ ΧΑΡΟΥΛΑ (ΚΟΡΙΝΑ)",
+          "ΠΑΤΣΙΔΗΣ ΧΑΡΑΛΑΜΠΟΣ",
+          "ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ",
+          "ΚΑΠΟΔΙΣΤΡΙΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΟΜΝΗΝΟΣ ΧΡΗΣΤΟΣ",
+          "ΠΑΠΑΧΡΗΣΤΟΥ ΣΟΦΙΑ",
+          "ΛΙΓΝΟΣ ΓΕΡΑΣΙΜΟΣ",
+          "ΣΤΑΜΟΥ ΣΤΑΥΡΙΑΝΗ",
+          "ΦΙΛΟΣΟΦΟΥ ΣΩΤΗΡΙΑ",
+          "ΖΑΧΑΡΟΠΟΥΛΟΥ ΜΑΡΙΑ",
+          "ΠΟΘΗΤΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΧΑΡΑΛΑΜΠΟΣ"
+        ],
+        "absentMembers": [
+          "ΒΑΤΣΑΚΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΒΛΑΧΟΥ ΑΝΝΑ",
+          "ΔΟΜΑΖΟΥ-ΠΑΝΤΕΛΙΔΟΥ ΡΟΔΟΜΑΡΙΑ",
+          "ΚΕΦΑΛΑ ΠΟΛΥΞΕΝΗ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Εγκρίνεται με ΥΠΕΡ: 11 ψήφους ΚΑΤΑ: 1 ψήφος",
+        "phraseAsExtracted": "Κατά πλειοψηφία με ψήφους 11 υπέρ και 1 κατά",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΠΟΘΗΤΟΣ ΓΕΩΡΓΙΟΣ",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "arrival=yes",
+    "changeAnchor=session_phase",
+    "namedVoters=dissenters_only",
+    "voteTally=yes"
+  ]
+}

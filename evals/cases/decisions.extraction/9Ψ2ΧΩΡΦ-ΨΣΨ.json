@@ -1,0 +1,139 @@
+{
+  "id": "decisions.extraction/9Ψ2ΧΩΡΦ-ΨΣΨ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9Ψ2ΧΩΡΦ-ΨΣΨ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Ψ2ΧΩΡΦ-ΨΣΨ",
+    "city": "zografou",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 5,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "mayorStated=yes",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1211,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+          "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ-ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΑΛΕΞΑΝΔΡΗ-ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+          "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+          "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+          "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+          "ΒΑΜΒΑΚΑ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+          "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+          "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+          "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+          "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+          "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": null,
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "rollCallLayout=composition_and_absent",
+    "mayorStated=yes",
+    "correctedRepost=yes"
+  ]
+}

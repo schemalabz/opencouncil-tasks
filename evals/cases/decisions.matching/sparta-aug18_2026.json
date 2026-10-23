@@ -1,0 +1,197 @@
+{
+  "id": "decisions.matching/sparta-aug18_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/aug18_2026",
+    "meetingDate": "2026-08-18",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-09-01",
+      "fromDate": "2026-08-18"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmsylemyb009ts05lnde371bn",
+        "name": "Μουσική εκδήλωση Σωτηροπούλειο Αμφιθέατρο",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmsswouuz02533q444m7xkmir",
+        "name": "Βελτίωση πρόσβασης σε γεωργική γη",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouvk02543q44anmjtfjw",
+        "name": "Ενεργειακή αναβάθμιση Δημοτικής Λαϊκής Αγοράς",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouvz02553q44zhiecue5",
+        "name": "Ενεργειακή αναβάθμιση Κλειστού Γυμναστηρίου",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouwa02563q44nqgqjihl",
+        "name": "Παραχώρηση τμημάτων στο Ξηροκάμπι",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouwj02573q44nlt7c3c6",
+        "name": "Πρακτική άσκηση σπουδαστών ΣΑΕΚ",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouwq02583q44h9tm0hfz",
+        "name": "Πρωτόκολλο Ταμειακής Διαχείρισης Ιουνίου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouwx02593q44qlf2q1dp",
+        "name": "Παράταση προγράμματος απασχόλησης 55+",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswoux6025a3q44ebo72tay",
+        "name": "Ανάπλαση Ανοιχτού Κέντρου Εμπορίου",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouxg025b3q44t7zza2a4",
+        "name": "Σίτιση Μουσικού Σχολείου Σπάρτης",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouxr025c3q44p8v6gzg7",
+        "name": "Πολιτιστικές εκδηλώσεις Δ.Ε. Μυστρά",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouxz025d3q44fpew1if0",
+        "name": "Προμήθεια λογισμικών",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmsswouyc025e3q44tro8dzkh",
+        "name": "Δαπάνες Παγίας Προκαταβολής Σχολείων",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmsswouuz02533q444m7xkmir]": {
+      "value": "ΡΧ1ΣΩ1Ν-Ο8Ο",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouvk02543q44anmjtfjw]": {
+      "value": "ΨΞΨΘΩ1Ν-Κ2Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouvz02553q44zhiecue5]": {
+      "value": "ΨΨΥΧΩ1Ν-6Χ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouwa02563q44nqgqjihl]": {
+      "value": "ΨΩ7ΒΩ1Ν-ΟΓΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouwj02573q44nlt7c3c6]": {
+      "value": "ΡΠΧΡΩ1Ν-ΖΟΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouwq02583q44h9tm0hfz]": {
+      "value": "ΨΣΓΞΩ1Ν-ΥΥΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouwx02593q44qlf2q1dp]": {
+      "value": "9ΟΠΚΩ1Ν-00Λ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswoux6025a3q44ebo72tay]": {
+      "value": "Ψ9ΤΖΩ1Ν-Κ1Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouxg025b3q44t7zza2a4]": {
+      "value": "9ΩΚΓΩ1Ν-ΑΛΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouxr025c3q44p8v6gzg7]": {
+      "value": "6ΜΔΨΩ1Ν-ΤΕΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouxz025d3q44fpew1if0]": {
+      "value": "9ΚΦΟΩ1Ν-2Υ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmsswouyc025e3q44tro8dzkh]": {
+      "value": "91ΑΞΩ1Ν-0ΩΠ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu46gyrl0104y5k25p3wh7co"
+    },
+    "link[cmsylemyb009ts05lnde371bn]": {
+      "value": "9Γ8ΧΩ1Ν-ΝΞΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

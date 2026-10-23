@@ -44,6 +44,8 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/VERSION ./VERSION
 COPY --from=builder /app/assets ./assets
+# Failure-mode registry, read by the post-task checks
+COPY --from=builder /app/evals/failure-modes ./evals/failure-modes
 
 # Download latest yt-dlp binary. Own the whole /app/bin DIRECTORY (not just the
 # file) by apify: yt-dlp's `--update-to` self-update writes a new binary into the

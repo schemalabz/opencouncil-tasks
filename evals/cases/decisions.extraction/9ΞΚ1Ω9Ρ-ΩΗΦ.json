@@ -1,0 +1,194 @@
+{
+  "id": "decisions.extraction/9ΞΚ1Ω9Ρ-ΩΗΦ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΞΚ1Ω9Ρ-ΩΗΦ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΞΚ1Ω9Ρ-ΩΗΦ",
+    "city": "vrilissia",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 11,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "mayorStated=yes",
+        "changeAnchor=agenda_item",
+        "namedVoters=dissenters_only",
+        "declaration=yes",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ προσήλθε κατά τη συζήτηση του 1ου θέματος σύμφωνα με την παρ.2, του άρθρου 8, του Κανονισμού Λειτουργίας του Δημοτικού Συμβουλίου (ΑΔΣ 9/2025)"
+          },
+          {
+            "name": "ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Η Δημοτική Σύμβουλος κα. ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ κατά τη συζήτηση του 1ου θέματος σύμφωνα με την παρ.2, του άρθρου 8, του Κανονισμού Λειτουργίας του Δημοτικού Συμβουλίου (ΑΔΣ 9/2025)"
+          },
+          {
+            "name": "ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ)",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Η Δημοτική Σύμβουλος κα. ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ) αποχώρησε κατά τη συζήτηση του 3ου θέματος της ημερήσιας διάταξης"
+          },
+          {
+            "name": "ΡΑΠΤΗ ΣΟΦΙΑ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 3,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Η Δημοτική Σύμβουλος κα. ΡΑΠΤΗ ΣΟΦΙΑ κατά τη συζήτηση του 3ου θέματος της ημερήσιας διάταξης"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1667,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες:"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΡΗΣΤΑΚΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΤΖΙΜΑ ΛΑΜΠΡΙΝΗ ΛΙΛΗ",
+          "ΔΗΜΗΤΡΙΟΥ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΣΤΑΜΑΤΕΛΟΠΟΥΛΟΣ ΝΙΚΗΤΑΣ",
+          "ΜΠΗΤΑΣ ΙΩΑΝΝΗΣ",
+          "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+          "ΜΑΝΤΙΝΙΔΟΥ-ΤΣΟΥΒΑΛΟΥ ΣΟΦΙΑ",
+          "ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ)",
+          "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+          "ΜΑΡΙΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΠΠΑΣ ΧΡΗΣΤΟΣ",
+          "ΑΝΑΓΝΩΣΤΟΥ ΠΑΝΑΓΙΩΤΗΣ (ΠΑΝΟΣ)",
+          "ΔΗΜΑΡΑΣ ΘΕΟΔΩΡΟΣ-ΕΡΝΕΣΤΟΣ (ΑΚΗΣ)",
+          "ΦΑΡΑΚΛΑΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΒΑΦΕΙΑΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΥΡΙΤΣΗ ΙΩΑΝΝΑ",
+          "ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ)",
+          "ΡΑΠΤΗ ΣΟΦΙΑ",
+          "ΤΣΟΥΤΣΙΑΣ ΙΩΑΝΝΗΣ",
+          "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+          "ΑΡΧΙΜΑΝΔΡΙΤΗΣ ΒΑΣΙΛΕΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ",
+          "ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+          "ΚΟΥΤΣΙΩΡΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+          "ΜΑΛΑΚΟΥ ΧΡΙΣΤΙΝΑ",
+          "ΛΙΑΚΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ",
+          "ΒΗΤΤΟΣ ΒΑΣΙΛΕΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Ομόφωνα με δεκαεννέα (19) θετικές ψήφους, μία (1) αρνητική ψήφο και μία (1) δήλωση «παρών»",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΤΣΟΥΤΣΙΑΣ ΙΩΑΝΝΗΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+            "vote": "PRESENT"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "vrilissia",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "mayorStated=yes",
+    "changeAnchor=agenda_item",
+    "namedVoters=dissenters_only",
+    "declaration=yes",
+    "embeddedDecision=yes"
+  ]
+}

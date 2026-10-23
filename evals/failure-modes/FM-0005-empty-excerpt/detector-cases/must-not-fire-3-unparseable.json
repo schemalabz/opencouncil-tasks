@@ -1,0 +1,16 @@
+{
+  "kind": "must-not-fire",
+  "note": "A response that is not JSON is unknown, not a fire",
+  "input": {
+    "label": "decision-extraction",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"attendanceFormat\": \"explicit_present_",
+      "stopReason": "end_turn"
+    }
+  }
+}

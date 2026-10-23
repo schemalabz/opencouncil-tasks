@@ -199,7 +199,7 @@ export interface ResolveOutcome {
 
 /**
  * The matching core: similarity -> candidate pool -> resolver LLM -> protocol
- * gap-fill. Exported so the matching eval CLI measures this exact path, not a
+ * gap-fill. Exported so the decisions.matching suite measures this exact path, not a
  * copy. Candidates split by phase-0 reading: `inMeeting` documents declare this
  * session (exact partition), `fallback` documents could not be read and go
  * through the legacy window-similarity flow. Protocol-chain gap-fill only ever
@@ -462,18 +462,29 @@ ${gapCandidateLines}`;
     return { matches, unmatchedSubjects, usage };
 }
 
-export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = async (request, onProgress) => {
-    let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
-    const log = createScopedLogger.fromCallbackUrl(request.callbackUrl);
+/** The fields of a poll request that define a meeting's decision window. */
+export type WindowRequest = Pick<PollDecisionsRequest, 'meetingDate' | 'diavgeiaUid' | 'diavgeiaUnitIds' | 'administrativeBodyName' | 'window' | 'knownDecisions' | 'lookupAdas'>;
 
-    log("Polling decisions from Diavgeia:", {
-        diavgeiaUid: request.diavgeiaUid,
-        diavgeiaUnitIds: request.diavgeiaUnitIds,
-        meetingDate: request.meetingDate,
-        subjectCount: request.subjects.length,
-        peopleCount: request.people?.length ?? 0,
-    });
+export interface MeetingCandidates {
+    /** Every decision fetched: the window's, the typed ΑΔΑ values', and this meeting's own outside the window. */
+    decisions: Decision[];
+    lookups: PollDecisionsResult['lookups'];
+    reads: ReadDecision[];
+    partition: ReturnType<typeof partitionReadDecisions>;
+    /** The Diavgeia query the window was fetched with. */
+    query: { fromDate: string; toDate: string; scopes: string[] };
+}
 
+/**
+ * Fetches a meeting's decision window from Diavgeia, reads each document's own
+ * statement of its session (phase 0) and partitions them. Exported so the
+ * matching evaluation fetches and reads exactly as a poll does.
+ */
+export async function gatherMeetingCandidates(
+    request: WindowRequest,
+    log: (...args: unknown[]) => void,
+    onProgress: (status: string, percent: number) => void = () => {},
+): Promise<MeetingCandidates> {
     onProgress("fetching decisions", 5);
 
     // Date range: from the request's derived window when present, else the
@@ -574,37 +585,40 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
     onProgress("reading decisions", 10);
     const known = new Map((request.knownDecisions ?? []).map(k => [k.ada, k]));
     const READ_CONCURRENCY = 4;
-    const reads: ReadDecision[] = [];
+    // Indexed, not pushed: the readings keep the fetch order whatever order they finish
+    // in, so the resolver's prompt is the same on every run and a recorded poll replays.
+    const reads: ReadDecision[] = new Array(decisions.length);
     let readCursor = 0;
     const readWorker = async () => {
         while (readCursor < decisions.length) {
-            const d = decisions[readCursor++];
+            const i = readCursor++;
+            const d = decisions[i];
             const k = known.get(d.ada);
             if (k && k.readStatus !== 'unread') {
                 // Already read on a previous poll — never pay twice. Only
                 // 'unread' is retried; 'unreadable'/'no_meeting_date' recovery
                 // is a prompt-version bump plus manual re-run.
-                reads.push({
+                reads[i] = {
                     decision: d,
                     reading: k.meetingDate
                         ? { meetingDate: k.meetingDate, decisionNumber: null, body: null, notADecision: false }
                         : null,
                     readStatus: k.readStatus,
                     fromKnown: true,
-                });
+                };
                 continue;
             }
             try {
                 const { result } = await readDecisionDocument(decisionPdfUrl(d));
-                reads.push({
+                reads[i] = {
                     decision: d,
                     reading: result,
                     readStatus: result.notADecision ? 'not_a_decision' : result.meetingDate ? 'ok' : 'no_meeting_date',
                     fromKnown: false,
-                });
+                };
             } catch (e) {
                 log(`  read failed for ${d.ada}: ${e instanceof Error ? e.message : e}`);
-                reads.push({ decision: d, reading: null, readStatus: 'unreadable', fromKnown: false });
+                reads[i] = { decision: d, reading: null, readStatus: 'unreadable', fromKnown: false };
             }
         }
     };
@@ -612,6 +626,23 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
 
     const partition = partitionReadDecisions(reads, request.meetingDate, request.administrativeBodyName);
     log(`=== PHASE 0: READ === ${reads.length} candidates: ${partition.inMeeting.length} declare this session, ${partition.elsewhere.length} another, ${partition.fallback.length} unreadable/unread (fallback pool), ${partition.nonDecisions.length} not decisions`);
+
+    return { decisions, lookups, reads, partition, query: { fromDate, toDate, scopes: scopeLabels } };
+}
+
+export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = async (request, onProgress) => {
+    let totalUsage: Anthropic.Messages.Usage = { ...NO_USAGE };
+    const log = createScopedLogger.fromCallbackUrl(request.callbackUrl);
+
+    log("Polling decisions from Diavgeia:", {
+        diavgeiaUid: request.diavgeiaUid,
+        diavgeiaUnitIds: request.diavgeiaUnitIds,
+        meetingDate: request.meetingDate,
+        subjectCount: request.subjects.length,
+        peopleCount: request.people?.length ?? 0,
+    });
+
+    const { decisions, lookups, reads, partition, query } = await gatherMeetingCandidates(request, log, onProgress);
 
     // Partition subjects
     const subjectLookup = new Map(request.subjects.map(s => [s.subjectId, s]));
@@ -860,7 +891,7 @@ export const pollDecisions: Task<PollDecisionsRequest, PollDecisionsResult> = as
         usage: toTaskTokenUsage(totalUsage),
         metadata: {
             diavgeiaUid: request.diavgeiaUid,
-            query: { fromDate, toDate, unitIds: request.diavgeiaUnitIds, scopes: scopeLabels },
+            query: { fromDate: query.fromDate, toDate: query.toDate, unitIds: request.diavgeiaUnitIds, scopes: query.scopes },
             fetchedCount: decisions.length,
             matchedCount: matches.length,
             unmatchedCount: unmatchedSubjects.length,

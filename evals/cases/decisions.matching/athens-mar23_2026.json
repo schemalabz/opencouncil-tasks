@@ -1,0 +1,450 @@
+{
+  "id": "decisions.matching/athens-mar23_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/mar23_2026",
+    "meetingDate": "2026-03-23",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "78341"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-04-08",
+      "fromDate": "2026-03-23"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmmymjj00079o10vy2flf1opr",
+        "name": "Έγκριση κατανομής ποσού 887.380,00€ ως Α΄ Δόση έτους 2026 για την κάλυψη λειτουργικών δαπανών των σχολείων του Δήμου Αθηναίων, συμπεριλαμβανομένης της δαπάνης για την υλοποίηση του θεσμού του σχολικού τροχονόμου. (Δ/νση Παιδικής Ηλικίας, Παιδείας & Δια Βίου Μάθησης) (Σχετ. Πρωτ. 73229-26)",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjivk079a10vyc2blkrs4",
+        "name": "Έγκριση ψηφίσματος του Δήμου Αθηναίων για την διασφάλιση των πολιτικών ισότητας των φύλων στον Νέο Κώδικα Τοπικής Αυτοδιοίκησης.(Σχετικό 1)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjixe079d10vy76r8hd64",
+        "name": "Μη έγκριση της μελέτης «ΑΠΑΓΟΡΕΥΣΗ ΤΗΣ ΣΤΑΣΗΣ ΚΑΙ ΣΤΑΘΜΕΥΣΗΣ ΣΤΗΝ ΟΔΟ ΖΑΪΜΗ ΣΤΗ ΔΕΞΙΑ ΠΛΕΥΡΑ ΤΗΣ ΟΔΟΥ ΚΑΤΑ ΤΗ ΦΟΡΑ ΚΥΚΛΟΦΟΡΙΑΣ» και την εκπόνηση νέας μελέτης (με δημιουργία θέσεων στάθμευσης κατοίκων και επισκεπτών) για το σύνολο της περιοχής και όχι μεμονωμένα για έναν δόμο, σύμφωνα με τη με αρ. 442/10-12-2025 (ΑΔΑ: ΨΚΣΒΩ6Μ-ΟΝΞ) Πράξη του Συμβουλίου της 1ης Δημοτικής Κοινότητας. (Σχετική η με αρ, 373/2026 Πράξη της Δημοτικής Επιτροπής) (Τμήμα Δημοτικής Επιτροπής – Δ/νση Σχεδίου Πόλεως & Αστικού Περιβάλλοντος) (Σχετ. Πρωτ. 57645-26)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiw3079b10vyeuwg1cpk",
+        "name": "Απολογισμός Έργων και Δράσεων της εταιρείας του Δήμου Αθηναίων «Εθνικός Κήπος – Μητροπολιτικό Πράσινο Α.Ε./Green Athens»",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiwu079c10vy0pmdg9tv",
+        "name": "Εκ νέου έγκριση των προσωρινών κυκλοφοριακών ρυθμίσεων για το έργο «ΑΝΑΔΙΑΡΡΥΜΙΣΗ ΔΙΑΜΕΡΙΣΜΑΤΟΣ 6ου ΚΑΙ 7ου ΟΡΟΦΟΥ ΚΑΙ ΑΝΑΔΙΑΜΟΡΦΩΣΗ ΔΩΜΑΤΟΣ», με διακοπή κυκλοφορίας της οδού ΛΥΚΑΒΗΤΤΟΥ από την οδό ΤΣΑΚΑΛΩΦ έως την οδό ΠΑΝΑΓΙΩΤΟΥ ΑΝΑΓΝΩΣΤΟΠΟΥΛΟΥ, της οδού ΤΣΑΚΑΛΩΦ από την οδό ΔΗΜΟΚΡΙΤΟΥ έως την οδό ΛΥΚΑΒΗΤΤΟΥ και τς παραπλεύρου οδού της οδού ΠΑΝΑΓΙΩΤΟΥ ΑΝΑΓΝΩΣΤΟΠΟΥΛΟΥ από την οδό ΛΥΚΑΒΗΤΤΟΥ έως την οδό ΠΑΝΑΓΙΩΤΟΥ ΑΝΑΓΝΩΣΤΟΠΟΥΛΟΥ, για χρονικό διάστημα έως 10-11-2026, για την ημέρα Σάββατο και τις ώρες 06:30 έως 12:00. (Σχετική είναι η με αρ. 495/2026 Πράξη της Δημοτικής Επιτροπής) (Τμήμα Δημοτικής Επιτροπής – Δ/νση Σχεδίου Πόλεως & Αστικού Περιβάλλοντος) (Σχετ. Πρωτ.73825-26)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjixp079e10vyok4cwqqs",
+        "name": "Έγκριση για τη δωρεά ποσότητας ακατέργαστου άλατος προς τη Διεύθυνση Μητροπολιτικών Υποδομών της Περιφέρειας Αττικής. (Δ/νση Καθαριότητας – Ανακύκλωσης) (Σχετ. Πρωτ.75617-26",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjixz079f10vylzwkyylf",
+        "name": "Έγκριση για την τροποποίηση του Οργανισμού Εσωτερικής Υπηρεσίας (ΟΕΥ) του Δήμου Αθηναίων, κατόπιν νέων παρατηρήσεων από την Αποκεντρωμένη Διοίκηση Αττικής.(Δ/νση Διαχείρισης και Ανάπτυξης Ανθρώπινου Δυναμικού)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiy8079g10vynzvg55j7",
+        "name": "Έγκριση για την τροποποίηση της με αριθ. 530/28-08-24 ΑΔΣ περί συγκρότησης τριμελούς Επιτροπής Παρακολούθησης και Παραλαβής για τον διαγωνισμό που αφορά την προμήθεια « ΑΣΦΑΛΤΙΚΩΝ ΥΛΙΚΩΝ (ΑΣΦΑΛΤΟΜΙΓΜΑ ΑΣ12,5 ΨΥΧΡΑ ΑΣΦΑΛΤΟΣ) συνολικού ποσού 36.975,31€ συμπ/νου ΦΠΑ 24% ως προς την απαλλαγή και αντικατάσταση του 3ου Τακτικού , 1ου και 3ου Αναπληρωματικού μέλους λόγω συνταξιοδότησης (Δ/νση Διαχείρισης και Ανάπτυξης Ανθρώπινου Δυναμικού)(Σχετ. Πρωτ.77357-26)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiyg079h10vyogm2chfw",
+        "name": "Έγκριση για την ανάθεση στον δικηγόρο κ. Ιωάννη Πίκουλα του δικαστικού χειρισμού της υπόθεσης σχετικά με την εκδίκαση της από 02-01-2026 αγωγής δικηγόρων του Δήμου ενώπιον του Μονομελούς Πρωτοδικείου Αθηνών (Περιουσιακές Διαφορές –Αμοιβές για παροχή εργασίας 6145α και 622Α) σε βάρος του νομικού προσώπου του Δήμου Αθηναίων και κατόπιν του υπ' αριθ. πρωτ.9282/14-01-2026 εγγράφου της Νομικής Διεύθυνσης.(Δ/νση Διαχείρισης και Ανάπτυξης Ανθρώπινου Δυναμικού)(Σχετ. Πρωτ. 77359-26 ΔΕ)",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiyn079i10vyzk18hxy0",
+        "name": "Ορισμός Δημοτικών συμβούλων και υπαλλήλων - μελών στις Επιτροπές Συμβιβαστικής Επίλυσης Φορολογικών Διαφορών και Αμφισβητήσεων του Δήμου Αθηναίων για το έτος 2026 (Δ/νση Διαχείρισης και Ανάπτυξης Ανθρώπινου Δυναμικού)(Σχετ. Πρωτ. 77361-26 )",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiyu079j10vy6r0z0475",
+        "name": "Έγκριση για την τροποποίηση της με αρ. 805/22-12-2025 Απόφασης του Δημοτικού Συμβουλίου περί συγκρότησης Τριμελούς Επιτροπής Παρακολούθησης και Παραλαβής της Δημόσιας Σύμβασης ανάθεσης υπηρεσίας που αφορά στην «ΤΟΠΟΘΕΤΗΣΗ ΕΚ ΤΟΠΟΘΕΤΗΣΗ ΕΟΡΤΑΣΤΙΚΟΥ ΣΤΟΛΙΣΜΟΥ ΤΗΣ ΠΟΛΗΣ 2024 – 2027» ποσού 2.309.993,52€ συμπ/νου Φ.Π.Α. 24% ως προς την αντικατάσταση τακτικού μέλους. (Δ/νση Διαχείρισης & Ανάπτυξης Ανθρώπινου Δυναμικού) (Σχετ. Πρωτ. 68342-26)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjiz2079k10vyb6vjh7pm",
+        "name": "Έγκριση ένταξης του Γ΄ Νεκροταφείου Αθηνών στην Ένωση Σημαντικών Κοιμητηρίων της Ευρώπης (Association of Significant Cemeteries in Europe – ASCE) και στην Πολιτιστική Διαδρομή του Συμβουλίου της Ευρώπης «Ο δρόμος των Κοιμητηρίων» (European Cemeteries Route). (Δ/νση Σχεδίου Πόλεως & Αστικού Περιβάλλοντος) (Σχετ. Πρωτ.73955-26)",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjizb079l10vyb531gp8c",
+        "name": "Έγκριση της παράτασης παραχώρησης του απορριμματοφόρου με στοιχεία ΚΗΗ 1847 (ΔΑ 2006) μάρκας IVECO στον Δήμο Μεγαρέων για χρονικό διάστημα έξι (6) μηνών. (Δ/νση Μηχανολογικού) (Σχετ. Πρωτ. 69052-26)",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjizj079m10vygllkht2e",
+        "name": "Έγκριση της συμμετοχής του Δήμου Αθηναίων ως εταίρος στην υποβολή πρότασης με τίτλο \"BRIDGE4CLIMA: Behavioural Resilience and Information Defense, Governance and Engagement for Climate Information against Manipulation\" που απευθύνεται στην πρόσκληση \"HORIZON-CL5-2026-07-D1-04: Fighting disinformation and effectively communicating on climate change\" στο πλαίσιο του Χρηματοδοτικού Προγράμματος \"Horizon Europe\", με καταληκτική ημερομηνία υποβολής προτάσεων την Τετάρτη 15/04/2026. (Δ/νση Καθαριότητας – Ανακύκλωσης) (Σχετ. Πρωτ. 77072-26)",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjizr079n10vymwwbjrsy",
+        "name": "Ορισμός δύο μελών, ενός τακτικού και ενός αναπληρωματικού, ως εκπροσώπων της «Κοινής Επιτροπής Παρακολούθησης», της Προγραμματικής Σύμβασης του άρθρου 100 του Ν. 3852/2010. (Δ/νση Καθαριότητας – Ανακύκλωσης) (Σχετ. Πρωτ. 77082-26)",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj09079p10vyynux100o",
+        "name": "Έγκριση της 6ης Αναμόρφωσης προϋπολογισμού του Δήμου Αθηναίων οικονομικού έτους 2026. (Δ/νση Οικονομικών)",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj0i079q10vyd8ir9gs2",
+        "name": "Έγκριση για την τροποποίηση της με αρ. 840/2025 Απόφασης του Δημοτικού Συμβουλίου που αφορά «έγκριση του Ολοκληρωμένου Πλαισίου Δράσης (Ο.Π.Δ.)-Πινάκων Στοχοθεσίας Οικονομικών Αποτελεσμάτων 2026 του Δήμου Αθηναίων και των δύο (2) εκ των Νομικών Προσώπων (Δημοτικό Βρεφοκομείο Αθηνών,Κέντρο Υποδοχής και Αλληλεγγύης του Δήμου Αθηναίων (Κ.Υ.Α.Δ.Α.) βάσει της ΚΥΑ 59576/11.11.2025 (Β΄ 6172) Κοινή Απόφαση των Υπουργών Εσωτερικών και Εθνικής Οικονομίας και Οικονομικών»,σύμφωνα με τη με αρ. 2599/2025 πράξη της Οικονομικής Επιτροπής» ως προς τη συμπλήρωση με τους πίνακες στοχοθεσίας Ολοκληρωμένου Πλαισίου Δράσης (Ο.Π.Δ.) 2026 του Οργανισμού Πολιτισμού, Αθλητισμού και Νεολαίας Δήμου Αθηναίων (Ο.Π.Α.Ν.Δ.Α.) και της Εταιρείας Ανάπτυξης και Τουριστικής Προβολής Αθηνών ΑΝΑΠΤΥΞΙΑΚΗ Α.Ε. (Ε.Α.Τ.Α.Α.) βάση της ΚΥΑ 59576/11-11-2025 (Β΄ 6172) Κοινής Απόφασης των Υπουργών Εσωτερικών, Εθνικής Οικονομίας και Οικονομικών. (Δ/νση Οικονομικών) (Σχετ. Πρωτ. 77282-26ΔΕ)",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj0r079r10vy1r6wq9xp",
+        "name": "Ορισμός Δημοτικού Συμβούλου για την σύσταση Τριμελούς Επιτροπής Εκκαθάρισης του αρχείου του Τμήματος Αποθηκών Υλικών της Διεύθυνσης Προμηθειών & Αποθηκών. (Δ/νση Προμηθειών & Αποθηκών) (Σχετ. Πρωτ. 72832-26)",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj14079s10vycmjpw99m",
+        "name": "Έγκριση α) της αποδοχής πρόθεσης δωρεάς (μελέτης και έργου) από τον κύριο Αντώνιο Λαμπρόπουλο, χωρίς αντάλλαγμα και για την έγκριση περί των μελετών που θα εκπονηθούν στο πλαίσιο της μελέτης του έργου «ΜΕΛΕΤΗ ΚΑΙ ΚΑΤΑΣΚΕΥΗ ΕΠΙΣΤΡΩΣΗΣ ΠΕΖΟΔΡΟΜΟΥ ΠΑΡΟΔΟΥ ΑΔΡΙΑΝΟΥ 102 ΣΤΗΝ ΠΛΑΚΑ» και β) της εκτέλεσης των απαιτούμενων εργασιών στο πλαίσιο της κατασκευής έργου. (Δ/νση Οδοποιίας, Αποχέτευσης και Κοινοχρήστων Χώρων)(Σχετ. Πρωτ. 77379-26)",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj1e079t10vym306ei42",
+        "name": "Έγκριση για την τροποποίηση της με αρ. 171/2024 Απόφασης του Δημοτικού Συμβουλίου περί «συγκρότησης του Μηχανισμού Πιστοποίησης Εκτέλεσης της Πράξης με τίτλο «Συνέχιση Λειτουργίας Διευρυμένων Κέντρων Κοινότητας στο Δήμο Αθηναίων (2 Κεντρικές Δομές, 1 Παράρτημα ΚΕΜ και 1 Παράρτημα Ρομά)» και κωδικό MIS 6002686» με την αντικατάσταση ενός μέλους του εν λόγω Μηχανισμού. (Δ/νση Κοινωνικής Αλληλεγγύης) (Σχετ. Πρωτ. 67108-26)",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj1q079u10vygv9egdhl",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 586,94€ στην επιχείρηση με την επωνυμία «ΚΟΡΜΠΑΚΗ ΔΙΟΝ. ΚΥΡΙΑΚΗ» - Θ. Βρεσθένης 100, για μία διαφημιστική επιγραφή. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74337-26)",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj2w079x10vyqkzstc2q",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 30.000,00€ στην εταιρεία «ΕΙΣΑΓΩΓΕΣ & ΕΜΠΟΡΙΑ ΕΤΟΙΜΩΝ ΕΝΔΥΜΑΤΩΝ ΧΑΡΑΛΑΜΠΟΣ ΣΕΜΕΡΤΖΙΔΗΣ ΤΟΥ ΠΑΥΛΟΥ» - Θερμοπυλών 20, για διαφημιστικές επιγραφές. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74319-26)",
+        "agendaItemIndex": 24,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj6407a510vybusfo1dh",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 30.000,00€ στην εταιρεία «ΓΚΑΖΙ ΠΑΡΚΙΝΓΚ ΚΑΙ ΣΙΑ Ε.Ε.» - Ιάκχου 28-30, για διαφημιστικές επιγραφές. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74333-26)",
+        "agendaItemIndex": 32,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj24079v10vyw53yxf2d",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 30.000,00€ στην επιχείρηση με την επωνυμία «ΚΑΛΟΓΗΡΟΥ ΒΑΣΙΛΙΚΗ» - Πατησίων 77, για μία διαφημιστική επιγραφή. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74336-26)",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj2i079w10vyog67du2p",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 30.000,00€ στην εταιρεία «Γ. ΒΑΡΣΑΜΗΣ & ΣΙΑ Ο.Ε.» - Πατησίων 77-79, για δύο διαφημιστικές επιγραφές. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74335-26)",
+        "agendaItemIndex": 23,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj3d079y10vybtgw05ye",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 30.000,00€ στην εταιρεία «ΠΕΙΡΑΙΩΣ 117 Ε.Ε.» - Πειραιώς 117, για μία διαφημιστική επιγραφή-οθόνη. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74321-26)",
+        "agendaItemIndex": 25,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj3t079z10vyphesw9vn",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 586,94€ στην επιχείρηση με την επωνυμία «NOREU ANDREA REMZI» - Αμφιαράου 48-50, για μία διαφημιστική επιγραφή. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74322-26)",
+        "agendaItemIndex": 26,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj4607a010vyoyt9x7xl",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 586,94€ στην εταιρεία «ΚΩΝΣΤΑΝΤΙΝΟΣ ΧΑΤΖΑΚΗΣ & ΣΙΑ Ε.Ε.» - Β. Ηπείρου 155, για μία διαφημιστικές προβολές. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74323-26)",
+        "agendaItemIndex": 27,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj4k07a110vyhf5obu80",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 30.000,00€ στην επιχείρηση με την επωνυμία «AKRAM MOHAMMAD TOY ASLAM» - Πατησίων 114, για μία διαφημιστική επιγραφή. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74324-26)",
+        "agendaItemIndex": 28,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj4y07a210vyxykplmz3",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 586,94€ στην επιχείρηση με την επωνυμία «NΙΚΟΛΑΚΕΑΣ ΒΑΣΙΛΕΙΟΣ» - Μπακνανά 17, για μια διαφημιστική επιγραφή. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74328-26)",
+        "agendaItemIndex": 29,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmmymjj5c07a310vyw8g2g47n",
+        "name": "Έγκριση για την επιβολή ή μη, λόγω συμμόρφωσης, προστίμου ποσού 586,94€ στην εταιρεία «Α. ΚΑΤΣΑΜΠΑΝΗ – Γ. ΛΕΒΕΝΤΑΚΗΣ Ο.Ε.» - Ρουμπέση 77, για μία διαφημιστική επιγραφή. (Δ/νση Δημοτικών Προσόδων) (Σχετ. Πρωτ. 74331-26)",
+        "agendaItemIndex": 30,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmmymjivk079a10vyc2blkrs4]": {
+      "value": "9ΔΚΔΩ6Μ-ΙΩ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjiw3079b10vyeuwg1cpk]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmmymjiwu079c10vy0pmdg9tv]": {
+      "value": "90ΞΒΩ6Μ-ΨΟΑ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjixe079d10vy76r8hd64]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmmymjixp079e10vyok4cwqqs]": {
+      "value": "ΨΘΣΞΩ6Μ-1ΦΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjixz079f10vylzwkyylf]": {
+      "value": "ΡΨΓ2Ω6Μ-263",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjiy8079g10vynzvg55j7]": {
+      "value": "94ΓΙΩ6Μ-Φ3Τ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjiyg079h10vyogm2chfw]": {
+      "value": "Ψ3ΨΝΩ6Μ-Χ2Ε",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjiyn079i10vyzk18hxy0]": {
+      "value": "ΡΑ0ΞΩ6Μ-37Δ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjiyu079j10vy6r0z0475]": {
+      "value": "6Μ1ΟΩ6Μ-Ξ9Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjiz2079k10vyb6vjh7pm]": {
+      "value": "6ΔΞ1Ω6Μ-5ΑΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjizb079l10vyb531gp8c]": {
+      "value": "ΡΥ04Ω6Μ-53Η",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjizj079m10vygllkht2e]": {
+      "value": "Ρ8ΩΠΩ6Μ-ΝΛΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjizr079n10vymwwbjrsy]": {
+      "value": "9Ν2ΧΩ6Μ-ΓΗΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj00079o10vy2flf1opr]": {
+      "value": "9ΨΗ9Ω6Μ-ΖΛΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj09079p10vyynux100o]": {
+      "value": "ΨΧΜΦΩ6Μ-9Ε1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj0i079q10vyd8ir9gs2]": {
+      "value": "ΡΧΑΣΩ6Μ-ΦΤΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj0r079r10vy1r6wq9xp]": {
+      "value": "Ρ4Ξ2Ω6Μ-56Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj14079s10vycmjpw99m]": {
+      "value": "ΨΜΕΙΩ6Μ-ΘΒΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj1e079t10vym306ei42]": {
+      "value": "Ρ48ΧΩ6Μ-ΜΤΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj1q079u10vygv9egdhl]": {
+      "value": "6ΣΘΨΩ6Μ-ΟΟΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj24079v10vyw53yxf2d]": {
+      "value": "ΨΒΓ0Ω6Μ-Σ45",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj2i079w10vyog67du2p]": {
+      "value": "981ΙΩ6Μ-2ΝΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj2w079x10vyqkzstc2q]": {
+      "value": "9ΖΖΗΩ6Μ-Δ5Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj3d079y10vybtgw05ye]": {
+      "value": "Ρ3ΑΞΩ6Μ-ΡΨΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj3t079z10vyphesw9vn]": {
+      "value": "Ρ3ΤΠΩ6Μ-2ΩΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj4607a010vyoyt9x7xl]": {
+      "value": "ΡΣ8ΧΩ6Μ-ΤΟΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj4k07a110vyhf5obu80]": {
+      "value": "Ρ988Ω6Μ-ΕΡΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj4y07a210vyxykplmz3]": {
+      "value": "6Α82Ω6Μ-ΡΞΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj5c07a310vyw8g2g47n]": {
+      "value": "651ΣΩ6Μ-2ΨΨ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmmymjj6407a510vybusfo1dh]": {
+      "value": "ΨΑ8ΝΩ6Μ-ΠΧ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΚΒΛΩ6Μ-8ΔΛ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0txd80kv7ipx6paapfd9e"
+    },
+    "reject[ΨΒΗΓΩ6Μ-0ΑΤ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0te1o0knnipx6h3hfbu73"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

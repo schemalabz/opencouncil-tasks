@@ -28,3 +28,14 @@ squid.conf
 
 # Local work directory of the 2026-09-13 body survey: large, not versioned
 .extraction-survey/
+
+# Local MinIO data (eval archive)
+.minio-eval/
+
+# Task requests built from public meeting data (scripts/build-task-request.ts)
+.eval-requests/
+.eval-verify/
+.eval-runs/
+
+# Signals exported from an opencouncil database copy and the cases built from them: production content, kept on this machine
+.eval-signals/

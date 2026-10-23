@@ -1,0 +1,151 @@
+{
+  "id": "decisions.matching/argos-nov26_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/nov26_2025",
+    "meetingDate": "2025-11-26",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "83271"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-12-10",
+      "fromDate": "2025-11-26"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb7t83b009xrbsi7rkpfvrk",
+        "name": "Παραχώρηση χώρων για Παλαμήδειο Άθλο 2025",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb7t83o009yrbsinbzyjckj",
+        "name": "Παραχώρηση Δημοτικού Σχολείου Καρυάς",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqb59jda05x6pn1tiwt4cqum",
+        "name": "Τροποποίηση προϋπολογισμού 2025",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59jdw05x8pn1tpgfgt0zz",
+        "name": "Είσοδος-έξοδος ΚΔΗΦ ΑΜΕΑ Δαλαμανάρας",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59je905x9pn1t94vnmhvj",
+        "name": "Δίκτυο οπτικών ινών CIRCET Άργους",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59jeo05xapn1tc686idde",
+        "name": "Παραχώρηση οικοπέδου στους Μύλους",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59jff05xcpn1twgu5jsfq",
+        "name": "Παραχώρηση αθλητικών εγκαταστάσεων",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb59jfs05xdpn1t9gp36kko",
+        "name": "Αγώνας Artemisio Mountain Running 2025",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb59jda05x6pn1tiwt4cqum]": {
+      "value": "9Δ78ΩΨΔ-ΘΞ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59jdw05x8pn1tpgfgt0zz]": {
+      "value": "9ΔΖΓΩΨΔ-ΣΜ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59je905x9pn1t94vnmhvj]": {
+      "value": "6ΣΣΝΩΨΔ-679",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59jeo05xapn1tc686idde]": {
+      "value": "ΡΕΜΣΩΨΔ-ΣΧΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59jff05xcpn1twgu5jsfq]": {
+      "value": "9Φ8ΦΩΨΔ-ΠΕΠ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb59jfs05xdpn1t9gp36kko]": {
+      "value": "917ΔΩΨΔ-5ΑΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb7t83b009xrbsi7rkpfvrk]": {
+      "value": "6ΓΝΙΩΨΔ-7Ξ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb7t83o009yrbsinbzyjckj]": {
+      "value": "6ΔΙ7ΩΨΔ-ΤΓΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[6ΣΓ4ΩΨΔ-ΖΦΞ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pelv07hgu36p6vwja3e5"
+    },
+    "reject[9ΠΒΩΩΨΔ-ΗΧΨ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5pemv07hyu36plo26xm0w"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

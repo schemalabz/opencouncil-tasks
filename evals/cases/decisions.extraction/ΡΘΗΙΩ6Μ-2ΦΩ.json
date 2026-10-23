@@ -1,0 +1,125 @@
+{
+  "id": "decisions.extraction/ΡΘΗΙΩ6Μ-2ΦΩ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "ΡΘΗΙΩ6Μ-2ΦΩ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΘΗΙΩ6Μ-2ΦΩ",
+    "city": "athens",
+    "body": "6η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=dissenters_only",
+        "voteTally=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3436,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 6ης ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Αγγελιδάκης Παναγιώτης",
+          "Γεωργάτος Ιατρίδης Δημήτριος",
+          "Δήμου Δημήτριος",
+          "Ζαφείρης Ιωάννης",
+          "Καβέτσου Κωνσταντίνα (Ντιάνα)",
+          "Μεγαλοοικονόμου Νάκου Ελένη",
+          "Πρωτοψάλτης Ιωάννης",
+          "Πρεζεράκου Καλλιόπη (Πόπη)",
+          "Αδαμοπούλου Μαριγώ (Μαίρη)",
+          "Γιακουμάτου Ελένη"
+        ],
+        "absentMembers": [
+          "Χαλικιά Ειρήνη Αγλαϊα",
+          "Λαγός Ευστάθιος",
+          "Τσιμπλάκη Παναγιώτα (Γιώτα)",
+          "Αντωνάτος Αναστάσιος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 3,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 3,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "επί του συνόλου των 9 παρευρισκομένων Κοινοτικών Συμβούλων εγκρίνεται κατά πλειοψηφία το ανωτέρω θέμα με ΥΠΕΡ: 7 ψήφους, ΚΑΤΑ 1, ΛΕΥΚΟ 1",
+        "phraseAsExtracted": "Κατά πλειοψηφία με ΥΠΕΡ: 7 ψήφους, ΚΑΤΑ 1, ΛΕΥΚΟ 1",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Γιακουμάτου Ελένη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Αδαμοπούλου Μαριγώ (Μαίρη)",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/6η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=dissenters_only",
+    "voteTally=yes"
+  ]
+}

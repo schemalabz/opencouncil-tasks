@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/papagos-cholargos__jun23_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "papagos-cholargos",
+    "meetingId": "jun23_2026",
+    "date": "2026-06-23",
+    "time": "19:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/papagos-cholargos_jun23_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα πραγματοποιηθεί διά ζώσης στην αίθουσα Δημοτικού Συμβουλίου"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "σε τακτική συνεδρίαση του Δημοτικού Συμβουλίου"
+    },
+    "sessionNumber": {
+      "value": 13,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Συνεδρίαση : 13η / 2026"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "papagos-cholargos",
+    "council"
+  ]
+}

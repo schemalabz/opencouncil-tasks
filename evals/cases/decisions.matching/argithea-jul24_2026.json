@@ -1,0 +1,93 @@
+{
+  "id": "decisions.matching/argithea-jul24_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "argithea/jul24_2026",
+    "meetingDate": "2026-07-24",
+    "diavgeiaUid": "6041",
+    "diavgeiaUnitIds": [
+      "100086220"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-08-11",
+      "fromDate": "2026-07-24"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrubpbnw05jgui73j944vbrv",
+        "name": "Αναμόρφωση προϋπολογισμού 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrubpboj05jhui732wy4et7h",
+        "name": "Προγραμματισμός προσλήψεων 2027",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrubpbow05jiui732fxpgm5q",
+        "name": "Εξοπλισμοί πολιτικής προστασίας",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrubpbpa05jjui73lvefzhvh",
+        "name": "Διαγραφές οφειλών δημοτών",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrubpbpm05jkui73w5na0r7d",
+        "name": "Έξοδα πολιτιστικών δραστηριοτήτων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrubpbnw05jgui73j944vbrv]": {
+      "value": "994ΞΩΨ3-Λ30",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrubpboj05jhui732wy4et7h]": {
+      "value": "620ΗΩΨ3-2ΕΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrubpbow05jiui732fxpgm5q]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmrubpbpa05jjui73lvefzhvh]": {
+      "value": "ΡΧΛ0ΩΨ3-2Τ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrubpbpm05jkui73w5na0r7d]": {
+      "value": "ΡΔΖΔΩΨ3-8ΒΖ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-02",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtjx2gy40lchu0rilmnfbp5g"
+    }
+  },
+  "cluster": "argithea/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

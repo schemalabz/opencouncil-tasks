@@ -1,0 +1,102 @@
+{
+  "id": "decisions.matching/athens-may28_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/may28_2_2026",
+    "meetingDate": "2026-05-28",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100010590"
+    ],
+    "administrativeBodyName": "5η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-06-11",
+      "fromDate": "2026-05-28"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmpspu2vs06exg5e7uu14wj0j",
+        "name": "Θέση στάθμευσης ΑΜΕΑ Κονδηλάκη 15",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmpspu2w606eyg5e7ivkqc762",
+        "name": "Θέση στάθμευσης ΑΜΕΑ Θεοτοκοπούλου 21",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmpmboqm408vp13y43n54guw1",
+        "name": "Συζήτηση και λήψη απόφασης για την παραχώρηση ή μη, επιπλέων χώρου στο Άλσος Προμπονά, για την Κατασκευή γηπέδων εδαφοσφαίρισης (σχετ. το με Α.Π.121968-11/05/2026 έγγραφο της κ. Ρωξάνης Μπέη Προέδρου Δ.Σ. Ο.Π.Α.Ν.Δ.Α.)",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpmboqmn08vq13y4gsked6i8",
+        "name": "Συζήτηση και λήψη απόφασης για τη χορήγηση ή μη, παράτασης ωραρίου λειτουργίας μουσικών οργάνων στην επιχείρηση υγειονομικού ενδιαφέροντος «ΕΣΤΙΑΤΟΡΙΟ-ΚΑΦΕΤΕΡΙΑ» της ΠΑΝΤΑΖΗΣ ΑΛΕΞΗΣ & ΣΙΑ Ε.Ε. επί της ΠΑΤΗΣΙΩΝ 353Α (σχετ. η με Α.Π.123057-12/05/2026 αίτηση και το με Α.Π.126432-14/05/2026 έγγραφο του Τμήματος Εξυπηρέτησης Δημοτών & Επαγγελματιών 5ης Δημοτικής Κοινότητας)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmpmboqmy08vr13y4q46ad5be",
+        "name": "Συζήτηση και λήψη απόφασης για τη χορήγηση ή μη, παράτασης ωραρίου λειτουργίας μουσικών οργάνων στην επιχείρηση υγειονομικού ενδιαφέροντος «ΕΣΤΙΑΤΟΡΙΟ» του ARBRI XHAFAJ επί της ΛΕΩΦ. ΓΑΛΑΤΣΙΟΥ 9-11 (σχετ. η με Α.Π.128132-15/05/2026 αίτηση και το με Α.Π.131380-19/05/2026 έγγραφο του Τμήματος Εξυπηρέτησης Δημοτών & Επαγγελματιών 5ης Δημοτικής Κοινότητας)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmpmboqm408vp13y43n54guw1]": {
+      "value": "9ΥΣΜΩ6Μ-49Ζ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpmboqmn08vq13y4gsked6i8]": {
+      "value": "6Α5ΖΩ6Μ-ΚΕ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpmboqmy08vr13y4q46ad5be]": {
+      "value": "91ΛΠΩ6Μ-9ΧΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpspu2vs06exg5e7uu14wj0j]": {
+      "value": "Ρ7Κ4Ω6Μ-ΚΨΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpspu2w606eyg5e7ivkqc762]": {
+      "value": "ΡΝ6ΨΩ6Μ-4ΛΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΨΒΩ1Ω6Μ-794]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvf2q5l00v8d1y2kcp2xvgr"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

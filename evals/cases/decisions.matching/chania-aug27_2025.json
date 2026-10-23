@@ -1,0 +1,340 @@
+{
+  "id": "decisions.matching/chania-aug27_2025",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "chania/aug27_2025",
+    "meetingDate": "2025-08-27",
+    "diavgeiaUid": "6318",
+    "diavgeiaUnitIds": [
+      "83115"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-09-26",
+      "fromDate": "2025-08-27"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqer0q0x01bq4t7gkil9a1lc",
+        "name": "Παραχώρηση χώρου Αθλητικού Κέντρου Σούδας",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqer0q1t01br4t7grwin5tut",
+        "name": "Παραχώρηση στρατοπέδου Μαρκοπούλου για φεστιβάλ Αναίρεσις",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqd3001c009nlqjq4n5vagw0",
+        "name": "Εγκατάσταση συγκεντρωτών ΔΕΥΑΧ",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzxo0092lqjq9thel3x8",
+        "name": "Πρακτική άσκηση σπουδαστών ΣΑΕΚ",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzxw0093lqjqog5bpi0j",
+        "name": "Αναμόρφωση προϋπολογισμού (1η)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzy30094lqjqbf057fxo",
+        "name": "Αναμόρφωση προϋπολογισμού (2η)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzy90095lqjq97hg9i6s",
+        "name": "Παράταση σύμβασης Δημοτικά ATMs",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzyf0096lqjq7nhe7nux",
+        "name": "Αναμόρφωση προϋπολογισμού Λιμενικού Ταμείου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzyl0097lqjqrfsbjwef",
+        "name": "Στέγαση 30ου και 31ου Νηπιαγωγείου",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzyr0098lqjq83gkbwsb",
+        "name": "Χωροθέτηση λαϊκής αγοράς Πέμπτης",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzyz0099lqjqfpuvbaet",
+        "name": "Παράταση δράσης πυροπροστασίας δασών",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzz4009alqjq1qz9h8uy",
+        "name": "Παραχωρήσεις αθλητικών χώρων (Θέματα 9-17)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzza009blqjq2viug548",
+        "name": "Παραχώρηση γηπέδων σε ΕΠΣ 2025-2026",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzzh009clqjq6dnz3x00",
+        "name": "Παραχώρηση χώρου Σούδας σε ΝΟΧ",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzzo009dlqjqmpd77c9o",
+        "name": "Παραχώρηση γηπέδου Βαρυπέτρου",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd2zzzu009elqjq6ndtzjut",
+        "name": "Παραχώρηση γηπέδου Περιβολίων σε ΕΦΑ",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30001009flqjq4bemrcrz",
+        "name": "Παραχώρηση γυμναστηρίου Κλαδισού",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30008009glqjq6ww6zbwv",
+        "name": "Παραχώρηση γηπέδου Αγίας Μαρίνας",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd3000e009hlqjqm6iozjqm",
+        "name": "Παραχώρηση γηπέδου Νεροκούρου",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd3000k009ilqjqwbeim77v",
+        "name": "Παραχώρηση χώρου Σούδας σε ΑΠΣ Άρη",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd3000q009jlqjqfm7bz1ok",
+        "name": "Αποζημίωση ακινήτου Πασακάκι-Χαρακιάς",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd3000w009klqjqr47mwjdp",
+        "name": "Συναυλίες στρατόπεδο Μαρκοπούλου",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30011009llqjqp65vxxsd",
+        "name": "Απαγόρευση στάθμευσης οδού Πολογιώργη",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd3001i009olqjqkdrwm563",
+        "name": "Επέκταση δικτύου οπτικών ινών FTTH",
+        "agendaItemIndex": 23,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqd2zzxo0092lqjq9thel3x8]": {
+      "value": "6594ΩΗ5-Ν49",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzxw0093lqjqog5bpi0j]": {
+      "value": "9ΓΗΔΩΗ5-ΘΙΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzy30094lqjqbf057fxo]": {
+      "value": "ΨΦΠΛΩΗ5-ΤΨ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzy90095lqjq97hg9i6s]": {
+      "value": "ΨΚ3ΣΩΗ5-9ΦΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzyf0096lqjq7nhe7nux]": {
+      "value": "ΡΗΛ6ΩΗ5-ΚΛ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzyl0097lqjqrfsbjwef]": {
+      "value": "9792ΩΗ5-ΝΔ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzyr0098lqjq83gkbwsb]": {
+      "value": "ΨΒΒ5ΩΗ5-7ΙΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzyz0099lqjqfpuvbaet]": {
+      "value": "99ΕΖΩΗ5-ΩΧΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzz4009alqjq1qz9h8uy]": {
+      "value": "ΨΟΧΧΩΗ5-2Χ2",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-01",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtj19cdx0jbhu0rilzuj3cj8"
+    },
+    "link[cmqd2zzza009blqjq2viug548]": {
+      "value": "623ΕΩΗ5-ΛΦΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzzh009clqjq6dnz3x00]": {
+      "value": "6ΔΧ5ΩΗ5-ΜΤ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzzo009dlqjqmpd77c9o]": {
+      "value": "ΨΦΙΤΩΗ5-Η48",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd2zzzu009elqjq6ndtzjut]": {
+      "value": "ΨΓΞΡΩΗ5-ΗΜΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30001009flqjq4bemrcrz]": {
+      "value": "6ΑΟ1ΩΗ5-1Ι3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30008009glqjq6ww6zbwv]": {
+      "value": "96ΝΠΩΗ5-Χ7Α",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd3000e009hlqjqm6iozjqm]": {
+      "value": "ΨΟ70ΩΗ5-ΠΦΘ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd3000k009ilqjqwbeim77v]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqd3000q009jlqjqfm7bz1ok]": {
+      "value": "ΨΘΙΥΩΗ5-2Γ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd3000w009klqjqr47mwjdp]": {
+      "value": "9ΝΕ1ΩΗ5-3ΧΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30011009llqjqp65vxxsd]": {
+      "value": "9ΣΕΟΩΗ5-ΡΒΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd3001c009nlqjq4n5vagw0]": {
+      "value": "ΨΗΔΛΩΗ5-ΖΜ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd3001i009olqjqkdrwm563]": {
+      "value": "9Η0ΕΩΗ5-231",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqer0q0x01bq4t7gkil9a1lc]": {
+      "value": "ΡΨΣΒΩΗ5-ΑΩΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqer0q1t01br4t7grwin5tut]": {
+      "value": "Ψ64ΒΩΗ5-ΧΡ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

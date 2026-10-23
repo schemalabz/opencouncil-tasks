@@ -1,0 +1,155 @@
+{
+  "id": "decisions.extraction/ΨΧΙ0Ω9Ρ-ΜΘΩ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "ΨΧΙ0Ω9Ρ-ΜΘΩ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΧΙ0Ω9Ρ-ΜΘΩ",
+    "city": "vrilissia",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": null,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "arrivalsAlsoReturnedAsPresent",
+        "presidentDroppedFromPresent",
+        "embeddedOtherBodyDecision"
+      ],
+      "namedEdgeCase": "arrivals copied into the present list",
+      "needsReview": false,
+      "reviewNote": "Added 2026-09-18 from the page text: 19 present (incl. the president ΚΑΠΠΑΣ), 10 absent, two arrivals during item 1. The extractor returned the two arrivals inside the present list and dropped ΚΑΠΠΑΣ.",
+      "statedButUnstorable": [
+        "substitution",
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ) προσήλθε κατά τη συζήτηση του 1ου θέματος της ημερήσιας διάταξης"
+          },
+          {
+            "name": "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ προσήλθε κατά τη συζήτηση του 1ου θέματος της ημερήσιας διάταξης"
+          }
+        ],
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 0,
+        "extractionFlaggedIncomplete": false,
+        "verified": "unresolvable"
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΧΡΗΣΤΑΚΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΤΖΙΜΑ ΛΑΜΠΡΙΝΗ ΛΙΛΗ",
+          "ΔΗΜΗΤΡΙΟΥ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΣΤΑΜΑΤΕΛΟΠΟΥΛΟΣ ΝΙΚΗΤΑΣ",
+          "ΜΠΗΤΑΣ ΙΩΑΝΝΗΣ",
+          "ΜΑΝΤΙΝΙΔΟΥ-ΤΣΟΥΒΑΛΟΥ ΣΟΦΙΑ",
+          "ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ)",
+          "ΜΑΡΙΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΠΠΑΣ ΧΡΗΣΤΟΣ",
+          "ΑΝΑΓΝΩΣΤΟΥ ΠΑΝΑΓΙΩΤΗΣ (ΠΑΝΟΣ)",
+          "ΔΗΜΑΡΑΣ ΘΕΟΔΩΡΟΣ- ΕΡΝΕΣΤΟΣ (ΑΚΗΣ)",
+          "ΦΑΡΑΚΛΑΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΒΑΦΕΙΑΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΥΡΙΤΣΗ ΙΩΑΝΝΑ",
+          "ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ)",
+          "ΡΑΠΤΗ ΣΟΦΙΑ",
+          "ΤΣΟΥΤΣΙΑΣ ΙΩΑΝΝΗΣ",
+          "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+          "ΑΡΧΙΜΑΝΔΡΙΤΗΣ ΒΑΣΙΛΕΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ",
+          "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+          "ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+          "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+          "ΚΟΥΤΣΙΩΡΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+          "ΜΑΛΑΚΟΥ ΧΡΙΣΤΙΝΑ",
+          "ΛΙΑΚΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΒΗΤΤΟΣ ΒΑΣΙΛΕΙΟΣ"
+        ],
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Με δεκαοκτώ (18) θετικές ψήφους",
+        "phraseAsExtracted": null,
+        "carriesTally": true,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "vrilissia",
+    "arrivalsAlsoReturnedAsPresent",
+    "presidentDroppedFromPresent",
+    "embeddedOtherBodyDecision"
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "id": "decisions.extraction/ΡΚΠΠΩ6Μ-ΕΦΧ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΡΚΠΠΩ6Μ-ΕΦΧ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΚΠΠΩ6Μ-ΕΦΧ",
+    "city": "athens",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "substitute=yes",
+        "arrival=yes",
+        "changeAnchor=decision_number"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Π.Π.ΧΑΡΛΑΥΤΗΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Τα Τακτικά Μέλη κ.κ. Π.Π.ΧΑΡΛΑΥΤΗΣ και Ε.ΚΟΛΛΑΤΟΣ προσήλθαν κατά τη συζήτηση του 1ου θέματος της ημερήσιας διάταξης (αριθμός πράξης ΔΕ: 1440/2026)"
+          },
+          {
+            "name": "Ε.ΚΟΛΛΑΤΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Τα Τακτικά Μέλη κ.κ. Π.Π.ΧΑΡΛΑΥΤΗΣ και Ε.ΚΟΛΛΑΤΟΣ προσήλθαν κατά τη συζήτηση του 1ου θέματος της ημερήσιας διάταξης (αριθμός πράξης ΔΕ: 1440/2026)"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 942,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΠΡΟΕΔΡΟΣ",
+          "ΤΑΚΤΙΚΟ ΜΕΛΟΣ",
+          "ΑΝΑΠΛΗΡΩΜΑΤΙΚΟ ΜΕΛΟΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Γ.Κ.ΓΙΑΝΝΑΡΟΣ",
+          "Θ.ΓΕΩΡΓΙΑΔΗΣ",
+          "Κ.ΓΙΑΝΝΟΠΟΥΛΟΥ",
+          "Π.Π.ΧΑΡΛΑΥΤΗΣ",
+          "Ε.ΖΩΝΤΗΡΟΥ",
+          "Ε.ΚΟΛΛΑΤΟΣ",
+          "Β.ΜΠΑΡΚΑ"
+        ],
+        "absentMembers": [
+          "Ο.ΔΟΥΡΟΥ",
+          "Ν.ΑΒΡΑΜΙΔΗΣ",
+          "Ε.ΚΑΛΑΜΠΟΚΑΣ"
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "present count disagrees",
+            "verdict": "extraction is right",
+            "note": null
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 29,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 29,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/Δημοτική Επιτροπή",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "substitute=yes",
+    "arrival=yes",
+    "changeAnchor=decision_number"
+  ]
+}

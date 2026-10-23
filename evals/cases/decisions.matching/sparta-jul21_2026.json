@@ -1,0 +1,193 @@
+{
+  "id": "decisions.matching/sparta-jul21_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/jul21_2026",
+    "meetingDate": "2026-07-21",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-08-04",
+      "fromDate": "2026-07-21"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmroxifik0i46tn0q7xwjbkuc",
+        "name": "Προέλεγχος χρηματοοικονομικών καταστάσεων 2023",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifiy0i47tn0q97u6xcix",
+        "name": "Δαπάνες Παγίας Προκαταβολής Κοινοτήτων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifj60i48tn0qsyebp0yf",
+        "name": "Ανάθεση καθαρισμού αύλειων χώρων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifje0i49tn0q1of9w9yo",
+        "name": "Δαπάνες Παγίας Προκαταβολής Σχολείων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifjm0i4atn0qla0t4njw",
+        "name": "Περίπτερα τουριστικής πληροφόρησης",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifjt0i4btn0qsnmne4zt",
+        "name": "Πρόταση στο πρόγραμμα LEADER",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifk20i4ctn0q73l3am6b",
+        "name": "Επανένταξη αδέσποτων ζώων συντροφιάς",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifk90i4dtn0qna2cv4qb",
+        "name": "Τροποποίηση ανάθεσης σε συμβολαιογράφο",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifkf0i4etn0qbgabij0w",
+        "name": "Έγκριση κίνησης οχημάτων Δήμου",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifkn0i4ftn0q2y21jhwr",
+        "name": "Θεατρική παράσταση «ΕΓΩ ΘΑ ΣΑΣ ΤΑ ΠΩ!»",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifl00i4gtn0qb4fxzdhj",
+        "name": "Πολιτιστικές εκδηλώσεις Δ.Ε. Μυστρά",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmroxifld0i4htn0qyt1gqo2u",
+        "name": "Αναμόρφωση προϋπολογισμού Κληροδοτήματος Κωστάκη",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmroxifik0i46tn0q7xwjbkuc]": {
+      "value": "ΡΚ23Ω1Ν-ΘΡ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifiy0i47tn0q97u6xcix]": {
+      "value": "9ΚΟ3Ω1Ν-ΜΟΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifj60i48tn0qsyebp0yf]": {
+      "value": "ΨΕΦ8Ω1Ν-0ΡΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifje0i49tn0q1of9w9yo]": {
+      "value": "9ΒΒΑΩ1Ν-ΤΡ9",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifjm0i4atn0qla0t4njw]": {
+      "value": "9ΖΥΘΩ1Ν-ΜΒΛ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifjt0i4btn0qsnmne4zt]": {
+      "value": "96ΧΦΩ1Ν-ΗΕ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifk20i4ctn0q73l3am6b]": {
+      "value": "9ΧΒΚΩ1Ν-ΛΘΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifk90i4dtn0qna2cv4qb]": {
+      "value": "ΨΞΧΦΩ1Ν-ΣΧΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifkf0i4etn0qbgabij0w]": {
+      "value": "ΨΟΣΓΩ1Ν-24Ω",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifkn0i4ftn0q2y21jhwr]": {
+      "value": "9ΨΩΕΩ1Ν-Ξ5Λ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifl00i4gtn0qb4fxzdhj]": {
+      "value": "ΡΙΦ8Ω1Ν-ΓΞΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmroxifld0i4htn0qyt1gqo2u]": {
+      "value": "9ΒΦΡΩ1Ν-0ΚΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΨΒΞ9Ω1Ν-6Χ1]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1qqy700inu36p00jhwzig"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

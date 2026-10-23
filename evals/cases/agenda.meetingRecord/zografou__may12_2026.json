@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/zografou__may12_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "zografou",
+    "meetingId": "may12_2026",
+    "date": "2026-05-12",
+    "time": "09:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/zografou_may12_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα πραγματοποιηθεί στο Δημαρχείο (3ος όροφος)"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "TAKTIKH ΣΥΝΕΔΡΙΑΣΗ (19η) της ΔΗΜΟΤΙΚΗΣ ΕΠΙΤΡΟΠΗΣ"
+    },
+    "sessionNumber": {
+      "value": 19,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "TAKTIKH ΣΥΝΕΔΡΙΑΣΗ (19η)"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "zografou/Δημοτική Επιτροπή",
+  "tags": [
+    "zografou",
+    "committee"
+  ],
+  "note": "Item 1 is compiling the 2025 financial απολογισμός, but sitting is τακτική."
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "must-not-fire",
+  "input": {
+    "label": "decision-reading",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"meetingDate\":null,\"decisionNumber\":null,\"body\":null,\"notADecision\":true}",
+      "stopReason": "end_turn"
+    }
+  }
+}

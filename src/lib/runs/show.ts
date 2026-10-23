@@ -1,98 +1,86 @@
-import { getLangfuseClient } from '../observability.js';
+import { openArchive, type ArchiveStore } from '../archive/store.js';
+import type { CallRecord } from '../llm/callRecord.js';
+import { summarizeTaskInput } from '../observability.js';
+import { callCostUsd, callsCostUsd } from '../pricing.js';
+import { requireArchivedRun } from './fetch.js';
 
-type Observation = {
-    id: string;
-    type: string;
-    name?: string | null;
-    startTime?: string | Date | null;
-    endTime?: string | Date | null;
-    model?: string | null;
-    parentObservationId?: string | null;
-    usageDetails?: Record<string, number> | null;
-    calculatedTotalCost?: number | null;
-    metadata?: Record<string, unknown> | null;
-    level?: string | null;
-    statusMessage?: string | null;
-};
-
-function duration(start?: string | Date | null, end?: string | Date | null): string {
+function duration(start?: string, end?: string): string {
     if (!start || !end) return 'running';
-    const seconds = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000);
-    return seconds >= 90 ? `${Math.floor(seconds / 60)}m${seconds % 60}s` : `${seconds}s`;
+    const seconds = (new Date(end).getTime() - new Date(start).getTime()) / 1000;
+    if (seconds < 10) return `${seconds.toFixed(1)}s`;
+    const whole = Math.round(seconds);
+    return whole >= 90 ? `${Math.floor(whole / 60)}m${whole % 60}s` : `${whole}s`;
 }
 
-export function formatUsage(usage?: Record<string, number> | null): string {
+const num = (value: unknown): number => (typeof value === 'number' ? value : 0);
+
+/** One line of token counters from an API `usage` object. */
+export function formatUsage(usage?: Record<string, unknown> | null): string {
     if (!usage) return '';
-    const parts = [`${(usage.input ?? 0).toLocaleString()} in`, `${(usage.output ?? 0).toLocaleString()} out`];
-    if (usage.cache_creation_input_tokens) parts.push(`${usage.cache_creation_input_tokens.toLocaleString()} cache-write`);
-    if (usage.cache_read_input_tokens) parts.push(`${usage.cache_read_input_tokens.toLocaleString()} cache-read`);
-    if (usage.web_search_requests) parts.push(`${usage.web_search_requests} searches`);
-    if (usage.web_fetch_requests) parts.push(`${usage.web_fetch_requests} fetches`);
-    if (usage.thinking_tokens) parts.push(`${usage.thinking_tokens.toLocaleString()} thinking`);
+    const serverTools = (usage.server_tool_use ?? {}) as Record<string, unknown>;
+    const outputDetails = (usage.output_tokens_details ?? {}) as Record<string, unknown>;
+    const parts = [`${num(usage.input_tokens).toLocaleString()} in`, `${num(usage.output_tokens).toLocaleString()} out`];
+    const optional: [number, string][] = [
+        [num(usage.cache_creation_input_tokens), 'cache-write'],
+        [num(usage.cache_read_input_tokens), 'cache-read'],
+        [num(serverTools.web_search_requests), 'searches'],
+        [num(serverTools.web_fetch_requests), 'fetches'],
+        [num(outputDetails.thinking_tokens), 'thinking'],
+    ];
+    for (const [count, what] of optional) if (count) parts.push(`${count.toLocaleString()} ${what}`);
     return parts.join(', ');
 }
 
-function formatGeneration(g: Observation, indent: string): string {
-    const cost = g.calculatedTotalCost ? ` | $${g.calculatedTotalCost.toFixed(3)}` : '';
-    const error = g.level === 'ERROR' ? ` ⚠ ${g.statusMessage ?? 'error'}` : '';
-    const batch = (g.metadata as { batchMode?: boolean } | null)?.batchMode ? ' [batch]' : '';
-    const lines = [`${indent}${g.name ?? 'generation'} | ${duration(g.startTime, g.endTime)} | ${g.model ?? '-'}${batch}${cost}${error}`];
-    const usage = formatUsage(g.usageDetails);
+function formatCall(call: CallRecord, indent: string): string {
+    const r = call.response;
+    const tags = [r?.batchMode && '[batch]', r?.replayed ? '[replayed]' : r?.cacheHit && '[cached]'].filter(Boolean).join(' ');
+    const cost = callCostUsd(call);
+    const fields = [
+        call.label ?? call.callId,
+        duration(call.startedAt, call.finishedAt),
+        `${r?.servedModel ?? call.request.model}${tags ? ` ${tags}` : ''}`,
+        ...(cost ? [`$${cost.toFixed(3)}`] : []),
+    ];
+    const error = call.error ? ` ⚠ ${call.error.class}: ${call.error.message}` : '';
+    const lines = [`${indent}${fields.join(' | ')}${error}`];
+    const usage = formatUsage(r?.usage);
     if (usage) lines.push(`${indent}  ${usage}`);
     return lines.join('\n');
 }
 
-/** Print a human-readable tree view of a traced run. */
-export async function showRun(traceId: string): Promise<void> {
-    const client = getLangfuseClient();
-    if (!client) {
-        throw new Error('Langfuse is not configured. Set LANGFUSE_SECRET_KEY/LANGFUSE_PUBLIC_KEY in .env.');
-    }
-    const { data: trace } = await client.fetchTrace(traceId);
-    if (!trace || !('id' in trace)) {
-        throw new Error(`Trace ${traceId} not found: ${JSON.stringify(trace).slice(0, 200)}`);
-    }
+/** Print a human-readable view of an archived run: header, input, output and its calls by phase. */
+export async function showRun(traceId: string, store: ArchiveStore = openArchive()): Promise<void> {
+    const { run, outcome, phases, calls, result } = await requireArchivedRun(traceId, store);
+    const spend = callsCostUsd(calls);
 
-    console.log(`${trace.name}  ${trace.id}`);
-    console.log(`  tags:     ${(trace.tags ?? []).join(', ')}`);
-    console.log(`  session:  ${trace.sessionId ?? '-'}`);
-    console.log(`  started:  ${new Date(trace.timestamp).toISOString()}`);
-    console.log(`  latency:  ${trace.latency ? Math.round(trace.latency) + 's' : '-'} | cost: ${trace.totalCost ? '$' + trace.totalCost.toFixed(3) : '-'}`);
-    console.log(`  input:    ${JSON.stringify(trace.input ?? null).slice(0, 200)}`);
+    console.log(`${run.taskType}  ${run.traceId}`);
+    console.log(`  meeting:  ${run.meeting ?? '-'} | version: ${run.taskVersion ?? '-'} | env: ${run.env}`);
+    console.log(`  started:  ${run.startedAt}`);
+    console.log(`  latency:  ${duration(run.startedAt, outcome.endedAt)} | status: ${outcome.status} | cost: $${spend.usd.toFixed(3)} (${spend.live} live of ${calls.length} calls)`);
+    if (outcome.error) console.log(`  error:    ${outcome.error}`);
+    console.log(`  input:    ${JSON.stringify(summarizeTaskInput(run.input ?? null)).slice(0, 300)}`);
 
-    const output = trace.output as Record<string, unknown> | null;
-    const sizeBytes = (trace.metadata as { resultSizeBytes?: number } | null)?.resultSizeBytes;
-    if (!output) {
-        console.log('  output:   (none — running or completion update lost)');
-    } else if (output.resultTruncated) {
-        console.log(`  output:   truncated (${sizeBytes} bytes) — summary: ${JSON.stringify(output.resultSummary).slice(0, 200)}`);
-    } else {
-        const stats = Object.entries(output)
+    if (result === undefined) {
+        console.log(`  output:   (none${outcome.status === 'success' ? ' archived — results over 20 MB are left out' : ''})`);
+    } else if (result && typeof result === 'object' && !Array.isArray(result)) {
+        const stats = Object.entries(result)
             .map(([key, value]) => Array.isArray(value) ? `${key}[${value.length}]` : key)
             .join(', ');
-        console.log(`  output:   ${stats}${sizeBytes ? ` (${sizeBytes} bytes)` : ''}`);
+        console.log(`  output:   ${stats} (${Buffer.byteLength(JSON.stringify(result)).toLocaleString()} bytes)`);
+    } else {
+        console.log(`  output:   ${JSON.stringify(result).slice(0, 200)}`);
     }
-
-    const observations = ((trace.observations ?? []) as Observation[])
-        .sort((a, b) => String(a.startTime ?? '').localeCompare(String(b.startTime ?? '')));
-    const spans = observations.filter(o => o.type === 'SPAN');
-    const generations = observations.filter(o => o.type === 'GENERATION');
-    const events = observations.filter(o => o.type === 'EVENT');
 
     console.log('');
-    for (const span of spans) {
-        console.log(`▸ ${span.name} (${duration(span.startTime, span.endTime)})`);
-        for (const g of generations.filter(g => g.parentObservationId === span.id)) {
-            console.log(formatGeneration(g, '    '));
+    // Calls name their phase, not a phase instance, so a repeated phase name lists its calls once.
+    const printed = new Set<CallRecord>();
+    for (const phase of phases) {
+        console.log(`▸ ${phase.name} (${duration(phase.startedAt, phase.endedAt)})`);
+        for (const call of calls.filter(c => c.phase === phase.name && !printed.has(c))) {
+            printed.add(call);
+            console.log(formatCall(call, '    '));
         }
     }
-    for (const g of generations.filter(g => !g.parentObservationId)) {
-        console.log(formatGeneration(g, ''));
-    }
-    for (const e of events) {
-        console.log(`⚠ [${e.level ?? 'EVENT'}] ${e.name}: ${e.statusMessage ?? ''}`);
-    }
-    if (observations.length === 0) {
-        console.log('(no observations — task makes no LLM calls, or is still starting)');
-    }
+    for (const call of calls.filter(c => !printed.has(c))) console.log(formatCall(call, ''));
+    if (calls.length === 0) console.log('(no LLM calls)');
 }

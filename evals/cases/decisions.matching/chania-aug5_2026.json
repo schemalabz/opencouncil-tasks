@@ -1,0 +1,185 @@
+{
+  "id": "decisions.matching/chania-aug5_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chania/aug5_2026",
+    "meetingDate": "2026-08-05",
+    "diavgeiaUid": "6318",
+    "diavgeiaUnitIds": [
+      "83115"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-09-04",
+      "fromDate": "2026-08-05"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmshiy9xt02yzzal1ll5g643h",
+        "name": "Ίδρυση τομέα Μηχανολογίας ΕΠΑΛ Ελευθερίου Βενιζέλου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmshiy9ys02z6zal1pl3cejbi",
+        "name": "Παραχώρηση κοινόχρηστου χώρου για εκδήλωση",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cms8wz5qs03xw10mikihwb2xw",
+        "name": "Παραχώρηση στρατοπέδου Μαρκοπούλου για συναυλίες",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5rc03xx10mihkpbs68s",
+        "name": "Μέλη ΔΣ Δημοτικού Γηροκομείου",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5rm03xy10mi88qxoqnw",
+        "name": "Μέλη ΔΣ Λιμενικού Ταμείου",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5rv03xz10miohzirx0d",
+        "name": "Επιτροπές αξιολόγησης περιουσιακών στοιχείων",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5s803y010mi50r3hivj",
+        "name": "Επανεγκατάσταση μισθωτών Δημοτικής Αγοράς",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5sm03y110mix9gql1ft",
+        "name": "Δημοπρασία καταστημάτων Δημοτικής Αγοράς",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5t403y310mi2afipt50",
+        "name": "Ένταξη έργων στο Πενταετές Πρόγραμμα",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5ti03y410mi3v0um8xz",
+        "name": "Παραχώρηση γηπέδου Μοναχής Ελιάς",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5tw03y510mir11qao2j",
+        "name": "Παραχώρηση γηπέδου Νεροκούρου",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cms8wz5u903y610mii1rw9pto",
+        "name": "Παραχώρηση γυμναστηρίου Κλαδισού",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cms8wz5qs03xw10mikihwb2xw]": {
+      "value": "Ψ77ΜΩΗ5-ΠΣΝ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-02",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtk1kbpo0007u36p4jd8kfds"
+    },
+    "link[cms8wz5rc03xx10mihkpbs68s]": {
+      "value": "ΨΣΩ9ΩΗ5-1Σ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5rm03xy10mi88qxoqnw]": {
+      "value": "6Ν5ΑΩΗ5-Φ3Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5rv03xz10miohzirx0d]": {
+      "value": "9ΙΟΓΩΗ5-ΤΛΕ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5s803y010mi50r3hivj]": {
+      "value": "9ΠΑΦΩΗ5-ΣΦΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5sm03y110mix9gql1ft]": {
+      "value": "9ΗΩΞΩΗ5-ΥΓΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5t403y310mi2afipt50]": {
+      "value": "6ΣΧΥΩΗ5-ΚΣΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5ti03y410mi3v0um8xz]": {
+      "value": "ΨΡΛ1ΩΗ5-ΡΚΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5tw03y510mir11qao2j]": {
+      "value": "9ΓΔ3ΩΗ5-ΖΟΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cms8wz5u903y610mii1rw9pto]": {
+      "value": "9ΟΗΥΩΗ5-Α3Η",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmshiy9xt02yzzal1ll5g643h]": {
+      "value": "Ρ6ΒΛΩΗ5-ΣΦ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmshiy9ys02z6zal1pl3cejbi]": {
+      "value": "9ΖΘΟΩΗ5-82Τ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-02",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtk1k5o20004u36pdxtbksn5"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

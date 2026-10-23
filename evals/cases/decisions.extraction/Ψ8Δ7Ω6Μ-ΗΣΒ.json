@@ -1,0 +1,131 @@
+{
+  "id": "decisions.extraction/Ψ8Δ7Ω6Μ-ΗΣΒ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ8Δ7Ω6Μ-ΗΣΒ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ8Δ7Ω6Μ-ΗΣΒ",
+    "city": "athens",
+    "body": "2η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "changeAnchor=decision_number",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Βλάχου Αγορή",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η κα Βλάχου Αγορή αποχώρησε στην πράξη 42/2026."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2894,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 2ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Τσουκάτου Αγγελική",
+          "Τσαλίκη Νερατζούλα",
+          "Μαγείρου Ελένη",
+          "Ζωντήρος Παναγιώτης",
+          "Βλάχου Αγορή",
+          "Ζαχαράκης Μελέτης",
+          "Φωτάκη Κωνσταντινιά",
+          "Πλατανιάς Αθανάσιος",
+          "Ιατρού Δήμητρα",
+          "Σιδέρης Κωνσταντίνος",
+          "Αργυρέλλη Ιωάννα"
+        ],
+        "absentMembers": [
+          "Σακελλαρίου Θεοπίστη",
+          "Κανελλοπούλου Θεοδώρα",
+          "Πολυζώη Ελένη",
+          "Μπάσιος Φώτιος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 17,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 17,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/2η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "changeAnchor=decision_number",
+    "correctedRepost=yes"
+  ]
+}

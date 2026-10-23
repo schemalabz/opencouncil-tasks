@@ -1,0 +1,112 @@
+{
+  "id": "decisions.extraction/ΡΟ9ΖΩ1Ν-ΙΚΗ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "ΡΟ9ΖΩ1Ν-ΙΚΗ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΟ9ΖΩ1Ν-ΙΚΗ",
+    "city": "sparta",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 7,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "advisoryAct=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "advisoryAct"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1139,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 9,
+        "presentMembers": [
+          "Βακαλόπουλος Μιχαήλ",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Παυλής Παναγιώτης",
+          "Κοκκορός Ευστράτιος",
+          "Κουρτσούνης Παναγιώτης"
+        ],
+        "absentMembers": [
+          "Κακούρος Δημοσθένης",
+          "Γκολέμης Αναστάσιος",
+          "Καρμοίρης Ιωάννης",
+          "Τσούκλερης Νικόλαος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 6,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 6,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_and_absent",
+    "advisoryAct=yes"
+  ]
+}

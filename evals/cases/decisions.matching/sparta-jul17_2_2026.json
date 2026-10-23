@@ -1,0 +1,50 @@
+{
+  "id": "decisions.matching/sparta-jul17_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/jul17_2_2026",
+    "meetingDate": "2026-07-17",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-08-18",
+      "fromDate": "2026-07-17"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmroxcqth0i24tn0qkyxwx9lf",
+        "name": "Δαπάνες Δημοτικής Φιλαρμονικής Σπάρτης",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmroxcqth0i24tn0qkyxwx9lf]": {
+      "value": "ΡΡΦΘΩ1Ν-ΡΧ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΖΕ6Ω1Ν-96Ξ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1qr1j00jvu36p604n5hii"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

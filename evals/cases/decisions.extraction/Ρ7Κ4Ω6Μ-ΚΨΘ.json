@@ -1,0 +1,129 @@
+{
+  "id": "decisions.extraction/Ρ7Κ4Ω6Μ-ΚΨΘ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ρ7Κ4Ω6Μ-ΚΨΘ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ7Κ4Ω6Μ-ΚΨΘ",
+    "city": "athens",
+    "body": "5η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "outOfAgenda=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2163,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 5ης ΚΟΙΝΟΤΗΤΑΣ",
+          "ΟΙ ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "ΒΟΛΟΝΑΣΗ ΧΑΡΟΥΛΑ (ΚΟΡΙΝΑ)",
+          "ΠΑΤΣΙΔΗΣ ΧΑΡΑΛΑΜΠΟΣ",
+          "ΒΟΥΛΓΑΡΗ ΑΝΔΡΙΑΝΗ",
+          "ΒΑΤΣΑΚΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΠΟΔΙΣΤΡΙΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΟΜΝΗΝΟΣ ΧΡΗΣΤΟΣ",
+          "ΠΑΠΑΧΡΗΣΤΟΥ ΣΟΦΙΑ",
+          "ΣΤΑΜΟΥ ΣΤΑΥΡΙΑΝΗ",
+          "ΦΙΛΟΣΟΦΟΥ ΣΩΤΗΡΙΑ",
+          "ΒΛΑΧΟΥ ΑΝΝΑ",
+          "ΔΟΜΑΖΟΥ-ΠΑΝΤΕΛΙΔΟΥ ΡΟΔΟΜΑΡΙΑ",
+          "ΚΕΦΑΛΑ ΠΟΛΥΞΕΝΗ"
+        ],
+        "absentMembers": [
+          "ΛΙΓΝΟΣ ΓΕΡΑΣΙΜΟΣ",
+          "ΖΑΧΑΡΟΠΟΥΛΟΥ ΜΑΡΙΑ",
+          "ΠΟΘΗΤΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΧΑΡΑΛΑΜΠΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "page prints no item number; null is the answer"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Εγκρίνεται ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/5η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "outOfAgenda=yes"
+  ]
+}

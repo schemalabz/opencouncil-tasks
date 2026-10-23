@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/ΨΨΝΝΩ9Ρ-ΒΝΘ",
+  "suite": "decisions.reading",
+  "split": "holdout",
+  "input": {
+    "ada": "ΨΨΝΝΩ9Ρ-ΒΝΘ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΨΝΝΩ9Ρ-ΒΝΘ"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτικό Συμβούλιο",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "54/2026",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-05-27",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "vrilissia",
+    "decision"
+  ]
+}

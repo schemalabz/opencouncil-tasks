@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
 import {
     scoreRollCall, scoreAttendanceChanges, scorePerVoteAbsence, scoreVotes, scoreSubject, scoreExcerpt, scoreMayor, scorePresidedBy, scoreDecisionAttendance, tallyScores, scoreDocument,
-    STORED_LABEL_ANCHORS,
-    type ExtractionLabel, type StoredLabelAnchor,
+    type ExtractionLabel,
 } from './extractionScoring.js';
 import type { RawExtractedDecision } from './decisionPdfExtraction.js';
 
@@ -242,27 +240,3 @@ describe('scoreVotes with a structured tally', () => {
     });
 });
 
-// ===========================================================================
-// The fixture is the scorer's only ground truth, and the label type disciplines
-// the TypeScript that reads it, never the JSON on disk. The shapes it forbids
-// are the ones that used to score a weaker comparison in silence: a label
-// saying the page records no change while listing some had its list compared
-// anyway, because no scorer read `stated`.
-// ===========================================================================
-
-describe('fixtures/extraction-golden.json', () => {
-    const labels = (JSON.parse(readFileSync('fixtures/extraction-golden.json', 'utf-8')) as {
-        cities: Array<{ cityId: string; bodies: Array<{ documents?: Array<{ ada: string; extraction: ExtractionLabel }> }> }>;
-    }).cities.flatMap(c => c.bodies.flatMap(b => (b.documents ?? []).map(d => ({ where: `${c.cityId}/${d.ada}`, ac: d.extraction.attendanceChanges }))));
-
-    it('holds the labels the measurement reports on', () => {
-        expect(labels.length).toBeGreaterThan(100);
-    });
-
-    it('carries an anchor and a list exactly when it says the page states a change', () => {
-        const wrong = labels.filter(({ ac }) => ac.stated
-            ? !STORED_LABEL_ANCHORS.includes(ac.anchoredBy as StoredLabelAnchor) || !Array.isArray(ac.asExtracted)
-            : ac.anchoredBy !== undefined || ac.asExtracted !== undefined);
-        expect(wrong.map(l => l.where)).toEqual([]);
-    });
-});

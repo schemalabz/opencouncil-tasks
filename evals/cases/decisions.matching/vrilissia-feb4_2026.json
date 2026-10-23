@@ -1,0 +1,106 @@
+{
+  "id": "decisions.matching/vrilissia-feb4_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/feb4_2026",
+    "meetingDate": "2026-02-04",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-02-18",
+      "fromDate": "2026-02-04"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmpzbp13v04v73dbk49ghmjb5",
+        "name": "Παραχώρηση οδού Αυλίδος για έθιμο Γενίτσαροι και Μπούλες",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmlh9a2zf02l21rnsx72vhys7",
+        "name": "Έγκριση ή μη, της υποβληθείσας έκθεσης εκκαθάρισης της κοινωφελούς επιχείρησης του Δήμου Βριλησσίων με την επωνυμία «ΚΟΙΝΩΦΕΛΗΣ ΕΠΙΧΕΙΡΗΣΗ ΒΡΙΛΗΣΣΙΩΝ (Κ.Ε.Β)» και β) απαλλαγή του εκκαθαριστή ορκωτού λογιστή κ. Απέργη Νικολάου (Α.Μ.ΣΟΕΛ 54581) από κάθε ευθύνη",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlh9a31l02lk1rnswctztjut",
+        "name": "Έγκριση εκμίσθωσης περιπτέρων με δημοπρασία που βρίσκονται στην Πλατεία Αναλήψεως και Πλατεία Ελευθερίας του Δήμου Βριλησσίων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlh9a37p02ll1rnsyjtmlt2c",
+        "name": "Καθορισμός τέλους που αφορά το 30% των παραχωρούμενων θέσεων περιπτέρων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlh9a3an02ma1rnsqd375wt9",
+        "name": "Απομάκρυνση ξερών και επικίνδυνων δένδρων για λόγους ασφαλείας",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmlh9a3cm02ml1rnst4t34rmx",
+        "name": "Συγκρότηση Επιτροπής Συμβιβαστικής Επίλυσης Φορολογικών Διαφορών και Αμφισβητήσεων έτους 2026",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmlh9a2zf02l21rnsx72vhys7]": {
+      "value": "ΡΚΣΕΩ9Ρ-9ΥΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlh9a31l02lk1rnswctztjut]": {
+      "value": "9Ι0ΙΩ9Ρ-ΧΣΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlh9a37p02ll1rnsyjtmlt2c]": {
+      "value": "ΨΛ0ΔΩ9Ρ-0ΡΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlh9a3an02ma1rnsqd375wt9]": {
+      "value": "9ΠΧΔΩ9Ρ-ΧΒΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmlh9a3cm02ml1rnst4t34rmx]": {
+      "value": "Ψ5ΒΨΩ9Ρ-75Ο",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmpzbp13v04v73dbk49ghmjb5]": {
+      "value": "686ΡΩ9Ρ-ΤΚΖ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-03",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmusu7u2n0012dj9sbdfeepyj"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

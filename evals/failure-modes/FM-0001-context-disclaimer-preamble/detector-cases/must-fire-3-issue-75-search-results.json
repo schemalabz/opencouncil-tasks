@@ -1,0 +1,16 @@
+{
+  "kind": "must-fire",
+  "note": "Second opening named in #75",
+  "input": {
+    "label": "subject-context-search:Τροποποίηση παρ. 4 άρθρου 72 Ν. 3852",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "Με βάση τα αποτελέσματα της αναζήτησης, δεν προκύπτουν ειδικές πληροφορίες για τη συγκεκριμένη τροποποίηση. Το άρθρο 72 του ν. 3852/2010 ορίζει τις αρμοδιότητες της οικονομικής επιτροπής.",
+      "stopReason": "end_turn"
+    }
+  }
+}

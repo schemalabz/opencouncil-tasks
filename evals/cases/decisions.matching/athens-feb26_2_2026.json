@@ -1,0 +1,115 @@
+{
+  "id": "decisions.matching/athens-feb26_2_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "athens/feb26_2_2026",
+    "meetingDate": "2026-02-26",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "78341"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-03-12",
+      "fromDate": "2026-02-26"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmm958k6v0c3ppgwx4odmn34p",
+        "name": "Εξελίξεις σχετικά με το ανενεργό εργοτάξιο της Ελληνικό Μετρό στην Πλατεία Εξαρχείων και την παρατεινόμενη περίφραξη του κοινόχρηστου χώρου",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmm958k9e0c6tpgwxuw33xl5y",
+        "name": "Ερώτημα σχετικά με τα σχέδια της δημοτικής αρχής για τις κοινωνικές δομές που απειλούνται με κλείσιμο ή συρρίκνωση",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmm958k7n0c4epgwxs7s8wgcm",
+        "name": "Προστασία και ανάδειξη της ιστορικής μνήμης της πόλης",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmm958k8c0c59pgwxit7gg2uw",
+        "name": "Ανάπλαση περιοχής Κουντουριώτικων και ενέργειες του Δήμου Αθηναίων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmm958k8w0c5ypgwxpkyo9bn2",
+        "name": "Οικόπεδα στον Δήμο Αθηναίων χαρακτηρισμένα ως χώροι για ανέγερση/εγκατάσταση σχολείων ή βρεφονηπιακών σταθμών και ενέργειες του Δήμου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmm958k9w0c7qpgwxqi6z2z4i",
+        "name": "Ερώτημα σχετικά με τη μέριμνα του Δήμου για τους άπορους, άστεγους, ανήμπορους ηλικιωμένους",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmm958k6v0c3ppgwx4odmn34p]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmm958k7n0c4epgwxs7s8wgcm]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmm958k8c0c59pgwxit7gg2uw]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmm958k8w0c5ypgwxpkyo9bn2]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmm958k9e0c6tpgwxuw33xl5y]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmm958k9w0c7qpgwxqi6z2z4i]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[ΨΟ4ΘΩ6Μ-52Θ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtx0thsv0ko8ipx6jugt5mfq"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

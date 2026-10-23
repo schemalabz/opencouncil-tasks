@@ -1,0 +1,126 @@
+{
+  "id": "decisions.extraction/ΨΦ4ΡΩ1Ν-Χ5Η",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΦ4ΡΩ1Ν-Χ5Η",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΦ4ΡΩ1Ν-Χ5Η",
+    "city": "sparta",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_only"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3933,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_only",
+        "headingsAsPrinted": [
+          "ΔΗΜΟΤΙΚΟΙ ΣΥΜΒΟΥΛΟΙ",
+          "ΠΡΟΕΔΡΟΙ ΚΟΙΝΟΤΗΤΩΝ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Δεδεδήμου Γεωργία",
+          "Κουρεμπής Γεώργιος",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Αρβανίτης Δημήτριος",
+          "Βαγιακάκου-Δογαντζή Αδαμαντία",
+          "Βαλιώτης Ευάγγελος",
+          "Γιαννακόπουλος Παντελής",
+          "Γιαννόπουλος Δημήτριος",
+          "Γκολέμης Αναστάσιος",
+          "Δούκας Πέτρος",
+          "Ζαχαράκη Νίκη",
+          "Κακούρος Δημοσθένης",
+          "Κανελλοπούλου Αναστασία",
+          "Καρμοίρης Ιωάννης",
+          "Καρούνος Παναγιώτης",
+          "Κοκκορός Ευστράτιος",
+          "Κουλουβάκος Γεώργιος",
+          "Κουρτσούνης Παναγιώτης",
+          "Κυριακούλιας Δημήτριος",
+          "Λάζαρης Θεοφάνης",
+          "Μαλλιαρός Δημήτριος",
+          "Παυλής Παναγιώτης",
+          "Σελίμος Σπυρίδων",
+          "Σκιαδάς Απόστολος",
+          "Σοφού-Παπαστάθη Ευγενία",
+          "Τζανετέα Αδαμαντία",
+          "Τριτάκης Παναγιώτης",
+          "Τσιρώνη Μαρία",
+          "Τσούκλερης Νικόλαος",
+          "Σούπος Γεώργιος",
+          "Κορίνης Νικόλαος"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_only"
+  ]
+}

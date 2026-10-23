@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/ΨΨΡΙΩΞΠ-1ΗΝ",
+  "suite": "decisions.reading",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΨΡΙΩΞΠ-1ΗΝ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΨΡΙΩΞΠ-1ΗΝ"
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτική Επιτροπή",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "5/2026",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-08-10",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "xylokastro/Δημοτική Επιτροπή",
+  "tags": [
+    "xylokastro",
+    "decision"
+  ]
+}

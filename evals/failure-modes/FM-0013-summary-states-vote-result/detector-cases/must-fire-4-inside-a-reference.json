@@ -1,0 +1,15 @@
+{
+  "kind": "must-fire",
+  "note": "References are stripped before matching: the link text is what readers see",
+  "input": {
+    "label": "batch-processing:1/1",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Ο προϋπολογισμός [εγκρίθηκε ομόφωνα](REF:UTTERANCE:abc123) μετά από σύντομη συζήτηση.\"}]}"
+    }
+  }
+}

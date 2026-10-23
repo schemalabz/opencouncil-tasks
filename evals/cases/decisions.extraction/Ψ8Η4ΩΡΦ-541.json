@@ -1,0 +1,176 @@
+{
+  "id": "decisions.extraction/Ψ8Η4ΩΡΦ-541",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ8Η4ΩΡΦ-541",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ8Η4ΩΡΦ-541",
+    "city": "zografou",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "changeAnchor=agenda_item",
+        "mayorStated=yes",
+        "reordering=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "reordering"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος αποχώρησαν οι Δ.Σ. ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ."
+          },
+          {
+            "name": "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος αποχώρησαν οι Δ.Σ. ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ."
+          },
+          {
+            "name": "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Κατά τη διάρκεια της συζήτησης του 1ου τακτικού θέματος αποχώρησαν οι Δ.Σ. ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ, ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 230,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+          "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ- ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΑΛΕΞΑΝΔΡΗ-ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+          "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+          "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+          "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+          "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+          "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+          "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+          "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+          "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+          "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΒΑΜΒΑΚΑ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 3,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 3,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "changeAnchor=agenda_item",
+    "mayorStated=yes",
+    "reordering=yes"
+  ]
+}

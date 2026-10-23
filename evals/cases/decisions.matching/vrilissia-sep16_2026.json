@@ -1,0 +1,146 @@
+{
+  "id": "decisions.matching/vrilissia-sep16_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "vrilissia/sep16_2026",
+    "meetingDate": "2026-09-16",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "100085541"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-09-30",
+      "fromDate": "2026-09-16"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmu57wdf500qx6qttdxoql7nu",
+        "name": "Εδαφόπλακα ΟΤ 61 - πρακτικό επιτροπής",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmu57wdfq00qy6qttu83xcpb2",
+        "name": "Προμήθεια ειδών καθαριότητας Δήμου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmtwy3y3f0er71etff9lrbjaq",
+        "name": "Έγκριση δαπανών και 2η αποκατάσταση πάγιας προκαταβολής της παρ. 9 του άρθρου 487 του ν. 5314/2026, για το έτος 2026, με υπόλογο - διαχειρίστρια την αν. προϊστάμενη του 5ου νηπιαγωγείου Βριλησσίων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwy3y3q0er81etfsr8di7uk",
+        "name": "Λογιστική τακτοποίηση ποσού 300,00 €, το οποίο καταβλήθηκε από την εταιρεία «Χαλκένκο Μονοπρόσωπη Α.Ε.» και καταχωρίστηκε εκ παραδρομής σε διαφορετικό υπόχρεο",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwy3y3x0er91etf1av7g1d7",
+        "name": "Κατάρτιση όρων διακήρυξης ΗΛΕΚΤΡΟΝΙΚΟΥ ΑΝΟΙΚΤΟΥ ΔΙΑΓΩΝΙΣΜΟΥ «κάτω των ορίων» για την εκτέλεση της δημόσιας σύμβασης με τίτλο: «ΤΑΧΥΔΡΟΜΙΚΕΣ ΥΠΗΡΕΣΙΕΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΩΝ ΥΔΡΕΥΣΗΣ ΚΑΙ ΕΠΙΣΤΟΛΙΚΗΣ ΑΛΛΗΛΟΓΡΑΦΙΑΣ» - Έγκριση τεχνικών προδιαγραφών",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwy3y430era1etf1bpuhsiw",
+        "name": "Συγκρότηση επιτροπής διενέργειας του ηλεκτρονικού ανοικτού διαγωνισμού «κάτω των ορίων» και αξιολόγησης υποβαλλόμενων προσφορών για τη δημόσια σύμβαση με τίτλο: «ΤΑΧΥΔΡΟΜΙΚΕΣ ΥΠΗΡΕΣΙΕΣ ΑΠΟΣΤΟΛΗΣ ΛΟΓΑΡΙΑΣΜΩΝ ΥΔΡΕΥΣΗΣ ΚΑΙ ΕΠΙΣΤΟΛΙΚΗΣ ΑΛΛΗΛΟΓΡΑΦΙΑΣ",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwy3y4o0erc1etfz1ge7uad",
+        "name": "Καθορισμός όρων διακήρυξης δημόσιου πλειοδοτικού διαγωνισμού με σφραγισμένες προσφορές για την εκμίσθωση του κυλικείου του 1ου Λυκείου Βριλησσίων",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwy3y4z0erd1etfm9gww4fr",
+        "name": "Λήψη απόφασης για: α) την άσκηση ή μη αίτησης αναίρεσης στον Άρειο Πάγο κατά της υπ' αριθ. 2071/2026 απόφασης του Μονομελούς Εφετείου Αθηνών και β) την αποδοχή ή μη της υπ' αριθ. πρωτ. 14384/27-7-2026 αίτησης περί καταβολής των επιδικασθέντων ποσών και παραίτησης από τους τόκους",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtwy3y550ere1etforvoi6o0",
+        "name": "Τροποποίηση της με αρ. 69/2026 (ΑΔΑ: 9ΑΟΖΩ9Ρ-Ζ2Χ) Απόφασης Δημοτικού Συμβουλίου περί τροποποίησης οργανισμού εσωτερικής υπηρεσίας δήμου Βριλησσίων, σύμφωνα με τις παρατηρήσεις/προτάσεις της Αποκεντρωμένης Διοίκησης Αττικής",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmtwy3y3f0er71etff9lrbjaq]": {
+      "value": "ΡΛΦΥΩ9Ρ-ΟΒΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwy3y3q0er81etfsr8di7uk]": {
+      "value": "ΡΨΦΤΩ9Ρ-9ΝΞ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:cb4c42bbf7a51434e9cfad1eb65531c35"
+    },
+    "link[cmtwy3y3x0er91etf1av7g1d7]": {
+      "value": "9ΤΘΧΩ9Ρ-ΕΩ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwy3y430era1etf1bpuhsiw]": {
+      "value": "Ψ1ΘΞΩ9Ρ-5ΡΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwy3y4o0erc1etfz1ge7uad]": {
+      "value": "Ψ3Θ6Ω9Ρ-ΞΛΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwy3y4z0erd1etfm9gww4fr]": {
+      "value": "Ε6ΚΗΩ9Ρ-ΨΡΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtwy3y550ere1etforvoi6o0]": {
+      "value": "ΕΚΤΠΩ9Ρ-ΕΑΩ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c6c873b5fa048479e82515ae6ca861002"
+    },
+    "link[cmu57wdf500qx6qttdxoql7nu]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmu57wdfq00qy6qttu83xcpb2]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

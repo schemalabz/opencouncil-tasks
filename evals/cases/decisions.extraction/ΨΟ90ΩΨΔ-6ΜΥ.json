@@ -1,0 +1,100 @@
+{
+  "id": "decisions.extraction/ΨΟ90ΩΨΔ-6ΜΥ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΟ90ΩΨΔ-6ΜΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΟ90ΩΨΔ-6ΜΥ",
+    "city": "argos",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 0,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "secretaryInList=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "presidedBy": {
+      "value": {
+        "name": null,
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [],
+        "absentMembers": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argos",
+    "secretaryInList=yes"
+  ]
+}

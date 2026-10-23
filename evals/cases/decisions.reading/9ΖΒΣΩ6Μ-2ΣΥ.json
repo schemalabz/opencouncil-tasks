@@ -1,0 +1,44 @@
+{
+  "id": "decisions.reading/9ΖΒΣΩ6Μ-2ΣΥ",
+  "suite": "decisions.reading",
+  "split": "dev",
+  "input": {
+    "ada": "9ΖΒΣΩ6Μ-2ΣΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΖΒΣΩ6Μ-2ΣΥ"
+  },
+  "expect": {
+    "body": {
+      "value": "7η Δημοτική Κοινότητα",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "96",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2026-07-29",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "athens/7η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "decision"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/papagos-cholargos__sep15_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "papagos-cholargos",
+    "meetingId": "sep15_2026",
+    "date": "2026-09-15",
+    "time": "10:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/papagos-cholargos_sep15_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "remote",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "θα πραγματοποιηθεί με τηλεδιάσκεψη μέσω e - presence"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Πρόσκληση σε Τακτική συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": 21,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "21η Συνεδρίαση Δημοτικής Επιτροπής"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτική Επιτροπή",
+  "tags": [
+    "papagos-cholargos",
+    "committee"
+  ]
+}

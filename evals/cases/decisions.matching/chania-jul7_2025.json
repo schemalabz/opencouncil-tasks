@@ -1,0 +1,354 @@
+{
+  "id": "decisions.matching/chania-jul7_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chania/jul7_2025",
+    "meetingDate": "2025-07-07",
+    "diavgeiaUid": "6318",
+    "diavgeiaUnitIds": [
+      "100086019"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2025-08-07",
+      "fromDate": "2025-07-07"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqepdjoc00mx6ewx01havgut",
+        "name": "Σίτιση μεταναστών - ενίσχυση κωδικού",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqepdjon00my6ewxir1nurhg",
+        "name": "Προσωπικό ολοήμερου καλοκαιρινού προγράμματος 2025",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqepdjov00mz6ewx30uamgkm",
+        "name": "Προσωπικό παιδικής εξοχής - κατασκήνωσης",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqd30sx9008xnk22u6foosag",
+        "name": "Αναμόρφωση προϋπολογισμού 2025",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sxf008ynk22yh1pznt2",
+        "name": "Αποδοχή χρηματοδοτήσεων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sxk008znk22b535q0oi",
+        "name": "Προέγκριση καταστήματος ζώων συντροφιάς",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sxq0090nk22xsc2zjsf",
+        "name": "Αποζημίωση φθορών οχήματος από λακκούβα",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sxv0091nk22ttryimzu",
+        "name": "Παράταση σύμβασης ΣΔΙΤ σχολείων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sy00092nk22qcsfk8ij",
+        "name": "Παράταση έργου Δημοτικής Αγοράς",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sy50093nk2207gsm8zj",
+        "name": "Παράταση έργου χλοοτάπητα Μοναχής Ελιάς",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sya0094nk22jralvutl",
+        "name": "Ανακεφαλαιωτικός πίνακας σχολικών κτιρίων",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30syg0095nk22u8xqbc7z",
+        "name": "Διαγωνισμός ελαστικών οχημάτων",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30syl0096nk22dio1zlgq",
+        "name": "Προαίρεση φύλαξης καταφυγίου αστέγων",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30syr0097nk22ld5nuy2h",
+        "name": "Επιτροπή σίτισης Μουσικού Σχολείου",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30syv0098nk22zlgm3bez",
+        "name": "Σύνδεση ρεύματος Τριών Ιεραρχών Σούδα",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sz00099nk22s2w858qt",
+        "name": "Μετακίνηση αντιδημάρχων στο Ρέθυμνο",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sz5009ank229lja4n3s",
+        "name": "Τουρνουά καλαθοσφαίρισης 3x3",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30sza009bnk223xqtfj0k",
+        "name": "Τουρνουά σκάκι «Κυδωνία 2025»",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30szf009cnk22j0w5eafz",
+        "name": "Τριήμερο επιστημονικών-αθλητικών εκδηλώσεων",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30szk009dnk22p10qfbnn",
+        "name": "Φεστιβάλ Μίκης Θεοδωράκης",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30szp009enk22sllr09gk",
+        "name": "Παραχώρηση χώρου για εκδήλωση καταστήματος",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30szz009gnk22d77a5i14",
+        "name": "Απαλλαγή οφειλετών από προσαυξήσεις",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30t04009hnk226fclkmsv",
+        "name": "Επιστροφή αχρεωστήτως καταβληθέντων",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30t0c009ink22zb1151xj",
+        "name": "Διαγραφή οφειλών ΚΟΚ (39278/2025)",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd30t0h009jnk227r68c0ei",
+        "name": "Διαγραφή οφειλών ΚΟΚ (40042/2025)",
+        "agendaItemIndex": 23,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqd30sx9008xnk22u6foosag]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqd30sxf008ynk22yh1pznt2]": {
+      "value": "ΨΧΗΧΩΗ5-04Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sxk008znk22b535q0oi]": {
+      "value": "ΨΘ9ΛΩΗ5-ΚΙ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sxq0090nk22xsc2zjsf]": {
+      "value": "Ψ577ΩΗ5-0ΗΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sxv0091nk22ttryimzu]": {
+      "value": "9ΗΒΔΩΗ5-7Μ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sy00092nk22qcsfk8ij]": {
+      "value": "Ρ7ΔΖΩΗ5-2Υ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sy50093nk2207gsm8zj]": {
+      "value": "637ΝΩΗ5-ΗΞ3",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sya0094nk22jralvutl]": {
+      "value": "ΨΝΧΩΩΗ5-ΒΙΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30syg0095nk22u8xqbc7z]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqd30syl0096nk22dio1zlgq]": {
+      "value": "ΨΒΩΖΩΗ5-Φ4Ρ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30syr0097nk22ld5nuy2h]": {
+      "value": "ΨΩΝ8ΩΗ5-7ΤΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30syv0098nk22zlgm3bez]": {
+      "value": "9ΨΜΙΩΗ5-Η0Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sz00099nk22s2w858qt]": {
+      "value": "9ΞΑΦΩΗ5-Ε5Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sz5009ank229lja4n3s]": {
+      "value": "61ΧΦΩΗ5-ΣΞΒ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30sza009bnk223xqtfj0k]": {
+      "value": "9ΧΥΚΩΗ5-Χ7Ψ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30szf009cnk22j0w5eafz]": {
+      "value": "6Τ6ΟΩΗ5-ΞΑ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30szk009dnk22p10qfbnn]": {
+      "value": "Ψ4ΞΘΩΗ5-ΔΨ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30szp009enk22sllr09gk]": {
+      "value": "ΨΒΥΩΩΗ5-ΟΞΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30szz009gnk22d77a5i14]": {
+      "value": "6ΣΚ4ΩΗ5-ΙΘ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30t04009hnk226fclkmsv]": {
+      "value": "6Α4ΞΩΗ5-169",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd30t0c009ink22zb1151xj]": {
+      "value": "61Ν0ΩΗ5-ΚΣΤ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-01",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtj1ae2o0gid9208rjn7x5b4"
+    },
+    "link[cmqd30t0h009jnk227r68c0ei]": {
+      "value": "608ΟΩΗ5-2ΗΠ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-01",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtj1ajyv0jbku0ri4mylpkd8"
+    },
+    "link[cmqepdjoc00mx6ewx01havgut]": {
+      "value": "9ΓΓ9ΩΗ5-ΕΔΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqepdjon00my6ewxir1nurhg]": {
+      "value": "Ρ90ΤΩΗ5-Ξ5Ι",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqepdjov00mz6ewx30uamgkm]": {
+      "value": "9Ρ5ΖΩΗ5-ΝΦΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "chania/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

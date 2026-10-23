@@ -1,0 +1,21 @@
+id: FM-0010
+slug: not_a_decision_with_number
+title: Decision reading says "not a decision" yet carries a decision number or date
+definition: >
+  The decision-reading call answers notADecision: true while also returning a decisionNumber or
+  a meetingDate, which the prompt forbids. normalizeReading silently drops the values, so an
+  inconsistent reading is invisible downstream: either the document is a decision misread as
+  something else, or the model invented identity fields for a non-decision.
+boundary: >
+  Not this mode: notADecision with a body name only; a decision (notADecision false) whose fields
+  are null.
+suite: decisions.reading
+scope: call
+severity: major
+impact: silent
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/notADecisionWithNumber.ts
+decision: monitor
+alert: "any fail per city per week; daily digest"

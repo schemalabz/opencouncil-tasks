@@ -1,0 +1,297 @@
+{
+  "id": "decisions.matching/chania-apr2_2025",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "chania/apr2_2025",
+    "meetingDate": "2025-04-02",
+    "diavgeiaUid": "6318",
+    "diavgeiaUnitIds": [
+      "83115"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2025-05-02",
+      "fromDate": "2025-04-02"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqd33nkc00dznk22yvihwzps",
+        "name": "Καταφύγιο αδέσποτων ζώων Καμπάνι - παρουσίαση μελέτης",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nkz00e2nk2231uhs8os",
+        "name": "Παραχώρηση χώρων για εκδηλώσεις",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqesp4c101fyluihgy0fya4a",
+        "name": "Πρόσβαση οικοδομικών εργασιών πλατεία Κορακιών",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmqd33nis00dtnk22p6q1b9fc",
+        "name": "Οικονομικές καταστάσεις Γηροκομείου 2023",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nj800dunk22lwhbr5jb",
+        "name": "Σύμφωνο συνεργασίας ΕΕΑΕ - μέτρηση ηλεκτρομαγνητικών πεδίων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33njf00dvnk223g1v1bw2",
+        "name": "Τροποποίηση τεχνικού προγράμματος - αναμόρφωση προϋπολογισμού",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33njn00dwnk22q7f52uf9",
+        "name": "Τροποποίηση πίνακα στοχοθεσίας Δήμου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33njt00dxnk22w7u6au7y",
+        "name": "Αναμόρφωση προϋπολογισμού Λιμενικού Ταμείου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nk100dynk22b1upjvft",
+        "name": "Στοχοθεσία Λιμενικού Ταμείου 2025",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nkr00e1nk22vk1v22q3",
+        "name": "Δημοτικό Κοινωνικό Φαρμακείο",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nl600e3nk22l5tnjl0f",
+        "name": "Παραχώρηση γηπέδου Περιβολίων",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nlf00e4nk22oc0g1lw5",
+        "name": "Γυμναστήριο Καμπανίου - πασχαλινό τουρνουά",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nln00e5nk22e9ct3kkr",
+        "name": "Γυμναστήριο Καμπανίου - Α.Γ.Σ Ηρακλής",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nlt00e6nk2202wek3zq",
+        "name": "Γυμναστήριο Κλαδισού - ρυθμική γυμναστική",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nm200e7nk22wc9akd9g",
+        "name": "Σύμβαση αποκομιδής Πεδίου Βολής",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nm900e8nk22p3iqimp2",
+        "name": "Ρύθμιση κυκλοφορίας Σταυρός Ακρωτηρίου",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nmi00e9nk2294l35yyl",
+        "name": "Ρύθμιση κυκλοφορίας οδών Δ.Ε. Χανίων",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nmp00eank2240eow0ar",
+        "name": "Αποκατάσταση νεοκλασικού για Βιβλιοθήκη",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nmw00ebnk229gsbsnom",
+        "name": "Προσκύρωση χώρου Πασακάκι-Χαρακιάς",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqd33nn600ecnk22aumykv1j",
+        "name": "Υψομετρική μελέτη Παρηγοριάς Ν. Κυδωνίας",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqd33nis00dtnk22p6q1b9fc]": {
+      "value": "9ΨΨΛΩΗ5-2Μ8",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nj800dunk22lwhbr5jb]": {
+      "value": "9Ν55ΩΗ5-3Λ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33njf00dvnk223g1v1bw2]": {
+      "value": "6ΤΧΦΩΗ5-ΕΩΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33njn00dwnk22q7f52uf9]": {
+      "value": "6ΑΠΧΩΗ5-ΡΕΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33njt00dxnk22w7u6au7y]": {
+      "value": "9ΞΜΜΩΗ5-Ω3Η",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nk100dynk22b1upjvft]": {
+      "value": "99ΓΥΩΗ5-Γ21",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nkc00dznk22yvihwzps]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqd33nkr00e1nk22vk1v22q3]": {
+      "value": "ΨΥΖ1ΩΗ5-ΨΩΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nkz00e2nk2231uhs8os]": {
+      "value": "Ψ9ΗΩΩΗ5-Γ3Ι",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nl600e3nk22l5tnjl0f]": {
+      "value": "9Ω0ΡΩΗ5-69Χ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nlf00e4nk22oc0g1lw5]": {
+      "value": "95ΥΩΩΗ5-ΟΜΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nln00e5nk22e9ct3kkr]": {
+      "value": "9ΜΗ6ΩΗ5-ΥΤ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nlt00e6nk2202wek3zq]": {
+      "value": "ΨΞΣΘΩΗ5-ΞΙΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nm200e7nk22wc9akd9g]": {
+      "value": "9ΒΗΑΩΗ5-ΑΕ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nm900e8nk22p3iqimp2]": {
+      "value": "Ψ0Φ0ΩΗ5-Μ2Μ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nmi00e9nk2294l35yyl]": {
+      "value": "ΡΠΥ5ΩΗ5-Δ64",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nmp00eank2240eow0ar]": {
+      "value": "9ΥΧ2ΩΗ5-ΞΒΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nmw00ebnk229gsbsnom]": {
+      "value": "61Δ0ΩΗ5-Ψ6Μ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqd33nn600ecnk22aumykv1j]": {
+      "value": "6ΞΕΚΩΗ5-Η14",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqesp4c101fyluihgy0fya4a]": {
+      "value": "ΨΒΡΣΩΗ5-Ε5Η",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΡΡΧΒΩΗ5-ΓΝ5]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtb74b3h027f12ykmiu01vr7"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

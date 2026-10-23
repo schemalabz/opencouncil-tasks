@@ -1,7 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { PDFDocument } from 'pdf-lib';
 import { aiChat, ResultWithUsage, NO_USAGE, addUsage, HAIKU_MODEL } from '../../lib/ai.js';
-import { downloadPdfAsBuffer, extractPdfPages, readCache, writeCache } from './decisionPdfExtraction.js';
+import { downloadPdfAsBuffer, extractPdfPages } from './decisionPdfExtraction.js';
+import { withoutCacheReads } from '../../lib/llm/callPolicy.js';
 
 /**
  * Read a decision document's own statement of which session produced it.
@@ -30,16 +31,6 @@ export interface DecisionReading {
     /** True when the document is not a decision of a deliberative session at all (agenda, invitation, mayoral or service act). */
     notADecision: boolean;
 }
-
-/**
- * Cache key prefix. Bump the version when a prompt or schema change could
- * alter the VALUES of fields we keep — pure field removals don't qualify
- * (cached entries simply carry an ignored extra key).
- *
- * v2 (2026-08-14): ΠΡΑΞΗ number labels, body extraction, not-a-decision
- * classification.
- */
-const READING_CACHE_PREFIX = 'reading-v2-';
 
 /** Page 1 carries the header in every format seen so far; fall back to 3 pages when it does not. */
 const PAGE_ATTEMPTS = [1, 3];
@@ -110,10 +101,7 @@ export async function readDecisionDocument(
     pdfUrl: string,
     opts?: { skipCache?: boolean },
 ): Promise<ResultWithUsage<DecisionReading> & { fromCache: boolean }> {
-    if (!opts?.skipCache) {
-        const cached = readCache<DecisionReading>(pdfUrl, READING_CACHE_PREFIX);
-        if (cached) return { result: cached, usage: { ...NO_USAGE }, fromCache: true };
-    }
+    if (opts?.skipCache) return withoutCacheReads(() => readDecisionDocument(pdfUrl));
 
     const pdfBuffer = await downloadPdfAsBuffer(pdfUrl);
     const srcDoc = await PDFDocument.load(pdfBuffer);
@@ -139,6 +127,7 @@ export async function readDecisionDocument(
             model: HAIKU_MODEL,
             maxTokens: READING_MAX_TOKENS,
             label: 'decision-reading',
+            cache: 'use',
         });
 
         totalUsage = addUsage(totalUsage, usage);
@@ -146,6 +135,6 @@ export async function readDecisionDocument(
         if (reading.meetingDate || reading.notADecision || pages >= totalPages) break;
     }
 
-    writeCache(pdfUrl, reading, READING_CACHE_PREFIX);
-    return { result: reading, usage: totalUsage, fromCache: false };
+    // A cache hit reports no usage, so a reading that cost nothing came entirely from recordings.
+    return { result: reading, usage: totalUsage, fromCache: totalUsage.input_tokens === 0 && totalUsage.output_tokens === 0 };
 }

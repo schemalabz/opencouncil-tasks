@@ -1,0 +1,50 @@
+{
+  "id": "decisions.matching/chalandri-jul2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chalandri/jul2_2026",
+    "meetingDate": "2026-07-02",
+    "diavgeiaUid": "6314",
+    "diavgeiaUnitIds": [
+      "79311"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-07-16",
+      "fromDate": "2026-07-02"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmr0kwe0u0akfw4923ncwy07v",
+        "name": "Εκλογή Προεδρείου και Δημοτικής Επιτροπής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmr0kwe0u0akfw4923ncwy07v]": {
+      "value": "Ψ50ΛΩΗΔ-ΘΞ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9Ε1ΛΩΗΔ-89Ψ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtjylyfg0lsmu0ri4td4yg5q"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

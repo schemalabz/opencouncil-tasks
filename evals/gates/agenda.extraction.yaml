@@ -1,0 +1,17 @@
+# Gate for `eval gate agenda.extraction <runA> <runB>` (spec D7). Omitted keys fall back to the default gate.
+#
+# Only meaningful once human-tier holdout cases exist. Today every case is a recorded run whose
+# expectations are that run's own items at tier `drafted`, which measure change, not correctness,
+# so this gate prints NEEDS_REVIEW, never PASS. Human-edited agenda items and subjects from
+# opencouncil become `imported` expectations (docs/evals.md, "What's needed for gate-grade cases").
+
+# Too few human-backed cases to decide on: NEEDS_REVIEW until at least this many holdout cases carry them.
+minHumanHoldoutCases: 5
+
+# Cases whose majority-over-repeats outcome on an adjudicated/imported holdout item may go from
+# agree to disagree/missing. Any more fails the gate, unless the field's regressions are within noiseFloorPp
+# of its scored units.
+maxHumanHoldoutRegressions: 0
+
+# Largest allowed increase in cost per attempt over run A, in percent.
+maxCostIncreasePct: 10

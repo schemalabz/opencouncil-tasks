@@ -1,0 +1,29 @@
+{
+  "kind": "must-fire",
+  "note": "Mid-description, after a past-tense sentence",
+  "input": {
+    "run": {
+      "traceId": "00000000000000000000000000000000",
+      "taskType": "summarize",
+      "taskVersion": null,
+      "taskId": "t",
+      "meeting": "athens/jun18_2026",
+      "env": "production",
+      "startedAt": "2026-06-23T08:00:00Z",
+      "input": {
+        "date": "2026-06-22"
+      }
+    },
+    "calls": [],
+    "result": {
+      "subjects": [
+        {
+          "id": "s1",
+          "name": "Ελεγχόμενη στάθμευση Μακρυγιάννη",
+          "description": "Η αντιδήμαρχος παρουσίασε το τεχνικό πρόγραμμα. Στη συνεδρίαση θα τεθεί προς ψήφιση η τροποποίησή του.",
+          "context": null
+        }
+      ]
+    }
+  }
+}

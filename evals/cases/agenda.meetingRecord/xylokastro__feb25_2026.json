@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/xylokastro__feb25_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "xylokastro",
+    "meetingId": "feb25_2026",
+    "date": "2026-02-25",
+    "time": "19:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/xylokastro_feb25_2026_agenda_2.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "δια ζώσης στην αίθουσα συνεδριάσεων του Κέντρου Νεότητας Ξυλοκάστρου"
+    },
+    "kind": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "xylokastro/Δημοτικό Συμβούλιο",
+  "tags": [
+    "xylokastro",
+    "council",
+    "multiple-sittings"
+  ],
+  "note": "Two invitations in one file for 25/2/2026: an Ειδική Συνεδρίαση Λογοδοσίας at 19:00 and a regular public sitting (no τακτική word) at 20:00. Both δια ζώσης at the same hall; no session numbers."
+}

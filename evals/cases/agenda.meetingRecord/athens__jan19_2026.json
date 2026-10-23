@@ -1,0 +1,55 @@
+{
+  "id": "agenda.meetingRecord/athens__jan19_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "jan19_2026",
+    "date": "2026-01-26",
+    "time": "18:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/athens_jan19_2026_agenda_8.pdf",
+    "administrativeBody": {
+      "name": "1η Δημοτική Κοινότητα",
+      "type": "community"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "προσέλθετε στο Δημοτικό Κατάστημα της Πρώτης (1ης) Δημοτικής Κοινότητας"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "σε μετ’ αναβολή συνεδρίαση και λήψη απόφασης"
+    },
+    "sessionNumber": {
+      "value": 1,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "1η ΣΥΝΕΔΡΙΑΣΗ (ΑΠΟ ΑΝΑΒΟΛΗ)"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "community"
+  ],
+  "note": "Adjourned (από αναβολή) 1st sitting held 26 Jan; key says jan19 (original date)."
+}

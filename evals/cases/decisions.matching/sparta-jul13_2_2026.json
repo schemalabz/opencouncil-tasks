@@ -1,0 +1,206 @@
+{
+  "id": "decisions.matching/sparta-jul13_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/jul13_2_2026",
+    "meetingDate": "2026-07-13",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-08-14",
+      "fromDate": "2026-07-13"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrdmdg0h03592sjdr68oto4i",
+        "name": "Εκλογή Αντιπροέδρου Δημοτικής Επιτροπής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg19035a2sjdr30ivvhc",
+        "name": "Συναυλία Γιάννη Κότσιρα",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg1o035b2sjdvl9ivh7u",
+        "name": "Υποστήριξη μηχανογραφικών εφαρμογών",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg1x035c2sjd8jxtx5xx",
+        "name": "Πρόσληψη σχολικών καθαριστριών",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg2b035d2sjd85230hev",
+        "name": "Θεατρική παράσταση «Πέρσες» Αισχύλου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg2o035e2sjda1cmyuio",
+        "name": "Αντικατάσταση μέλους επιτροπής προμήθειας",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg33035f2sjdbuq41kjd",
+        "name": "Μελέτη ανάπλασης Κοινότητας Άρνας",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg3j035g2sjda6gbi90k",
+        "name": "Θεατρική παράσταση «Εγώ θα σας τα πω!»",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg41035h2sjdcycazx13",
+        "name": "Θέση στάθμευσης ΑΜΕΑ οδός Ατρειδών",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg4d035i2sjdgnjrg6xn",
+        "name": "Αποδοχή δωρεάς από λέσχη Lions",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg4n035j2sjd4wos0rxb",
+        "name": "Τροποποίηση σύμβασης στολών Δημοτικής Αστυνομίας",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg4w035k2sjdoyjk4csv",
+        "name": "Επιτροπή πολιτιστικών-αθλητικών εκδηλώσεων",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrdmdg55035l2sjdfnpbg8di",
+        "name": "Έγκριση κίνησης οχημάτων Δήμου",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrdmdg0h03592sjdr68oto4i]": {
+      "value": "97ΔΑΩ1Ν-ΕΑΥ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg19035a2sjdr30ivvhc]": {
+      "value": "6Ν6ΥΩ1Ν-ΟΘΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg1o035b2sjdvl9ivh7u]": {
+      "value": "Ψ6ΦΓΩ1Ν-ΙΞΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg1x035c2sjd8jxtx5xx]": {
+      "value": "Ρ61ΨΩ1Ν-ΖΩ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg2b035d2sjd85230hev]": {
+      "value": "ΡΠΑΜΩ1Ν-6ΔΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg2o035e2sjda1cmyuio]": {
+      "value": "6ΜΣΖΩ1Ν-ΠΕΡ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg33035f2sjdbuq41kjd]": {
+      "value": "94ΩΥΩ1Ν-ΒΜ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg3j035g2sjda6gbi90k]": {
+      "value": "91ΔΗΩ1Ν-Ν7Υ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg41035h2sjdcycazx13]": {
+      "value": "ΡΡΑ3Ω1Ν-9ΒΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg4d035i2sjdgnjrg6xn]": {
+      "value": "Ψ70ΒΩ1Ν-Μ9Σ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg4n035j2sjd4wos0rxb]": {
+      "value": "ΨΤΘΗΩ1Ν-Π3Μ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg4w035k2sjdoyjk4csv]": {
+      "value": "ΨΣ22Ω1Ν-9ΕΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrdmdg55035l2sjdfnpbg8di]": {
+      "value": "ΨΜΕΤΩ1Ν-ΑΤ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΨΚΗ4Ω1Ν-ΑΥ0]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1r1xo00puu36p7dwe6jhq"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

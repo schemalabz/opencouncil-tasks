@@ -1,0 +1,102 @@
+{
+  "id": "decisions.matching/sparta-jul14_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/jul14_2026",
+    "meetingDate": "2026-07-14",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-07-28",
+      "fromDate": "2026-07-14"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmrexeq9m05qq2sjd483g75ia",
+        "name": "Κυκλοφοριακή μελέτη ανάπλασης Σπάρτης",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrexeqa205qr2sjdipfxdn7c",
+        "name": "Παραλαβή έργου συντήρησης οδών",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrexeqaa05qs2sjdcgqiun50",
+        "name": "Δαπάνες σχολικών μονάδων 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrexeqan05qt2sjd8bznqmrl",
+        "name": "Κληροδότημα Ασημακόπουλου προς εκκλησία Αμυκλών",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmrexeqb105qu2sjdsr3y4l5c",
+        "name": "Κληροδότημα Μοσχοβίτη προς εκκλησία Λογγάστρας",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmrexeq9m05qq2sjd483g75ia]": {
+      "value": "9ΡΧ5Ω1Ν-4ΚΖ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrexeqa205qr2sjdipfxdn7c]": {
+      "value": "9ΡΝΟΩ1Ν-9Λ5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrexeqaa05qs2sjdcgqiun50]": {
+      "value": "Ρ6ΜΤΩ1Ν-Δ01",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrexeqan05qt2sjd8bznqmrl]": {
+      "value": "ΨΜΧΘΩ1Ν-3ΨΞ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmrexeqb105qu2sjdsr3y4l5c]": {
+      "value": "ΨΔΣΑΩ1Ν-0ΣΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΨΗΥΔΩ1Ν-ΦΓΚ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1r1vp00p4u36pu6u4jjza"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

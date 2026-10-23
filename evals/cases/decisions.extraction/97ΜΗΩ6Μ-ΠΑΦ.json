@@ -1,0 +1,206 @@
+{
+  "id": "decisions.extraction/97ΜΗΩ6Μ-ΠΑΦ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "97ΜΗΩ6Μ-ΠΑΦ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/97ΜΗΩ6Μ-ΠΑΦ",
+    "city": "athens",
+    "body": "4η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "changeAnchor=decision_number",
+        "namedVoters=all",
+        "outOfAgenda=yes",
+        "departure=yes",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "ΚΟΛΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΙΟΣ",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 14,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο κ. Κολλιόπουλος Διονύσιος αποχώρησε στην πράξη 14/2026."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2750,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 4ΗΣ ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "ΑΡΒΑΝΙΤΗ ΕΥΑΝΘΙΑ",
+          "ΑΡΒΑΝΙΤΗΣ ΣΠΥΡΙΔΩΝ",
+          "ΓΙΑΝΝΟΠΟΥΛΟΥ ΓΕΩΡΓΙΑ",
+          "ΚΑΡΥΔΑΣ ΔΗΜΗΤΡΙΟΣ-ΕΥΑΓΓΕΛΟΣ",
+          "ΚΕΛΕΠΟΥΡΗ ΑΝΑΣΤΑΣΙΑ (ΝΑΤΑΣΑ)",
+          "ΚΟΛΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΙΟΣ",
+          "ΛΟΚΑ ΜΑΡΙΑ",
+          "ΜΑΡΚΟΥΙΖΟΣ ΗΡΑΚΛΗΣ",
+          "ΜΗΤΡΟΠΟΥΛΟΥ-ΚΑΤΣΙΚΗ ΓΕΡΑΣΙΜΟΥΛΑ (ΜΙΝΑ)",
+          "ΠΑΝΟΠΟΥΛΟΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΦΡΑΓΚΙΟΥΔΑΚΗ-ΚΩΝΣΤΑΝΤΑΚΗ ΚΥΡΙΑΚΗ",
+          "ΨΗΜΜΕΝΟΥ ΓΙΑΝΝΟΥΛΑ (ΓΙΑΝΝΑ)"
+        ],
+        "absentMembers": [
+          "ΚΑΛΛΙΤΣΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΜΟΝΑΣΤΗΡΙΩΤΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "survey is right",
+            "note": "the text actually say that this is the first out of agenda item"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "page says first out-of-agenda item; the survey missed the OA ordinal, extraction had it"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΒΑΡΔΗ ΠΟΛΥΞΕΝΗ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΡΒΑΝΙΤΗ ΕΥΑΝΘΙΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΡΒΑΝΙΤΗΣ ΣΠΥΡΙΔΩΝ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΓΙΑΝΝΟΠΟΥΛΟΥ ΓΕΩΡΓΙΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΑΡΥΔΑΣ ΔΗΜΗΤΡΙΟΣ-ΕΥΑΓΓΕΛΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΕΛΕΠΟΥΡΗ ΑΝΑΣΤΑΣΙΑ (ΝΑΤΑΣΑ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΟΛΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΙΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΛΟΚΑ ΜΑΡΙΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΗΤΡΟΠΟΥΛΟΥ-ΚΑΤΣΙΚΗ ΓΕΡΑΣΙΜΟΥΛΑ (ΜΙΝΑ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΠΑΝΟΠΟΥΛΟΣ ΑΠΟΣΤΟΛΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΦΡΑΓΚΙΟΥΔΑΚΗ-ΚΩΝΣΤΑΝΤΑΚΗ ΚΥΡΙΑΚΗ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΨΗΜΜΕΝΟΥ ΓΙΑΝΝΟΥΛΑ (ΓΙΑΝΝΑ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΑΡΚΟΥΙΖΟΣ ΗΡΑΚΛΗΣ",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "ΥΠΕΡ ψήφισαν η Πρόεδρος κα Βαρδή Πολυξένη και οι κ.κ. Σύμβουλοι: Αρβανίτη Ευανθία, Αρβανίτης Σπυρίδων, Γιαννοπούλου Γεωργία, Καρύδας Δημήτριος-Ευάγγελος, Κελεπούρη Αναστασία (Νατάσα), Κολλιόπουλος Διονύσιος, Λόκα Μαρία, Μητροπούλου-Κατσίκη Γερασιμούλα (Μίνα), Πανόπουλος Απόστολος, Φραγκιουδάκη-Κωνσταντάκη Κυριακή, Ψημμένου Γιαννούλα (Γιάννα)\n\nΑΠΟΧΗ ψήφισε ο κος Μαρκουϊζος Ηρακλής",
+          "ada": "97ΜΗΩ6Μ-ΠΑΦ",
+          "page": 2,
+          "adjudicatedAt": "2026-09-18T14:22:26.651Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-18",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/4η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "changeAnchor=decision_number",
+    "namedVoters=all",
+    "outOfAgenda=yes",
+    "departure=yes",
+    "declaration=yes"
+  ]
+}

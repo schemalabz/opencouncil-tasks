@@ -1,0 +1,219 @@
+{
+  "id": "decisions.matching/sparta-may6_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/may6_2026",
+    "meetingDate": "2026-05-06",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-05-20",
+      "fromDate": "2026-05-06"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmoli6ypa00fohmdqipq5gxtt",
+        "name": "Παράταση σύμβασης προμήθειας χρωμάτων",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6ypr00fphmdqclfrminl",
+        "name": "Μεταφορά πίστωσης Κέντρου Κοινότητας",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6ypy00fqhmdqojgx1ibh",
+        "name": "Μεταφορά χρημάτων σε εμπορικό λογαριασμό",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yq500frhmdq0bl6593q",
+        "name": "Ανάθεση σύνταξης πληρεξουσίου",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yqb00fshmdqczqa80n3",
+        "name": "Ανατύπωση τουριστικού χάρτη Δήμου",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yqh00fthmdqyke2phrw",
+        "name": "Διαφήμιση στο ATHINORAMA.GR",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yqo00fuhmdq7tvbgw1z",
+        "name": "Διαφήμιση στο ΙΟΝΙΑΝ TV",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yqw00fvhmdqvkddykcw",
+        "name": "Διαφήμιση στο LACONIA MAGAZINE",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yr400fwhmdq5eecp0zv",
+        "name": "Διαφήμιση στο TOURIST GUIDE OF GREECE",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yrb00fxhmdq4jqiig07",
+        "name": "Διαφήμιση στο TRAVELSTYLE",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yrj00fyhmdqd8k634j0",
+        "name": "Μεταφορά ογκωδών απορριμμάτων",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yrq00fzhmdqdm9b4m3j",
+        "name": "Κάδοι συλλογής βρώσιμων λιπών",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6yrw00g0hmdqdo4jonr8",
+        "name": "Έγκριση κίνησης δημοτικών οχημάτων",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmoli6ys300g1hmdqge1zo53e",
+        "name": "Δαπάνες παγίας προκαταβολής σχολείων",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmoli6ypa00fohmdqipq5gxtt]": {
+      "value": "6Α48Ω1Ν-6Φ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6ypr00fphmdqclfrminl]": {
+      "value": "65ΕΚΩ1Ν-ΖΞ6",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6ypy00fqhmdqojgx1ibh]": {
+      "value": "Ρ6ΚΨΩ1Ν-ΗΧΗ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yq500frhmdq0bl6593q]": {
+      "value": "92ΓΣΩ1Ν-Κ5Φ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yqb00fshmdqczqa80n3]": {
+      "value": "ΨΒΗ4Ω1Ν-ΕΧ2",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yqh00fthmdqyke2phrw]": {
+      "value": "68Χ7Ω1Ν-ΝΕΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yqo00fuhmdq7tvbgw1z]": {
+      "value": "Ψ57ΜΩ1Ν-ΥΤΝ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yqw00fvhmdqvkddykcw]": {
+      "value": "Ρ7Ι9Ω1Ν-ΜΣ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yr400fwhmdq5eecp0zv]": {
+      "value": "ΨΑΝΘΩ1Ν-ΡΧ4",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yrb00fxhmdq4jqiig07]": {
+      "value": "6ΤΟ9Ω1Ν-15Θ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yrj00fyhmdqd8k634j0]": {
+      "value": "Ψ228Ω1Ν-Δ0Ξ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yrq00fzhmdqdm9b4m3j]": {
+      "value": "9ΡΥ9Ω1Ν-ΛΔΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6yrw00g0hmdqdo4jonr8]": {
+      "value": "92ΥΩΩ1Ν-8Ο5",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmoli6ys300g1hmdqge1zo53e]": {
+      "value": "9ΡΘ2Ω1Ν-Κ7Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[9ΤΘ3Ω1Ν-94Χ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1tmu502alu36pgvqnivwn"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "id": "decisions.matching/chalandri-sep10_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "chalandri/sep10_2026",
+    "meetingDate": "2026-09-10",
+    "diavgeiaUid": "6314",
+    "diavgeiaUnitIds": [
+      "100084212"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-09-24",
+      "fromDate": "2026-09-10"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmtvrbbia065sipx6zpgwpg34",
+        "name": "Οπτικοακουστικός εξοπλισμός Φεστιβάλ Ρεματιάς",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmtvrbbj1065tipx6ha8hd6yp",
+        "name": "Άρση απαλλοτρίωσης φυτωρίου Εθνικής Αντιστάσεως",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmtvrbbkb0664ipx6pzhzmr7f",
+        "name": "Γνωμοδότηση για ένδικο μέσο υπόθεσης ΔΕΠΑΧ",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      },
+      {
+        "subjectId": "cmtmw8ukx0hyu7xm460pn5bi3",
+        "name": "Εξειδίκευση πίστωσης ποσού για την ετήσια συνδρομή του Δήμου στον οργανισμό GEA για χρήση ηχογραφημένης μουσικής",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8ulo0hyv7xm4eligy1bp",
+        "name": "Εξειδίκευση πίστωσης για την υπηρεσία με τίτλο: «Χρονομέτρηση – Μηχανογράφηση του 13ου Αγώνα Δρόμου Ρεματιάς 2026»",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8um80hyw7xm4vjwy435q",
+        "name": "Εξειδίκευση πίστωσης ποσού για συνδιοργάνωση μουσικής συναυλίας του Δήμου μας με τον Ιερό Ναό Αγίου Αντωνίου Χαλανδρίου – Βριλησσίων, με ελεύθερη είσοδο για το κοινό",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8umh0hyx7xm42hewtysp",
+        "name": "Ακύρωση της υπ΄αρ. 430/2026 απόφασης της Δ.Ε. και έκδοση νέας περί «Εξειδίκευσης πίστωσης για την υπηρεσία Παροχή υπηρεσιών Έκδοσης και Διαχείρισης Ηλεκτρονικών Προπληρωμένων Καρτών»",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8ump0hyy7xm4uarhcdhe",
+        "name": "Σύνταξη κατάστασης απόρων για οικονομικό βοήθημα",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8un20hyz7xm4zry6b4b1",
+        "name": "Έγκριση πρακτικού Γνωμοδοτικού Οργάνου, για την άρτια διεξαγωγή της υπηρεσίας με τίτλο: Παροχή υπηρεσιών για τον σχεδιασμό, την παραγωγή, την εγκατάσταση και την υλοποίηση της έκθεσης φωτογραφίας και site-specific εικαστικής εγκατάστασης \"The Egg\" στο Κτίριο Νόμπελ του Δήμου Χαλανδρίου, από 24.09.20216 – 15.11.2026, με ελεύθερη είσοδο για το κοινό",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8una0hz07xm4685y16sw",
+        "name": "Έγκριση υποβολής πρότασης συγχρηματοδότησης του Δήμου Χαλανδρίου στο ευρωπαϊκό πρόγραμμα GRETA (Green Regional Ecosystem for Textile Circularity through Innovative Collection for Sorting, Reuse and Repair Actions) στο πλαίσιο της πρόσκλησης HORIZON-CL6-2026-01-CIRCBIO-04",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8unh0hz17xm4p2ypu6at",
+        "name": "Τροποποίηση της σύνθεσης της \"Επιτροπής Παρακολούθησης και Παραλαβής προμηθειών, Δ/νσης Προγραμματισμού, Οργάνωσης και Πληροφορικής, για το έτος 2026\" και της \"Επιτροπής Παραλαβής παροχής γενικών υπηρεσιών, Δ/νσης Προγραμματισμού, Οργάνωσης και Πληροφορικής, για το έτος 2026\"",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8unp0hz27xm4n6k5nj83",
+        "name": "Παροχή πληρεξουσιότητας στη δικηγόρο Αθηνών Μαρία-Ιωάννα Κ. Διαμαντή (ΑΜΔΣΑ 32279), όπως γνωμοδοτήσει επί του υπ' αρ. πρωτ. 25864/2026 αιτήματος για αλλαγή επωνύμου κατόπιν του υπ' αρ. πρωτ. 28673/2-9-2026 αιτήματος του Τμήματος Δημοτικής και Αστικής Κατάστασης",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmtmw8unx0hz37xm4jg68mpby",
+        "name": "Έγκριση της υπ' αρ. 1042/2026 απόφασης Δημάρχου (Παροχή εντολής και πληρεξουσιότητας στον δικηγόρο Αθηνών Πολύδωρο Τακόπουλο, με ΑΜΔΣΑ 13806), όπως εκπροσωπήσει τον Δήμο Χαλανδρίου ενώπιον του Προέδρου Υπηρεσίας του Μονομελούς Πρωτοδικείου Αθηνών (διαδικασία ασφαλιστικών μέτρων) στη δικάσιμο της 4/9/2026 κατά την εκδίκαση της από 3/9/2026 με ΓΑΚ 185061/2026 και ΕΑΚ 12546/2026 μη αυτοτελούς προσωρινής διαταγής πέντε συμβασιούχων με ειδικότητα ΥΕ Συνοδών Απορριμματοφόρων κατά του Δήμου Χαλανδρίου",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmtmw8ukx0hyu7xm460pn5bi3]": {
+      "value": "ΡΡΠΡΩΗΔ-5ΔΧ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8ulo0hyv7xm4eligy1bp]": {
+      "value": "ΨΔΑΧΩΗΔ-Γ3Φ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8um80hyw7xm4vjwy435q]": {
+      "value": "9Χ88ΩΗΔ-Ε56",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8umh0hyx7xm42hewtysp]": {
+      "value": "9Ω7ΑΩΗΔ-ΠΔ0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8ump0hyy7xm4uarhcdhe]": {
+      "value": "ΨΚΨΓΩΗΔ-ΥΩΣ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8un20hyz7xm4zry6b4b1]": {
+      "value": "Ψ4ΜΝΩΗΔ-ΥΞΓ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8una0hz07xm4685y16sw]": {
+      "value": "9ΜΤΞΩΗΔ-ΕΣ7",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8unh0hz17xm4p2ypu6at]": {
+      "value": "9Ζ3ΒΩΗΔ-ΧΡΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8unp0hz27xm4n6k5nj83]": {
+      "value": "91ΥΝΩΗΔ-Β1Π",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtmw8unx0hz37xm4jg68mpby]": {
+      "value": "99ΑΙΩΗΔ-Ψ1Λ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtvrbbia065sipx6zpgwpg34]": {
+      "value": "9ΜΧΧΩΗΔ-ΤΣΓ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-26",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmui2u51b0zu7wyspicysjxlf"
+    },
+    "link[cmtvrbbj1065tipx6ha8hd6yp]": {
+      "value": "9Λ2ΦΩΗΔ-49Χ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmtvrbbkb0664ipx6pzhzmr7f]": {
+      "value": "Ψ5ΜΔΩΗΔ-6ΥΟ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "chalandri/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

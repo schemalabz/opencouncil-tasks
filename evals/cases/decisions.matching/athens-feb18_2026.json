@@ -1,0 +1,383 @@
+{
+  "id": "decisions.matching/athens-feb18_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/feb18_2026",
+    "meetingDate": "2026-02-18",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085601"
+    ],
+    "administrativeBodyName": "3η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-03-05",
+      "fromDate": "2026-02-18"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmly8ffin02vomz0zxpzmvudv",
+        "name": "Ενημέρωση και συζήτηση με τον Αντιδήμαρχο Περιβάλλοντος και Πρασίνου του Δήμου Αθηναίων κ. Γεώργιο Αποστολόπουλο του Παναγιώτη",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffk002x1mz0zac0660t4",
+        "name": "Παραχώρηση ή μη θέσης στάθμευσης για το με αρ. κυκλοφορίας ΙΚΒ 8597 όχημα ατόμου με αναπηρία, στην οδό Πλάτωνος 15. (Σχετ.: το με Α.Π. 14876/20-01-2026 έγγραφο του Τμήματος Βιώσιμης Κινητικότητας της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffkc02x2mz0z33m4xkt4",
+        "name": "Τροποποίηση της με αριθμό 03/28-01-2026 πράξης της 3ης Δημοτικής Κοινότητας σχετικά με το θέμα: \"την παραχώρηση μιας (1) θέσης στάθμευσης για οχήματα τελετών, έμπροσθεν του Ιερού Ναού Αγίας Φιλοθέης και των γραφείων της Ιεράς Αρχιεπισκοπής των Γνησίων Ορθοδόξων Χριστιανών Ελλάδας επί της οδού Κλειδήμου 6...\". (Σχετ.: το με Α.Π. 34893 - 06/02/2026 έγγραφο του Τμήματος Βιώσιμης Κινητικότητας της Διεύθυνσης Σχεδίου Πόλεως και Αστικού Περιβάλλοντος)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffkx02xbmz0zct73r5av",
+        "name": "«ΚΕΝΤΡΟ ΔΙΑΣΚΕΔΑΣΗΣ ΜΕ ΣΥΓΚΡΟΤΗΣΗ ΕΣΤΙΑΤΟΡΙΟΥ - ΜΠΑΡ», στην επωνυμία «ROYAL ENTERTAINMENT ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.», στην οδό ΙΕΡΑ ΟΔΟ 11-13-15. (Σχετ. η με Α.Π. 31984/04-02-2026 αίτηση)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffla02xcmz0zun0a66lr",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ - ΣΝΑΚ ΜΠΑΡ - ΕΣΤΙΑΤΟΡΙΟ\", με την επωνυμία \"ΑΓΟΡΟΠΟΥΛΟΥ ΣΩΤΗΡΙΑ\", στην οδό ΜΕΓΑΛΟΥ ΑΛΕΞΑΝΔΡΟΥ 109-111. (Σχετ.: η με Α.Π. 13554/19-01-2026 αίτηση)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fflu02xdmz0z3tre8191",
+        "name": "\"ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"Ξ ΝΑΘΑΝΑΗΛΙΔΗΣ ΚΑΙ ΣΙΑ ΕΕ\", στην οδό ΚΥΔΑΝΤΙΔΩΝ 21. (Σχετ.: η με Α.Π. 14695/19-01-2026 αίτηση)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffmb02xemz0zk4cy0qt9",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ\", με την επωνυμία \"BLUE BAMBOO ΕΤΕΡΟΡΡΥΘΜΗ ΕΤΑΙΡΕΙΑ\", στην οδό ΚΥΔΑΝΤΙΔΩΝ 24. (Σχετ.: η με Α.Π. 14699/19-01-2026 αίτηση)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffoz02xfmz0z1rnx0sbf",
+        "name": "\"ΠΙΤΣΑΡΙΑ - ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"ΦΡΑΓΚΟΣ ΣΠΗΛΙΟΣ - ΝΙΑΣΣΟΥ ΒΑΣΙΛΚΗ Ο.Ε.\", στην οδό ΠΕΡΣΕΦΟΝΗΣ 7. (Σχετ.: η με Α.Π. 12040/16-01-2026 αίτηση)",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffrm02xgmz0z0oknzr37",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ - ΜΠΑΡ - ΑΝΑΨΥΚΤΗΡΙΟ\", με την επωνυμία \"Κ. ΚΕΡΑΣΙΩΤΗΣ - Β. ΡΑΠΕΛΛΑ ΚΑΙ ΣΙΑ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ\", στην οδό ΛΕΩΦΟΡΟΣ ΚΩΝΣΤΑΝΤΙΝΟΥΠΟΛΕΩΣ 121. (Σχετ.: η με Α.Π. 19028/23-01-2026 αίτηση)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffs102xhmz0zjc3nisqx",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ – ΕΣΤΙΑΤΟΡΙΟ (ΧΩΡΙΣ ΖΩΝΤΑΝΗ ΜΟΥΣΙΚΗ)\", με την επωνυμία \"WOODEN BIKE CAFE ΕΕ\", στην οδό ΤΡΙΠΤΟΛΕΜΟΥ 26. (Σχετ.: η με Α.Π. 21142/26-01-2026 αίτηση)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffuo02ximz0za138il8r",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ – ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"ΑΛΕΣΤΑ ΧΡΙΣΤΙΝΑ\", στην οδό ΣΩΦΡΟΝΙΟΥ 4. (Σχετ.: η με Α.Π. 23670/28-01-2026 αίτηση)",
+        "agendaItemIndex": 11,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8ffxl02xjmz0zvzo0rb3b",
+        "name": "\" ΕΣΤΙΑΤΟΡΙΟ – ΣΝΑΚ ΜΠΑΡ - ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"LLANAJ ALBERT\", στην οδό ΑΙΓΑΛΕΩ 35. (Σχετ.: η με Α.Π. 23681/28-01-2026 αίτηση)",
+        "agendaItemIndex": 12,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg0502xkmz0zkdt2obp8",
+        "name": "\"ΚΑΦΕΝΕΙΟ – ΜΑΓΕΙΡΕΙΟ (ΠΑΡΑΔΟΣΙΑΚΟΥ ΤΥΠΟΥ)\", με την επωνυμία \"ΚΕΡΑΜΕΙΚΟΣ ΕΣΤΙΑΤΟΡΙΑ Ι.Κ.Ε.\", στην οδό ΠΑΡΑΜΥΘΙΑΣ 13 & ΣΑΛΑΜΙΝΟΣ. (Σχετ.: η με Α.Π. 23645/28-01-2026 αίτηση)",
+        "agendaItemIndex": 13,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg0f02xlmz0zepr8wcgo",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ\", με την επωνυμία \"ΤΖΑΒΕΛΑ ΑΦΟΙ ΕΕ\", στην οδό ΙΟΛΑΟΥ 29 & ΔΕΞΑΜΕΝΗΣ 1. (Σχετ.: η με Α.Π. 24217/28-01-2026 αίτηση)",
+        "agendaItemIndex": 14,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg0q02xmmz0zhkarhzgd",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ - ΕΣΤΙΑΤΟΡΙΟ - ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"ΝΙΚΗΦΟΡΟΣ ΚΕΧΑΓΙΑΔΑΚΗΣ ΚΑΙ ΣΙΑ Ε.Ε.\", στην οδό ΜΕΓ. ΑΛΕΞΑΝΔΡΟΥ 57. (Σχετ.: η με Α.Π. 25255/29-01-2026 αίτηση)",
+        "agendaItemIndex": 15,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg1002xnmz0z3kvz16cm",
+        "name": "\"ΚΑΦΕ - ΑΝΑΨΥΚΤΗΡΙΟ\", με την επωνυμία \"ΧΡΗΣΤΟΣ ΨΥΧΟΓΙΟΣ\", στην οδό ΦΑΛΑΙΣΙΑΣ 12. (Σχετ.: η με Α.Π. 29916/03-02-2026 αίτηση)",
+        "agendaItemIndex": 16,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg1b02xomz0zh03y7boq",
+        "name": "\"ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"Ε. & Κ. ΣΑΡΑΝΤΟΠΟΥΛΟΥ & ΣΙΑ Ο.Ε.\", στην οδό ΤΡΙΩΝ ΙΕΡΑΡΧΩΝ 21 & ΑΙΞΩΝΕΩΝ 12. (Σχετ.: η με Α.Π. 30015/03-02-2026 αίτηση)",
+        "agendaItemIndex": 17,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg1m02xpmz0zexmlh1s6",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"POLIS NEW AGE RESTAURANT ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.\", στην οδό ΠΕΡΣΕΦΟΝΗΣ 29 & ΙΑΚΧΟΥ, ΙΣΟΓΕΙΟ ΜΕ ΠΑΤΑΡΙ & Α ΟΡΟΦΟΣ. (Σχετ.: η με Α.Π. 31830/04-02-2026 αίτηση)",
+        "agendaItemIndex": 18,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg2902xzmz0z1pw831hp",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΚΑΦΕΤΕΡΙΑ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"POLIS NEW AGE RESTAURANT ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.\", στην οδό ΠΕΡΣΕΦΟΝΗΣ 29 & ΙΑΚΧΟΥ, ΙΣΟΓΕΙΟ ΜΕ ΥΠΟΓΕΙΟ. (Σχετ.: η με Α.Π. 31821/04-02-2026 αίτηση)",
+        "agendaItemIndex": 19,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg2t02y0mz0zqopn0wrg",
+        "name": "\"ΑΝΑΨΥΚΤΗΡΙΟ - ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ χωρίς ζωντανή μουσική\", με την επωνυμία \"HOOKAHOLIC ΓΚΑΖΙ Ε.Ε.\", στην οδό ΕΥΜΟΛΠΙΔΩΝ 33. (Σχετ.: η με Α.Π. 33412/05-02-2026 αίτηση)",
+        "agendaItemIndex": 20,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg3202y1mz0zzsehin76",
+        "name": "\"ΜΠΑΡ\", με την επωνυμία \"ΠΑΡΑΣΚΕΥΑΣ ΚΑΡΠΟΝΤΙΝΗΣ\", στην οδό ΚΕΛΕΟΥ 1-5. (Σχετ.: η με Α.Π. 33381/05-02-2026 αίτηση)",
+        "agendaItemIndex": 21,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmly8fg3d02y2mz0zfwizd53a",
+        "name": "\"ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ\", με την επωνυμία \"ΑΚΑΛΕΣΤΟΣ ΓΕΩΡΓΙΟΣ\", στην οδό ΜΑΡΑΘΩΝΟΣ 28 & ΓΕΡΜΑΝΙΚΟΥ 16. (Σχετ.: η με Α.Π. 4386/09-01-2026 αίτηση)",
+        "agendaItemIndex": 22,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmly8ffin02vomz0zxpzmvudv]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmly8ffk002x1mz0zac0660t4]": {
+      "value": "Ψ3ΣΨΩ6Μ-36Ρ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43ud7h0aasmpr0b2i762y0"
+    },
+    "link[cmly8ffkc02x2mz0z33m4xkt4]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmly8ffkx02xbmz0zct73r5av]": {
+      "value": "Ψ94ΕΩ6Μ-ΡΝ2",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43v9od00ddy5k24bgpnkuz"
+    },
+    "link[cmly8ffla02xcmz0zun0a66lr]": {
+      "value": "ΨΨΜ5Ω6Μ-Π5Δ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43zfha0ab1mpr0k7pvvjqr"
+    },
+    "link[cmly8fflu02xdmz0z3tre8191]": {
+      "value": "6ΜΔ9Ω6Μ-ΥΘΓ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43r91r0aajmpr0gcm3anid"
+    },
+    "link[cmly8ffmb02xemz0zk4cy0qt9]": {
+      "value": "9ΞΧΓΩ6Μ-ΙΜ6",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43rsyb00d3y5k2tn6ddyks"
+    },
+    "link[cmly8ffoz02xfmz0z1rnx0sbf]": {
+      "value": "ΨΨΜΜΩ6Μ-Π42",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43y73n00dry5k2o6n9un7q"
+    },
+    "link[cmly8ffrm02xgmz0z0oknzr37]": {
+      "value": "ΨΑ57Ω6Μ-ΥΓΣ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43vyv500doy5k2v4k4nn63"
+    },
+    "link[cmly8ffs102xhmz0zjc3nisqx]": {
+      "value": "6ΧΥ6Ω6Μ-9ΤΧ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43onbq00cuy5k2rgx29rqk"
+    },
+    "link[cmly8ffuo02ximz0za138il8r]": {
+      "value": "Ψ3ΤΦΩ6Μ-ΓΟΑ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43tk0c0aapmpr0mgbmvpzi"
+    },
+    "link[cmly8ffxl02xjmz0zvzo0rb3b]": {
+      "value": "9ΥΗΦΩ6Μ-6Δ3",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu4411y90abampr08rlu7yrt"
+    },
+    "link[cmly8fg0502xkmz0zkdt2obp8]": {
+      "value": "6ΝΜ9Ω6Μ-97Ο",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43nu340aagmpr0junntunu"
+    },
+    "link[cmly8fg0f02xlmz0zepr8wcgo]": {
+      "value": "9Φ2ΑΩ6Μ-469",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43smwa0aammpr056wk0c45"
+    },
+    "link[cmly8fg0q02xmmz0zhkarhzgd]": {
+      "value": "9ΩΟ0Ω6Μ-ΜΨΜ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu440ngj0ab7mpr00ctz01i5"
+    },
+    "link[cmly8fg1002xnmz0z3kvz16cm]": {
+      "value": "94ΡΝΩ6Μ-ΔΔΕ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43vjno00dly5k28opitved"
+    },
+    "link[cmly8fg1b02xomz0zh03y7boq]": {
+      "value": "ΨΨ2ΥΩ6Μ-ΜΚΩ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43z3ik0aaympr0e0bpvg8i"
+    },
+    "link[cmly8fg1m02xpmz0zexmlh1s6]": {
+      "value": "ΨΣΨΓΩ6Μ-ΔΓ9",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43kjah0aa8mpr049davme0"
+    },
+    "link[cmly8fg2902xzmz0z1pw831hp]": {
+      "value": "Ψ6ΓΞΩ6Μ-Χ9Π",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43kdb40aa5mpr02l7wbau9"
+    },
+    "link[cmly8fg2t02y0mz0zqopn0wrg]": {
+      "value": "ΨΒΘΦΩ6Μ-ΔΟ1",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43wecl0aavmpr0hl3184jv"
+    },
+    "link[cmly8fg3202y1mz0zzsehin76]": {
+      "value": "6ΤΞ6Ω6Μ-ΥΗ7",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43s80h00d6y5k21y9ays7k"
+    },
+    "link[cmly8fg3d02y2mz0zfwizd53a]": {
+      "value": "6Μ5ΑΩ6Μ-69Ρ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmu43zo3g0ab4mpr09vas3wrf"
+    },
+    "reject[63Φ6Ω6Μ-ΜΦΠ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjf6w80b1e7xm4ry4qd3dn"
+    },
+    "reject[ΡΣΘΔΩ6Μ-ΣΛΘ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjf6vt0b1a7xm4ts2y40or"
+    },
+    "reject[ΨΗΔΒΩ6Μ-Λ3Ρ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjf6w10b1c7xm45uipz8y7"
+    },
+    "reject[ΨΞΥΨΩ6Μ-22Η]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjfp3y08piu36pzaw1rm0i"
+    },
+    "reject[ΨΤΛΖΩ6Μ-Φ0Ι]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtkjf6wf0b1g7xm4t519vp3t"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

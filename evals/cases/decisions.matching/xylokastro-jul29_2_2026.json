@@ -1,0 +1,60 @@
+{
+  "id": "decisions.matching/xylokastro-jul29_2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "xylokastro/jul29_2_2026",
+    "meetingDate": "2026-07-29",
+    "diavgeiaUid": "6222",
+    "diavgeiaUnitIds": [
+      "87737"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-08-23",
+      "fromDate": "2026-07-29"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmryvj8ae08dpjy1k3txkp634",
+        "name": "Εγγραφές παιδιών σε Παιδικούς Σταθμούς",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmryvj8ae08dpjy1k3txkp634]": {
+      "value": "Ψ20ΣΩΞΠ-ΝΧΜ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΡΨΜΒΩΞΠ-Α9Τ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-26",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5b1og06i5u36pw29zzayj"
+    },
+    "reject[ΨΞΘ9ΩΞΠ-29Π]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-26",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5ayfm06p17xm4dug4r6fp"
+    }
+  },
+  "cluster": "xylokastro/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

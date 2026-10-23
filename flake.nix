@@ -82,6 +82,9 @@
             cp package.json $out/
             # Bundled caption fonts, read from cwd at render time
             cp -r assets $out/
+            # Failure-mode registry, read by the post-task checks
+            mkdir -p $out/evals
+            cp -r evals/failure-modes $out/evals/
 
             # Create start script that sets the working directory and pins the
             # full runtime to THIS flake's nixpkgs — the app runs on the

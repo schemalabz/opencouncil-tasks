@@ -1,0 +1,59 @@
+{
+  "id": "agenda.meetingRecord/xylokastro__jun3_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "xylokastro",
+    "meetingId": "jun3_2026",
+    "date": "2026-06-04",
+    "time": "20:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/xylokastro_jun3_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "δια ζώσης στην αίθουσα συνεδριάσεων του Κέντρου Νεότητας Ξυλοκάστρου"
+    },
+    "kind": {
+      "value": "financialAccounts",
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)",
+      "evidence": "Σας καλούμε στην ειδική συνεδρίαση του Δημοτικού Συμβουλίου ... 1.Έγκριση Ισολογισμού έτους 2024"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "contested",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "reason": "the labeller marked the reading low confidence (see note)"
+    }
+  },
+  "cluster": "xylokastro/Δημοτικό Συμβούλιο",
+  "tags": [
+    "xylokastro",
+    "council",
+    "low-confidence"
+  ],
+  "note": "Ειδική sitting whose only item is approval of the 2024 balance sheet (Ισολογισμός) - not one of the listed special purposes, so null. Date mismatch: item date 2026-06-04, invitation says 3 June 2026."
+}

@@ -1,0 +1,153 @@
+{
+  "id": "decisions.extraction/9ΦΞ4Ω6Μ-ΑΔ5",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΦΞ4Ω6Μ-ΑΔ5",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΞ4Ω6Μ-ΑΔ5",
+    "city": "athens",
+    "body": "4η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "arrival=yes",
+        "namedVoters=all",
+        "changeAnchor=session_phase"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "ΠΑΝΟΠΟΥΛΟΣ ΑΠΟΣΤΟΛΟΣ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Προσήλθε στην Π.Κ.Σ. 2 ο Σύμβουλος κ. Πανόπουλος Α."
+          },
+          {
+            "name": "ΜΑΡΚΟΥΙΖΟΣ ΗΡΑΚΛΗΣ",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Απεχώρησε στην Π.Κ.Σ. 1 ο Σύμβουλος κ. Μαρκουίζος Η."
+          }
+        ],
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "Προσήλθε στην Π.Κ.Σ. 2 ο Σύμβουλος κ. Πανόπουλος Α. \nΑπεχώρησε στην Π.Κ.Σ. 1 ο Σύμβουλος κ. Μαρκουίζος Η.",
+          "ada": "9ΦΞ4Ω6Μ-ΑΔ5",
+          "page": 1,
+          "adjudicatedAt": "2026-09-18T14:26:03.489Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-18",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 663,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 4ης ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΑΡΒΑΝΙΤΗ ΕΥΑΝΘΙΑ",
+          "ΑΡΒΑΝΙΤΗΣ ΣΠΥΡΙΔΩΝ",
+          "ΓΙΑΝΝΟΠΟΥΛΟΥ ΓΕΩΡΓΙΑ",
+          "ΚΑΡΥΔΑΣ ΔΗΜΗΤΡΙΟΣ-ΕΥΑΓΓΕΛΟΣ",
+          "ΚΕΛΕΠΟΥΡΗ ΑΝΑΣΤΑΣΙΑ",
+          "ΚΟΛΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΙΟΣ",
+          "ΛΟΚΑ ΜΑΡΙΑ",
+          "ΜΑΡΚΟΥΙΖΟΣ ΗΡΑΚΛΗΣ",
+          "ΜΗΤΡΟΠΟΥΛΟΥ-ΚΑΤΣΙΚΗ ΓΕΡΑΣΙΜΟΥΛΑ",
+          "ΜΟΝΑΣΤΗΡΙΩΤΗΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΠΑΝΟΠΟΥΛΟΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΦΡΑΓΚΙΟΥΔΑΚΗ-ΚΩΝΣΤΑΝΤΑΚΗ ΚΥΡΙΑΚΗ",
+          "ΨΗΜΜΕΝΟΥ ΓΙΑΝΝΟΥΛΑ"
+        ],
+        "absentMembers": [
+          "ΚΑΛΛΙΤΣΗΣ ΝΙΚΟΛΑΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 9,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 9,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΥΠΕΡ ψήφισαν",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": true,
+        "review": [
+          {
+            "what": "named voters dropped",
+            "verdict": "neither is right",
+            "note": "Α Π Ο Φ Α Σ Ι Ζ Ε Ι  Ο Μ Ο Φ Ω Ν Α"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "page only says ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ; nobody is named"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/4η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "arrival=yes",
+    "namedVoters=all",
+    "changeAnchor=session_phase"
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "id": "decisions.matching/athens-apr22_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "athens/apr22_2026",
+    "meetingDate": "2026-04-22",
+    "diavgeiaUid": "6013",
+    "diavgeiaUnitIds": [
+      "84655:100085601"
+    ],
+    "administrativeBodyName": "3η Δημοτική Κοινότητα",
+    "window": {
+      "toDate": "2026-05-08",
+      "fromDate": "2026-04-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmo2przv502kfk9xfqi8h9805",
+        "name": "Θέση στάθμευσης ΑμεΑ Πλάτωνος 22",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przvk02kgk9xfpul5na3g",
+        "name": "\"ΚΑΦΕ ΜΠΑΡ\", με την επωνυμία \"Ε. ΓΕΡΑΣΙΜΟΥ - Φ. ΣΕΡΓΟΥΛΟΠΟΥΛΟΣ ΟΕ\", στην ΛΕΩΦ. ΚΩΝΣΤΑΝΤΙΝΟΥΠΟΛΕΩΣ 44. (Σχετ.: η με Α.Π. 63078/06-03-2026 αίτηση)",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przvw02khk9xf52o4fw1y",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ - ΜΠΑΡ\", με την επωνυμία \"SHAMONE ΜΟΝΟΠΡΟΣΩΠΗ ΙΔΙΩΤΙΚΗ ΚΕΦΑΛΑΙΟΥΧΙΚΗ ΕΤΑΙΡΕΙΑ\", στην οδό ΕΛΑΣΙΔΩΝ 30. (Σχετ.: η με Α.Π. 63073/06-03-2026 αίτηση)",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przw702kik9xfa22wetzx",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ – ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"ΚΑΡΑΠΕΤΗ ΕΛΕΝΗ\", στην οδό ΠΥΘΟΔΩΡΟΥ 10 & ΠΙΕΡΙΑΣ 16. (Σχετ.: η με Α.Π. 70352/13-03-2026 αίτηση)",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przwi02kjk9xf7f9g1vyo",
+        "name": "\"ΕΣΤΙΑΤΟΡΙΟ\", με την επωνυμία \"ALL DAY 41 ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε\", στην οδό ΠΕΡΣΕΦΟΝΗΣ 41-43 & ΤΡΙΠΤΟΛΕΜΟΥ 42. (Σχετ.: η με Α.Π. 80968/24-03-2026 αίτηση)",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przwx02kkk9xfv0q10svf",
+        "name": "\"ΠΑΡΑΔΟΣΙΑΚΟ ΚΑΦΕΝΕΙΟ – ΜΑΓΕΙΡΕΙΟ\", με την επωνυμία \"ΚΛΕΙΩ ΑΓΓΟΥΡΑΚΗ\", στην οδό ΣΦΑΚΤΗΡΙΑΣ 20. (Σχετ.: η με Α.Π. 65054/09-03-2026 αίτηση)",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przxb02klk9xfiur9jlyf",
+        "name": "\"ΚΑΦΕΤΕΡΙΑ - ΣΝΑΚ ΜΠΑΡ\", με την επωνυμία \"ΚΟΚΚΙΝΙΔΟΥ ΕΥΓΝΩΣΙΑ\", στην οδό ΚΑΛΛΙΣΘΕΝΟΥΣ 90. (Σχετ.: η με Α.Π. 88236/01-04-2026 αίτηση)",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przxn02kmk9xfbmxx8sd2",
+        "name": "\"ΚΑΦΕΝΕΙΟ & ΜΑΓΕΙΡΕΙΟ ΠΑΡΑΔΟΣΙΑΚΟΥ ΤΥΠΟΥ\", με την επωνυμία \"NERESIUS ΜΟΝΟΠΡΟΣΩΠΗ Ι.Κ.Ε.\", στην οδό ΠΛΑΤΑΙΩΝ 36 & ΣΦΑΚΤΗΡΙΑΣ 26. (Σχετ.: η με Α.Π. 94876/08-04-2026 αίτηση)",
+        "agendaItemIndex": 9,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przxy02knk9xfu7r1abnn",
+        "name": "\"ΛΙΑΝΙΚΗ ΔΙΑΘΕΣΗ ΚΑΦΕ – ΚΑΦΕΤΕΡΙΑ - ΜΠΑΡ\", με την επωνυμία \"MACONDO PROJECT Ι.Κ.Ε.\", στην οδό ΚΟΡΥΤΣΑΣ 15. (Σχετ.: η με Α.Π. 100011/16-04-2026 αίτηση)",
+        "agendaItemIndex": 10,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmo2przu902kek9xfeawwwz57",
+        "name": "Ενημέρωση και συζήτηση με την Πρόεδρο του Δ.Σ. του Οργανισμού Πολιτισμού Αθλητισμού και Νεολαίας Δήμου Αθηναίων (ΟΠΑΝΔΑ) κα. ΡΩΞΑΝΗ-ΕΥΑΓΓΕΛΙΑ ΜΠΕΗ-ΚΑΡΑΜΠΟΤΣΟΥ",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmo2przu902kek9xfeawwwz57]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmo2przv502kfk9xfqi8h9805]": {
+      "value": "ΨΡΨΙΩ6Μ-0Ι0",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przvk02kgk9xfpul5na3g]": {
+      "value": "9ΟΓΙΩ6Μ-9ΥΚ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przvw02khk9xf52o4fw1y]": {
+      "value": "9Α0ΦΩ6Μ-019",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przw702kik9xfa22wetzx]": {
+      "value": "9ΜΤΥΩ6Μ-ΡΕΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przwi02kjk9xf7f9g1vyo]": {
+      "value": "6ΝΛΕΩ6Μ-ΛΣΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przwx02kkk9xfv0q10svf]": {
+      "value": "Ψ7ΗΧΩ6Μ-Ν60",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przxb02klk9xfiur9jlyf]": {
+      "value": "9ΟΚ6Ω6Μ-06Θ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przxn02kmk9xfbmxx8sd2]": {
+      "value": "9ΞΞ3Ω6Μ-ΡΩΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmo2przxy02knk9xfu7r1abnn]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "reject[63Δ4Ω6Μ-ΝΩΑ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtvm7wao00pz1etfhrn16i85"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

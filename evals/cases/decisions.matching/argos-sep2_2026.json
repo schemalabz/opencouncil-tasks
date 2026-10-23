@@ -1,0 +1,61 @@
+{
+  "id": "decisions.matching/argos-sep2_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "argos/sep2_2026",
+    "meetingDate": "2026-09-02",
+    "diavgeiaUid": "6042",
+    "diavgeiaUnitIds": [
+      "100087485"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-09-16",
+      "fromDate": "2026-09-02"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmtik80kk06l9u0rilgi8k6x7",
+        "name": "Περί προσωρινών κυκλοφοριακών ρυθμίσεων (διακοπή κυκλοφορίας στην οδό Γενναίου Κολοκοτρώνη / Βασ. Αλεξάνδρου στο Άργος",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmtik80kk06l9u0rilgi8k6x7]": {
+      "value": "6ΤΧ3ΩΨΔ-9Ξ8",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-03",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:cmtl92d450bub7xm4t6h9kd61"
+    },
+    "reject[6ΖΕ1ΩΨΔ-ΩΣΛ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5nt5207qt7xm4hd7oqft1"
+    },
+    "reject[9ΥΕ0ΩΨΔ-ΓΩ8]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-12",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk5ntgd07r47xm4xaue98mh"
+    }
+  },
+  "cluster": "argos/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

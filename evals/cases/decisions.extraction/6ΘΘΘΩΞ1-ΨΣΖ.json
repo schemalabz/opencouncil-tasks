@@ -1,0 +1,154 @@
+{
+  "id": "decisions.extraction/6ΘΘΘΩΞ1-ΨΣΖ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΘΘΘΩΞ1-ΨΣΖ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΘΘΘΩΞ1-ΨΣΖ",
+    "city": "papagos-cholargos",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "outOfAgenda=yes",
+        "departure=yes",
+        "changeAnchor=nothing",
+        "perVoteAbsence=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "perVoteAbsence"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": true,
+        "review": [
+          {
+            "what": "attendance change dropped",
+            "verdict": "survey is right",
+            "note": "this is a bit more complex cause it's at the very end of the page, so i wonder if we lost it in other documetns of this body and municipality, it;s at the end and says \"Κατά τη διαδικασία της ψηφοφορίας απουσίαζε η κ. Αναστασία Χαμηλοθώρη – Κουγιουμτζοπούλου.\" so that infomration might be per decision on this city, we will need to check more"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "not an arrival or departure: a per-vote absence printed after the decision"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1979,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "perVoteAbsence": {
+      "value": {
+        "members": [
+          "Αναστασία Χαμηλοθώρη – Κουγιουμτζοπούλου"
+        ],
+        "asPrinted": "Κατά τη διαδικασία της ψηφοφορίας απουσίαζε η κ. Αναστασία Χαμηλοθώρη – Κουγιουμτζοπούλου.",
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Παρόντες",
+          "Απόντες"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Ηλίας Αποστολόπουλος (Πρόεδρος)",
+          "Αθανάσιος Βαλυράκης",
+          "Αγλαΐα Σουρανή",
+          "Αθανάσιος Αυγουρόπουλος",
+          "Μιχάλης Υφαντής",
+          "Αναστασία Χαμηλοθώρη – Κουγιουμτζοπούλου",
+          "Δημήτριος Οικονόμου"
+        ],
+        "absentMembers": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "survey is right",
+            "note": "it's out of agenda item -- it seems that on out of agenda"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "out-of-agenda; extraction OA1 matches the page"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "papagos-cholargos/Δημοτική Επιτροπή",
+  "tags": [
+    "papagos-cholargos",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "outOfAgenda=yes",
+    "departure=yes",
+    "changeAnchor=nothing",
+    "perVoteAbsence=yes"
+  ]
+}

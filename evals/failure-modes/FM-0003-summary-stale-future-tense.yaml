@@ -1,0 +1,25 @@
+id: FM-0003
+slug: summary_stale_future_tense
+title: Subject description still speaks of the meeting in the future tense after it took place
+definition: >
+  A summarize result for a meeting that already took place describes a subject as still to be
+  discussed («Θα συζητηθεί η έγκριση…», «θα εξεταστεί», «θα τεθεί», «πρόκειται να συζητηθεί»),
+  so citizens read the item as pending.
+boundary: >
+  Not this mode: reported speech about the future («ο αντιδήμαρχος ανέφερε ότι θα συζητηθεί
+  ξανά»), obligations («θα πρέπει να εξεταστεί»), and items postponed or withdrawn to a later
+  session («αναβλήθηκε και θα συζητηθεί στην επόμενη συνεδρίαση»). The code detector excludes
+  reported speech only when a reporting verb with «ότι/πως» precedes the phrase, so attributions
+  like «Σύμφωνα με…» remain known false alarms; future verbs outside its phrase list are known
+  misses.
+suite: summarize.e2e
+scope: task
+severity: degraded
+impact: visible
+status: confirmed
+detector:
+  kind: code
+  module: src/evals/checks/staleFutureTense.ts
+issue: schemalabz/opencouncil-tasks#83
+decision: evaluate
+alert: "any run with a fail: Discord immediately with the run's meeting and the failing subject count"

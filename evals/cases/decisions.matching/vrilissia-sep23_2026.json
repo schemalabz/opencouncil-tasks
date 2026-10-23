@@ -1,0 +1,132 @@
+{
+  "id": "decisions.matching/vrilissia-sep23_2026",
+  "suite": "decisions.matching",
+  "split": "holdout",
+  "input": {
+    "meeting": "vrilissia/sep23_2026",
+    "meetingDate": "2026-09-23",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "100085541"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-10-07",
+      "fromDate": "2026-09-23"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmu6x327200tzohpvry4ld5yy",
+        "name": "Λήψη απόφασης για έκδοση χρηματικού εντάλματος προπληρωμής (2η δόση) & ορισμό υπολόγου, για την αντιμετώπιση των δαπανών της πληρωμής των υπηρεσιών διοδίων για τη διέλευση των οχημάτων του Δήμου σε βάρος του Α.Λ.Ε. 000.2420302001 του προϋπολογισμού έτους 2026",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x327h00u0ohpv5wnh2xl4",
+        "name": "Έγκριση προσφυγής στη διαδικασία της διαπραγμάτευσης χωρίς προηγούμενη δημοσίευση βάσει της υποπερίπτωσης γγ), της περίπτωσης β), του άρθρου 32 του Ν. 4412/2016, για την εκτέλεση της παροχής υπηρεσίας με τίτλο «ΣΥΝΤΗΡΗΣΗ – ΥΠΟΣΤΗΡΙΞΗ & ΠΡΟΜΗΘΕΙΑ ΝΕΟΥ ΛΟΓΙΣΜΙΚΟΥ ΟΡΓΑΝΩΣΗΣ & ΔΙΑΧΕΙΡΙΣΗΣ ΚΟΙΝΩΝΙΚΩΝ ΔΟΜΩΝ» (CPV: 72261000-2 με τίτλο «Υπηρεσίες υποστήριξης λογισμικού», CPV: 48100000-9, «Πακέτα λογισμικού για συγκεκριμένους κλάδους») για τα έτη 2026 και 2027– Έγκριση της 29/2026 μελέτης της Δ/νσης Διοικητικών & Κοινωνικών Υπηρεσιών",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x327p00u1ohpvz2xqibq5",
+        "name": "Έγκριση ή μη απομάκρυνσης μη βιώσιμων και επικίνδυνων δένδρων από κοινόχρηστους χώρους του Δήμου Βριλησσίων",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x328800u2ohpv8rqdoq45",
+        "name": "Εισήγηση για τη λήψη απόφασης από τη Δημοτική Επιτροπή του Δήμου Βριλησσίων επί του αιτήματος μείωσης του μισθώματος του κυλικείου του 1ου Γυμνασίου Βριλησσίων, με συμβιβαστική επίλυση της σχετικής διαφοράς ενώπιον της Επιτροπής Διακανονισμού Εμπορικών Μισθώσεων Περιφερειακής Ενότητας Βορείου Τομέα Αθηνών, και για την παροχή σχετικής εξουσιοδότησης",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x328q00u3ohpvp4k8yq3c",
+        "name": "Έγκριση τροποποίησης Οργανισμού Εσωτερικής Υπηρεσίας (ΟΕΥ) - Σύσταση θέσεων τακτικού προσωπικού στους Δημοτικούς Παιδικούς, Βρεφικούς και Βρεφονηπιακούς Σταθμούς του Δήμου Βριλησσίων, σύμφωνα με τα άρθρα 759 και 768 του ν.5314/2026 (Κώδικας Τοπικής Αυτοδιοίκησης) και την υπ' αριθμ. πρωτ. 43691/04-08-2026 εγκύκλιο του Υπουργείου Εσωτερικών",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x328y00u4ohpvhsim40ox",
+        "name": "Παραίτηση ή μη του Δήμου Βριλησσίων από την ασκηθείσα έφεσή του (Γ.Α.Κ. 285880/2025, Ε.Α.Κ. 9237/2025) κατά της υπ' αριθ. 1287/2023 απόφασης του Μονομελούς Πρωτοδικείου Αθηνών (Διαδικασία Εργατικών Διαφορών), κατ' εφαρμογή του άρθρου 731 παρ. 4 του ν. 5314/2026",
+        "agendaItemIndex": 6,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x329800u5ohpvvpf3ss2m",
+        "name": "Άσκηση ή μη ενδίκων μέσων εκ μέρους του Δήμου Βριλησσίων κατά της υπ' αριθ. 1606/2025 απόφασης του Μονομελούς Πρωτοδικείου Αθηνών (Διαδικασία Περιουσιακών Διαφορών), κατ' εφαρμογή του άρθρου 731 παρ. 4 του ν. 5314/2026",
+        "agendaItemIndex": 7,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmu6x329f00u6ohpvai2o2660",
+        "name": "Παραίτηση ή μη του Δήμου Βριλησσίων από την ασκηθείσα έφεσή του (Γ.Α.Κ. 159135/2024, Ε.Α.Κ. 6706/2024) κατά της υπ' αριθ. 1261/2022 απόφασης του Μονομελούς Πρωτοδικείου Αθηνών (Διαδικασία Εργατικών Διαφορών), κατ' εφαρμογή του άρθρου 731 παρ. 4 του ν. 5314/2026",
+        "agendaItemIndex": 8,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmu6x327200tzohpvry4ld5yy]": {
+      "value": "92Ε8Ω9Ρ-01Ν",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmu6x327h00u0ohpv5wnh2xl4]": {
+      "value": "9ΖΙΥΩ9Ρ-ΨΞΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmu6x327p00u1ohpvz2xqibq5]": {
+      "value": "ΨΤ16Ω9Ρ-ΨΛ1",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmu6x328800u2ohpv8rqdoq45]": {
+      "value": "ΡΖΛΥΩ9Ρ-ΨΡΔ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmu6x328q00u3ohpvp4k8yq3c]": {
+      "value": "ΨΔΦΞΩ9Ρ-Ε6Κ",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:manual:c4ee21beb32ca49dea7280d4aed314ef2"
+    },
+    "link[cmu6x328y00u4ohpvhsim40ox]": {
+      "value": "Ψ6ΜΜΩ9Ρ-ΗΦΙ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmu6x329800u5ohpvvpf3ss2m]": {
+      "value": "635ΩΩ9Ρ-Δ06",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmu6x329f00u6ohpvai2o2660]": {
+      "value": "ΨΒΑΔΩ9Ρ-43Χ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

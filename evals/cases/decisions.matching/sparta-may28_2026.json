@@ -1,0 +1,50 @@
+{
+  "id": "decisions.matching/sparta-may28_2026",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "sparta/may28_2026",
+    "meetingDate": "2026-05-28",
+    "diavgeiaUid": "6286",
+    "diavgeiaUnitIds": [
+      "100033602"
+    ],
+    "administrativeBodyName": "Δημοτική Επιτροπή",
+    "window": {
+      "toDate": "2026-06-29",
+      "fromDate": "2026-05-28"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmppf0t1b048k5jblnt4di72i",
+        "name": "Ανάθεση δικηγόρου για υποστήριξη τέως αντιδημάρχου",
+        "agendaItemIndex": null,
+        "nonAgendaReason": "outOfAgenda"
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmppf0t1b048k5jblnt4di72i]": {
+      "value": "9ΗΖΥΩ1Ν-Ι01",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "reject[ΡΒ72Ω1Ν-68Ρ]": {
+      "value": {
+        "subjectId": null
+      },
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-09-16",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:dismiss:cmtk1sf1201f8u36pgtefllnw"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

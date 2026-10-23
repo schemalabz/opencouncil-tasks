@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/argithea__jun25_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "argithea",
+    "meetingId": "jun25_2026",
+    "date": "2026-06-25",
+    "time": "14:00",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/argithea_jun25_2026_agenda_2.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στη διά ζώσης 3η ειδική συνεδρίαση ... στην αίθουσα του Δημοτικού Συμβουλίου"
+    },
+    "kind": {
+      "value": "accountability",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "«Ειδική συνεδρίαση λογοδοσίας δημοτικής αρχής» με μοναδικό θέμα συζήτησης: Λογοδοσία Δημοτικής Αρχής"
+    },
+    "sessionNumber": {
+      "value": 3,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στη διά ζώσης 3η ειδική συνεδρίαση του Σώματος"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "argithea/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argithea",
+    "council"
+  ]
+}

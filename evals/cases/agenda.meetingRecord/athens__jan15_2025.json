@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/athens__jan15_2025",
+  "suite": "agenda.meetingRecord",
+  "split": "holdout",
+  "input": {
+    "cityId": "athens",
+    "meetingId": "jan15_2025",
+    "date": "2025-01-15",
+    "time": "23:17",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/c5b00549-12ee-4e1f-bd01-d90058444402.pdf",
+    "administrativeBody": {
+      "name": "Δημοτικό Συμβούλιο",
+      "type": "council"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "hybrid",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Η Συνεδρίαση θα πραγματοποιηθεί δια ζώσης και με τηλεδιάσκεψη"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "sessionNumber": {
+      "value": 2,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "συμμετέχετε στην 2η Συνεδρίαση του Σώματος"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "athens/Δημοτικό Συμβούλιο",
+  "tags": [
+    "athens",
+    "council"
+  ],
+  "note": "Word τακτική absent; nothing marks it urgent or special."
+}

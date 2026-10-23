@@ -1,0 +1,119 @@
+{
+  "id": "decisions.matching/vrilissia-dec22_2025",
+  "suite": "decisions.matching",
+  "split": "dev",
+  "input": {
+    "meeting": "vrilissia/dec22_2025",
+    "meetingDate": "2025-12-22",
+    "diavgeiaUid": "6061",
+    "diavgeiaUnitIds": [
+      "80700"
+    ],
+    "administrativeBodyName": "Δημοτικό Συμβούλιο",
+    "window": {
+      "toDate": "2026-01-05",
+      "fromDate": "2025-12-22"
+    },
+    "subjects": [
+      {
+        "subjectId": "cmqb5fnlk0609pn1tgsk3g8sr",
+        "name": "Έγκριση Ισολογισμού, Αποτελεσμάτων Χρήσεως & Απολογισμού Δήμου Βριλησσίων, οικονομικού έτους 2023",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5fnle0608pn1tar6z2b2t",
+        "name": "Θεσμοθέτηση διαδικασίας πρόσκλησης ενδιαφέροντος προς τοπικούς επαγγελματίες πριν από κάθε απευθείας ανάθεση του Δήμου Βριλησσίων. Δημοτική παράταξη: «ΒΡΙΛΗΣΣΙΑ ΠΟΡΕΙΑ ΕΥΘΥΝΗΣ»",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5fnl90607pn1t5hge3rmi",
+        "name": "«Έγκριση α) υπαγωγής του Δήμου του Δήμου Βριλησσίων στο Ειδικό Συνδρομητικό Πρόγραμμα Δήμων της Αττικής Οδού, β) κατάρτισης σύμβασης συνεργασίας με την εταιρεία «Νέα Αττική Οδός Λειτουργία Α.Ε.» για τη διέλευση των οχημάτων του Δήμου από την Αττική Οδό και για την πληρωμή τελών διοδίων του έτους 2026 και γ) παροχής εξουσιοδότησης στον Δήμαρχο Βριλησσίων»",
+        "agendaItemIndex": 1,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5fnlq060apn1t2bw7ybtz",
+        "name": "Έγκριση α) εκποίησης άχρηστων σιδηρούχων κάδων και λοιπών μεταλλικών αντικειμένων (σκραπ) και β) διενέργειας φανερής, προφορικής, πλειοδοτικής δημοπρασίας σύμφωνα με τις διατάξεις του Π.Δ. 270/81, για την εκποίηση άχρηστων σιδηρούχων κάδων και λοιπών μεταλλικών αντικειμένων (σκραπ) του Δήμου Βριλησσίων",
+        "agendaItemIndex": 2,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5fnlw060bpn1two4adnrh",
+        "name": "Ψήφιση Τεχνικού Προγράμματος Δήμου Βριλησσίων, έτους 2026",
+        "agendaItemIndex": 3,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5fnm2060cpn1t7r9ng570",
+        "name": "Σημειακές Κυκλοφοριακές Ρυθμίσεις",
+        "agendaItemIndex": 4,
+        "nonAgendaReason": null
+      },
+      {
+        "subjectId": "cmqb5fnma060dpn1ttuelyx45",
+        "name": "Μερική εφαρμογή κυκλοφοριακών ρυθμίσεων που προβλέπονται στο ΣΒΑΚ του Δήμου Βριλησσίων",
+        "agendaItemIndex": 5,
+        "nonAgendaReason": null
+      }
+    ]
+  },
+  "replay": null,
+  "expect": {
+    "link[cmqb5fnl90607pn1t5hge3rmi]": {
+      "value": "9ΗΩΗΩ9Ρ-1Γ8",
+      "tier": "imported",
+      "by": "user",
+      "at": "2026-10-09",
+      "source": "opencouncil:decision-link",
+      "signal": "opencouncil:decision-link:assign:c4bc737c292814321b9841ea2af8c25d0"
+    },
+    "link[cmqb5fnle0608pn1tar6z2b2t]": {
+      "value": null,
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:no-link"
+    },
+    "link[cmqb5fnlk0609pn1tgsk3g8sr]": {
+      "value": "ΨΧΙ0Ω9Ρ-ΜΘΩ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5fnlq060apn1t2bw7ybtz]": {
+      "value": "ΨΓΘ8Ω9Ρ-Μ9Β",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5fnlw060bpn1two4adnrh]": {
+      "value": "ΨΨ0ΨΩ9Ρ-ΡΑΤ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5fnm2060cpn1t7r9ng570]": {
+      "value": "6ΑΤΙΩ9Ρ-ΣΒΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    },
+    "link[cmqb5fnma060dpn1ttuelyx45]": {
+      "value": "9ΞΚ1Ω9Ρ-ΩΗΦ",
+      "tier": "drafted",
+      "by": "opencouncil",
+      "at": "2026-10-11",
+      "source": "opencouncil:task-link"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "opencouncil-signals"
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "id": "agenda.meetingRecord/sparta__jun30_2026",
+  "suite": "agenda.meetingRecord",
+  "split": "dev",
+  "input": {
+    "cityId": "sparta",
+    "meetingId": "jun30_2026",
+    "date": "2026-06-30",
+    "time": "08:30",
+    "agendaUrl": "https://townhalls-gr.fra1.digitaloceanspaces.com/uploads/sparta_jun30_2026_agenda.pdf",
+    "administrativeBody": {
+      "name": "Δημοτική Επιτροπή",
+      "type": "committee"
+    }
+  },
+  "expect": {
+    "format": {
+      "value": "inPerson",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "στο Δημοτικό Κατάστημα (Δημαρχιακό Μέγαρο - Κεντρική Πλατεία Σπάρτης - αίθουσα συνεδριάσεων)"
+    },
+    "kind": {
+      "value": "ordinary",
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json",
+      "evidence": "Καλείστε σε τακτική συνεδρίαση της Δημοτικής Επιτροπής"
+    },
+    "sessionNumber": {
+      "value": null,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    },
+    "urgent": {
+      "value": false,
+      "tier": "adjudicated",
+      "by": "labels-163 (quoted reading, #107)",
+      "at": "2026-10-13",
+      "source": "labels:agenda-meetings-evidence/labels-163.json"
+    }
+  },
+  "cluster": "sparta/Δημοτική Επιτροπή",
+  "tags": [
+    "sparta",
+    "committee"
+  ],
+  "note": "«ΑΡΙΘ. ΠΡΟΣΚΛΗΣΕΩΣ: 31» is the invitation number."
+}

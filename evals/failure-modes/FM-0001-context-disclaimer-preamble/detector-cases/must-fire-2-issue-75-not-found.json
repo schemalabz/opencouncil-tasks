@@ -1,0 +1,16 @@
+{
+  "kind": "must-fire",
+  "note": "Opening quoted in the #75 summary",
+  "input": {
+    "label": "subject-context-search:ΣΥΝΔΗΚΟΣ",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "Δυστυχώς, δεν βρέθηκαν συγκεκριμένες πληροφορίες για τον ΣΥΝΔΗΚΟ στις διαθέσιμες πηγές. Ο σύνδεσμος δήμων και κοινοτήτων είναι νομικό πρόσωπο δημοσίου δικαίου που συστήνεται για την κοινή άσκηση αρμοδιοτήτων.",
+      "stopReason": "end_turn"
+    }
+  }
+}
