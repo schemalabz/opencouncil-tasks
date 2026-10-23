@@ -4,8 +4,10 @@ import {
   buildUtteranceIndexMap,
   getStatusEmoji,
   splitTranscript,
-  initializeSubjectsFromExisting
+  initializeSubjectsFromExisting,
+  subjectsOmittedFromBatch
 } from './utils.js';
+import type { SubjectInProgress } from './types.js';
 
 describe('buildUtteranceIndexMap', () => {
   it('builds chronological index from transcript segments', () => {
@@ -251,5 +253,68 @@ describe('initializeSubjectsFromExisting', () => {
     const result = initializeSubjectsFromExisting(existing);
 
     expect(result[0].speakerContributions).toEqual([]);
+  });
+});
+
+describe('subjectsOmittedFromBatch', () => {
+  const subject = (id: string, overrides: Partial<SubjectInProgress> = {}): SubjectInProgress => ({
+    id,
+    type: 'IN_AGENDA',
+    agendaItemIndex: 1,
+    name: `Subject ${id}`,
+    description: 'Description',
+    topicImportance: 'normal',
+    proximityImportance: 'none',
+    introducedByPersonId: null,
+    locationText: null,
+    topicLabel: null,
+    speakerContributions: [],
+    discussedIn: null,
+    ...overrides,
+  });
+
+  it('returns only the subjects that the batch left out', () => {
+    const previous = [subject('a'), subject('b'), subject('c')];
+    const returned = [subject('b')];
+
+    expect(subjectsOmittedFromBatch(previous, returned, new Set(['b'])).map(s => s.id)).toEqual(['a', 'c']);
+  });
+
+  // athens/oct21_2026: batch 2 returned all seven subjects, batch 3 returned one,
+  // and the other six reached the after-meeting notification as doNotNotify.
+  it('keeps the importance that the model gave a subject in an earlier batch', () => {
+    const previous = [
+      subject('a', { topicImportance: 'high', proximityImportance: 'wide' }),
+      subject('b', { topicImportance: 'normal', proximityImportance: 'near' }),
+      subject('c', { topicImportance: 'doNotNotify', proximityImportance: 'none' }),
+    ];
+
+    const omitted = subjectsOmittedFromBatch(previous, [], new Set(['a', 'b', 'c']));
+
+    expect(omitted.map(s => [s.topicImportance, s.proximityImportance])).toEqual([
+      ['high', 'wide'],
+      ['normal', 'near'],
+      ['doNotNotify', 'none'],
+    ]);
+  });
+
+  it('drops the agenda importance of a subject that no batch has returned', () => {
+    const previous = [subject('a', { topicImportance: 'high', proximityImportance: 'wide' })];
+
+    const [omitted] = subjectsOmittedFromBatch(previous, [], new Set());
+
+    expect([omitted.topicImportance, omitted.proximityImportance]).toEqual(['doNotNotify', 'none']);
+  });
+
+  it('keeps discussedIn and clears speaker contributions', () => {
+    const previous = [subject('a', {
+      discussedIn: 'b',
+      speakerContributions: [{ speakerId: 'p1', speakerName: 'Speaker', text: 'text' }],
+    })];
+
+    const [omitted] = subjectsOmittedFromBatch(previous, [], new Set(['a']));
+
+    expect(omitted.discussedIn).toBe('b');
+    expect(omitted.speakerContributions).toEqual([]);
   });
 });

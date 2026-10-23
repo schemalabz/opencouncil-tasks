@@ -18,6 +18,7 @@ import {
 import {
     splitTranscript,
     initializeSubjectsFromExisting,
+    subjectsOmittedFromBatch,
     getStatusEmoji
 } from "./utils.js";
 
@@ -63,6 +64,9 @@ export async function processBatchesWithState(
     const BATCH_RETRY_DELAY_MS = 5 * 60 * 1000; // 5 minutes
 
     console.log(`Processing ${batches.length} batches...`);
+
+    // Subjects that the model has returned in some batch, with an importance of its own
+    const returnedByModel = new Set<string>();
 
     for (let i = 0; i < batches.length; i++) {
         onProgress("batch_processing", i / batches.length);
@@ -478,24 +482,17 @@ export async function processBatchesWithState(
             }
         }
 
-        // VALIDATION: Ensure all existing subjects are preserved, even if not discussed
+        // VALIDATION: Ensure all existing subjects are preserved, even if this batch left them out
         // Bug fix: Undiscussed agenda items were being dropped
-        console.log(`\n   📋 Checking for undiscussed subjects...`);
-        const discussedSubjectIds = new Set(batchResult.subjects.map(s => s.id));
-        const undiscussedSubjects = conversationState.subjects.filter(s => !discussedSubjectIds.has(s.id));
+        console.log(`\n   📋 Checking for subjects this batch left out...`);
+        batchResult.subjects.forEach(s => returnedByModel.add(s.id));
+        const omittedSubjects = subjectsOmittedFromBatch(conversationState.subjects, batchResult.subjects, returnedByModel);
 
-        if (undiscussedSubjects.length > 0) {
-            console.log(`      Found ${undiscussedSubjects.length} undiscussed subjects - preserving with low priority:`);
-            for (const subject of undiscussedSubjects) {
-                console.log(`         • "${subject.name}" (ID: ${subject.id})`);
-                // Preserve subject but mark with lowest importance to prevent notifications
-                batchResult.subjects.push({
-                    ...subject,
-                    discussedIn: subject.discussedIn || null,  // PRESERVE discussedIn if set
-                    speakerContributions: [],
-                    topicImportance: 'doNotNotify',
-                    proximityImportance: 'none'
-                });
+        if (omittedSubjects.length > 0) {
+            console.log(`      Found ${omittedSubjects.length} subjects this batch left out - preserving (importance kept only if a batch returned them):`);
+            for (const subject of omittedSubjects) {
+                console.log(`         • "${subject.name}" (ID: ${subject.id}) [${subject.topicImportance}/${subject.proximityImportance}]`);
+                batchResult.subjects.push(subject);
             }
         }
 
