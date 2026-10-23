@@ -7,8 +7,18 @@ import fs from 'fs';
 import path from 'path';
 import { sameDecisionNumber } from './decisionNumberCompare.js';
 import type { DecisionWarning } from './decisionValidation.js';
+import { assertFetchableUrl } from '../../lib/fetchableUrl.js';
 
 // --- PDF download ---
+
+// The CLI reads PDFs from disk. The server never does: `pdfUrl` arrives in
+// the request body, so a path there would read any file on the host and hand
+// its text to the caller through the result.
+let localFilesAllowed = false;
+
+export function allowLocalPdfFiles(): void {
+    localFilesAllowed = true;
+}
 
 export function adaToPdfUrl(ada: string): string {
     return `https://diavgeia.gov.gr/doc/${encodeURIComponent(ada)}`;
@@ -16,7 +26,7 @@ export function adaToPdfUrl(ada: string): string {
 
 export async function downloadPdfAsBuffer(source: string): Promise<Buffer> {
     // Local file path
-    if (source.startsWith('/') || source.startsWith('./') || source.startsWith('../')) {
+    if (localFilesAllowed && (source.startsWith('/') || source.startsWith('./') || source.startsWith('../'))) {
         const filePath = decodeURIComponent(source);
         console.log(`Reading local file: ${filePath}...`);
         const buffer = fs.readFileSync(filePath);
@@ -24,6 +34,7 @@ export async function downloadPdfAsBuffer(source: string): Promise<Buffer> {
         return buffer;
     }
 
+    assertFetchableUrl(source, 'pdfUrl');
     console.log(`Downloading file from ${source}...`);
     const response = await fetch(source);
     if (!response.ok) {

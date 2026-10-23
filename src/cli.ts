@@ -12,7 +12,7 @@ import { pollDecisions, resolveMeetingDecisions } from './tasks/pollDecisions.js
 import { extractAgenda, processAgenda } from './tasks/processAgenda.js';
 import { extractAgendaMeetings } from './lib/agendaMeetingRecord.js';
 import { fetchAgendaDocument } from './lib/documentConversion.js';
-import { extractDecisionFromPdf, adaToPdfUrl, AgendaItemRef, readCache, writeCache, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
+import { extractDecisionFromPdf, adaToPdfUrl, allowLocalPdfFiles, AgendaItemRef, readCache, writeCache, type RawExtractedDecision } from './tasks/utils/decisionPdfExtraction.js';
 import { scoreDocument, tallyScores, FIELDS, type ExtractionLabel, type DocumentScore } from './tasks/utils/extractionScoring.js';
 import { parseBodyHints } from './tasks/utils/bodyHints.js';
 import { identifySpeakers, chunkSegments, buildSystemPrompt, buildUserPrompt, ACTIONABLE_EVIDENCE_KINDS, DEFAULT_IDENTIFICATION_MODEL, DEFAULT_IDENTIFICATION_EFFORT, DEFAULT_CHUNK_CHARS, type IdentificationEffort, type SpeakerIdentification } from './lib/speakerIdentification.js';
@@ -43,6 +43,9 @@ import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscri
 import { listFailedCallbacks } from './lib/failedCallbackStore.js';
 import { replayStoredCallback } from './lib/callbackReplay.js';
 import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
+
+// Only the CLI may read a decision PDF from a local path; the server fetches URLs only.
+allowLocalPdfFiles();
 
 const program = new Command();
 const app = getExpressAppWithCallbacks();

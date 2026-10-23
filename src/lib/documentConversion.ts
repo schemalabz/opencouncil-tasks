@@ -1,4 +1,5 @@
 import mammoth from "mammoth";
+import { assertFetchableUrl } from "./fetchableUrl.js";
 
 /**
  * Agenda documents arrive as whatever the municipality published. Claude's
@@ -194,6 +195,7 @@ export const convertDocxToHtml = async (docx: Buffer): Promise<string> => {
  * buffering an entire oversized response first.
  */
 const downloadBounded = async (url: string, maxBytes: number): Promise<Buffer> => {
+    assertFetchableUrl(url, 'agendaUrl');
     const response = await fetch(url);
     if (!response.ok) {
         throw new Error(`Failed to download document from ${url}: ${response.status} ${response.statusText}`);
