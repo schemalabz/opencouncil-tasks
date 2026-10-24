@@ -581,6 +581,12 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
 }
 
 async function normalizeVideoAudio(filePath: string): Promise<boolean> {
+    // An operator switch for when the time to a transcript matters more than even
+    // loudness: both passes are skipped, including the silent-audio check.
+    if (process.env.SKIP_LOUDNORM === '1') {
+        console.log(`[loudnorm] ${path.basename(filePath)}: SKIP_LOUDNORM=1, skipping measurement and normalization`);
+        return false;
+    }
     const { I, TP, LRA } = LOUDNORM_TARGET;
     const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
     const filename = path.basename(filePath);
