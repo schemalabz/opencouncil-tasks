@@ -6,6 +6,7 @@ This guide covers setting up [PGSync](https://github.com/toluaina/pgsync) for re
 
 - [Quick Reference](#quick-reference)
 - [Overview](#overview)
+- [The PGSync Image](#the-pgsync-image)
 - [Prerequisites](#prerequisites)
   - [1. PostgreSQL Configuration](#1-postgresql-configuration)
   - [2. Grant Replication Privileges](#2-grant-replication-privileges)
@@ -29,6 +30,8 @@ This guide covers setting up [PGSync](https://github.com/toluaina/pgsync) for re
 ### Key Points
 - ✅ Set `max_slot_wal_keep_size` to 15-25% of your disk (e.g., 15GB for 60GB disk)
 - ✅ Set up automated WAL monitoring with Discord alerts (see [WAL Monitoring](#wal-monitoring-setup))
+- ✅ Set up the crash check next to it: Docker restarts a crashed daemon at once, so only `scripts/check-pgsync.sh` sees a crash (see [Monitoring](#monitoring-and-maintenance))
+- ✅ Run the image that `docker/pgsync/` builds, never `toluaina1/pgsync:latest` (see [The PGSync Image](#the-pgsync-image))
 - ✅ A **"lost"** WAL status means the slot must be reset and data re-synced
 - ✅ Inactive slots are **normal** for PGSync's polling model - only worry if WAL is growing
 - ⚠️ **After every bootstrap/re-index**: Grant app access to `_view` (see [Post-Bootstrap](#post-bootstrap-grant-app-access))
@@ -41,6 +44,9 @@ psql "$PG_URL" -c "SELECT slot_name, slot_type, active, wal_status FROM pg_repli
 
 # Run WAL monitoring script manually
 ./scripts/check-wal.sh
+
+# Did the daemon crash or log errors since the last check?
+./scripts/check-pgsync.sh
 
 # View PGSync logs
 docker compose logs -f pgsync
@@ -58,6 +64,30 @@ PGSync uses PostgreSQL's logical replication (WAL) to sync data to Elasticsearch
 - Automatic handling of INSERT, UPDATE, DELETE, TRUNCATE
 - Redis checkpointing for resumable sync
 - Complex relationship mapping with nested documents
+
+Not every change reaches the index live. Which ones do, and the rules for `schema.json` and `views.sql` that follow from it, are in the opencouncil repository: `elasticsearch/README.md`, section "What syncs live".
+
+## The PGSync Image
+
+`docker-compose.yml` builds the PGSync image from `docker/pgsync/`. Upstream publishes only a moving `toluaina1/pgsync:latest` tag, and that tag can carry unreleased code, so the Dockerfile installs an exact PyPI release with the release's own pinned dependencies (`requirements.txt`).
+
+The Dockerfile also fixes one upstream bug: PGSync keeps the watched columns of only the last node of each table in `schema.json`, so its triggers ignore updates to the other indexed columns of that table. Without the fix, a meeting release and every Greek name never reach the index live. The build fails if the line that the fix changes is missing, so an upgrade cannot silently drop it.
+
+To upgrade PGSync:
+
+1. Set `PGSYNC_VERSION` in the Dockerfile and copy that release's `requirements/base.txt` into `requirements.txt`.
+2. Build it. If the build fails on the fix, check whether upstream fixed the bug, and drop the fix only if it did.
+3. Run `scripts/pgsync-matrix.sh --write` against a seeded local database and compare its report with "What syncs live" in the opencouncil README. `scripts/pgsync-test.sh` and `scripts/pgsync-matrix.sh` use this image by default, and `PGSYNC_IMAGE` selects another. To rehearse the release itself, first set up the old state with the `bootstrap` command of the running image, the old `views.sql` and the old `schema.json`. Then add `--upgrade`, which keeps the triggers and `_view` of that state.
+4. Deploy. A new daemon alone does not change which columns notify: the bootstrap builds `_view`, and the triggers read it. An index rebuild runs a bootstrap, so a release with a rebuild needs no extra step. Without a rebuild, refresh the setup of the current index with the image's setup-only `bootstrap` command, which writes no documents:
+
+   ```bash
+   docker compose build pgsync
+   docker compose stop pgsync
+   docker compose run --rm --entrypoint bootstrap pgsync
+   docker compose up -d pgsync
+   ```
+
+   The refresh creates the replication slot again. The daemon then catches up from its Redis checkpoint, but a row deleted while the daemon is stopped stays in the index until the next full sync. A plain `docker compose up` keeps an image that already exists, so build first. After the refresh, check the app's access to `_view` (see [Post-Bootstrap](#post-bootstrap-grant-app-access)).
 
 ## Prerequisites
 
@@ -239,8 +269,9 @@ docker compose restart pgsync
 The service configuration:
 - Runs in daemon mode (`-d`)
 - Depends on Redis for checkpointing
-- Automatically restarts on failure
+- Automatically restarts on failure, which hides a crash: see the crash check under [Monitoring](#monitoring-and-maintenance)
 - Stores state in Redis (no filesystem checkpoints)
+- Rotates its log: at most 3 files of 10 MB, the same as the app
 
 ### Elasticsearch Timeout Issues
 
@@ -284,7 +315,20 @@ docker compose logs --tail=200 pgsync
 
 # Run the WAL monitor (recommended)
 ./scripts/check-wal.sh
+
+# Run the crash check (recommended)
+./scripts/check-pgsync.sh
 ```
+
+### Crash check
+
+A crashed daemon is back within seconds, so `docker compose ps` shows it running. `scripts/check-pgsync.sh` compares the container's restart count and start time with its previous run, and scans the log written since then. It posts to `ALERT_WEBHOOK_URL`, the same webhook as the WAL monitor, and exits 2 for a crash or a stopped daemon, 1 for errors in the log. Install it as a cron job next to the WAL monitor:
+
+```bash
+*/10 * * * * cd /root/opencouncil-tasks && ./scripts/check-pgsync.sh >> logs/pgsync-check.log 2>&1
+```
+
+The first run only records the state.
 
 If you want to inspect slots manually:
 
@@ -597,6 +641,7 @@ Common causes:
 - Elasticsearch auth issues (check API key)
 - Database connection issues (check PG_URL)
 - Missing replication slot (run bootstrap first)
+- `Primary keys [...] not subset of payload data ... for table public.<View>`: a view in `schema.json` is keyed or joined on an aliased column, which a WAL event never carries. Every write to the view's base tables then exits the daemon. See rule 1 in "What syncs live" in the opencouncil README.
 
 ---
 
