@@ -35,7 +35,10 @@ services:
       - ./data/redis:/data
 
   pgsync:
-    image: toluaina1/pgsync:latest
+    # Pinned and patched: see docker/pgsync/Dockerfile and docs/pgsync-setup.md.
+    build:
+      context: ./docker/pgsync
+    image: opencouncil/pgsync:7.3.0-columns
     restart: unless-stopped
     env_file:
       - .env
