@@ -34,6 +34,8 @@
 #   ELASTICSEARCH_API_KEY     - ES API key secret (required)
 #   OPENCOUNCIL_REPO          - Path to opencouncil repo (default: ../opencouncil)
 #   TEST_INDEX                - Elasticsearch test index name (default: subjects_test)
+#   PGSYNC_IMAGE              - PGSync image (default: the production image, built
+#                               from docker/pgsync/ on first use)
 #
 set -euo pipefail
 
@@ -60,6 +62,8 @@ fi
 # Configuration
 OPENCOUNCIL_REPO="${OPENCOUNCIL_REPO:-../opencouncil}"
 TEST_INDEX="${TEST_INDEX:-subjects_test}"
+PRODUCTION_PGSYNC_IMAGE="opencouncil/pgsync:7.3.0-columns"
+PGSYNC_IMAGE="${PGSYNC_IMAGE:-$PRODUCTION_PGSYNC_IMAGE}"
 CLEANUP=false
 DAEMON=false
 
@@ -206,6 +210,18 @@ else
 fi
 
 # Step 4: Run PGSync
+# The production image is built from this repository, so a checkout can always
+# make it. Any other PGSYNC_IMAGE must already exist locally.
+if ! docker image inspect "$PGSYNC_IMAGE" >/dev/null 2>&1; then
+  if [ "$PGSYNC_IMAGE" = "$PRODUCTION_PGSYNC_IMAGE" ]; then
+    log_info "Building $PGSYNC_IMAGE from docker/pgsync..."
+    docker build -q -t "$PGSYNC_IMAGE" "$(dirname "$0")/../docker/pgsync" >/dev/null
+  else
+    log_error "Image $PGSYNC_IMAGE not found locally"
+    exit 1
+  fi
+fi
+log_info "PGSync image: $PGSYNC_IMAGE ($(docker run --rm --entrypoint pip "$PGSYNC_IMAGE" show pgsync 2>/dev/null | sed -n 's/^Version: //p'))"
 SCHEMA_CONTAINER_PATH="/tmp/test-schema.json"
 
 # Start a temporary Redis on host network for PGSync checkpointing
@@ -239,7 +255,7 @@ if [ "$DAEMON" = true ]; then
     -e "ELASTICSEARCH_API_KEY_ID=$ELASTICSEARCH_API_KEY_ID" \
     -v "$TEMP_SCHEMA:$SCHEMA_CONTAINER_PATH:ro" \
     -v "$CHECKPOINT_DIR:/data" \
-    toluaina1/pgsync:latest \
+    "$PGSYNC_IMAGE" \
     --config "$SCHEMA_CONTAINER_PATH" --bootstrap; then
     log_error "Bootstrap failed"
     exit 1
@@ -263,7 +279,7 @@ if [ "$DAEMON" = true ]; then
     -e "ELASTICSEARCH_API_KEY_ID=$ELASTICSEARCH_API_KEY_ID" \
     -v "$TEMP_SCHEMA:$SCHEMA_CONTAINER_PATH:ro" \
     -v "$CHECKPOINT_DIR:/data" \
-    toluaina1/pgsync:latest \
+    "$PGSYNC_IMAGE" \
     --config "$SCHEMA_CONTAINER_PATH" -d
   
   # If we get here, PGSync exited (user pressed Ctrl+C or error)
@@ -289,7 +305,7 @@ else
     -e "ELASTICSEARCH_API_KEY_ID=$ELASTICSEARCH_API_KEY_ID" \
     -v "$TEMP_SCHEMA:$SCHEMA_CONTAINER_PATH:ro" \
     -v "$CHECKPOINT_DIR:/data" \
-    toluaina1/pgsync:latest \
+    "$PGSYNC_IMAGE" \
     --config "$SCHEMA_CONTAINER_PATH" --bootstrap; then
     log_ok "PGSync bootstrap completed"
   else

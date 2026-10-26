@@ -31,3 +31,9 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t opencouncil-tasks:ci .
+
+      # The Dockerfile fails the build when the watched-columns fix no longer applies.
+      - name: Build PGSync image
+        run: |
+          docker build -t opencouncil/pgsync:ci docker/pgsync
+          docker run --rm --entrypoint pip opencouncil/pgsync:ci show pgsync | grep '^Version'

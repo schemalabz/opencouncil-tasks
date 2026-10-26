@@ -35,7 +35,15 @@ services:
       - ./data/redis:/data
 
   pgsync:
-    image: toluaina1/pgsync:latest
+    # Pinned and patched: see docker/pgsync/Dockerfile and docs/pgsync-setup.md.
+    build:
+      context: ./docker/pgsync
+    image: opencouncil/pgsync:7.3.0-columns
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     restart: unless-stopped
     env_file:
       - .env

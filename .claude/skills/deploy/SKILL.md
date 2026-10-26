@@ -104,6 +104,14 @@ If the tag doesn't exist, stop and tell the user.
 
 Show what will be deployed: the tag, and a brief summary of what changed since what's currently running on the target environment. Use `git log --oneline <current>..<deploy_tag>` to show the commits.
 
+Check whether the range changes the PGSync daemon:
+
+```bash
+git diff --stat <current>..<deploy_tag> -- docker/pgsync docker-compose.yml scripts/check-pgsync.sh
+```
+
+This deploy rebuilds only the `app` service. A change to `docker/pgsync` or to the `pgsync` service reaches the daemon only when the daemon is recreated, and a new image acts only after a bootstrap or a setup refresh (`docs/pgsync-setup.md`, "The PGSync Image"). If the range has such a change, tell the user, and hand over to `/es-deploy` in the opencouncil repository after this deploy. That skill recreates the daemon in the right order with the views and the schema.
+
 ## Step 4: Confirm and Deploy
 
 **Always confirm with the user before deploying.** Show:
