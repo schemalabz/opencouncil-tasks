@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getLanguageConfig, DEFAULT_LANGUAGE, LANGUAGES } from "./language.js";
+import { getLanguageConfig, DEFAULT_LANGUAGE, LANGUAGES, CITY_LANGUAGES, cityLanguageForScribeCode, isCityLanguage } from "./language.js";
 
 describe("getLanguageConfig", () => {
     it("returns the Greek config for 'el'", () => {
@@ -21,6 +21,19 @@ describe("getLanguageConfig", () => {
         expect(sr.promptName).toBe("Serbian");
         expect(sr.outputDirective).not.toBe("");
         expect(sr.defaultAdministrativeBodyName).toBe("Скупштина града");
+    });
+
+    it("accepts exactly the registered languages", () => {
+        for (const language of CITY_LANGUAGES) expect(isCityLanguage(language)).toBe(true);
+        expect(isCityLanguage("xx")).toBe(false);
+        expect(isCityLanguage("toString")).toBe(false);
+    });
+
+    it("maps each Scribe code back to its language", () => {
+        for (const language of CITY_LANGUAGES) {
+            expect(cityLanguageForScribeCode(LANGUAGES[language].scribeCode)).toBe(language);
+        }
+        expect(cityLanguageForScribeCode("eus")).toBe("eus");
     });
 
     it("defaults to Greek when the language is undefined (older clients)", () => {

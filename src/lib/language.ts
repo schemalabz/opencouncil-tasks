@@ -124,6 +124,21 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
     },
 };
 
+/** Every supported content language, in registry order. */
+export const CITY_LANGUAGES = Object.keys(LANGUAGES) as CityLanguage[];
+
+export function isCityLanguage(value: string): value is CityLanguage {
+    return Object.prototype.hasOwnProperty.call(LANGUAGES, value);
+}
+
+/**
+ * The content language whose Scribe code is `code` ("ell" → "el"), or the code
+ * itself when no registered language uses it (Scribe detected something else).
+ */
+export function cityLanguageForScribeCode(code: string): string {
+    return CITY_LANGUAGES.find((language) => LANGUAGES[language].scribeCode === code) ?? code;
+}
+
 /**
  * Resolve a language's config, defaulting to Greek when the field is missing —
  * a defensive fallback for older clients that omit `cityLanguage`.

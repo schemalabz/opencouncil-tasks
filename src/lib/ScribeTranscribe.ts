@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 import { fetch, Agent, FormData } from "undici";
 import { CityLanguage, Transcript, Utterance, Word } from "../types.js";
-import { getLanguageConfig } from "./language.js";
+import { cityLanguageForScribeCode, getLanguageConfig } from "./language.js";
 
 dotenv.config();
 
@@ -187,9 +187,7 @@ function logprobToConfidence(logprob: number | null | undefined): number {
 // Scribe uses ISO-639-3 codes ("ell", "fra"); downstream consumers expect the
 // two-letter codes Gladia produced ("el", "fr")
 function normalizeLanguageCode(code: string): string {
-    if (code === "ell") return "el";
-    if (code === "fra") return "fr";
-    return code;
+    return cityLanguageForScribeCode(code);
 }
 
 export function scribeResponseToTranscript(response: ScribeResponse, transcriptionTimeSeconds: number, logLabel = ""): Transcript {

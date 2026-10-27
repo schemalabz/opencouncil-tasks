@@ -175,6 +175,18 @@ describe("scribeResponseToTranscript", () => {
         expect(transcript.transcription.languages).toEqual(["fr"]);
     });
 
+    it("normalizes every registered Scribe code, Serbian included, and passes others through", () => {
+        const languagesFor = (code: string) => scribeResponseToTranscript({
+            language_code: code,
+            language_probability: 0.99,
+            text: "Добар дан.",
+            words: scribeWords([["Добар дан.", 0, 0.5]]),
+            audio_duration_secs: 0.6,
+        }, 10).transcription.languages;
+        expect(languagesFor("srp")).toEqual(["sr"]);
+        expect(languagesFor("ukr")).toEqual(["ukr"]);
+    });
+
     it("falls back to the last utterance end when audio_duration_secs is missing", () => {
         const transcript = scribeResponseToTranscript({ ...response, audio_duration_secs: null }, 35);
 
