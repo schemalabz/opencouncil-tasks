@@ -1,0 +1,19 @@
+id: FM-0004
+slug: extraction_incomplete
+title: Decision extraction reports a truncated document
+definition: >
+  The whole-document decision extraction sets incomplete: the decision section was not found or is cut off, so the decision text may be missing.
+  The pipeline's own EXTRACTION_INCOMPLETE warning (validateRawExtraction / validateProcessedDecision), run as a check.
+boundary: >
+  Only the whole-document read (label decision-extraction) is checked: partial, continuation and closing reads of long documents leave fields empty by instruction, and their merged result is not a single call.
+suite: decisions.extraction
+scope: call
+severity: major
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/decisionValidationCodes.ts
+  export: EXTRACTION_INCOMPLETE
+decision: monitor
+alert: "fail rate per city > 3× its 30-day baseline, min 5 decision-extraction calls"

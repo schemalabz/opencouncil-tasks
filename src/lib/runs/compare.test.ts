@@ -124,4 +124,25 @@ describe('compareRuns', () => {
         const comparison = compareRuns(makeRun('t1', [from]), makeRun('t2', [to]));
         expect(comparison.subjects.matched[0].verdict).toBe('identical');
     });
+
+    it('treats context appearing or vanishing as structural, rewording as cosmetic', () => {
+        const ctx = (text: string) => ({ text, citationUrls: [] });
+        const base = makeSubject({ id: 'a', name: 'Θέμα 1', context: ctx('Το έργο χρηματοδοτείται από το ΕΣΠΑ.') });
+        const reworded = makeSubject({ id: 'b', name: 'Θέμα 1', context: ctx('Το έργο έχει χρηματοδότηση ΕΣΠΑ.') });
+        const lost = makeSubject({ id: 'c', name: 'Θέμα 1', context: null });
+        expect(compareRuns(makeRun('t1', [base]), makeRun('t2', [reworded])).subjects.matched[0].verdict).toBe('cosmetic');
+        expect(compareRuns(makeRun('t1', [base]), makeRun('t2', [lost])).subjects.matched[0].verdict).toBe('structural');
+    });
+
+    // Sectioned agendas restart their numbering: «Α. 1» and «Β. 1» are two subjects.
+    it('matches subjects that share an item number in different agenda sections', () => {
+        const sectioned = (id: string) => [
+            makeSubject({ id: `${id}1`, name: 'Έγκριση προϋπολογισμού', agendaItemIndex: 1, agendaSection: { index: 1, title: 'Α' } }),
+            makeSubject({ id: `${id}2`, name: 'Κοπή δέντρων', agendaItemIndex: 1, agendaSection: { index: 2, title: 'Β' } }),
+        ];
+        const comparison = compareRuns(makeRun('t1', sectioned('a')), makeRun('t2', sectioned('b')));
+        expect(comparison.subjects.matched.map(m => m.from.name).sort()).toEqual(['Έγκριση προϋπολογισμού', 'Κοπή δέντρων']);
+        expect(comparison.subjects.fromOnly).toEqual([]);
+        expect(comparison.subjects.toOnly).toEqual([]);
+    });
 });

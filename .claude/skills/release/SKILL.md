@@ -135,12 +135,12 @@ echo "Next version: $NEXT_VERSION"
 
 ## Step 4: Check Task Versions
 
-For each versioned task in `src/server.ts`, answer two questions — from evidence, not inference:
+For each versioned task in `src/tasks/registry.ts`, answer two questions — from evidence, not inference:
 
 **Why did each bump happen?** Find the commit that changed the `version:` line and use *its* stated reason. Don't infer the reason from the range's headline change — it's often unrelated.
 
 ```bash
-git log $RANGE -L <start>,<end>:src/server.ts   # commit + message for a version: line
+git log $RANGE -L <start>,<end>:src/tasks/registry.ts   # commit + message for a version: line
 ```
 
 **Should a bump have happened but didn't?** Decide whether results differ for existing consumers — a type change alone isn't proof. Before calling anything breaking, verify runtime behavior: a field required in TypeScript but unvalidated at the route and defaulted when omitted is backward compatible, not breaking. New behavior gated behind an opt-in value existing callers won't send doesn't change existing results.

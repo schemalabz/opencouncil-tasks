@@ -1,0 +1,16 @@
+{
+  "kind": "must-not-fire",
+  "note": "Starts with «Δεν» but not with a search-failure phrase",
+  "input": {
+    "label": "subject-context-search:Ανανέωση άδειας περιπτέρου",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "Δεν επιτρέπεται η μεταβίβαση άδειας περιπτέρου χωρίς έγκριση του δήμου, σύμφωνα με τον ν. 4093/2012. Οι άδειες παραχωρούνται κατά προτεραιότητα σε άτομα με αναπηρία και πολύτεκνους, και ο δήμος εισπράττει ετήσιο τέλος χρήσης κοινόχρηστου χώρου.",
+      "stopReason": "end_turn"
+    }
+  }
+}

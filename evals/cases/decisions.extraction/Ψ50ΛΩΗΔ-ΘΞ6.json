@@ -1,0 +1,171 @@
+{
+  "id": "decisions.extraction/Ψ50ΛΩΗΔ-ΘΞ6",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "Ψ50ΛΩΗΔ-ΘΞ6",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ50ΛΩΗΔ-ΘΞ6",
+    "city": "chalandri",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "mayorStated=yes",
+        "changeAnchor=session_phase",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "ΔΗΜΗΤΡΑ ΓΚΑΣΟΥΚΑ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την ψηφοφορία για τα μέλη της Δημοτικής Επιτροπής προσήλθαν οι κ.κ. Δ. Γκασούκα και Σ. Φωτεινός."
+          },
+          {
+            "name": "ΣΠΥΡΙΔΩΝ ΦΩΤΕΙΝΟΣ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την ψηφοφορία για τα μέλη της Δημοτικής Επιτροπής προσήλθαν οι κ.κ. Δ. Γκασούκα και Σ. Φωτεινός."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1641,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "presidedBy": {
+      "value": {
+        "name": null,
+        "verified": true
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΚΩΝΣΤΑΝΤΙΝΑ - ΟΛΥΜΠΙΑ ΚΑΡΑΓΙΑΝΝΗ",
+          "ΕΛΕΝΗ ΧΡΙΣΤΟΥΛΗ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΕΡΟΛΥΜΑΤΟΣ",
+          "ΙΩΑΝΝΑ ΑΘΑΝΑΣΑΤΟΥ",
+          "ΓΕΡΑΣΙΜΟΣ ΛΥΜΠΕΡΑΤΟΣ",
+          "ΧΡΙΣΤΙΝΑ ΜΑΧΑΙΡΑ",
+          "ΑΛΕΞΙΟΣ ΜΑΥΡΑΓΑΝΗΣ",
+          "ΕΥΤΕΡΠΗ ΛΕΡΤΑ",
+          "ΧΡΥΣΑΥΓΗ ΑΛΟΥΠΗ",
+          "ΕΥΘΥΜΙΟΣ ΚΟΥΡΑΣΗΣ",
+          "ΕΛΕΥΘΕΡΙΟΣ ΠΑΝΤΕΛΙΔΑΚΗΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΧΡΙΣΤΟΥΛΑΚΗΣ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΓΑΒΡΑΣ",
+          "ΔΗΜΗΤΡΙΟΣ ΒΑΣΙΛΟΠΟΥΛΟΣ",
+          "ΙΩΑΝΝΑ ΚΑΜΠΟΥΡΗ",
+          "ΑΝΝΑ ΣΟΥΣΟΥ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΑΓΓΕΛΗΣ",
+          "ΠΑΝΑΓΙΩΤΗΣ ΛΑΜΠΡΟΠΟΥΛΟΣ",
+          "ΧΡΗΣΤΟΣ ΚΙΑΚΟΣ",
+          "ΘΕΟΔΩΡΑ ΑΛΕΞΑΝΔΡΗ",
+          "ΧΑΡΑΛΑΜΠΟΣ (ΧΑΡΗΣ) ΡΑΣΣΙΑΣ (ΡΩΜΑΣ)",
+          "ΠΑΡΑΣΚΕΥΗ ΖΟΡΜΠΑ",
+          "ΕΛΠΙΝΙΚΗ ΠΑΠΑΓΙΑΝΝΑΚΗ",
+          "ΕΙΡΗΝΗ ΚΑΛΛΗ",
+          "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+          "ΕΜΜΑΝΟΥΗΛ ΚΡΑΝΙΔΗΣ"
+        ],
+        "absentMembers": [
+          "ΧΑΡΗΣ ΜΑΥΡΟΥΔΗΣ",
+          "ΙΩΑΝΝΗΣ ΛΑΔΟΠΟΥΛΟΣ",
+          "ΔΗΜΗΤΡΑ ΓΚΑΣΟΥΚΑ",
+          "ΚΩΝΣΤΑΝΤΙΝΟΣ ΕΥΘΥΜΙΟΥ",
+          "ΣΠΥΡΙΔΩΝ ΦΩΤΕΙΝΟΣ",
+          "ΧΡΥΣΑ ΑΓΑΠΗΤΟΥ",
+          "ΑΘΑΝΑΣΙΟΣ ΤΣΙΑΜΠΑΣ",
+          "ΙΩΑΝΝΗΣ ΚΟΥΡΑΣΗΣ",
+          "ΚΟΝΔΥΛΙΑ ΚΑΡΑΤΖΑ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "συγκέντρωσε 25 ψήφους, δηλαδή την απόλυτη πλειοψηφία του συνόλου των μελών του Δημοτικού Συμβουλίου",
+        "phraseAsExtracted": "Κατά πλειοψηφία (25 ψήφοι υπέρ, 1 λευκή)",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΙΩΑΝΝΗΣ ΠΑΠΑΓΕΩΡΓΙΟΥ",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chalandri/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chalandri",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "mayorStated=yes",
+    "changeAnchor=session_phase",
+    "partialVote=yes"
+  ]
+}

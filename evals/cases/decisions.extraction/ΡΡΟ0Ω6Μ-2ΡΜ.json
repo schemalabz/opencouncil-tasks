@@ -1,0 +1,170 @@
+{
+  "id": "decisions.extraction/ΡΡΟ0Ω6Μ-2ΡΜ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΡΡΟ0Ω6Μ-2ΡΜ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΡΟ0Ω6Μ-2ΡΜ",
+    "city": "athens",
+    "body": "3η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "changeAnchor=agenda_item",
+        "namedVoters=dissenters_only",
+        "arrival=yes",
+        "voteTally=yes",
+        "correctedRepost=yes",
+        "decisionNumber=text"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Νίκη Ανδρικοπούλου",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Προσήλθε κατά τη συζήτηση του 1ου Θέματος, η κα. Νίκη Ανδρικοπούλου."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "decisionNumber": {
+      "value": {
+        "number": "119",
+        "verified": "adjudicated",
+        "evidence": {
+          "quote": "ΠΡΑΞΗ 119",
+          "ada": "ΡΡΟ0Ω6Μ-2ΡΜ",
+          "page": 1,
+          "adjudicatedAt": "2026-09-26T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-26",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 988,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΠΡΟΕΔΡΟΣ",
+          "ΜΕΛΗ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Φίλιππος Κέγκος",
+          "Παναγιώτα Αμανατίδου",
+          "Νίκη Ανδρικοπούλου",
+          "Μαρία Δεπούντη",
+          "Βασίλειος Δήμου",
+          "Μαρίνα Ζώντου",
+          "Μαρία Μαργαρίτα (Μαρίτα) Μελέτη",
+          "Ιωάννης Φελέκης"
+        ],
+        "absentMembers": [
+          "Πέτρος Δεδούσης",
+          "Γεώργιος Κόρκας",
+          "Πρόδρομος Πέρδικος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 9,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 9,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "επί συνόλου παρευρισκόμενων 8 Συμβούλων, με 4 ψήφους ΥΠΕΡ, με 2 ψήφους ΛΕΥΚΟ (Παναγιώτα Αμανατίδου, Μαρία Δεπούντη) και 2 ψήφους ΚΑΤΑ (Βασίλειος Δήμου, Μαρία Μαργαρίτα Μελέτη)",
+        "phraseAsExtracted": "Κατά πλειοψηφία με 4 ψήφους ΥΠΕΡ, 2 ψήφους ΛΕΥΚΟ και 2 ψήφους ΚΑΤΑ",
+        "carriesTally": true,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Παναγιώτα Αμανατίδου",
+            "vote": "ABSTAIN"
+          },
+          {
+            "name": "Μαρία Δεπούντη",
+            "vote": "ABSTAIN"
+          },
+          {
+            "name": "Βασίλειος Δήμου",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαρία Μαργαρίτα Μελέτη",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "changeAnchor=agenda_item",
+    "namedVoters=dissenters_only",
+    "arrival=yes",
+    "voteTally=yes",
+    "correctedRepost=yes",
+    "decisionNumber=text"
+  ]
+}

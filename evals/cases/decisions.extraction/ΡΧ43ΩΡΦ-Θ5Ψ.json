@@ -1,0 +1,168 @@
+{
+  "id": "decisions.extraction/ΡΧ43ΩΡΦ-Θ5Ψ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΡΧ43ΩΡΦ-Θ5Ψ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΡΧ43ΩΡΦ-Θ5Ψ",
+    "city": "zografou",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 16,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "mayorStated=yes",
+        "namedVoters=dissenters_only",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 768,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+          "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ- ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+          "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+          "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+          "ΒΑΜΒΑΚΑ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+          "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+          "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΑΛΕΞΑΝΔΡΗ-ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ",
+          "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+          "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+          "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+          "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+          "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "neither is right",
+            "note": "this was a meeting with a single item that's why the woridng is different \"Στην ημερήσια διάταξη υπήρχε και το μοναδικό θέμα, που αναφέρεται στην περίληψη της\nεπικεφαλίδας\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "single-item session («το μοναδικό θέμα»): #1 by the rule the reviewer applied on Ψ75ΤΩ6Μ-6ΔΡ"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ Ομόφωνα",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration stored as a vote",
+            "verdict": "survey is right",
+            "note": "but it had an abstain, with which we still get to ομόφωνα"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "«ΛΕΥΚΟ» ψήφισε ΚΑΡΑΒΙΔΑΣ is a blank vote; extraction's ABSTAIN is right, the survey called it a declaration"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "rollCallLayout=composition_and_absent",
+    "mayorStated=yes",
+    "namedVoters=dissenters_only",
+    "declaration=yes"
+  ]
+}

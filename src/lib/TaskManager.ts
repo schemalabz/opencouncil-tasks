@@ -150,7 +150,7 @@ export class TaskManager {
             }
 
             const result = await runWithTaskControl(control, () => runWithTaskTrace(
-                { taskType, version, input, callbackUrl },
+                { taskType, version, input, callbackUrl, taskId },
                 () => task(input, (stage, progressPercent) => {
                     // Universal cancellation checkpoint: every task reports
                     // progress, so every task observes cancellation here

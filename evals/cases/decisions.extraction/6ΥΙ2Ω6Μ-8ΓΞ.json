@@ -1,0 +1,170 @@
+{
+  "id": "decisions.extraction/6ΥΙ2Ω6Μ-8ΓΞ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΥΙ2Ω6Μ-8ΓΞ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΥΙ2Ω6Μ-8ΓΞ",
+    "city": "athens",
+    "body": "1η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "changeAnchor=decision_number",
+        "arrival=yes",
+        "namedVoters=all",
+        "partialVote=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Βέρα Λ.",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          },
+          {
+            "name": "Νέτος Γ.",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          },
+          {
+            "name": "Ξυνέλης Π.",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          },
+          {
+            "name": "Χαμντί Ντ.",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2742,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ",
+          "ΤΑ ΜΕΛΗ ΤΟΥ ΣΥΜΒΟΥΛΙΟΥ ΤΗΣ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Ευαγγελία Λίλιαν Γαζή",
+          "Αικατερίνη Βαλσαμάκη",
+          "Λυδία Βέρα",
+          "Σοφία Γαϊτάνη",
+          "Κωνσταντίνος Δεκαβάλλας",
+          "Δημήτριος Ευθυμίου",
+          "Παναγιώτης Κουφάκης",
+          "Γεώργιος (Γιωργής) Νέτος",
+          "Παναγιώτης Ξυνέλης",
+          "Παπαγεωργίου Χρυσούλα",
+          "Χαμντί Ντάφερ"
+        ],
+        "absentMembers": [
+          "Σπύρος (Σάκης) Αθανασάκης",
+          "Γεώργιος Διαμάντης",
+          "Μαρία Καζάντη",
+          "Γεωργία Σμέρου"
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "present count disagrees",
+            "verdict": "not resolvable from this page",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "15-member composition (president + 14); absentees printed by surname and initial (e.g. «Αθανασάκης Σ.»), which the extractor failed to subtract from the composition and so returned all 15 as present; Βέρα, Νέτος, Ξυνέλης, Χαμντί departed at decision 286, before this one (304): the vote names exactly the 7 who remained"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 19,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 19,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": true,
+        "asExtracted": [
+          {
+            "name": "Παπαγεωργίου Χρυσούλα",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "changeAnchor=decision_number",
+    "arrival=yes",
+    "namedVoters=all",
+    "partialVote=yes"
+  ]
+}

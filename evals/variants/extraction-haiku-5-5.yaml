@@ -1,0 +1,5 @@
+# Decision extraction (every page window) on Haiku 5.5.
+name: extraction-haiku-5-5
+overrides:
+  "decision-extraction*":
+    model: claude-haiku-5-5

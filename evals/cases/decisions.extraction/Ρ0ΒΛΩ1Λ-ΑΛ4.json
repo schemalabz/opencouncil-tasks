@@ -1,0 +1,118 @@
+{
+  "id": "decisions.extraction/Ρ0ΒΛΩ1Λ-ΑΛ4",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ρ0ΒΛΩ1Λ-ΑΛ4",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ0ΒΛΩ1Λ-ΑΛ4",
+    "city": "samothraki",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": true,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "voteTally=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2131,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 5,
+        "presentMembers": [
+          "Βίτσας Αθανάσιος",
+          "Σκαρλατίδης Αθανάσιος",
+          "Καλαϊτζη Αικατερίνη"
+        ],
+        "absentMembers": [
+          "Γαλατούμος Νικόλαος",
+          "Θεοδώρου Ιωάννης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "με την απόλυτη πλειοψηφία των τριών (3) μελών της που ήταν παρόντα και ψήφισαν υπέρ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": true,
+        "review": [
+          {
+            "what": "vote tally dropped",
+            "verdict": "extraction is right",
+            "note": "survey is also write, it just got the first part, cause 3 where all the members present so it's ομοφωνα"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "«των τριών (3) μελών» counts those present, all voted for; ομόφωνα is right"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "samothraki/Δημοτική Επιτροπή",
+  "tags": [
+    "samothraki",
+    "rollCallLayout=present_and_absent",
+    "voteTally=yes"
+  ]
+}

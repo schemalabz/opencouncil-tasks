@@ -1,6 +1,6 @@
 ---
 name: compare-runs
-description: Compare two traced summarize runs from Langfuse and produce a qualitative evaluation of how subjects, descriptions, and speaker contributions changed.
+description: Compare two archived summarize runs and produce a qualitative evaluation of how subjects, descriptions, and speaker contributions changed.
 argument-hint: "<cityId/meetingId> [traceA traceB]"
 allowed-tools: Bash, Read
 ---
@@ -9,7 +9,7 @@ allowed-tools: Bash, Read
 
 Compare two traced summarize runs and evaluate whether the differences are improvements, regressions, or generation noise. Use after re-running summarize on a meeting (e.g. to evaluate a prompt or pipeline change).
 
-Requires `LANGFUSE_*` env vars in `.env` (see [docs/observability.md](../../../docs/observability.md)).
+Reads runs from the archive (`ARCHIVE_URL`, see [docs/evals.md](../../../docs/evals.md)). To compare a change on a recorded meeting without paying for every phase, replay it with only the changed phase live: `eval task run summarize --request <req> --cassette <trace> --live '<label>*'`.
 
 ## Phase 1: Generate the comparison
 

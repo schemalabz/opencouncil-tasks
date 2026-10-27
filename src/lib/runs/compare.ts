@@ -10,9 +10,12 @@ function cleanRefs(text: string | null | undefined): string {
     return (text ?? '').replace(/\[([^\]]*)\]\(REF:[A-Z]+:[^)]+\)/g, '$1');
 }
 
-function toSubjectViews(result: SummarizeResult): SubjectView[] {
+/** A task result that carries subjects: summarize's, or processAgenda's, which has no utterance statuses. */
+export type SubjectsResult = Pick<SummarizeResult, 'subjects'> & Partial<Pick<SummarizeResult, 'utteranceDiscussionStatuses'>>;
+
+export function toSubjectViews(result: SubjectsResult): SubjectView[] {
     const statusesBySubject = new Map<string, Record<string, number>>();
-    for (const u of result.utteranceDiscussionStatuses) {
+    for (const u of result.utteranceDiscussionStatuses ?? []) {
         if (!u.subjectId) continue;
         const statuses = statusesBySubject.get(u.subjectId) ?? {};
         statuses[u.status] = (statuses[u.status] ?? 0) + 1;
@@ -24,6 +27,7 @@ function toSubjectViews(result: SummarizeResult): SubjectView[] {
         name: s.name,
         description: s.description,
         agendaItemIndex: typeof s.agendaItemIndex === 'number' ? s.agendaItemIndex : null,
+        agendaSectionIndex: s.agendaSection?.index ?? null,
         nonAgendaReason: s.agendaItemIndex === 'BEFORE_AGENDA' ? 'beforeAgenda' as const
             : s.agendaItemIndex === 'OUT_OF_AGENDA' ? 'outOfAgenda' as const : null,
         topic: s.topicLabel,
@@ -60,7 +64,11 @@ function classifySubject(from: SubjectView, to: SubjectView): { verdict: Subject
     if (from.withdrawn !== to.withdrawn) { changes.push('withdrawn'); structural = true; }
     if (from.topicImportance !== to.topicImportance) changes.push('topicImportance');
     if (from.proximityImportance !== to.proximityImportance) changes.push('proximityImportance');
-    if (from.context !== to.context) changes.push('context');
+    if (from.context !== to.context) {
+        changes.push('context');
+        // Context appearing or vanishing is what a failed or refused search looks like, not rewording.
+        if (Boolean(from.context?.trim()) !== Boolean(to.context?.trim())) structural = true;
+    }
 
     const fromDesc = cleanRefs(from.description);
     const toDesc = cleanRefs(to.description);
@@ -185,24 +193,41 @@ function collectSegmentSamples(from: SummarizeResult, to: SummarizeResult): Segm
     return picked.sort((a, b) => a.index - b.index);
 }
 
-/** Build the full comparison between two runs of the same meeting. */
-export function compareRuns(from: RunWithResult, to: RunWithResult): ComparisonData {
-    const fromViews = toSubjectViews(from.result);
-    const toViews = toSubjectViews(to.result);
+const itemKey = (v: SubjectView) => `${v.agendaSectionIndex ?? '-'}:${v.agendaItemIndex}`;
 
-    const fromByIndex = new Map(fromViews.filter(v => v.agendaItemIndex !== null).map(v => [v.agendaItemIndex, v]));
-    const toByIndex = new Map(toViews.filter(v => v.agendaItemIndex !== null).map(v => [v.agendaItemIndex, v]));
+/**
+ * Agenda items keyed by section and number. A key two subjects share (a run that numbered
+ * twice) leaves the extras to name matching rather than dropping them.
+ */
+function byItem(views: SubjectView[], leftovers: SubjectView[]): Map<string, SubjectView> {
+    const out = new Map<string, SubjectView>();
+    for (const v of views) {
+        if (v.agendaItemIndex === null) continue;
+        if (out.has(itemKey(v))) leftovers.push(v);
+        else out.set(itemKey(v), v);
+    }
+    return out;
+}
 
+/**
+ * Pairs the subjects of two runs of one meeting: by agenda section and item first, then by
+ * name for what is left, each pair with its verdict.
+ */
+export function matchSubjects(fromViews: SubjectView[], toViews: SubjectView[]): ComparisonData['subjects'] {
     const matched: MatchedSubject[] = [];
     const fromOnly: SubjectView[] = fromViews.filter(v => v.agendaItemIndex === null);
     const toOnly: SubjectView[] = toViews.filter(v => v.agendaItemIndex === null);
+    const fromByItem = byItem(fromViews, fromOnly);
+    const toByItem = byItem(toViews, toOnly);
 
-    const allIndices = [...new Set([...fromByIndex.keys(), ...toByIndex.keys()])].sort((a, b) => a! - b!);
-    for (const index of allIndices) {
-        const f = fromByIndex.get(index);
-        const t = toByIndex.get(index);
+    const order = (key: string) => { const [section, item] = key.split(':'); return [section === '-' ? -1 : Number(section), Number(item)]; };
+    const allKeys = [...new Set([...fromByItem.keys(), ...toByItem.keys()])]
+        .sort((a, b) => { const [sa, ia] = order(a); const [sb, ib] = order(b); return sa - sb || ia - ib; });
+    for (const key of allKeys) {
+        const f = fromByItem.get(key);
+        const t = toByItem.get(key);
         if (f && t) {
-            matched.push({ agendaItemIndex: index!, matchedBy: 'index', from: f, to: t, ...classifySubject(f, t) });
+            matched.push({ agendaItemIndex: f.agendaItemIndex!, matchedBy: 'index', from: f, to: t, ...classifySubject(f, t) });
         } else if (f) {
             fromOnly.push(f);
         } else if (t) {
@@ -211,6 +236,14 @@ export function compareRuns(from: RunWithResult, to: RunWithResult): ComparisonD
     }
 
     matched.push(...matchLeftoversByName(fromOnly, toOnly));
+    return { matched, fromOnly, toOnly };
+}
+
+/** Build the full comparison between two runs of the same meeting. */
+export function compareRuns(from: RunWithResult, to: RunWithResult): ComparisonData {
+    const fromViews = toSubjectViews(from.result);
+    const toViews = toSubjectViews(to.result);
+    const { matched, fromOnly, toOnly } = matchSubjects(fromViews, toViews);
 
     const verdictSummary: Record<SubjectVerdict, number> = { identical: 0, cosmetic: 0, structural: 0 };
     for (const m of matched) verdictSummary[m.verdict]++;

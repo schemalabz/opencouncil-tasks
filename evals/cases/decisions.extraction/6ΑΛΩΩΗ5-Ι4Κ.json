@@ -1,0 +1,189 @@
+{
+  "id": "decisions.extraction/6ΑΛΩΩΗ5-Ι4Κ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "6ΑΛΩΩΗ5-Ι4Κ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΑΛΩΩΗ5-Ι4Κ",
+    "city": "chania",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "changeAnchor=decision_number",
+        "mayorStated=yes",
+        "embeddedDecision=yes",
+        "departure=yes",
+        "substitute=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution",
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Κλωνιζάκης Μιλτιάδης",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την υπ'αριθμ. 259/2025 απόφαση αποχώρησαν οι κ.κ. Κλωνιζάκης Μιλτιάδης, Μπομπολάκης Φώτης"
+          },
+          {
+            "name": "Μπομπολάκης Φώτης",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Πριν την υπ'αριθμ. 259/2025 απόφαση αποχώρησαν οι κ.κ. Κλωνιζάκης Μιλτιάδης, Μπομπολάκης Φώτης"
+          },
+          {
+            "name": "Γεωργούλα Ζωή",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "πριν την υπ'αριθμ. 263/2025 αποχώρησαν οι κ.κ. Γεωργούλα Ζωή, Πετρουλάκης Βασίλειος"
+          },
+          {
+            "name": "Πετρουλάκης Βασίλειος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "πριν την υπ'αριθμ. 263/2025 αποχώρησαν οι κ.κ. Γεωργούλα Ζωή, Πετρουλάκης Βασίλειος"
+          },
+          {
+            "name": "Ελευθεριάδου-Παπαδάκη Σοφία",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "κατά τη συζήτηση της 275/2025 αποχώρησε η κ. Ελευθεριάδου-Παπαδάκη Σοφία"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 354,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Αλόγλου Αναστάσιος",
+          "Αποστολάκη Νίκη",
+          "Αρσενίδου Μαγδαληνή",
+          "Βαλυράκης Στυλιανός",
+          "Βαρδάκης Αντώνιος-Ιωάννης",
+          "Βερυκάκη Ευστρατία",
+          "Γεωργούλα Ζωή",
+          "Γιαννακάκης Ιωάννης",
+          "Δρακακάκης Ιωάννης",
+          "Δρακάκης Πέτρος",
+          "Ελευθεριάδου-Παπαδάκη Σοφία",
+          "Ζερβάκης Στυλιανός",
+          "Ζερβουδάκη Ελένη",
+          "Καλιτσάκης Ιωάννης",
+          "Καλογριδάκης Μιχαήλ",
+          "Καραγιαννάκης Εμμανουήλ",
+          "Κελαϊδής Εμμανουήλ",
+          "Κλωνιζάκης Μιλτιάδης",
+          "Κοκογιαννάκης Ελευθέριος",
+          "Κοντορινάκης Αλέξανδρος",
+          "Κοτσιφάκης Εμμανουήλ",
+          "Κωνστανταράκης Βασίλειος",
+          "Λέκκας Εμμανουήλ",
+          "Λουτσέτης Χαράλαμπος",
+          "Μανιμανάκη Αικατερίνη",
+          "Μαυριδάκης Ζαχάρης",
+          "Μιχαηλάκης Στυλιανός",
+          "Μπομπολάκης Φώτης",
+          "Μπουρμπάκης Νικόλαος",
+          "Μπούτζουκας Αδάμ",
+          "Νικηφοράκης Ιωάννης",
+          "Πετραντωνάκη-Καλογερή Μαρία",
+          "Πετρουλάκης Βασίλειος",
+          "Σφυράκης Ιωάννης",
+          "Σχοινάς Μιχαήλ",
+          "Τσουπάκης Μιχαήλ",
+          "Χαζιράκης Νικόλαος",
+          "Χατζάκης Ιωάννης",
+          "Ψαρουδάκης Νεκτάριος"
+        ],
+        "absentMembers": [
+          "Βουλγαρίδης Μηνάς",
+          "Γούλας Δημήτριος",
+          "Ηλιάκης Νικόλαος",
+          "Μακρέας Δημήτριος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "rollCallLayout=composition_and_absent",
+    "changeAnchor=decision_number",
+    "mayorStated=yes",
+    "embeddedDecision=yes",
+    "departure=yes",
+    "substitute=yes"
+  ]
+}

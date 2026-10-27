@@ -1,0 +1,159 @@
+{
+  "id": "decisions.extraction/Ρ6ΕΒΩΨΔ-ΔΘΠ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ρ6ΕΒΩΨΔ-ΔΘΠ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ρ6ΕΒΩΨΔ-ΔΘΠ",
+    "city": "argos",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 6,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "arrival=yes",
+        "changeAnchor=this_document",
+        "namedVoters=dissenters_only",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "nothing",
+        "asExtracted": [
+          {
+            "name": "Δ. Καμπόσος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "ΑΠΟΧΩΡΗΣΑΝΤΕΣ: 1. Δ. Καμπόσος (Σύμβουλος)"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1272,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ",
+          "ΑΠΟΧΩΡΗΣΑΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Α. Βαρδάκας",
+          "Π. Μπουλούκος",
+          "Χ. Φλεβάρης",
+          "Κ. Αδρακτάς",
+          "Χ. Σελλής",
+          "Γ. Αλεξανδρόπουλος",
+          "Α. Λιόλιος",
+          "Φ. Κολεβέντης",
+          "Γ. Κωτσονάρος",
+          "Φ. Ξηνταροπούλου",
+          "Χ. Πούλος",
+          "Σ. Δαμάλας",
+          "Π. Καμπόσος",
+          "Β. Καραβίδας",
+          "Γ. Σελλής",
+          "Χ. Πετσέλης",
+          "Π. Σκούφης",
+          "Γ. Σαρρής",
+          "Ν. Δελής",
+          "Π.-Μ. Ρέσκος",
+          "Ι. Νώτης",
+          "Ι. Αθανασόπουλος",
+          "Γ. Γρίβας",
+          "Μ. Παναγιώτου",
+          "Π. Διολίτσης",
+          "Π. Δούρος"
+        ],
+        "absentMembers": [
+          "Α. Αργυροπούλου",
+          "Κ. Αναγνωστόπουλος",
+          "Μ. Ζουλούμη",
+          "Γ. Δημάκης",
+          "Α. Αθανασόπουλος",
+          "Δ. Γάτσιου",
+          "Π. Χασάπης",
+          "Π. Παπαϊωάννου"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 8,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 8,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΟΜΟΦΩΝΑ ΑΠΟΦΑΣΙΖΕΙ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Π. Μπουλούκος",
+            "vote": "PRESENT"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "argos/Δημοτικό Συμβούλιο",
+  "tags": [
+    "argos",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "arrival=yes",
+    "changeAnchor=this_document",
+    "namedVoters=dissenters_only",
+    "declaration=yes"
+  ]
+}

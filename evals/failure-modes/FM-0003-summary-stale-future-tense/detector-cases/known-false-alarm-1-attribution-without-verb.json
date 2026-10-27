@@ -1,0 +1,29 @@
+{
+  "kind": "known-false-alarm",
+  "note": "Reported speech without a reporting verb + «ότι»: the code check cannot tell attribution from the summary voice",
+  "input": {
+    "run": {
+      "traceId": "00000000000000000000000000000000",
+      "taskType": "summarize",
+      "taskVersion": null,
+      "taskId": "t",
+      "meeting": "athens/jun18_2026",
+      "env": "production",
+      "startedAt": "2026-06-23T08:00:00Z",
+      "input": {
+        "date": "2026-06-22"
+      }
+    },
+    "calls": [],
+    "result": {
+      "subjects": [
+        {
+          "id": "s1",
+          "name": "Ελεγχόμενη στάθμευση Μακρυγιάννη",
+          "description": "Εγκρίθηκε η μελέτη. Σύμφωνα με τον αντιδήμαρχο, η επέκταση στο Κουκάκι θα εξεταστεί από την αρμόδια επιτροπή τον Σεπτέμβριο.",
+          "context": null
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,288 @@
+{
+  "id": "decisions.extraction/ΨΚ0ΖΩ1Ν-8Η0",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΚ0ΖΩ1Ν-8Η0",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΚ0ΖΩ1Ν-8Η0",
+    "city": "sparta",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 36,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "changeAnchor=agenda_item",
+        "mayorStated=yes",
+        "namedVoters=all",
+        "voteTally=yes",
+        "declaration=yes",
+        "reordering=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode",
+        "reordering"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Τσιρώνη Μαρία",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η δημοτική σύμβουλος Τσιρώνη Μαρία προσήλθε κατά τη διάρκεια της συνεδρίασης (ώρα 18:30)"
+          },
+          {
+            "name": "Τζανετέα Αδαμαντία",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 9,
+              "nonAgendaReason": null
+            },
+            "timing": "after",
+            "rawText": "Η δημοτική σύμβουλος Τζανετέα Αδαμαντία αποχώρησε μετά τη συζήτηση του 9ου θέματος"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1236,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Βρεττάκος Στέφανος",
+          "Δεδεδήμου Γεωργία",
+          "Κουρεμπής Γεώργιος",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Αρβανίτης Δημήτριος",
+          "Βαγιακάκου-Δογαντζή Αδαμαντία",
+          "Γιαννόπουλος Δημήτριος",
+          "Ζαχαράκη Νίκη",
+          "Κακούρος Δημοσθένης",
+          "Κανελλοπούλου Αναστασία",
+          "Καρμοίρης Ιωάννης",
+          "Καρούνος Παναγιώτης",
+          "Κατσίχτης Θεόδωρος",
+          "Κοκκορός Ευστράτιος",
+          "Κουλουβάκος Γεώργιος",
+          "Κουρτσούνης Παναγιώτης",
+          "Λάζαρης Θεοφάνης",
+          "Μαλλιαρός Δημήτριος",
+          "Μπαρέλος Παναγιώτης",
+          "Παυλής Παναγιώτης",
+          "Σελίμος Σπυρίδων",
+          "Σοφού-Παπαστάθη Ευγενία",
+          "Τζανετέα Αδαμαντία",
+          "Τσιρώνη Μαρία",
+          "Τσούκλερης Νικόλαος",
+          "Κανελλάκης Ηλίας"
+        ],
+        "absentMembers": [
+          "Γιαννακόπουλος Παντελής",
+          "Μπεμπέτσος Παντελής",
+          "Τριτάκης Παναγιώτης",
+          "Κυριακούλιας Δημήτριος",
+          "Γκολέμης Αναστάσιος",
+          "Βαλιώτης Ευάγγελος",
+          "Φλώρος Νικόλαος",
+          "Δούκας Πέτρος",
+          "Αρφάνης Δημήτριος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 9,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 9,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Κατά Πλειοψηφία",
+        "phraseAsExtracted": "Κατά Πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Βρεττάκος Στέφανος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αντωνάκος Χρήστος-Άγγελος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αρβανίτης Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Βαγιακάκου-Δογαντζή Αδαμαντία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γιαννόπουλος Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κακούρος Δημοσθένης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Καρούνος Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κατσίχτης Θεόδωρος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κοκκορός Ευστράτιος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κουλουβάκος Γεώργιος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κουρτσούνης Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κυριακούλιας Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Λάζαρης Θεοφάνης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μαλλιαρός Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μπαρέλος Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Παυλής Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Σελίμος Σπυρίδων",
+            "vote": "FOR"
+          },
+          {
+            "name": "Σοφού-Παπαστάθη Ευγενία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Τζανετέα Αδαμαντία",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Δεδεδήμου Γεωργία",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Ζαχαράκη Νίκη",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Καρμοίρης Ιωάννης",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Τσούκλερης Νικόλαος",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Κουρεμπής Γεώργιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Κανελλοπούλου Αναστασία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Τσιρώνη Μαρία",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "vote tally dropped",
+            "verdict": "extraction is right",
+            "note": "importatn here is to also get the actrual votes of the people"
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "«Κατά Πλειοψηφία» carries no tally; the named votes were extracted"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "changeAnchor=agenda_item",
+    "mayorStated=yes",
+    "namedVoters=all",
+    "voteTally=yes",
+    "declaration=yes",
+    "reordering=yes"
+  ]
+}

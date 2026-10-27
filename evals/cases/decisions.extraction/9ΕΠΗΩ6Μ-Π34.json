@@ -1,0 +1,186 @@
+{
+  "id": "decisions.extraction/9ΕΠΗΩ6Μ-Π34",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9ΕΠΗΩ6Μ-Π34",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΕΠΗΩ6Μ-Π34",
+    "city": "athens",
+    "body": "2η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 3,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=all",
+        "changeAnchor=decision_number",
+        "correctedRepost=yes",
+        "arrival=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Σιδέρης Κωνσταντίνος",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Ο Σύμβουλος κ. Σιδέρης Κωνσταντίνος προσήλθε στην Πράξη 97/2026."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3003,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 2ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "Τσουκάτου Αγγελική",
+          "Μαγείρου Ελένη",
+          "Ζωντήρος Παναγιώτης",
+          "Σακελλαρίου Θεοπίστη",
+          "Βλάχου Αγορή",
+          "Ζαχαράκης Μελέτης",
+          "Πλατανιάς Αθανάσιος",
+          "Ιατρού Δήμητρα",
+          "Κανελλοπούλου Θεοδώρα",
+          "Πολυζώη Ελένη",
+          "Σιδέρης Κωνσταντίνος",
+          "Μπάσιος Φώτιος",
+          "Αργυρέλλη Ιωάννα"
+        ],
+        "absentMembers": [
+          "Τσαλίκη Νερατζούλα",
+          "Φωτάκη Κωνσταντινιά"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 9,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 9,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Τσουκάτου Αγγελική",
+            "vote": "FOR"
+          },
+          {
+            "name": "Ζωντήρος Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μαγείρου Ελένη",
+            "vote": "FOR"
+          },
+          {
+            "name": "Βλάχου Αγορή",
+            "vote": "FOR"
+          },
+          {
+            "name": "Σακελλαρίου Θεοπίστη",
+            "vote": "FOR"
+          },
+          {
+            "name": "Πλατανιάς Αθανάσιος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Ιατρού Δήμητρα",
+            "vote": "FOR"
+          },
+          {
+            "name": "Πολυζώη Ελένη",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κανελλοπούλου Θεοδώρα",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αργυρέλλη Ιωάννα",
+            "vote": "FOR"
+          },
+          {
+            "name": "Σιδέρης Κωνσταντίνος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μπάσιος Φώτιος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Ζαχαράκης Μελέτης",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/2η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=all",
+    "changeAnchor=decision_number",
+    "correctedRepost=yes",
+    "arrival=yes"
+  ]
+}

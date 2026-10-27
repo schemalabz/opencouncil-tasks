@@ -1,0 +1,19 @@
+id: FM-0009
+slug: no_vote_details
+title: Majority decision without any non-FOR voter
+definition: >
+  The vote result says «κατά πλειοψηφία» but the extraction lists nobody voting AGAINST, ABSTAIN, PRESENT or DID_NOT_VOTE.
+  The pipeline's own NO_VOTE_DETAILS warning (validateRawExtraction / validateProcessedDecision), run as a check.
+boundary: >
+  Only the whole-document read (label decision-extraction) is checked: partial, continuation and closing reads of long documents leave fields empty by instruction, and their merged result is not a single call. Checked on the named votes as read, before name matching; the pipeline checks the matched votes.
+suite: decisions.extraction
+scope: call
+severity: degraded
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/decisionValidationCodes.ts
+  export: NO_VOTE_DETAILS
+decision: monitor
+alert: "fail rate per city > 3× its 30-day baseline, min 5 decision-extraction calls"

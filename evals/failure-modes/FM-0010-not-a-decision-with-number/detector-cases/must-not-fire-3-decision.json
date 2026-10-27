@@ -1,0 +1,15 @@
+{
+  "kind": "must-not-fire",
+  "input": {
+    "label": "decision-reading",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"meetingDate\":\"2026-06-02\",\"decisionNumber\":\"425/2026\",\"body\":\"ΔΗΜΟΤΙΚΟ ΣΥΜΒΟΥΛΙΟ\",\"notADecision\":false}",
+      "stopReason": "end_turn"
+    }
+  }
+}

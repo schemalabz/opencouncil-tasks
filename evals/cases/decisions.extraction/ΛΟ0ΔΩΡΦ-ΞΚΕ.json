@@ -1,0 +1,126 @@
+{
+  "id": "decisions.extraction/ΛΟ0ΔΩΡΦ-ΞΚΕ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΛΟ0ΔΩΡΦ-ΞΚΕ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΛΟ0ΔΩΡΦ-ΞΚΕ",
+    "city": "zografou",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "mayorStated=yes",
+        "outOfAgenda=yes",
+        "namedVoters=dissenters_only",
+        "embeddedDecision=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "embeddedOtherBodyDecision"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1007,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΜΕΛΗ ΔΗΜΟΤΙΚΗΣ ΕΠΙΤΡΟΠΗΣ",
+          "ΠΡΟΕΔΡΟΣ",
+          "ΤΑΚΤΙΚΑ",
+          "ΑΝΑΠΛΗΡΩΜΑΤΙΚΑ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "ΤΙΝΑ ΚΑΦΑΤΣΑΚΗ",
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)"
+        ],
+        "absentMembers": [
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": true,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ κατά πλειοψηφία",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτική Επιτροπή",
+  "tags": [
+    "zografou",
+    "rollCallLayout=composition_and_absent",
+    "mayorStated=yes",
+    "outOfAgenda=yes",
+    "namedVoters=dissenters_only",
+    "embeddedDecision=yes"
+  ]
+}

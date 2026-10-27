@@ -1,0 +1,187 @@
+{
+  "id": "decisions.extraction/9ΦΨΤΩ6Μ-17Ξ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "9ΦΨΤΩ6Μ-17Ξ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΨΤΩ6Μ-17Ξ",
+    "city": "athens",
+    "body": "1η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "changeAnchor=decision_number",
+        "namedVoters=all",
+        "declaration=yes",
+        "advisoryAct=yes",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost",
+        "advisoryAct"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Κωνσταντίνος Δεκαβάλλας",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Δεκαβάλλας Κ. και Νέτος Γ. απεχώρησαν στην 230 ΑΚΣ."
+          },
+          {
+            "name": "Γεώργιος Νέτος",
+            "type": "departure",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Δεκαβάλλας Κ. και Νέτος Γ. απεχώρησαν στην 230 ΑΚΣ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 940,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ",
+          "ΤΑ ΜΕΛΗ ΤΟΥ ΣΥΜΒΟΥΛΙΟΥ ΤΗΣ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Ευαγγελία Λίλιαν Γαζή",
+          "Κωνσταντίνος Δεκαβάλλας",
+          "Μαρία Καζάντη",
+          "Παναγιώτης Κουφάκης",
+          "Γεώργιος (Γιωργής) Νέτος",
+          "Παναγιώτης Ξυνέλης",
+          "Παπαγεωργίου Χρυσούλα"
+        ],
+        "absentMembers": [
+          "Σπύρος (Σάκης) Αθανασάκης",
+          "Αικατερίνη Βαλσαμάκη",
+          "Λυδία Βέρα",
+          "Σοφία Γαϊτάνη",
+          "Γεώργιος Διαμάντης",
+          "Δημήτριος Ευθυμίου",
+          "Γεωργία Σμέρου",
+          "Χαμντί Ντάφερ"
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "present count disagrees",
+            "verdict": "not resolvable from this page",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "15-member composition (president + 14); absentees printed by surname and initial (e.g. «Αθανασάκης Σ.»), which the extractor failed to subtract from the composition and so returned all 15 as present; Δεκαβάλλας and Νέτος departed at decision 230, after this one (227)"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 67,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 67,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Ευαγγελία Λίλιαν Γαζή",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κωνσταντίνος Δεκαβάλλας",
+            "vote": "FOR"
+          },
+          {
+            "name": "Παναγιώτης Κουφάκης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γεώργιος Νέτος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Παναγιώτης Ξυνέλης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Παπαγεωργίου Χρυσούλα",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαρία Καζάντη",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "changeAnchor=decision_number",
+    "namedVoters=all",
+    "declaration=yes",
+    "advisoryAct=yes",
+    "correctedRepost=yes"
+  ]
+}

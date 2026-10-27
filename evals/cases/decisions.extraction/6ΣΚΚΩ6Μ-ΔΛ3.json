@@ -1,0 +1,146 @@
+{
+  "id": "decisions.extraction/6ΣΚΚΩ6Μ-ΔΛ3",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "6ΣΚΚΩ6Μ-ΔΛ3",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΣΚΚΩ6Μ-ΔΛ3",
+    "city": "athens",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "substitute=yes",
+        "arrival=yes",
+        "changeAnchor=agenda_item"
+      ],
+      "namedEdgeCase": "The σύνθεση is an invitation roster, not an attendance list, and two members arrive during item 1 while appearing in it. This is why composition-minus-absent reads cumulative.",
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Π.Π.ΧΑΡΛΑΥΤΗΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Τα Τακτικά Μέλη κ.κ. Π.Π.ΧΑΡΛΑΥΤΗΣ και Ε.ΚΟΛΛΑΤΟΣ προσήλθαν κατά τη συζήτηση του 1ου θέματος της ημερήσιας διάταξης (αριθμός πράξης ΔΕ: 1440/2026)"
+          },
+          {
+            "name": "Ε.ΚΟΛΛΑΤΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Τα Τακτικά Μέλη κ.κ. Π.Π.ΧΑΡΛΑΥΤΗΣ και Ε.ΚΟΛΛΑΤΟΣ προσήλθαν κατά τη συζήτηση του 1ου θέματος της ημερήσιας διάταξης (αριθμός πράξης ΔΕ: 1440/2026)"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1021,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "με την εξής σύνθεση:"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Γ.Κ.ΓΙΑΝΝΑΡΟΣ",
+          "Θ.ΓΕΩΡΓΙΑΔΗΣ",
+          "Κ.ΓΙΑΝΝΟΠΟΥΛΟΥ",
+          "Π.Π.ΧΑΡΛΑΥΤΗΣ",
+          "Ε.ΖΩΝΤΗΡΟΥ",
+          "Ε.ΚΟΛΛΑΤΟΣ",
+          "Β.ΜΠΑΡΚΑ"
+        ],
+        "absentMembers": [
+          "Ο.ΔΟΥΡΟΥ",
+          "Ν.ΑΒΡΑΜΙΔΗΣ",
+          "Ε.ΚΑΛΑΜΠΟΚΑΣ"
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "present count disagrees",
+            "verdict": "extraction is right",
+            "note": null
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 32,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 32,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/Δημοτική Επιτροπή",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "substitute=yes",
+    "arrival=yes",
+    "changeAnchor=agenda_item"
+  ]
+}

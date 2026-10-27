@@ -1,0 +1,177 @@
+{
+  "id": "decisions.extraction/65ΖΟΩ6Μ-ΗΒ9",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "65ΖΟΩ6Μ-ΗΒ9",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/65ΖΟΩ6Μ-ΗΒ9",
+    "city": "athens",
+    "body": "1η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "departure=yes",
+        "changeAnchor=decision_number",
+        "reordering=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "reordering"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "decision_number",
+        "asExtracted": [
+          {
+            "name": "Βέρα Λ.",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 286,
+              "nonAgendaReason": null
+            },
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          },
+          {
+            "name": "Νέτος Γ.",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 286,
+              "nonAgendaReason": null
+            },
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          },
+          {
+            "name": "Ξυνέλης Π.",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 286,
+              "nonAgendaReason": null
+            },
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          },
+          {
+            "name": "Χαμντί Ντ.",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 286,
+              "nonAgendaReason": null
+            },
+            "timing": null,
+            "rawText": "Οι κ. κ. Σύμβουλοι Βέρα Λ., Νέτος Γ., Ξυνέλης Π., Χαμντί Ντ. απεχώρησαν στην 286 ΑΚΣ."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 870,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ",
+          "ΤΑ ΜΕΛΗ ΤΟΥ ΣΥΜΒΟΥΛΙΟΥ ΤΗΣ 1ης ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Ευαγγελία Λίλιαν Γαζή",
+          "Αικατερίνη Βαλσαμάκη",
+          "Λυδία Βέρα",
+          "Σοφία Γαϊτάνη",
+          "Κωνσταντίνος Δεκαβάλλας",
+          "Δημήτριος Ευθυμίου",
+          "Παναγιώτης Κουφάκης",
+          "Γεώργιος (Γιωργής) Νέτος",
+          "Παναγιώτης Ξυνέλης",
+          "Παπαγεωργίου Χρυσούλα",
+          "Χαμντί Ντάφερ"
+        ],
+        "absentMembers": [
+          "Σπύρος (Σάκης) Αθανασάκης",
+          "Γεώργιος Διαμάντης",
+          "Μαρία Καζάντη",
+          "Γεωργία Σμέρου"
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "present count disagrees",
+            "verdict": "not resolvable from this page",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "15-member composition (president + 14); absentees printed by surname and initial (e.g. «Αθανασάκης Σ.»), which the extractor failed to subtract from the composition and so returned all 15 as present; same session as 6ΥΙ2Ω6Μ-8ΓΞ, this decision (284) precedes the departures at 286"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 25,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 25,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/1η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "departure=yes",
+    "changeAnchor=decision_number",
+    "reordering=yes"
+  ]
+}

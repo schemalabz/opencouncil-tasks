@@ -1,0 +1,3905 @@
+{
+  "id": "fix.transcript/zografou-sep8_2026",
+  "suite": "fix.transcript",
+  "split": "dev",
+  "input": {
+    "meeting": "zografou/sep8_2026"
+  },
+  "replay": "eba48a39ee19a9abf07cda1b03b4407c",
+  "expect": {
+    "utterance[cmtsdunmy00mdr3pp9hnjnapv]": {
+      "value": {
+        "text": "Συνάδελφοι, να ξεκινήσουμε;",
+        "before": "Συνάδ\\ελφοι, να ξεκινήσουμε;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmy00mhr3ppftuju7l6]": {
+      "value": {
+        "text": "Να πάρουμε παρουσίες.",
+        "before": "Nα πάρουμε παρουσίες."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmy00mir3ppwafwfu88]": {
+      "value": {
+        "text": "Ωραία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmy00mjr3pp9wp42zti]": {
+      "value": {
+        "text": "Ο κύριος Αρμπιλιάς προεδρεύει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmy00mkr3ppf3klq89k]": {
+      "value": {
+        "text": "Η κυρία Μακροζαχοπούλου είναι απούσα και αναπληρώνεται από την κυρία Παπαϊωάννου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmy00mlr3pposl43vwa]": {
+      "value": {
+        "text": "Η κυρία Νενεδάκη παρούσα, η κυρία Καμινάρη παρούσα, η κυρία Χριστοφορίδου παρούσα, ο κύριος Πολίτης παρών, ο κύριος Μετικαρίδης απών, η κυρία Χαλκιαδάκη παρούσα, ο κύριος Καραβίδας παρών, υπάρχει απαρτία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mnr3ppku2eph4c]": {
+      "value": {
+        "text": "Ωραία, καλημέρα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mpr3ppwzir4omu]": {
+      "value": {
+        "text": "Ήθελα να πω ότι η συνεδρίαση μεταδίδεται ζωντανά από το κανάλι του Δήμου στο YouTube."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mrr3ppwv68xpuw]": {
+      "value": {
+        "text": "Το ξέχασα και δεν ξυρίστηκα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00msr3pp8aq6ll01]": {
+      "value": {
+        "text": "Ήρθα απεριποίητος."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mtr3ppg724f9gb]": {
+      "value": {
+        "text": "Να ξεκινήσουμε, συνάδελφοι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mur3ppkim6kxgz]": {
+      "value": {
+        "text": "Έχουμε ένα έκτακτο θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mvr3ppl09fwrur]": {
+      "value": {
+        "text": "Τώρα ήρθε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mwr3pp4wvz32p7]": {
+      "value": {
+        "text": "Ο τίτλος του είναι: \"Έγκριση Μερικής Αμοιβαίας Λύσης της υπ' αριθμόν πρωτοκόλλου 44800/7-11-2025 Σύμβασης Προμήθειας Γραφικής Ύλης, αποκλειστικά ως προς το Τμήμα 12 Γραφική Ύλη, πρώην Πρωτοβάθμια Σχολική Επιτροπή\"."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00mxr3ppdxaoi8v6]": {
+      "value": {
+        "text": "Επί του εκτάκτου,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00myr3ppfpk4ajyb]": {
+      "value": {
+        "text": "ο κύριος Πολίτης θα μας πει την εισήγηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00n0r3pp5gurdtz0]": {
+      "value": {
+        "text": "Αφορά το τμήμα της Σύμβασης της Γραφικής Ύλης, το τμήμα 12, που αφορά την πρωτοβάθμια εκπαίδευση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00n1r3ppv7c0yyo0]": {
+      "value": {
+        "text": "Σε αυτό το τμήμα έχει παρατηρηθεί ότι αντικείμενα τα οποία χρειάζονται για"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00n2r3pp42k13l4t]": {
+      "value": {
+        "text": "τις σχολικές μονάδες δεν επαρκούν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunmz00n3r3ppzhguvsvz]": {
+      "value": {
+        "text": "Μέσα η σύμβαση δεν είχε τη δυνατότητα να αυξομειώσουμε τα προϊόντα για κάποια που χρειαζόμαστε και κάποια τα οποία δεν χρειάζονται, είναι σε αφθονία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000n4r3pp69ezfoeq]": {
+      "value": {
+        "text": "Αυτή τη στιγμή έχουμε ελλείψεις στη σύμβαση σε πολύ σημαντικά είδη γραφικής ύλης, οπότε ο"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000n5r3pp7g7hcyzw]": {
+      "value": {
+        "text": "μοναδικός τρόπος που συζητήσαμε και με όλες τις υπηρεσίες οι οποίες εμπλέκονται είναι να πάμε σε λύση της σύμβασης και να κάνουμε μια νέα σύμβαση, η οποία θα περιέχει τα είδη για το κομμάτι το συγκεκριμένο, για την πρωτοβάθμια εκπαίδευση, τα είδη γραφικής ύλης που πραγματικά έχουν ανάγκη τα σχολεία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000n6r3ppiutvn2zq]": {
+      "value": {
+        "text": "Κύριος Καραβίδας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000n8r3ppi5ypruie]": {
+      "value": {
+        "text": "Μέσα σε αυτά, επειδή τώρα εγώ δεν το έχω μπροστά μου,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000n9r3pps6bqexb3]": {
+      "value": {
+        "text": "αναφέρονται και αυτά που κατά κόρον ζητούνται και έχουν να κάνουν με τις κόλλες Α4 και αυτά όλα;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000nbr3pp56l748hp]": {
+      "value": {
+        "text": "Τις κόλλες Α4 τις παίρνουν κανονικά από την αποθήκη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000ncr3ppi42iqfix]": {
+      "value": {
+        "text": "Έχει να κάνει με στυλό..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000ner3ppfc5wph11]": {
+      "value": {
+        "text": "Θέλω να πω ότι θα ζητηθούν από τους γονείς και φέτος να πάρει ένας πάκος με 500 χαρτιά; "
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn000ngr3ppquhnsy63]": {
+      "value": {
+        "text": "Ήδη από την αποθήκη..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nir3pp6mfnzkii]": {
+      "value": {
+        "text": "Επειδή μεταδίδεται ζωντανά η συνεδρίαση, καλό είναι να το.."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nkr3ppgpgheyhv]": {
+      "value": {
+        "text": "Ωραία. Κύριε Καραβίδα, ήδη η αποθήκη έχει πάρει από τα τέλη Αυγούστου, θα στείλει σε όλα τα γυμνάσια, τα δημοτικά και τα λύκεια 10 πακέτα κόλλες Α4 για να ξεκινήσει η χρονιά και σε όλα τα νηπιαγωγεία 5 πακέτα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nlr3ppx9fh7xtp]": {
+      "value": {
+        "text": "Έτσι για να ξεκινήσουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nmr3ppzlqsz2hr]": {
+      "value": {
+        "text": "Ήδη ξεκινάνε, τα μοιράζει αυτή την εβδομάδα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nnr3pp3r3zcwe3]": {
+      "value": {
+        "text": "Μπορεί ήδη να έχει μοιράσει κάπου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nor3pp9mifzg5v]": {
+      "value": {
+        "text": "Και από εκεί και πέρα, ανάλογα με τις ανάγκες των σχολείων, θα [...]."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100npr3ppppopsepc]": {
+      "value": {
+        "text": "Εσείς εκτιμάτε ότι με 10 πακέτα θα βγει;",
+        "before": "Εσείς εκτιμάται ότι με 10 πακέτα θα βγει;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nqr3ppdkczgy31]": {
+      "value": {
+        "text": "Όχι, είπα για να ξεκινήσουν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nsr3ppc7puo4gf]": {
+      "value": {
+        "text": "Έχετε κάνει καθόλου κάποιο σχεδιασμό ή σας έχει έρθει από τα σχολεία περίπου;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100ntr3pph7iqkht3]": {
+      "value": {
+        "text": "Γιατί το έχουμε κουβεντιάσει πολλές φορές."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nur3ppl6mqnijn]": {
+      "value": {
+        "text": "Δεν είναι η πρώτη φορά που το κουβεντιάζουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn100nvr3pp283lm4ev]": {
+      "value": {
+        "text": "Έχει έρθει κάποιος σχεδιασμός ο οποίος να λέει ότι: \"Κοιτάχτε, εμείς χρησιμοποιούμε το χρόνο και έχουμε ανάγκη τόσα\";"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200nxr3ppdisj3rm4]": {
+      "value": {
+        "text": "Αυτό πάμε να κάνουμε τώρα, διότι αυτή η σύμβαση δεν κάλυπτε τις πραγματικές ανάγκες των σχολείων."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200nyr3ppwj4ceteb]": {
+      "value": {
+        "text": "Σήμερα έχουμε συνάντηση με όλους τους διευθυντές των δημοτικών και των νηπιαγωγείων και αύριο των γυμνασίων και των λυκείων."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200nzr3ppc9u9eatr]": {
+      "value": {
+        "text": "Σήμερα, λοιπόν, θα συζητηθούν όλα εδώ."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o0r3ppillf5cxj]": {
+      "value": {
+        "text": "Μέχρι τέλος της εβδομάδας να μας έχουν δώσει το τι χρειάζονται, ώστε την επόμενη εβδομάδα να προβούμε στη νέα σύμβαση και να τα δώσουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o1r3ppicq8p1hy]": {
+      "value": {
+        "text": "Οι"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o2r3ppw959lfd5]": {
+      "value": {
+        "text": "κόλλες Α4 δεν έχουν καμία σχέση με αυτό το τμήμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o4r3pp9n7k8z6w]": {
+      "value": {
+        "text": "Τέλος πάντων, επειδή έχουμε κουβεντιάσει και στο Δημοτικό Συμβούλιο και σε αυτά τα προβλήματα που αφορούσαν συνολικότερα και λέγαμε για τα κτηριακά ή οτιδήποτε τέτοιο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o5r3pp1mst6cpy]": {
+      "value": {
+        "text": "Το ότι αύριο, λέω εγώ τώρα, συναντάμε τους διευθυντές να μας πουν τι χρειάζονται, σε φάση να πούνε..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o6r3ppkhd1rriz]": {
+      "value": {
+        "text": "Γιατί η ερώτησή μου ήταν πολύ συγκεκριμένη με βάση το τι χρειάζονται όσον αφορά τη γραφική ύλη και αυτά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o7r3pp468gx2rc]": {
+      "value": {
+        "text": "Είπατε προηγουμένως έχει έρθει το έκτακτο θέμα αυτό που έχει να κάνει με την αλλαγή της σύμβασης και τα λοιπά για να καλυφθούν οι ανάγκες."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o8r3ppw2gi5m3q]": {
+      "value": {
+        "text": "Η ερώτηση δεν είναι μόνο για τις κόλλες Α4 ή οτιδήποτε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200o9r3pp2viudmjx]": {
+      "value": {
+        "text": "Το λέω ενδεικτικά το κόλλες Α4 γιατί συνέχεια σε αυτά που ζητάνε από τα σχολεία, πολλές φορές στη λίστα αυτών που χρειάζονται να φέρουν τα παιδιά και το οποίο το ξέρουμε ότι είναι απαράδεκτο αυτό το πράγμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200oar3ppo53n6xn1]": {
+      "value": {
+        "text": "Γιατί βγαίνει ένα κόστος 60, 50, 70, ανάλογα, που πολύς κόσμος δεν το έχει αυτό το εβδομηντάρι να το δώσει.",
+        "before": "Γιατί βγαίνει ένα κόστος εξήντα, πενήντα, εβδομήντα, ανάλογα, που πολύς κόσμος δεν το έχει αυτό το εβδομηντάρι να το δώσει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200obr3ppzcv7bwr4]": {
+      "value": {
+        "text": "Και το είχαμε πει χρόνια αυτό το πράγμα να μη γίνεται και πώς ο Δήμος θα το εξασφαλίσει αυτό το πράγμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200ocr3pphfoonbtx]": {
+      "value": {
+        "text": "Προηγουμένως είπατε εσείς και μου έκανε εντύπωση ο αριθμός."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200odr3ppandv56mu]": {
+      "value": {
+        "text": "Το 60",
+        "before": "Το εξήντα"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200oer3ppl1eqjs10]": {
+      "value": {
+        "text": "κόλλες κανσόν, ας το πούμε έτσι, με τις 200 είναι μια διαφορά πολύ μεγάλη.",
+        "before": "κόλλες κανσόν, ας το πούμε έτσι, με τις διακόσιες είναι μια διαφορά πολύ μεγάλη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200ofr3ppzvq9z3ak]": {
+      "value": {
+        "text": "Και γι' αυτό λέω ότι υπάρχει όλος ο χρόνος από το καλοκαίρι που λήγει, ας το πούμε έτσι και στο ενδιάμεσο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200ogr3ppayoric8b]": {
+      "value": {
+        "text": "Το λέγαμε και στη διοίκηση Θώδα, το έχουμε ξαναπεί."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200ohr3ppgbo8mbxn]": {
+      "value": {
+        "text": "Και λέμε: «Δεν μπορεί να μη δεν μπορούμε ένα μέσο όρο να βγάλουμε τι είναι αυτό που χρειαζόμαστε;» Γιατί υπάρχουν κατά καιρούς και κάθε χρόνο ανανεώνουμε μια σύμβαση για τη γραφική ύλη,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200oir3ppabbn8d9e]": {
+      "value": {
+        "text": "η οποία είχε συγκεκριμένα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200ojr3ppao53h52z]": {
+      "value": {
+        "text": "Είχε Α τμήμα, Β τμήμα, Γ τμήμα και έλεγε εκεί μέσα τι χρειαζόμαστε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200okr3ppm5lcbfdg]": {
+      "value": {
+        "text": "Από τότε που θυμάμαι εγώ τον εαυτό μου στην Οικονομική Επιτροπή ή στο Δημοτικό Συμβούλιο να συζητάμε γι' αυτό είναι ένα ζήτημα το οποίο βάζουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200olr3pp9ex1z940]": {
+      "value": {
+        "text": "Γι' αυτό μου κάνει εντύπωση που λέμε ότι θα τους μαζέψουμε και θα μας πούνε ή μπορεί να μας έχουν πει στο περίπου, αλλά δεν υπάρχει μία συγκεκριμένη, ας το πούμε,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200omr3ppikflkmh7]": {
+      "value": {
+        "text": "κατεύθυνση προμήθειας, δεν ξέρω πώς λέγεται από το τμήμα προμηθειών ή οτιδήποτε, να τους πούμε ότι φτιάξτε μια επιτροπή η οποία να κάνει αυτή την κίνηση σε όλα τα σχολεία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200onr3ppxajvpur6]": {
+      "value": {
+        "text": "Πρωτοβάθμια, δευτεροβάθμια, να δούμε τι χρειάζεται για να εξαλειφθεί ούτως ή άλλως αυτό το κόστος, το οποίο είναι βαρύ για τις οικογένειες αυτή τη στιγμή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn200oor3pp1fhb2rcm]": {
+      "value": {
+        "text": "Εμείς αυτό λέμε, αυτό λέγαμε και αυτό θα λέμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300oqr3pp2xbgo2xk]": {
+      "value": {
+        "text": "Κύριε Καραβίδα, συμφωνούμε σε αυτά που λέτε 100%."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300orr3ppm332rrhh]": {
+      "value": {
+        "text": "Ακούστε με λιγάκι όμως."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300osr3ppy8kttmrg]": {
+      "value": {
+        "text": "Αυτό ακριβώς κάναμε για τα είδη καθαριότητας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300otr3pplmbv80vm]": {
+      "value": {
+        "text": "Ακριβώς."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300our3ppu1hjh71h]": {
+      "value": {
+        "text": "Και γι' αυτό υπογράφονται οι συμβάσεις και την άλλη εβδομάδα θα υπάρχουν σε όλα τα σχολεία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300ovr3ppp2atc5jb]": {
+      "value": {
+        "text": "Στη γραφική ύλη ήταν λίγο ιδιαίτερο το θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300owr3ppfx5umxjh]": {
+      "value": {
+        "text": "Όλο το καλοκαίρι οι υπηρεσίες σε συνεργασία με τον ανάδοχο συζητάμε γιατί είχαμε κάποιες υπερβάσεις."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300oxr3ppxpkppiyz]": {
+      "value": {
+        "text": "Δηλαδή αυτό που γίνεται αυτή τη στιγμή θέλαμε να το φέρουμε πριν το καλοκαίρι, ώστε αν δε γίνει αυτό να προχωρήσουμε στο επόμενο βήμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300oyr3ppbpyo6r62]": {
+      "value": {
+        "text": "Δεν καθίσαμε, δεν περιμέναμε τελευταία στιγμή, ούτε περιμένουμε οι διευθυντές σήμερα να έρθουν να μας πούνε τις ανάγκες τους."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300ozr3ppayq68dbe]": {
+      "value": {
+        "text": "Οι ανάγκες τους καταγράφονται καθημερινά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p0r3pp1lb1jzg2]": {
+      "value": {
+        "text": "Μας στέλνουν τα αιτήματά τους."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p1r3ppk7p4quzj]": {
+      "value": {
+        "text": "Έχει ενισχυθεί το γραφείο παιδείας και με άλλον υπάλληλο, ώστε να μπορέσουμε να ανταποκριθούμε και στις συνθήκες με τον νέο κώδικα, οπότε είμαστε σε πολύ καλό δρόμο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p2r3ppzu839nw5]": {
+      "value": {
+        "text": "Τα κτηριακά, όλο το καλοκαίρι, εδώ είναι ο κύριος Αρμπιλιάς, ήταν από πάνω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p3r3ppoq7woqwf]": {
+      "value": {
+        "text": "Ό,τι ζητήσανε, ένα πολύ μεγάλος βαθμός, έχουν γίνει και θα συνεχίσουν να γίνονται, "
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p4r3ppvyzi3mfc]": {
+      "value": {
+        "text": "αυτά θα τους εξηγήσουμε σήμερα,",
+        "before": "αυτά θα τους εξηγήσουμε σήμερα,μ "
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p5r3pp5jp2n6ks]": {
+      "value": {
+        "text": "καθ' όλη τη διάρκεια του χρόνου παρεμβάσεις και επεμβάσεις στα σχολεία που χρειάζεται."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p6r3ppp7puztlj]": {
+      "value": {
+        "text": "Απλά πραγματικά η γραφική ύλη μας έχει ταλαιπωρήσει πάρα πολύ γιατί έγινε μία μελέτη το 2024."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p7r3pppydts8h2]": {
+      "value": {
+        "text": "Η σύμβαση υπογράφηκε το 2025, τον Νοέμβριο του 2025 για όλο το Δήμο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p8r3pp3ur6bd89]": {
+      "value": {
+        "text": "Η μελέτη που έγινε τότε δεν ανταποκρινόταν στις πραγματικές ανάγκες των σχολείων και το διαπιστώσαμε όταν ήρθαμε να την εκτελέσουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300p9r3ppweu3cmnr]": {
+      "value": {
+        "text": "Και εκεί βρήκαμε ότι πραγματικά μας δυσκόλεψε αρκετά"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300par3ppfv1rceno]": {
+      "value": {
+        "text": "ότι δεν υπήρχε στη σύμβαση μέσα ότι μπορούν να γίνονται στο ποσό, να μπορούμε να αλλάζουμε τα προϊόντα ανάλογα με τις ανάγκες των σχολείων."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pbr3ppffgj861k]": {
+      "value": {
+        "text": "Γιατί τη μία χρονιά είναι διετής."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pcr3ppwyb667p8]": {
+      "value": {
+        "text": "Τη μία χρονιά ένα σχολείο σου ζητάει, έχει πενήντα παιδιά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pdr3ppa81zsqsc]": {
+      "value": {
+        "text": "Σου ζητάει θέλω πενήντα μαρκαδόρους."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300per3ppzoyn8zk3]": {
+      "value": {
+        "text": "Την άλλη χρονιά το ίδιο σχολείο έχει τριάντα παιδάκια."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pfr3pprr67ayql]": {
+      "value": {
+        "text": "Σου λέει: «Ξέρετε, θέλω πιο λίγα»."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pgr3pp3sztr47w]": {
+      "value": {
+        "text": "Οπότε αυτό πάμε να κάνουμε τώρα, ώστε ούτε οι γονείς να αναγκάζονται να αγοράζουν, να έχουν αυτά που χρειάζονται τα νηπιαγωγεία, όσο μπορεί και ο Δήμος να προσφέρει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300phr3ppvk0g1y2r]": {
+      "value": {
+        "text": "Γιατί πολλές φορές μας ζητάνε πράγματα τα οποία"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pir3ppjtzx2xdb]": {
+      "value": {
+        "text": "δεν μπορούμε να προσφέρουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pjr3ppnugnbnmt]": {
+      "value": {
+        "text": "Είναι πάνω από τις δυνάμεις μας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300pkr3ppp58xpveq]": {
+      "value": {
+        "text": "Αυτό πάμε να κάνουμε, ώστε από εδώ και πέρα να μην ερχόμαστε τον Σεπτέμβριο και να λέμε για τη γραφική ύλη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn300plr3pp1pgwn0hm]": {
+      "value": {
+        "text": "Τον Ιούνιο να έχουμε τελειώσει με αυτά, ώστε την πρώτη εβδομάδα του Σεπτεμβρίου και τα είδη καθαριότητας και η γραφική ύλη που χρειάζονται για να ξεκινήσουν οι σχολικές μονάδες του Δήμου μας, να τα έχουν όλα οι διευθυντές."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400pnr3pp6wwh66w4]": {
+      "value": {
+        "text": "Ευχαριστούμε, κύριε Πολίτη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400ppr3pp5mheabxf]": {
+      "value": {
+        "text": "...είναι ένα άλλο θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400pqr3pplzwmeaq1]": {
+      "value": {
+        "text": "Το βασικό όμως είναι ότι τα σχολεία χρειάζεται να έχουν στη γραφική ύλη πέντε ή δέκα συγκεκριμένα πράγματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400psr3ppzs56z2kd]": {
+      "value": {
+        "text": "Είχαμε 201 κωδικούς."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400ptr3ppjteh4qw5]": {
+      "value": {
+        "text": "Υπερβολή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400pur3pp1ydic6je]": {
+      "value": {
+        "text": "Αυτό θέλω να πω. Πάμε στους 80-90."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn400pwr3ppqj1js5qx]": {
+      "value": {
+        "text": "Αυτό δεν μπορώ να το κρίνω εγώ αν είναι υπερβολή ή όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500pxr3ppry68ru5a]": {
+      "value": {
+        "text": "Η εκπαίδευση είναι πολύ συγκεκριμένη και λέει το συγκεκριμένο αυτό το πράγμα το οποίο θέλει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500pyr3ppsgd5nert]": {
+      "value": {
+        "text": "Αυτό όμως που γινόταν συνεχώς και"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500pzr3ppc85irs8z]": {
+      "value": {
+        "text": "μέχρι και πέρυσι γινόταν, ήταν μία λίστα που φιγουράριζε στην πρώτη αυτή, τα πεντακόσια φύλλα, το ένα πακέτο, το οποίο άμα καθίσουμε και το δούμε μπορεί να γέμιζε ένα σχολείο και να έκανε και κάβα για την επόμενη χρονιά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q0r3pp09kwus1j]": {
+      "value": {
+        "text": "Μπορεί δηλαδή αν πάμε στις αποθήκες και να βρούμε και άλλα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q1r3ppaviqpbxt]": {
+      "value": {
+        "text": "Γιατί τώρα από μία τάξη Α δημοτικού, παραδείγματος χάρη, η οποία κάθε παιδί να φέρνει από ένα το τόσο, τα δέκα που λέτε ανά σχολείο είναι τίποτα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q2r3ppvh7wwf9c]": {
+      "value": {
+        "text": "[...]"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q4r3pp4wfazop6]": {
+      "value": {
+        "text": "Έκανε πέντε χιλιάδες φύλλα, έτσι; Δεν είναι...."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q6r3ppcegmihrl]": {
+      "value": {
+        "text": "Κυρία Χαλκιαδάκη, θέλετε να πείτε κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q7r3pp70e6dfuq]": {
+      "value": {
+        "text": "Όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q8r3ppajplj0sx]": {
+      "value": {
+        "text": "Να προχωρήσουμε στην ψηφοφορία επί του εκτάκτου και επί της ουσίας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500q9r3ppd47etkhw]": {
+      "value": {
+        "text": "Ομόφωνα λοιπόν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qar3pp2e2h9us1]": {
+      "value": {
+        "text": "Ομοφώνως."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qbr3pp3dojap0r]": {
+      "value": {
+        "text": "Πάει το έκτακτο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qcr3ppk21k5nrt]": {
+      "value": {
+        "text": "Πάμε στα τακτικά μας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qdr3ppq6bbpeew]": {
+      "value": {
+        "text": "Θέμα πρώτον: Εξειδίκευση πίστωσης για τη διοργάνωση του 2ου τριήμερου Φεστιβάλ Κουκλοθεάτρου – Σεπτέμβριος 2026."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qer3ppzsjw4wwl]": {
+      "value": {
+        "text": "Το έχετε λάβει το θέμα, το έχετε δει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qfr3ppxg96frd1]": {
+      "value": {
+        "text": "Υπάρχει κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qgr3ppogo7s49c]": {
+      "value": {
+        "text": "Όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qhr3pp822vdnbv]": {
+      "value": {
+        "text": "Ομοφώνως;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qir3pp76gwe289]": {
+      "value": {
+        "text": "Ομοφώνως."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qjr3ppdmki6ks8]": {
+      "value": {
+        "text": "Θέμα δεύτερον:"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qkr3ppiqf3g2o7]": {
+      "value": {
+        "text": "Εξειδίκευση πίστωσης για τη συνδιοργάνωση του «1ου Χορευτικού Φεστιβάλ Θεσσαλών Ζωγράφου - Γιορτάζουμε την παράδοση, Χτίζουμε κοινότητα» με τον Πολιτιστικό Σύλλογο «Η Παναγία Τσούμα»."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn500qlr3pp5ws9sdhu]": {
+      "value": {
+        "text": "Έχουμε κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qnr3ppzwkc0eiq]": {
+      "value": {
+        "text": "Να πω κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qor3ppk4yqinx8]": {
+      "value": {
+        "text": "Είναι σαν το φεστιβάλ χορωδιών;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qpr3ppncj2bb99]": {
+      "value": {
+        "text": "Ρωτάω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qqr3ppat3deuqz]": {
+      "value": {
+        "text": "Κυρία Καμινάρη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qsr3ppn727an0p]": {
+      "value": {
+        "text": "Επειδή είναι καινούργιος σύλλογος, πέρσι είχε ξεκινήσει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qtr3ppgt43q7mu]": {
+      "value": {
+        "text": "Ήθελαν να κάνουν αυτή τη γιορτή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qur3ppjbpbu95n]": {
+      "value": {
+        "text": "Τους είναι το δικό τους πρώτο χορευτικό φεστιβάλ πολύ συγκεκριμένα για την παράδοση της Θεσσαλίας και τους χορούς."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qvr3ppradmoeb8]": {
+      "value": {
+        "text": "Όχι, δεν έχει να κάνει με το φεστιβάλ χορωδιών."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qwr3ppobv3eaft]": {
+      "value": {
+        "text": "Όπως κάνουν οι Ηπειρώτες, όπως κάνουν οι Κρήτες, θέλουν να κάνουν και εκείνοι για να μπορέσουν να μπουν μέσα σε όλο το πλαίσιο των πολιτιστικών συλλόγων του Ζωγράφου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qxr3ppmxixokbs]": {
+      "value": {
+        "text": "Ήταν να το κάνουν το Μάιο, αλλά υπήρξε ένα πρόβλημα με την ορχήστρα τότε, οπότε το μεταφέραμε τώρα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600qzr3ppxt8h6hrs]": {
+      "value": {
+        "text": "Προχωράμε στην ψηφοφορία του;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600r0r3ppuiw9pgtx]": {
+      "value": {
+        "text": "Ομοφώνως υποθέτω από..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600r1r3ppntrmt55c]": {
+      "value": {
+        "text": "Ομοφώνως."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn600r2r3ppiirqnbtt]": {
+      "value": {
+        "text": "Θέμα τρίτον: Εξειδίκευση πίστωσης για τη διοργάνωση εκδήλωσης στο πλαίσιο του εορτασμού της παγκόσμιας ημέρας για την Τρίτη Ηλικία για το έτος 2026."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700r6r3ppclmbw65g]": {
+      "value": {
+        "text": "Ομοφώνως, λοιπόν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700r7r3ppy6qs75bq]": {
+      "value": {
+        "text": "Πάει και το τρίτο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700r8r3ppj50kxjvu]": {
+      "value": {
+        "text": "Πάμε στο τέταρτο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700r9r3ppvexvafte]": {
+      "value": {
+        "text": "Συμπληρωματική εξειδίκευση πίστωσης για την πραγματοποίηση της διοργάνωσης «39οι Πανελλήνιοι Θεατρικοί Αγώνες Ερασιτεχνικών Θιάσων».",
+        "before": "Συμπληρωματική εξειδίκευση πίστωσης για την πραγματοποίηση της διοργάνωσης «39οι  Πανελλήνιοι Θεατρικοί Αγώνες Ερασιτεχνικών Θιάσων»."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rar3pp3f6vhxqg]": {
+      "value": {
+        "text": "Ομοφώνως."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rbr3pp03jab6kw]": {
+      "value": {
+        "text": "Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για την εργασία συντήρησης των υπαρχόντων μηχανογραφικών προγραμμάτων των Υπηρεσιών του Δήμου, καθώς και την παροχή υπηρεσιών τεχνικής υποστήριξης και αναβάθμισης των συγκεκριμένων εφαρμογών, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rcr3pp741vapv0]": {
+      "value": {
+        "text": "Ομόφωνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rdr3ppaax1h8fx]": {
+      "value": {
+        "text": "Θέμα έκτον: Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για την παροχή υπηρεσίας «ολοκληρωμένο πληροφορικό σύστημα d-management για την διαχείριση των σχολικών μονάδων Α΄βάθμιας και Β΄βάθμιας εκπαίδευσης» από τον Δήμο Ζωγράφου, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης.",
+        "before": "Θέμα έκτον: Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωριίς δημοσίευση για την παροχή υπηρεσίας «ολοκληρωμένο πληροφορικό σύστημα d-management για την διαχείρηση των σχολικών μονάδων Α΄βάθμιας και Β΄βάθμιας εκπαίδευσης» από τον Δήμο Ζωγράφου, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rer3pphvbxv6g1]": {
+      "value": {
+        "text": "Ομόφωνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rfr3ppx733vhda]": {
+      "value": {
+        "text": "Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για την παροχή υπηρεσίας λειτουργίας Λογισμικού On-Line Asc Time Table για τις σχολικές μονάδες Α΄βάθμιας και Β΄βάθμιας εκπαίδευσης, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης.",
+        "before": "Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωριίς δημοσίευση για την παροχή υπηρεσίας λειτουργίας Λογισμικού On-Line Asc Time Table για τις σχολικές μονάδες Α΄βάθμιας και Β΄βάθμιας εκπαίδευσης, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rgr3pphrxe9qqp]": {
+      "value": {
+        "text": "Ομοφώνως και αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rhr3ppcrg0dxwc]": {
+      "value": {
+        "text": "Όγδοο:"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rir3ppe2i7z2cs]": {
+      "value": {
+        "text": "Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωρίς δημοσίευση για την μίσθωση 44 πολυμηχανημάτων και εκτυπωτών με χρηματοδότηση μίσθωσης (LEASING), διάρκειας 11 μηνών για τις σχολικές μονάδες του Δήμου Ζωγράφου, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης.",
+        "before": "Έγκριση προσφυγής στη διαδικασία διαπραγμάτευσης χωριίς δημοσίευση για την μίσθωση σαράντα τεσσάρων (44) πολυμηχανημάτων και εκτυπωτών με χρηματοδότηση μίσθωσης (LEASING), διάρκειας έντεκα (11) μηνών για τις σχολικές μονάδες του Δήμου Ζωγράφου, έγκριση των τεχνικών προδιαγραφών της μελέτης και καθορισμός των όρων διαπραγμάτευσης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn700rmr3ppq7jn5ryh]": {
+      "value": {
+        "text": "Είναι επανάληψη της σύμβασης;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rqr3ppukppvk7x]": {
+      "value": {
+        "text": "Από αυτό έχουμε κάποια εικόνα;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rrr3pp0fs0kk8m]": {
+      "value": {
+        "text": "Λέω εγώ τώρα,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rsr3pprzybeob6]": {
+      "value": {
+        "text": "δώσαμε leasing"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rtr3ppenhe5pk2]": {
+      "value": {
+        "text": "για να έχουμε 44 πολυμηχανήματα"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rur3ppqvl02bau]": {
+      "value": {
+        "text": "και εκτυπωτές στα σχολεία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rvr3pp5tm7o6og]": {
+      "value": {
+        "text": "Έχουμε μια εικόνα από αυτό;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rwr3ppzktpnb9s]": {
+      "value": {
+        "text": "Βοήθησε;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rxr3ppgocksdns]": {
+      "value": {
+        "text": "Τι εννοώ."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800ryr3pp67f37pm9]": {
+      "value": {
+        "text": "Για να μπορέσω να δω τις τεχνικές προδιαγραφές στη συνέχεια, πρέπει να έχω ένα know-how της προηγούμενης χρονιάς."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800rzr3ppd8uln0g3]": {
+      "value": {
+        "text": "Πώς πήγε αυτό το πράγμα;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s0r3ppxr25dvo8]": {
+      "value": {
+        "text": "Αυτό εγώ δεν το είδα πουθενά στα χαρτιά που είχαμε μαζί."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s1r3pplv7u2gzu]": {
+      "value": {
+        "text": "Δεν είδα κάτι τέτοιο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s2r3ppiap63rc9]": {
+      "value": {
+        "text": "Απλά τουλάχιστον για να ξέρουμε, γιατί όταν έρχεται κάτι, θέλω να ξέρω τι έχει γίνει την προηγούμενη χρονιά με αυτό, για να μπορέσω να ανανεώσω μια σύμβαση με το συγκεκριμένο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s4r3ppzyegyt3i]": {
+      "value": {
+        "text": "Βοήθησε πάρα πολύ διότι πήραμε ένα πολύ μεγάλο γραφειοκρατικό κομμάτι από τους διευθυντές, γιατί η ΚΟΝΙΚΑ, η οποία είχε όλα τα μηχανήματα του Δήμου,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s5r3ppskp28xux]": {
+      "value": {
+        "text": "κάναμε τότε την προαίρεση, πήραμε με το 50% και αυτή είναι μια επιπλέον σύμβαση η οποία γίνεται γιατί"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s6r3ppunyib6dm]": {
+      "value": {
+        "text": "μας λείπαν σαράντα τέσσερα μηχανήματα, δεν φτάνουν τα χρήματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn800s7r3pptj5nkcyl]": {
+      "value": {
+        "text": "Εκεί έχουμε καταγραφή πόσες Α4 εκτυπώνονται."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900s8r3pp60ciu7p2]": {
+      "value": {
+        "text": "Οι διευθυντές δεν ασχολούνται με το μελάνι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900s9r3pphgdefsm4]": {
+      "value": {
+        "text": "Λήγει έρχεται, πάρτε το μελάνι σας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sar3ppnd5o64ef]": {
+      "value": {
+        "text": "Αν χαλάει, πάει η ΚΟΝΙΚΑ κατευθείαν, η εταιρεία και το φτιάχνει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sbr3ppbmgumcbg]": {
+      "value": {
+        "text": "Τα έχει όλα μέσα, δεν ασχολούνται καθόλου, δεν χρησιμοποιούν την παγία τους για τα φωτοτυπικά μηχανήματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900scr3ppz87z6aqz]": {
+      "value": {
+        "text": "Είναι όλα στον Δήμο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sdr3ppy67n8m7b]": {
+      "value": {
+        "text": "Αυτό το παρακολουθεί ο κύριος Χαμακιώτης από το τμήμα Πληροφορικής και Επικοινωνίας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sfr3pp4zv41mtf]": {
+      "value": {
+        "text": "Με αυτό που λέτε, εγώ καταλαβαίνω το εξής: το να πάρεις leasing κάποιο μηχάνημα από τα πολυμηχανήματα και αυτά υποτίθεται ότι είναι όπως είναι τα leasing συνολικότερα, δηλαδή το service και αυτά όλα το αναλαμβάνει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sgr3pp2ttj2blc]": {
+      "value": {
+        "text": "Εμείς τη σύμβαση αυτή την έχουμε κάνει με βάση τι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900shr3ppi8wut7pv]": {
+      "value": {
+        "text": "Με βάση"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sir3ppcxzpjpwl]": {
+      "value": {
+        "text": "το πόσες σελίδες θα εκτυπώνονται;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900sjr3ppkxh7tb4p]": {
+      "value": {
+        "text": "Έχουμε ένα πλαφόν τέτοιο;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900slr3ppqe7dn1p4]": {
+      "value": {
+        "text": "Δεν υπάρχει πλαφόν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunn900snr3ppbgcm1g4x]": {
+      "value": {
+        "text": "Γιατί συνήθως βάζουν κάποιες τέτοιες προϋποθέσεις μέσα, γι' αυτό το λέω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00spr3pppleoflwi]": {
+      "value": {
+        "text": "Όχι, υπάρχει η σελίδα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00sqr3ppro1gq9ap]": {
+      "value": {
+        "text": "Έχουμε βάλει ένα ποσό,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00srr3pp5orophqv]": {
+      "value": {
+        "text": "τα χρήματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00ssr3ppbe70to1s]": {
+      "value": {
+        "text": "Και μας χρεώνουν αν θυμάμαι καλά 0,005"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00str3ppia4j0671]": {
+      "value": {
+        "text": "το ασπρόμαυρο, 0,006 το έγχρωμο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00sur3ppkytfsn0g]": {
+      "value": {
+        "text": "Και υπάρχει εκεί ένα ποσό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00svr3pp02s00p75]": {
+      "value": {
+        "text": "Αυτό λοιπόν το ποσό, επειδή είναι σε μια σύμβαση και μιλάω και για τα άλλα μηχανήματα, εάν δεν καλύπτεται, είναι πολύ μεγάλο το ποσό, φτάνει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00swr3ppsbv6s0gu]": {
+      "value": {
+        "text": "Φέτος δηλαδή δεν ξεπεράσαμε το ποσό αυτό από ό,τι ξέρω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00sxr3ppycdz4ufp]": {
+      "value": {
+        "text": "Αν θέλετε να ρωτήσετε τις οικονομικές υπηρεσίες."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00szr3pppgyzzs9t]": {
+      "value": {
+        "text": "Καλό ήταν όταν μας έρχεται κάτι σε μια εισήγηση που έχει να συνεχίσουμε κάτι, να ξέρουμε με μια μικρή έκθεση τι έχει γίνει την προηγούμενη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t0r3pp2gry7qwi]": {
+      "value": {
+        "text": "Δηλαδή ότι χρησιμοποιήθηκε και αυτά τα πράγματα που λέγονται στις τεχνικές"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t1r3pphyu8s8d7]": {
+      "value": {
+        "text": "προδιαγραφές που πάμε να φτιάξουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t2r3ppqc1qj9h6]": {
+      "value": {
+        "text": "Γιατί εμείς εδώ πέρα φτιάχνοντας τους όρους πάμε να διορθώσουμε πιθανά κάτι το οποίο μπορεί να μην πήγε καλά την προηγούμενη χρονιά, να ήταν λιγότερο, να θέλουμε περισσότερο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t3r3pp8eu3fzwh]": {
+      "value": {
+        "text": "Οπότε δεν είναι απλά μια τυπική ιστορία και ερχόμαστε μετά και λέμε «α, δεν μας βγήκε αυτό»."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t4r3ppee4dyix2]": {
+      "value": {
+        "text": "Τώρα 44 μηχανήματα για τα οποία θέλουμε να κάνουμε τη σύμβαση αυτή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t5r3ppqj6gbblj]": {
+      "value": {
+        "text": "Αν δεν ξέρω του χρόνου τι έχει γίνει με αυτά τα μηχανήματα,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t6r3pphczzhiwg]": {
+      "value": {
+        "text": "γιατί μπορεί ανά πάσα στιγμή ο καθένας να πει «κοίτα να δεις, το κόβω» ή «στο τάδε σχολείο είναι έτσι και στο άλλο είναι έτσι»."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t7r3ppkytokwos]": {
+      "value": {
+        "text": "Και εμένα δεν με βρίσκει σύμφωνο αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t8r3ppk28p4o5r]": {
+      "value": {
+        "text": "Αυτό λέω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00t9r3pp17ngxn0g]": {
+      "value": {
+        "text": "Θέλω να ξέρω ότι υπάρχει ένα πράγμα που λέει ότι"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00tar3ppliyzkvj2]": {
+      "value": {
+        "text": "μπορεί να βγάλει όσες φωτοτυπίες θέλει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00tbr3pp9fxlaycc]": {
+      "value": {
+        "text": "Όχι να φτάσουμε στο σημείο που είχαμε φτάσει κάποια στιγμή που λέμε τις φωτοτυπίες στα σχολεία, τα βιβλία, επειδή είχαν"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00tcr3ppryyxv7o9]": {
+      "value": {
+        "text": "αργήσει να βγουν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00tdr3ppghv9oqiw]": {
+      "value": {
+        "text": "Αλλά για μια σειρά δραστηριοτήτων άλλων που χρειάζεται ο καθηγητής, ο παιδαγωγός να κάνει στα παιδιά, να έχει την"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunna00ter3pp12gftnoa]": {
+      "value": {
+        "text": "ευχέρεια να το κάνει, να μην ψάχνεται."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tgr3pplc2fl1x5]": {
+      "value": {
+        "text": "Την έχει, κύριε Καραβίδα, την έχει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00thr3ppv9fgogg0]": {
+      "value": {
+        "text": "Το μοναδικό το οποίο θα το δούμε, το οποίο εξυπηρετήσουν οι υπηρεσίες του Δήμου, ήταν ότι θέλανε κάποιοι έγχρωμο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tir3ppuyq7vix1]": {
+      "value": {
+        "text": "Αυτό μόνο, το οποίο στη σύμβαση, επειδή λήγει η συνολική σύμβαση και θα έρθει καινούργια μεγάλη σύμβαση, θα βάλουμε να υπάρχει και έγχρωμο φωτοτυπικό στα νηπιαγωγεία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tjr3ppypi0qd9j]": {
+      "value": {
+        "text": "Στα νηπιαγωγεία έχει έγχρωμο, στα δημοτικά δεν έχει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tlr3pph6dm15tj]": {
+      "value": {
+        "text": "Το καλό είναι στα νηπιαγωγεία και γενικά τα παιδιά να βλέπουν τα χρώματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tnr3ppx6nmuaqm]": {
+      "value": {
+        "text": "Όλα τα νηπιαγωγεία έχουν χρώμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tor3ppfsh9jnvr]": {
+      "value": {
+        "text": "Μόνο στα δημοτικά δεν έχει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tqr3ppvg6w655s]": {
+      "value": {
+        "text": "Απλά και η διαφορά που είπατε στην τιμή"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00trr3ppqzre0qy9]": {
+      "value": {
+        "text": "μιας εκτύπωσης με την άλλη δεν είναι τίποτα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnb00tsr3pps41x34qd]": {
+      "value": {
+        "text": "Ένα λεπτό η διαφορά είναι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00tur3pp3wmdapeh]": {
+      "value": {
+        "text": "Λοιπόν, νομίζω εξαντλήθηκε το θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00tvr3pp2aveqe8w]": {
+      "value": {
+        "text": "Ψηφίζουμε ομόφωνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00txr3pp09b5xzz2]": {
+      "value": {
+        "text": "Ένατο θέμα: Έγκριση πρακτικού Επιτροπής διαγωνισμού, κατακύρωση αποτελέσματος και ανάδειξη αναδόχου για την εκμίσθωση του κυλικείου του 6ου Γυμνασίου και 6ου Λυκείου Ζωγράφου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00tyr3pp6hd9ivs9]": {
+      "value": {
+        "text": "Ομόφωνα λοιπόν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00tzr3pp928nk6j7]": {
+      "value": {
+        "text": "Δέκατο θέμα: Έγκριση Πρακτικού άγονου διαγωνισμού, έγκριση διενέργειας επαναληπτικού δημόσιου πλειοδοτικού διαγωνισμού και έγκριση κατάρτισης όρων διακήρυξης για την εκμίσθωση του κυλικείου του 5ου Λυκείου Ζωγράφου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00u0r3pp2l1cz0do]": {
+      "value": {
+        "text": "Ομόφωνα και αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00u5r3pp4a66xfqk]": {
+      "value": {
+        "text": "Για το συγκεκριμένο κυλικείο πέρυσι έγινε πάλι διαγωνισμός."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00u6r3ppruqjiswg]": {
+      "value": {
+        "text": "Ήρθε ένας ανάδοχος."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnc00u7r3ppwd0u19yy]": {
+      "value": {
+        "text": "Είναι πληροφοριακά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00u9r3ppdfxm9xqn]": {
+      "value": {
+        "text": "Πάμε"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00ubr3ppurkun0u9]": {
+      "value": {
+        "text": "στο 11ο θέμα.",
+        "before": "στο ενδέκατο θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00ucr3pp2asa5qaw]": {
+      "value": {
+        "text": "Έγκριση δαπάνης για οδοιπορικά και σίτιση των υπαλλήλων της Δημοτικής Αστυνομίας κατά τη διάρκεια της υποχρεωτικής τους εκπαίδευσης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00udr3ppvrx07var]": {
+      "value": {
+        "text": "Ομόφωνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00uer3pp5l8cr8zy]": {
+      "value": {
+        "text": "Δωδέκατο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00ufr3ppi9fyiz8g]": {
+      "value": {
+        "text": "Λήψη απόφασης για την αποδοχή χορηγίας φωτιστικών σωμάτων Led για το ανοικτό γήπεδο ποδοσφαίρου 11χ11 στο Πάρκο Γουδή Δήμου Ζωγράφου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00uhr3pp5qphjyfe]": {
+      "value": {
+        "text": "Ομόφωνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00ujr3ppjbi9btwy]": {
+      "value": {
+        "text": "Να ρωτήσω κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunnd00ulr3pp3s07s8sw]": {
+      "value": {
+        "text": "Να ρωτήσει ο κύριος Καραβίδας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00unr3ppsg6cyvzt]": {
+      "value": {
+        "text": "Ωραία, χρειαζόμαστε τα LED αυτά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00uor3ppy41a0rl5]": {
+      "value": {
+        "text": "Βασικά αλλάζουμε φωτισμό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00upr3pps6959mvk]": {
+      "value": {
+        "text": "Αυτό είναι χορηγία, να υποθέσω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00uqr3ppw6m7n4ay]": {
+      "value": {
+        "text": "Αν δεν ήταν η χορηγία δεν θα το αλλάζαμε;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00urr3ppno7n129d]": {
+      "value": {
+        "text": "Θα είχε γίνει μελέτη, δεν χρειαζόταν αυτό το πράγμα;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00usr3ppqwnqnsy4]": {
+      "value": {
+        "text": "Ένα είναι αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00utr3ppqtyzgbfp]": {
+      "value": {
+        "text": "Και το δεύτερο, εντάξει, δεν έχει να κάνει με τα LED."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00uur3pp45yjopnp]": {
+      "value": {
+        "text": "Το έχω ξαναρωτήσει, δεν θυμάμαι την απάντηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsdunne00uvr3ppa182kvwi]": {
+      "value": {
+        "text": "Η δωρεά που είχε γίνει, έχουν μεταφερθεί τα τέτοια;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700uxr3ppqes88fv0]": {
+      "value": {
+        "text": "Μεταφέρονται συνέχεια, πηγαίνουν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700uyr3pp6h4urlub]": {
+      "value": {
+        "text": "Έχουμε πάει στην Ανακρεόντος, έχουμε πάει στο Γουδή και συνέχεια σιγά-σιγά φέρνουμε και τα μεταφέρουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v0r3pp46izxwar]": {
+      "value": {
+        "text": "Σε ό,τι αφορά το αν θα χρειαζόταν να αλλαχτεί, θα χρειαζόταν να αλλαχτεί και θα είχε και ένα κόστος για το Δήμο σημαντικό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v1r3pp4ty5ef25]": {
+      "value": {
+        "text": "Γιατί τα φωτιστικά που υπάρχουν εκεί είναι παλαιού τύπου, πέρα από τις βλάβες που βγάζουν καίνε και τον πατέρα τους και τη μάνα τους."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v2r3ppsztxnj9v]": {
+      "value": {
+        "text": "Οπότε"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v3r3ppdxfu4df0]": {
+      "value": {
+        "text": "αφού μας δόθηκε η χορηγία, απλά εξοικονομούμε το κόστος που θα το φτιάχναμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v4r3pphnbce3td]": {
+      "value": {
+        "text": "Ομόφωνα λοιπόν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v5r3ppno6m7lza]": {
+      "value": {
+        "text": "13ο θέμα.",
+        "before": "Δέκατο τρίτο θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v6r3ppu9593cmo]": {
+      "value": {
+        "text": "Κατ' αρχήν αποδοχή δωρεάς έργων τέχνης και έγκριση εκτίμησης και ψηφιοποίησης αυτών."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v8r3ppzyriv0gj]": {
+      "value": {
+        "text": "Την έχετε δει, είναι μια πολύ σημαντική."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700v9r3ppfynft2wo]": {
+      "value": {
+        "text": "Να ευχαριστήσουμε και τον κύριο Μοσχανδρέου για τη δωρεά του."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0700var3ppyhu9ncea]": {
+      "value": {
+        "text": "Η κυρία Καμινάρη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vcr3ppbtryj3n3]": {
+      "value": {
+        "text": "Απλώς ήθελα να συμπληρώσω ότι το κάνει στη μνήμη δύο ξαδέλφων του που δεν τα γνώρισε, που ήταν στην ΕΠΟΝ και τα οποία εκτελέστηκαν 19 και 20 ετών στο Μεσολόγγι από τους Γερμανούς.",
+        "before": "Απλώς ήθελα να συμπληρώσω ότι το κάνει στη μνήμη δύο ξαδέλφων του που δεν τα γνώρισε, που ήταν στη ΕΠΟΝ και τα οποία εκτελέστηκαν δεκαεννέα και είκοσι ετών στο Μεσολόγγι από τους Γερμανούς."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vdr3ppf9zcd5ks]": {
+      "value": {
+        "text": "Είναι αρκετός καιρός που το ζητάει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800ver3pp4wyqvp50]": {
+      "value": {
+        "text": "Τώρα έγινε πιο τυπικά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vfr3ppd2xwiwzx]": {
+      "value": {
+        "text": "Του εξηγήσαμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vgr3ppyeuuhzdx]": {
+      "value": {
+        "text": "Είναι μεγάλος άνθρωπος ο κύριος Μοσχανδρέου και έκανε τυπικά την επιστολή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vhr3ppzxpt3apu]": {
+      "value": {
+        "text": "Έχει ξεκινήσει μια πρώτη καταλογογράφηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vir3ppfzzmkm6c]": {
+      "value": {
+        "text": "Από ό,τι η πρώτη εκτίμηση, μιλάμε για μια αρκετά σημαντική αξία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vjr3ppqp1rminh]": {
+      "value": {
+        "text": "Πιστεύω ότι θα πρέπει να την αποδεχτούμε και να γίνουν όλες οι ενέργειες που έχω γράψει και να ξανάρθει το θέμα στη Δημοτική Επιτροπή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vlr3ppcx296xdz]": {
+      "value": {
+        "text": "Ο κύριος Καραβίδας έχει το"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vmr3ppheggennm]": {
+      "value": {
+        "text": "λόγο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vor3pp89vjgkx6]": {
+      "value": {
+        "text": "Όπως είπατε και εσείς, δεν είναι η πρώτη φορά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vpr3pp76tvxrpv]": {
+      "value": {
+        "text": "Νομίζω έχουμε ξαναδεχτεί"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vqr3pp6c1h7nq6]": {
+      "value": {
+        "text": "έργα τέχνης και από τον ίδιο τον κύριο Μοσχανδρέου, αν θυμάμαι καλά και έχουμε δεχτεί τη συλλογή με τις εφημερίδες"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vrr3pp3zkbq8cw]": {
+      "value": {
+        "text": "χρόνων."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0800vsr3pplvjjxwse]": {
+      "value": {
+        "text": "Νομίζω ήταν στην προηγούμενη θητεία..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0900vwr3ppohjqzpxs]": {
+      "value": {
+        "text": "Όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0900vxr3pp37sbn11o]": {
+      "value": {
+        "text": "Ακούστε λίγο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0900vyr3pp81aiyau0]": {
+      "value": {
+        "text": "Ήταν μια έκθεση με έργα τα οποία έχει στη συλλογή του ο κύριος Μοσχανδρέου που είχε γίνει σε συνεργασία με τη Βουλή των Ελλήνων."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0900vzr3ppjvrzn09p]": {
+      "value": {
+        "text": "Είχε"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w0r3ppfvdvidjv]": {
+      "value": {
+        "text": "μια σειρά από ενδιαφέροντα έργα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w1r3ppgoajedeh]": {
+      "value": {
+        "text": "Στη βίλα ήταν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w2r3ppmxz9dzq5]": {
+      "value": {
+        "text": "Αυτό ήταν σε συνεργασία με τη Βουλή των Ελλήνων."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w3r3ppezyjesi0]": {
+      "value": {
+        "text": "Αυτό είχε γίνει την προηγούμενη θητεία, τη"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w4r3pp6wh8k0ma]": {
+      "value": {
+        "text": "δική σας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w5r3ppfzw9veqi]": {
+      "value": {
+        "text": "Στη θητεία, νομίζω, Θώδα έρχεται"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w6r3ppunqa7wye]": {
+      "value": {
+        "text": "και κάνει μία δωρεά με"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w7r3ppmdjxwlqv]": {
+      "value": {
+        "text": "αρχείο εφημερίδων, δημοτικών, τοπικών και όλων αυτών το οποίο το αποδεχόμαστε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w8r3pp8or74nfv]": {
+      "value": {
+        "text": "Όταν γίνεται η ιστορία με την κατάργηση του νομικού προσώπου, θυμόσαστε έναν μακροσκελή κατάλογο με πίνακες και αυτά τα οποία έχουν γίνει κατά καιρούς δωρεές, όχι από τον κύριο Μοσχανδρέου, αλλά",
+        "before": "Όταν γίνεται η ιστορία με την κατάργηση του νομικού προσώπου, θυμόσαστε έναν μακροσκελή κατάλογο με πίνακες και αυτά τα οποία έχουν γίνει κατά καιρούς δωρεές, όχι από τον κύριο Μοσχονδρέου, αλλά"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00w9r3pptkrjnbm8]": {
+      "value": {
+        "text": "συνολικά ήταν πάρα πολλά έργα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00war3pplrrrd6lo]": {
+      "value": {
+        "text": "Και τώρα έρχεται αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wbr3ppgo6bkdw7]": {
+      "value": {
+        "text": "Αυτό έχει και μια αξία και παραπάνω, γιατί αν θυμάμαι καλά,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wcr3pp1yzpxvw0]": {
+      "value": {
+        "text": "κατ' αρχήν άμα διάβασα καλά κιόλας και τα εισηγητικά χαρτιά τα οποία έχετε φέρει, έχουν να κάνουν με ανθρώπους οι οποίοι έχουν χαθεί την περίοδο"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wdr3ppbsi3qma8]": {
+      "value": {
+        "text": "και στο Δίστομο, αν διάβασα καλά, έχουν εκτελεστεί."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wer3ppm6cy9934]": {
+      "value": {
+        "text": "Οπότε νομίζω ότι έχει μια αξία αυτή τη στιγμή,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wfr3ppmzdgbbra]": {
+      "value": {
+        "text": "γιατί"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wgr3pplxscv72f]": {
+      "value": {
+        "text": "έχει γίνει εδώ και χρόνια μια κουβέντα,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00whr3ppaglggvy0]": {
+      "value": {
+        "text": "η οποία προφανώς δεν ανοίγει, γιατί εγώ δεν έχω δει πουθενά στα δημοτικά συμβούλια να έχει έρθει ποτέ θέμα, ούτε καν, όχι ολοκληρωμένα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wir3ppxu3sl8rb]": {
+      "value": {
+        "text": "Δεν έχει έρθει ποτέ θέμα το οποίο να λέει ότι έχουμε τα τάδε έργα και πρέπει να φτιάξουμε μια πινακοθήκη δημοτική και να κάνουμε μια κουβέντα με βάση αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wjr3ppn0mtwcx4]": {
+      "value": {
+        "text": "Εμένα λιγάκι αυτό το πράγμα, η διασπορά των έργων από εδώ, από εκεί και παραπέρα δεν ξέρω αν με βρίσκει πάρα πολύ σύμφωνο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wkr3pp4hu6vda3]": {
+      "value": {
+        "text": "Με την έννοια ποια;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wlr3ppo34fswp5]": {
+      "value": {
+        "text": "Μετά από αυτό θα φέρουμε το ζήτημα της ασφάλειας, όχι της ασφάλισης, της ασφάλειας των χώρων αυτών, γιατί είναι και κάποιας αξίας όλα αυτά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wmr3pp1a6i3mdk]": {
+      "value": {
+        "text": "Και μπαίνει άλλο ζήτημα μετά και θα γίνεται άλλη ιστορία μετά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wnr3pp3bvpqozs]": {
+      "value": {
+        "text": "Οπότε νομίζω ότι"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wor3pp5to9ncr9]": {
+      "value": {
+        "text": "η αποδοχή της συγκεκριμένης δωρεάς, εγώ το συζητάω γιατί νομίζω ότι"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wpr3ppyvzujl88]": {
+      "value": {
+        "text": "αν και την προηγούμενη φορά είδα κάποια έργα, δηλαδή η διαδήλωση στην Αθήνα"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wqr3ppgc62gsed]": {
+      "value": {
+        "text": "που υπήρχε στη συλλογή,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wrr3pp4rqxa6g2]": {
+      "value": {
+        "text": "που ήταν η διαδήλωση για την απελευθέρωση της Αθήνας,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wsr3pp8pxoqtdl]": {
+      "value": {
+        "text": "δεν ξέρω κατά πόσο μπορεί να την έχει μια δημοτική."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wtr3ppet6m0w13]": {
+      "value": {
+        "text": "Είναι η ίδια θέση και στάση που κρατάγαμε τότε για τον Ποταμίτη, ότι είναι θέμα που αφορά το Υπουργείο Πολιτισμού."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wur3ppbsjwwo8a]": {
+      "value": {
+        "text": "Είναι θέμα που αφορά κάποιους που εμείς δεν μπορούμε να το κάνουμε αυτό το πράγμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wvr3ppvf25802l]": {
+      "value": {
+        "text": "Ως τι θα το κάνουμε;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0a00wwr3ppnhj7l8qq]": {
+      "value": {
+        "text": "Εγώ καταλαβαίνω"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00wyr3ppzky3zh8c]": {
+      "value": {
+        "text": "την αγωνία του κυρίου Μοσχανδρέου, καταλαβαίνω τα πάντα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00wzr3ppnanee4wy]": {
+      "value": {
+        "text": "Βάζω ένα ερωτηματικό σε αυτό το πράγμα, ότι"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x0r3ppjlubhgw2]": {
+      "value": {
+        "text": "όταν έχουμε τέτοιου είδους έργα"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x1r3pphf8q7m8x]": {
+      "value": {
+        "text": "δεν έχουμε κάποια αυτή..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x2r3ppvhu3z1z9]": {
+      "value": {
+        "text": "Φέρτε μια πρόταση να τη δούμε, να την κουβεντιάσουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x3r3pp88dm10rt]": {
+      "value": {
+        "text": "Αλλά η διασπορά των έργων από δω και από εκεί σε δημοτικούς χώρους δικούς μας, έτσι όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x4r3ppms6j0dvh]": {
+      "value": {
+        "text": "Εμένα με βρίσκει αντίθετο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x6r3pp5dah5v16]": {
+      "value": {
+        "text": "Θα συμφωνήσω και αυτό είναι κάτι που το ψάχνουμε πάρα πολύ για να μη γίνει αυτή η διασπορά, αλλά μέχρι να γίνει αποδοχή, μακάρι να έχει βρεθεί απλώς η πρώτη λύση αυτή.",
+        "before": "Θα συμφωνήσω και αυτό είναι κάτι που το ψάχνουμε πάρα πολύ για να μη γίνει αυτή η διασπορά, αλλά μέχρι να γίνει αποδοχή, μακάρι να έχει βρεθεί απλώς η πρώτη λήυση αυτή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x7r3pp4i23qrgv]": {
+      "value": {
+        "text": "Το δεύτερο που έχω να καταθέσω είναι ότι εμείς μπορούμε να το κάνουμε αυτό"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x8r3ppd3fp33xt]": {
+      "value": {
+        "text": "Και να δείξουμε έναν πολιτισμό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00x9r3ppwuuoz2hh]": {
+      "value": {
+        "text": "Το Υπουργείο Πολιτισμού δεν πρόκειται να ενδιαφερθεί, όπως δεν ενδιαφέρεται και για πολλά πράγματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00xar3ppotbb0bft]": {
+      "value": {
+        "text": "Όχι τώρα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00xbr3ppt1uqo7uh]": {
+      "value": {
+        "text": "Πάντα δεν ενδιαφέρονται για τον πολιτισμό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00xcr3pp8nt7by5o]": {
+      "value": {
+        "text": "Δεν είναι θέμα κυβέρνησης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00xdr3pp7xmiezbt]": {
+      "value": {
+        "text": "Ο πολιτισμός είναι το τελευταίο κομμάτι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00xer3ppni9yrafa]": {
+      "value": {
+        "text": "Το ξέρω, με συγχωρείτε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0b00xgr3ppr9rvsblf]": {
+      "value": {
+        "text": "Δεν διαφωνώ σε αυτό το πράγμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xir3ppwdc3l1a7]": {
+      "value": {
+        "text": "Όμως θα μπορούμε να ψάξουμε και εγώ συμφωνώ απόλυτα μαζί σας και δεν νομίζω ότι υπάρχει καμία αντίρρηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xjr3pp1sl83uuz]": {
+      "value": {
+        "text": "Μακάρι να υπάρξει ένας χώρος που να στεγαστούν αυτά τα έργα και έχετε απόλυτο δίκιο, γιατί η διασπορά έχει και άλλους κινδύνους."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xkr3ppdmfnuasl]": {
+      "value": {
+        "text": "Ευχαριστώ."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xmr3pp3okapjvh]": {
+      "value": {
+        "text": "Συγγνώμη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xnr3ppef57c9z7]": {
+      "value": {
+        "text": "Και η δημιουργία μιας δημοτικής πινακοθήκης πρέπει να υπάρχει ένα διοικητικό συμβούλιο που θα κάνει, "
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xor3ppfqux5mp9]": {
+      "value": {
+        "text": "τι αυτό..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xpr3ppe1pzjen4]": {
+      "value": {
+        "text": "Δηλαδή δεν είναι το κτίριο,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xqr3pps8etb2fd]": {
+      "value": {
+        "text": "είναι όλη η διαδικασία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xrr3pp4gm06g4v]": {
+      "value": {
+        "text": "Και ξαναλέμε ότι δεν θυμάμαι, δεν ξέρω, επειδή ασχολείστε με αυτό, δεν ξέρω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xsr3pptoymxkbr]": {
+      "value": {
+        "text": "Δεν θυμάμαι πόσα έργα έχουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xtr3ppy40ng5gx]": {
+      "value": {
+        "text": "Δεν είναι μόνο αυτά που μπορεί να είναι Χ καλλιτεχνών, ας το πούμε έτσι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xur3pp1lsfcnib]": {
+      "value": {
+        "text": "Είναι μια καταγραφή η οποία θυμάμαι τότε με το νομικό πρόσωπο πριν από δύο χρόνια που μας έχει έρθει ένα κατεβατό και σαν αντίγραφα που βλέπαμε, το οποίο ήταν ένας πάκος τόσος που είναι πάρα πολλά έργα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xwr3ppmxqs3vrq]": {
+      "value": {
+        "text": "Για εμένα όλα είναι σημαντικά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xxr3ppvm1l6uyj]": {
+      "value": {
+        "text": "Ο κάθε καλλιτέχνης ό,τι κάνει είναι σημαντικό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00xyr3ppe8m0u27p]": {
+      "value": {
+        "text": "Γι' αυτό θέλει μια πολύ ξεχωριστή κουβέντα όλο αυτό το πράγμα θεωρώ."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y0r3ppxy3y5fgw]": {
+      "value": {
+        "text": "Να πω εγώ λίγο;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y1r3ppym7b3gth]": {
+      "value": {
+        "text": "Είναι δύο διαφορετικά θέματα τώρα που έχουμε ανοίξει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y2r3ppndbtxlyc]": {
+      "value": {
+        "text": "Είναι δύο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y3r3pproyc0nlw]": {
+      "value": {
+        "text": "Το ένα αναδεικνύει την ανάγκη"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y4r3ppql02inkq]": {
+      "value": {
+        "text": "να προχωρήσουμε και στη διερεύνηση για πινακοθήκη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y5r3pp7j2mkwre]": {
+      "value": {
+        "text": "Από ό,τι καταλαβαίνω δέσμευση της διοίκησης είναι ότι προχωράμε να δούμε πώς θα φτιάξουμε μια πινακοθήκη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y6r3ppd5ee9ks8]": {
+      "value": {
+        "text": "Είναι πολλά τα σημαντικά και αξιόλογα έργα που είναι στην κατοχή του Δήμου και θέλουν και συγκεκριμένες συνθήκες έκθεσης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y7r3ppjlt4cixv]": {
+      "value": {
+        "text": "Δηλαδή δεν είναι τα έβαλα στον τοίχο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y8r3ppp36ln72y]": {
+      "value": {
+        "text": "Προστασία από υγρασίες, από ζέστες."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0c00y9r3ppue8yihhh]": {
+      "value": {
+        "text": "Είναι μια μεγάλη δουλειά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0d00yar3ppqlvu9eer]": {
+      "value": {
+        "text": "Εγώ θεωρώ ότι δεν θα είναι ο πρώτος δήμος που έχει δημοτική πινακοθήκη και ότι πρέπει να προχωρήσουμε, αφού έχουμε αυτή την περιουσία, κατ' αρχήν στην αποδοχή και αυτής της δωρεάς και όποιας άλλης ανάλογης δωρεάς και να δούμε σοβαρά το θέμα"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0d00ybr3ppa7m0vzog]": {
+      "value": {
+        "text": "πώς και με ποιον τρόπο θα προχωρήσουμε και στην ίδρυση δημοτικής πινακοθήκης."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0d00ycr3ppg4vv1v87]": {
+      "value": {
+        "text": "Επί της ψηφοφορίας, λοιπόν, τι κάνετε η Λαϊκή Συσπείρωση;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0d00ydr3ppfrmyk4fs]": {
+      "value": {
+        "text": "Με την επιφύλαξη, με τις σκέψεις που είχατε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0d00yer3pp6rmjp504]": {
+      "value": {
+        "text": "Άρα ομόφωνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0d00yor3ppmhtpel7t]": {
+      "value": {
+        "text": "Να προχωρήσουμε στην ψηφοφορία."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0e00yqr3ppjftvfvkr]": {
+      "value": {
+        "text": "Επί της ουσίας λοιπόν,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0e00yrr3ppmwn35btr]": {
+      "value": {
+        "text": "υπάρχει διαφωνία;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0e00ysr3ppl18lvjmg]": {
+      "value": {
+        "text": "Όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0e00ytr3ppt9dl6wq1]": {
+      "value": {
+        "text": "Ομοφώνως λοιπόν το 13 και πάμε στο 14.",
+        "before": "Ομοφώνως λοιπόν το δεκατρία και πάμε στο δεκατέσσερα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0e00yur3pptn5kmuko]": {
+      "value": {
+        "text": "Έκφραση γνώμης για την κοπή δέντρου λεύκας στην πλατεία Άνοιξη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0e00yyr3ppvg2823t7]": {
+      "value": {
+        "text": "Ως η εισήγηση και το 14."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z2r3ppkbxa7vpx]": {
+      "value": {
+        "text": "Αυτό νομίζω δεν αναφέρεται εδώ μέσα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z3r3ppzxupaihe]": {
+      "value": {
+        "text": "Λέει κατόπιν αυτοψίας υπάρχει δένδρο λεύκας."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z4r3ppw3qr8alv]": {
+      "value": {
+        "text": "Έχει λάβει μεγάλη κλίση και στο σημείο [...] παρουσιάζει σήψη, ανοίγματα και ρωγμές, καταστάσεις που το καθιστούν..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z5r3ppi904mkiy]": {
+      "value": {
+        "text": "Να ρωτήσω κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z6r3ppzca0xtvv]": {
+      "value": {
+        "text": "Τώρα μου είπε μια πολύ ωραία"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z7r3pp1sfl9jpr]": {
+      "value": {
+        "text": "η κυρία Χαλκιαδάκη, η οποία ταξίδεψε στην Κίνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z8r3ppfmaut5c5]": {
+      "value": {
+        "text": "Αν και διαφωνώ με"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00z9r3ppf62fsohh]": {
+      "value": {
+        "text": "ένα μεγάλο κομμάτι ιδεολογικά με αυτό συγκεκριμένα, αλλά είπε ότι όλα τα δέντρα και ότι είχανε..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zar3ppuzycimps]": {
+      "value": {
+        "text": "Τώρα να πούμε κάτι;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zbr3ppls3emm80]": {
+      "value": {
+        "text": "Τα δέντρα,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zcr3ppdbxutcki]": {
+      "value": {
+        "text": "όπως θα ξεκινήσουν, άμα δεν τα φτιάξεις στην πορεία τους, γέρνουν με τον αέρα, με το οτιδήποτε, παίρνουν μια κλίση συγκεκριμένη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zdr3pp5ohtkat3]": {
+      "value": {
+        "text": "Έχουμε μπει όμως σε μια διαδικασία και το συζητάγατε και στο Δημοτικό Συμβούλιο που δεν ήμουν την προηγούμενη φορά."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zer3pptq1edtvi]": {
+      "value": {
+        "text": "Έχουμε μπει σε μια διαδικασία στο ότι δεν γίνεται όλα τα χρόνια, δεν υπάρχει, να το πούμε έτσι, μέριμνα όλα τα προηγούμενα χρόνια στο πώς θα συντηρηθούν μια σειρά από αυτά για να μη γίνονται οι σήψεις, για να μη γίνονται αυτά και να δούμε πώς μπορεί να γίνει σε μια σειρά από αυτά, να υπάρχουν και στήριξεις."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zfr3pp1hjkorhk]": {
+      "value": {
+        "text": "Τώρα σε μία πλατεία όπως είναι η πλατεία Άνοιξης...."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zjr3ppffmrkgun]": {
+      "value": {
+        "text": "Όχι."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zkr3ppvhsvppxs]": {
+      "value": {
+        "text": "Σε μία πλατεία όπως είναι η πλατεία Άνοιξης, άμα κόψεις και τα ήδη υπάρχοντα έτσι όπως είναι, είναι μία πλατεία η οποία θα έχει δεντράκια που μέχρι να μεγαλώσουν φέξε Μάη μου να φας τριφύλλι και δεν ξέρω αν έχουμε φυτέψει και δέντρα που θα μεγαλώσουν να γίνουν τόσα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zlr3ppgz2zloke]": {
+      "value": {
+        "text": "Εντάξει, έχουμε μια διαφορετική αντίληψη για κάποια πράγματα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00zmr3pprwygbsmk]": {
+      "value": {
+        "text": "Το καταλαβαίνω."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0f00znr3ppy6nb13b5]": {
+      "value": {
+        "text": "Πάμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zpr3ppbbizwlrz]": {
+      "value": {
+        "text": "Να πω εγώ όμως ότι όταν παρουσιάζει σήψη στη βάση του κορμού η λεύκα δε σώνεται."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zqr3ppnjzohv2a]": {
+      "value": {
+        "text": "Η κλίση που έχει πάρει είναι ικανή και οι λεύκες έχουν συγκεκριμένο χρόνο ζωής."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zrr3pptp68auc0]": {
+      "value": {
+        "text": "Δεν είναι αιωνόβια δέντρα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zsr3pp6lhijzcg]": {
+      "value": {
+        "text": "Σαράντα, πενήντα, βαριά εξήντα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zur3pp4hr66xml]": {
+      "value": {
+        "text": "Εντάξει, απλά το θέμα είναι ότι όλα"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zvr3ppbyveeckx]": {
+      "value": {
+        "text": "τα κόβουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zwr3pp6ac0l5jo]": {
+      "value": {
+        "text": "Όχι, δε λέω εσείς, εμείς."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zxr3pppulnryy4]": {
+      "value": {
+        "text": "Τα κόβουμε."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zyr3ppg2kjm9px]": {
+      "value": {
+        "text": "Μέχρι σήμερα πραγματικά, δηλαδή αυτό που λέει ο Ανδρέας τώρα το είδα στην Κίνα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g00zzr3ppt8tc8wi3]": {
+      "value": {
+        "text": "Δεν υπάρχει δέντρο που να μην έχει αντιστήριξη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0100r3pp8d5nkx6r]": {
+      "value": {
+        "text": "Δηλαδή όποιο είναι προβληματικό έχει μια αντιστήριξη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0101r3ppuizbuw80]": {
+      "value": {
+        "text": "Έχουν κάποιες πατέντες και βάζουν και το στηρίζουν."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0102r3pp5dzuo79k]": {
+      "value": {
+        "text": "Και όχι καμία τεχνική."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0103r3ppu15t88x9]": {
+      "value": {
+        "text": "Δυο λεπτάκια."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0104r3ppgu6rou9v]": {
+      "value": {
+        "text": "Δεν είδα κάτι...."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0105r3pp9mcb60mx]": {
+      "value": {
+        "text": "Ένα σίδερο με διχάλα, ένα αυτό."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0106r3ppklirowfs]": {
+      "value": {
+        "text": "Κάθεται έτσι και όποιο κλαδί γέρνει το τραβάνε, όπως είναι η σφεντόνα ας πούμε και το τραβάει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0g0107r3ppv8awh9re]": {
+      "value": {
+        "text": "Δηλαδή θέλω να πω ότι και σαν κόστος..."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010br3pplummpsgx]": {
+      "value": {
+        "text": "Θέλω να πω ότι και σαν κόστος δεν μιλάμε για ένα εξωπραγματικό, γιατί υπάρχει και αυτό το θέμα."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010cr3ppbsv8lumt]": {
+      "value": {
+        "text": "Δεν μιλάμε για"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010dr3ppwglp1uhx]": {
+      "value": {
+        "text": "εξωπραγματικές λύσεις."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010er3ppqv7jbd3o]": {
+      "value": {
+        "text": "Λέω λοιπόν, μήπως πρέπει και εμείς να αρχίσουμε να μπούμε σε μία λογική ότι όχι, ότι είναι παρ' το, κόφ' το. Προφανώς να μην πέσει σε κεφάλι κανενός."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010fr3ppr5uva5ka]": {
+      "value": {
+        "text": "Δεν τίθεται εκεί το θέμα να το αφήσουμε να πέσει."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010gr3ppmvgfsnnz]": {
+      "value": {
+        "text": "Ειδικά όμως για την Άνοιξη, επειδή είναι μια πλατεία, χρειαζόμαστε δύο τρία δεντράκια."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010hr3ppv5o471yh]": {
+      "value": {
+        "text": "Έχει σήψη."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010ir3pp45zgpi9z]": {
+      "value": {
+        "text": "Έχει επικινδυνότητα δηλαδή αυτή τη στιγμή;"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010mr3ppkxbb35ew]": {
+      "value": {
+        "text": "Η"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010or3ppsquhrnk4]": {
+      "value": {
+        "text": "πρόταση"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0h010pr3ppd2k417lm]": {
+      "value": {
+        "text": "η δικιά μας είναι αυτή."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i010tr3ppfasau8ub]": {
+      "value": {
+        "text": "Ωραία λοιπόν,"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i010ur3ppopopjp4w]": {
+      "value": {
+        "text": "κατά η Λαϊκή Συσπείρωση, θετικά οι υπόλοιποι με "
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i010vr3pp5d76vpe9]": {
+      "value": {
+        "text": "την πρόταση προς το Δημοτικό Συμβούλιο, να αντικατασταθεί επί της πλατείας, σε διπλανό σημείο επί της πλατείας"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i010wr3pp17agnajp]": {
+      "value": {
+        "text": "με μεγάλης"
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i010xr3pp258p9ga8]": {
+      "value": {
+        "text": "ηλικίας έτοιμο δέντρο."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0111r3ppdonxui3a]": {
+      "value": {
+        "text": "15ο θέμα, επιστροφή αχρεωστήτως εισπραχθέντων ποσών.",
+        "before": "Δέκατο πέμπτο θέμα, επιστροφή αχρεωστήτως εισπραχθέντων ποσών."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0112r3ppw06zwddn]": {
+      "value": {
+        "text": "Ως η εισήγηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0113r3ppwqj72d6e]": {
+      "value": {
+        "text": "16ο: Διαγραφή από βεβαιωτικούς Χρηματικούς Καταλόγους ανεισπράκτων Δ.Τ, Δ.Φ, ΤΑΠ ηλεκτροδοτούμενων ακινήτων από καταστάσεις ΔΕΗ.",
+        "before": "Δέκατο έκτο: Διαγραφή από βεβαιωτικούς Χρηματικούς Καταλόγους ανεισπράκτων Δ.Τ, Δ.Φ, ΤΑΠ ηλεκτροδοτούμενων ακινήτων από καταστάσεις ΔΕΗ."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0114r3pp5a0j09eg]": {
+      "value": {
+        "text": "Ως η εισήγηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0115r3pp5u21554k]": {
+      "value": {
+        "text": "Διαγραφή οφειλών από παραβάσεις Κ.Ο.Κ. από βεβαιωτικούς καταλόγους μισθωμένων οχημάτων από εταιρίες leasing."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0116r3ppldxldhpo]": {
+      "value": {
+        "text": "Ως η εισήγηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0117r3pp84j0wja7]": {
+      "value": {
+        "text": "Διαγραφή προστίμου αυθαίρετης χρήσης κοινόχρηστου χώρου."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0118r3ppcwmkdp1k]": {
+      "value": {
+        "text": "Ως η εισήγηση."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    },
+    "utterance[cmtsduo0i0119r3ppp4dkg0az]": {
+      "value": {
+        "text": "Σας ευχαριστώ πολύ."
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-11",
+      "source": "run:eba48a39ee19a9abf07cda1b03b4407c"
+    }
+  },
+  "cluster": "zografou",
+  "tags": [
+    "recorded-run",
+    "env:development"
+  ]
+}

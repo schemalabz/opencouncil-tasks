@@ -1,0 +1,15 @@
+{
+  "kind": "must-fire",
+  "note": "Sentence from papagos-cholargos/sep29_3_2026 on summarize v7, the meeting #109 cites: the rule alone did not stop it",
+  "input": {
+    "label": "batch-processing:3/6",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Συζήτηση για την έγκριση της μελέτης. Το θέμα εγκρίθηκε κατά πλειοψηφία.\"}]}"
+    }
+  }
+}

@@ -1,0 +1,155 @@
+{
+  "id": "summarize.context/xylokastro-sep28_2026",
+  "suite": "summarize.context",
+  "split": "holdout",
+  "input": {
+    "meeting": "xylokastro/sep28_2026"
+  },
+  "replay": "73e19fffefd38a2d568c8a635ccd5555",
+  "expect": {
+    "extra": {
+      "value": [],
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-15",
+      "source": "run:73e19fffefd38a2d568c8a635ccd5555"
+    },
+    "subject[#1 Νέα παροχή ρεύματος για 3ο Δημοτικό Ξυλοκάστρου]": {
+      "value": {
+        "id": "cmufjun5u05jlod4ql86rbt03",
+        "name": "Νέα παροχή ρεύματος για 3ο Δημοτικό Ξυλοκάστρου",
+        "description": "Έγκριση δαπάνης για νέα παροχή ισχύος 35 KVA στη διεύθυνση Νοταρά και Ρωμέση στο Ξυλόκαστρο, [λόγω της μετεγκατάστασης του 3ου Δημοτικού Σχολείου](REF:UTTERANCE:cmul66wrr013n8je52ogddjvp). Το θέμα εγκρίθηκε χωρίς ουσιαστική συζήτηση.",
+        "agendaItemIndex": 1,
+        "agendaSectionIndex": null,
+        "nonAgendaReason": null,
+        "topic": "Παιδεία",
+        "withdrawn": false,
+        "context": "Η κατασκευή του νέου σχολικού συγκροτήματος που θα στεγάσει το 3ο Δημοτικό Σχολείο και το 3ο Νηπιαγωγείο Ξυλοκάστρου εγκρίθηκε με χρηματοδότηση 5.850.000 ευρώ από το Επιχειρησιακό Πρόγραμμα «Πελοπόννησος 2021-2027». Το έργο αφορά την κατασκευή ενός νέου, σύγχρονου σχολικού συγκροτήματος στο κέντρο του Ξυλοκάστρου, σε δημοτικό οικόπεδο έκτασης 3.461,90 τ.μ., στο σημείο όπου λειτουργούν οι υφιστάμενες εγκαταστάσεις. Το νέο συγκρότημα θα έχει συνολική επιφάνεια 2.258,03 τ.μ., σύμφωνα με τις πλέον πρόσφατες προδιαγραφές ασφάλειας, προσβασιμότητας και ενεργειακής απόδοσης.\n\nΗ νέα παροχή ρεύματος ισχύος 35 KVA είναι απαραίτητη για τη λειτουργία του νέου σχολικού κτιρίου. Οι επαγγελματικές παροχές χαμηλής τάσης με ισχύ μεγαλύτερη των 25 kVA και έως 250 kVA απαιτούν ειδική αίτηση ηλεκτροδότησης. Το κόστος για επαγγελματική παροχή 25-50 kVA κυμαίνεται περίπου στα 1.800€. Το έργο σηματοδοτεί το οριστικό τέλος των πρόχειρων αιθουσών-κοντέινερ, οι οποίες για χρόνια αποτελούσαν την καθημερινότητα μαθητών και εκπαιδευτικών.\n\nΤο νέο σχολικό συγκρότημα θα έχει δυνατότητα εξυπηρέτησης έως και 230 μαθητών, ενώ η πράξη συγχρηματοδοτείται από το Ευρωπαϊκό Ταμείο Περιφερειακής Ανάπτυξης, στο πλαίσιο του ΕΣΠΑ 2021–2027. Η μετεγκατάσταση του σχολείου στη νέα τοποθεσία στη διεύθυνση Νοταρά και Ρωμέση καθιστά αναγκαία την εγκατάσταση νέας ηλεκτρικής παροχής επαρκούς ισχύος για την κάλυψη των λειτουργικών αναγκών του σύγχρονου σχολικού κτιρίου.",
+        "contextCitationUrls": [
+          "https://www.xylokastro-evrostini.gov.gr/el/zo-ston-dimo-services/enemeronomai/ta-nea-mas/programmata-chrematodoteses/programmata-espa/8841-kataskevi-neou-sxolikoy-sygkrotimatos-sto-ksylokastro-3o-dimotiko-sxoleio-3o-nipiagogeio",
+          "https://otavoice.gr/aytodioikitika-nea/2026/03/d-ptochos-dimiourgoume-enan-choro-pou-dinei-prooptiki-sto-xylokastro/",
+          "https://hmerisiakorinthou.gr/173823-2/",
+          "https://fthinorevma.gr/epaggelmatiko-revma/",
+          "https://bestenergydeals.gr/%CE%B4%CE%B9%CE%BA%CE%B1%CE%B9%CE%BF%CE%BB%CE%BF%CE%B3%CE%B7%CF%84%CE%B9%CE%BA%CE%B1-%CE%B3%CE%B9%CE%B1-%CE%BD%CE%B5%CE%B1-%CF%80%CE%B1%CF%81%CE%BF%CF%87%CE%B7-%CF%81%CE%B5%CF%85%CE%BC%CE%B1%CF%84%CE%BF%CF%83/",
+          "https://enloutrakio.gr/%CF%84%CE%AD%CE%BB%CE%BF%CF%82-%CE%B5%CF%80%CE%BF%CF%87%CE%AE%CF%82-%CE%B3%CE%B9%CE%B1-%CF%84%CE%B1-%CE%BA%CE%BF%CE%BD%CF%84%CE%AD%CE%B9%CE%BD%CE%B5%CF%81-%CF%83%CF%84%CE%BF-%CE%BE%CF%85%CE%BB%CF%8C/",
+          "https://www.ppel.gov.gr/spoudeo-vima-gia-to-telos-ton-konteiner-sto-3o-dimotiko-ke-nipiagogio-xilokastrou-dimitris-ptochos-ke-vlasis-tsiotos-anakinosan-tin-entaxi-ergou-585-ekat-evro/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 6,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-15",
+      "source": "run:73e19fffefd38a2d568c8a635ccd5555"
+    },
+    "subject[#2 Παραχώρηση γηπέδου για αθλητική εκδήλωση]": {
+      "value": {
+        "id": "cmufjun6g05jmod4qrd5bpuqp",
+        "name": "Παραχώρηση γηπέδου για αθλητική εκδήλωση",
+        "description": "Παραχώρηση χρήσης του γηπέδου Ξυλοκάστρου «Σωτήρης Αγγελόπουλος» σε αθλητικό σύλλογο για [εκδήλωση για παιδιά στις 24 και 25 Οκτωβρίου](REF:UTTERANCE:cmul66wrr013w8je55dpgkeya). Το θέμα εγκρίθηκε χωρίς τοποθετήσεις.",
+        "agendaItemIndex": 2,
+        "agendaSectionIndex": null,
+        "nonAgendaReason": null,
+        "topic": "Αθλητισμός",
+        "withdrawn": false,
+        "context": "Η παραχώρηση δημοτικών αθλητικών εγκαταστάσεων σε αθλητικούς συλλόγους απαιτεί την υποβολή σχετικής αίτησης από τα σωματεία, ενώ οι δήμοι έχουν τη δυνατότητα να παραχωρούν ελεύθερα τις αθλητικές τους εγκαταστάσεις για τη διοργάνωση αθλητικών, πολιτιστικών, ψυχαγωγικών και άλλων εκδηλώσεων. Οι σχετικές αποφάσεις λαμβάνονται με βάση τον εκάστοτε κανονισμό λειτουργίας και διαχείρισης των αθλητικών εγκαταστάσεων κάθε ΟΤΑ. Η σχετική διάταξη προβλέπεται στο άρθρο 33 του ν. 2725/1999, όπως τροποποιήθηκε με τον ν. 4908/2022.\n\nΤο γήπεδο Ξυλοκάστρου «Σωτήρης Αγγελόπουλος» αποτελεί το στάδιο του Π.Α.Ο. Ηρακλή Ξυλοκάστρου και φέρει το όνομα του Σωτήρη Αγγελόπουλου, ποδοσφαιριστή που αγωνίστηκε επαγγελματικά στον Παναθηναϊκό από το 1955 έως το 1964 και κατέκτησε τρία πρωταθλήματα. Η αθλητική εγκατάσταση φιλοξενεί τακτικά αγώνες και εκδηλώσεις, συμβάλλοντας στην αθλητική και κοινωνική ζωή της περιοχής.",
+        "contextCitationUrls": [
+          "https://e-patras.gr/el/parahorisi-dimotikon-athlitikon-egkatastaseon-se-erasitehnikoys-athlitikoys-syllogoys-gia-tin",
+          "https://astros-kynourianews.gr/%CF%84%CE%B9-%CE%B1%CE%BB%CE%BB%CE%AC%CE%B6%CE%B5%CE%B9-%CE%BC%CE%B5-%CF%84%CE%B7%CE%BD-%CF%80%CE%B1%CF%81%CE%B1%CF%87%CF%8E%CF%81%CE%B7%CF%83%CE%B7-%CE%B4%CE%B7%CE%BC%CE%BF%CF%84%CE%B9%CE%BA%CF%8E/",
+          "https://el.wikipedia.org/wiki/%CE%A0.%CE%91.%CE%9F._%CE%97%CF%81%CE%B1%CE%BA%CE%BB%CE%AE%CF%82_%CE%9E%CF%85%CE%BB%CE%BF%CE%BA%CE%AC%CF%83%CF%84%CF%81%CE%BF%CF%85"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "near",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 4,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-15",
+      "source": "run:73e19fffefd38a2d568c8a635ccd5555"
+    },
+    "subject[#3 Διαχείριση μεταχειρισμένων ειδών ένδυσης]": {
+      "value": {
+        "id": "cmufjun6q05jnod4qob9q2955",
+        "name": "Διαχείριση μεταχειρισμένων ειδών ένδυσης",
+        "description": "Τροποποίηση του συμφωνητικού συνεργασίας για τη [διαχείριση μεταχειρισμένων ειδών ένδυσης και υπόδησης](REF:UTTERANCE:cmul66wrs01458je50nvsyr3c), στο πλαίσιο πρόληψης δημιουργίας αποβλήτων στον Δήμο Ξυλοκάστρου-Ευρωστίνης. Το θέμα εγκρίθηκε χωρίς τοποθετήσεις.",
+        "agendaItemIndex": 3,
+        "agendaSectionIndex": null,
+        "nonAgendaReason": null,
+        "topic": "Καθαριότητα & Απορρίμματα",
+        "withdrawn": false,
+        "context": "Η Ευρωπαϊκή Ένωση απαιτεί από τα κράτη μέλη να διασφαλίσουν ξεχωριστή συλλογή κλωστοϋφαντουργικών αποβλήτων το αργότερο μέχρι το 2025, στο πλαίσιο της κυκλικής οικονομίας και της πρόληψης δημιουργίας αποβλήτων. Από τον Ιούλιο 2026 τέθηκαν σε ισχύ νέοι ευρωπαϊκοί κανόνες που απαγορεύουν την καταστροφή απούλητων ενδυμάτων και υποδημάτων, ενθαρρύνοντας τις επιχειρήσεις να διαχειρίζονται καλύτερα τα αποθέματά τους. Οι επιχειρήσεις πρέπει να δίνουν προτεραιότητα στη διατήρηση των προϊόντων σε χρήση, πουλώντας τα, δωρίζοντάς τα σε φιλανθρωπικές οργανώσεις ή προετοιμάζοντάς τα για επαναχρησιμοποίηση.\n\nΣτην Ελλάδα εγκρίθηκε το Εθνικό Πρόγραμμα Πρόληψης Δημιουργίας Αποβλήτων τον Απρίλιο 2022, που θέτει την πρόληψη ως πρώτη προτεραιότητα στην ιεράρχηση διαχείρισης αποβλήτων. Πολλοί δήμοι της χώρας έχουν αναπτύξει συστήματα συλλογής μεταχειρισμένων ρούχων και υποδημάτων μέσω ειδικών κάδων, συνεργαζόμενοι με εταιρείες που διαθέτουν τις απαραίτητες άδειες συλλογής και διαχείρισης. Η ανταπόκριση των πολιτών συμβάλλει στη μείωση των αποβλήτων που καταλήγουν στους ΧΥΤΑ, αποφεύγοντας τη σπατάλη φυσικών πόρων, ενώ παράλληλα ενισχύονται κοινωνικές δράσεις μέσω της διάθεσης μέρους των ενδυμάτων σε ευπαθείς ομάδες.",
+        "contextCitationUrls": [
+          "https://dspace.lib.ntua.gr/xmlui/bitstream/handle/123456789/53953/%CE%A0%CE%91%CE%A0%CE%91%CE%A3%CE%A4%CE%91%CE%9C%CE%91%CE%A4%CE%97%20%CE%91%CE%9D%CE%A4%CE%99%CE%93%CE%9F%CE%9D%CE%97%20-%20%CE%94%CE%99%CE%A0%CE%9B%CE%A9%CE%9C%CE%91%CE%A4%CE%99%CE%9A%CE%97%20%CE%95%CE%A1%CE%93%CE%91%CE%A3%CE%99%CE%91.pdf?sequence=1",
+          "https://www.ot.gr/2026/07/21/green/ee-apagoreyei-tin-katastrofi-apouliton-rouxon-ypodimaton-kai-aksesouar-endysis-ti-tha-isxyei/",
+          "https://www.eleftherostypos.gr/diethni/oi-etairies-den-tha-petane-ta-roucha-kai-papoutsia-pou-menoun-apoulita",
+          "https://www.myota.gr/wp-content/uploads/2022/05/apovlita_programma.pdf",
+          "https://naxostimes.gr/kyklades/syros/234864/88-tonoi-rouchon-kai-lefkon-eidon-odigithikan-se-anakyklosi-apo-ton-dimo-syrou-ermoupolis/",
+          "https://www.larissapress.gr/2026/03/05/i-anakyklosi-stin-praxi-dekades-tonoi-rouchismou-kai-mageirikon-ladion-syllechthikan-ston-dimo-elassonas/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "normal",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {
+          "SUBJECT_DISCUSSION": 5,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-15",
+      "source": "run:73e19fffefd38a2d568c8a635ccd5555"
+    },
+    "subject[outOfAgenda Ορισμός διαχειριστών λογαριασμών ΠΔΕ]": {
+      "value": {
+        "id": "cmulcmtiv01ky8je5kwmf23up",
+        "name": "Ορισμός διαχειριστών λογαριασμών ΠΔΕ",
+        "description": "Έκτακτο θέμα για τον [ετήσιο ορισμό υπεύθυνων διαχειριστών των λογαριασμών των έργων του Προγράμματος Δημοσίων Επενδύσεων](REF:UTTERANCE:cmul66wrs014c8je5r1f6idxb). Ορίστηκαν [οι υπάλληλοι του Δήμου Δημητρακοπούλου Αναστασία του Παναγιώτη και η υπάλληλος Βασιλική του Σπυρίδωνος](REF:UTTERANCE:cmul66wrs014f8je5nue00ome). Το θέμα εγκρίθηκε χωρίς τοποθετήσεις.",
+        "agendaItemIndex": null,
+        "agendaSectionIndex": null,
+        "nonAgendaReason": "outOfAgenda",
+        "topic": "Διοίκηση",
+        "withdrawn": false,
+        "context": "Το Πρόγραμμα Δημοσίων Επενδύσεων αποτελεί το κύριο εργαλείο χρηματοδότησης αναπτυξιακών έργων του Δημοσίου στην Ελλάδα. Οι υπόλογοι διαχειριστές έργου είναι οι οικονομικές υπηρεσίες φορέων της γενικής κυβέρνησης που ορίζονται ανά έργο με απόφαση των φορέων χρηματοδότησης. Οι υπόλογοι διαχειριστές έργου ορίζουν εισηγητές εκκαθάρισης δαπάνης και υπεύθυνους λογαριασμού για κάθε έργο. Οι πληρωμές διενεργούνται από τους εξουσιοδοτημένους Υπολόγους Διαχειριστές για κάθε έργο του Προγράμματος.\n\nΟι πληρωμές των έργων πραγματοποιούνται μέσω λογαριασμών δημοσίων επενδύσεων που τηρούνται στην Τράπεζα της Ελλάδος. Τα δεδομένα του Προγράμματος Δημοσίων Επενδύσεων καταχωρίζονται στο Ολοκληρωμένο Πληροφοριακό Σύστημα e-ΠΔΕ του Υπουργείου Εθνικής Οικονομίας και Οικονομικών. Ο ετήσιος ορισμός των υπευθύνων διαχειριστών είναι απαραίτητη διαδικασία για τη νόμιμη εκτέλεση και πληρωμή των έργων που χρηματοδοτούνται από το ΠΔΕ.\n\nΟ Προϋπολογισμός Δημοσίων Επενδύσεων του 2026 είναι ο μεγαλύτερος των τελευταίων δεκαέξι ετών, με συνολικό προϋπολογισμό 16,72 δισ. ευρώ, που συνιστά τον υψηλότερο των τελευταίων 16 ετών. Φορείς υλοποίησης έργων του ΑΠΔΕ είναι οι δήμοι, νοσοκομεία, δημόσιες επιχειρήσεις και ΔΕΥΑ.",
+        "contextCitationUrls": [
+          "https://www.opengov.gr/minfin/?p=12991",
+          "https://www.bankofgreece.gr/kiries-leitourgies/foreis-genikhs-kyvernhshs/programma-dhmosiwn-ependysewn",
+          "https://www.taxhorizon.club/el/%CE%B2%CE%B9%CE%B2%CE%BB%CE%B9%CE%BF%CE%B8%CE%AE%CE%BA%CE%B7-10015",
+          "https://www.hellenicparliament.gr/UserFiles/2f026f42-950c-4efc-b950-340c4fb76a24/12687097.pdf",
+          "https://epde.gr/portal/wp-content/uploads/2025/08/%CE%95%CE%B3%CE%BA%CF%8D%CE%BA%CE%BB%CE%B9%CE%BF%CF%82-%CE%9F%CE%B4%CE%B7%CE%B3%CE%B9%CF%8E%CE%BD-%CE%B3%CE%B9%CE%B1-%CF%84%CE%BF-%CE%91%CE%A0%CE%94%CE%95-2026-%CE%BA%CE%B1%CE%B9-%CF%84%CE%BF%CE%BD-%CE%A0%CF%81%CE%BF%CE%B3%CF%81%CE%B1%CE%BC%CE%BC%CE%B1%CF%84%CE%B9%CF%83%CE%BC%CF%8C-%CE%94%CE%B1%CF%80%CE%B1%CE%BD%CF%8E%CE%BD-%CE%91%CE%A0%CE%94%CE%95-2026-2029.pdf",
+          "https://acci.gr/%CF%80%CF%81%CF%8C%CE%B3%CF%81%CE%B1%CE%BC%CE%BC%CE%B1-%CE%B4%CE%B7%CE%BC%CE%BF%CF%83%CE%AF%CF%89%CE%BD-%CE%B5%CF%80%CE%B5%CE%BD%CE%B4%CF%8D%CF%83%CE%B5%CF%89%CE%BD-167-%CE%B4%CE%B9%CF%83-%CE%B5/",
+          "https://epde.gr/portal/pde/"
+        ],
+        "discussedIn": null,
+        "topicImportance": "doNotNotify",
+        "proximityImportance": "none",
+        "contributions": [],
+        "utteranceStatuses": {
+          "PROCEDURAL_VOTE": 1,
+          "SUBJECT_DISCUSSION": 6,
+          "VOTE": 1
+        }
+      },
+      "tier": "drafted",
+      "by": "recorded-run",
+      "at": "2026-10-15",
+      "source": "run:73e19fffefd38a2d568c8a635ccd5555"
+    }
+  },
+  "cluster": "xylokastro",
+  "tags": [
+    "recorded-run",
+    "env:development"
+  ]
+}

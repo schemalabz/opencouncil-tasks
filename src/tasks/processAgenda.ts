@@ -402,7 +402,7 @@ export function normalizeExtractedSections(subjects: SectionedSubject[]): TaskWa
     const titlesByIndex = new Map<number, Map<string, string>>();
     for (const s of sectioned) {
         const titles = titlesByIndex.get(s.agendaSectionIndex!) ?? new Map<string, string>();
-        const folded = foldSectionTitle(s.agendaSectionTitle);
+        const folded = foldAgendaTitle(s.agendaSectionTitle);
         if (!titles.has(folded)) titles.set(folded, s.agendaSectionTitle!);
         titlesByIndex.set(s.agendaSectionIndex!, titles);
     }
@@ -441,13 +441,13 @@ export function normalizeExtractedSections(subjects: SectionedSubject[]): TaskWa
 }
 
 /**
- * The section title as it is compared: the agenda item rules (whitespace, trailing
+ * An agenda title as it is compared: the agenda item rules (whitespace, trailing
  * stop, blank to null), then case, accents and the final sigma folded away. Greek
  * headings are printed in capitals, which carry no accents, so «ΓΕΝΙΚΑ ΘΕΜΑΤΑ» and
  * «Γενικά Θέματα» are the same heading and must fold to the same string. An
  * item keeps its verbatim title; only the comparison sees this form.
  */
-function foldSectionTitle(title: string | null): string {
+export function foldAgendaTitle(title: string | null): string {
     const lowered = normalizeAgendaItemTitle(title)?.toLocaleLowerCase('el');
     if (!lowered) return '';
     return lowered.normalize('NFD').replace(/\p{M}/gu, '').replace(/\u03c2/g, '\u03c3');

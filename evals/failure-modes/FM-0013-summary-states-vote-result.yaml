@@ -1,0 +1,25 @@
+id: FM-0013
+slug: summary_states_vote_result
+title: A subject description or speaker contribution states the vote's result
+definition: >
+  The summary says how this session voted: approved or rejected, unanimously or by majority,
+  vote counts, or who voted which way («Εγκρίθηκε ομόφωνα.», «με 12 ψήφους υπέρ»). The
+  transcript cannot settle it: roll-call answers are short utterances («Υπέρ», «Κι εγώ») that
+  diarization often gives to the wrong speaker, so stated results were frequently wrong
+  (papagos-cholargos sep29_3_2026). #109 forbade them in descriptions and contributions.
+boundary: >
+  Not this mode: an earlier act the discussion cites («η μελέτη που εγκρίθηκε το 2020»); a
+  speaker saying how they intend to vote, as their position («θα ψηφίσουμε κατά γιατί…» is
+  a known false alarm when phrased «ψηφίσαμε κατά»); the decisions themselves, which come from
+  Diavgeia, not the summary.
+suite: [summarize.e2e, summarize.contributions]
+scope: call
+severity: degraded
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/summaryVoteResult.ts
+issue: schemalabz/opencouncil-tasks#109
+decision: fix
+alert: "fail rate per city > 3× its 30-day baseline, min 5 summarize runs"

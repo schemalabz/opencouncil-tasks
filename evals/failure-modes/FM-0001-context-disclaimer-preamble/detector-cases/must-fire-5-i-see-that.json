@@ -1,0 +1,16 @@
+{
+  "kind": "must-fire",
+  "note": "Search narration without an apology",
+  "input": {
+    "label": "subject-context-search:Δημοτικό Κολυμβητήριο Ζωγράφου",
+    "request": {
+      "model": "claude-sonnet-4-5",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "Βλέπω ότι τα αποτελέσματα αφορούν κυρίως το παλιό κολυμβητήριο. Το Δημοτικό Κολυμβητήριο Ζωγράφου λειτουργεί από το 2004 και φιλοξενεί αθλητικούς συλλόγους της περιοχής.",
+      "stopReason": "end_turn"
+    }
+  }
+}

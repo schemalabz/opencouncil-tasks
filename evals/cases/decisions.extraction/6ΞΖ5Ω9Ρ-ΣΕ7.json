@@ -1,0 +1,341 @@
+{
+  "id": "decisions.extraction/6ΞΖ5Ω9Ρ-ΣΕ7",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "6ΞΖ5Ω9Ρ-ΣΕ7",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/6ΞΖ5Ω9Ρ-ΣΕ7",
+    "city": "vrilissia",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 17,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "arrival=yes",
+        "changeAnchor=session_phase",
+        "voteTally=yes",
+        "mayorStated=yes",
+        "reordering=yes",
+        "declaration=yes",
+        "embeddedDecision=yes",
+        "namedVoters=all"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "withdrawnItem",
+        "embeddedOtherBodyDecision",
+        "reordering"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "phase",
+        "asExtracted": [
+          {
+            "name": "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ) προσήλθε κατά τις ερωτήσεις της προ ημερησίας διάταξης."
+          },
+          {
+            "name": "ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ)",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η Δημοτική Σύμβουλος κα. ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ) προσήλθε κατά τις ερωτήσεις της προ ημερησίας διάταξης."
+          },
+          {
+            "name": "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ προσήλθε κατά το 1ο θέμα του άρθρου 8 του κανονισμού λειτουργίας του Δ.Σ."
+          },
+          {
+            "name": "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Η Δημοτική Σύμβουλος κα. ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ προσήλθε κατά τις ερωτήσεις της προ ημερησίας διάταξης."
+          },
+          {
+            "name": "ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Ο Δημοτικός Σύμβουλος κ. ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ προσήλθε κατά τις ερωτήσεις της προ ημερησίας διάταξης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 0,
+        "extractionFlaggedIncomplete": true,
+        "verified": true,
+        "review": [
+          {
+            "what": "no decision text",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "flagged truncated",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "the decision text is on the page; the document is long and extraction returned nothing"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Συμμετέχοντες-Παρόντες",
+          "Απόντες:"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΡΗΣΤΑΚΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΤΖΙΜΑ ΛΑΜΠΡΙΝΗ ΛΙΛΗ",
+          "ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ",
+          "ΔΗΜΗΤΡΙΟΥ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΣΤΑΜΑΤΕΛΟΠΟΥΛΟΣ ΝΙΚΗΤΑΣ",
+          "ΜΠΗΤΑΣ ΙΩΑΝΝΗΣ",
+          "ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+          "ΜΑΝΤΙΝΙΔΟΥ-ΤΣΟΥΒΑΛΟΥ ΣΟΦΙΑ",
+          "ΜΑΡΙΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΑΠΠΑΣ ΧΡΗΣΤΟΣ",
+          "ΑΝΑΓΝΩΣΤΟΥ ΠΑΝΑΓΙΩΤΗΣ (ΠΑΝΟΣ)",
+          "ΦΑΡΑΚΛΑΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΟΥΤΣΙΩΡΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΒΑΦΕΙΑΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΜΑΛΑΚΟΥ ΧΡΙΣΤΙΝΑ",
+          "ΚΥΡΙΤΣΗ ΙΩΑΝΝΑ",
+          "ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ)",
+          "ΡΑΠΤΗ ΣΟΦΙΑ",
+          "ΛΙΑΚΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΤΣΟΥΤΣΙΑΣ ΙΩΑΝΝΗΣ",
+          "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+          "ΑΡΧΙΜΑΝΔΡΙΤΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΒΗΤΤΟΣ ΒΑΣΙΛΕΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+          "ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ)",
+          "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+          "ΔΗΜΑΡΑΣ ΘΕΟΔΩΡΟΣ- ΕΡΝΕΣΤΟΣ (ΑΚΗΣ)",
+          "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+          "ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 6,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 6,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Με δεκαέξι (16) θετικές ψήφους",
+        "phraseAsExtracted": null,
+        "carriesTally": true,
+        "namedVoters": "all",
+        "declarationsRecorded": true,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΧΡΗΣΤΑΚΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΤΖΙΜΑ ΛΑΜΠΡΙΝΗ ΛΙΛΗ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΓΟΥΝΑΡΗΣ ΧΡΗΣΤΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΔΗΜΗΤΡΙΟΥ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΣΤΑΜΑΤΕΛΟΠΟΥΛΟΣ ΝΙΚΗΤΑΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΠΗΤΑΣ ΙΩΑΝΝΗΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΣΗΜΑΚΟΠΟΥΛΟΣ ΑΔΑΜ (ΔΑΝΗΣ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΒΟΥΤΣΑΔΑΚΗ ΑΙΚΑΤΕΡΙΝΗ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΑΝΤΙΝΙΔΟΥ-ΤΣΟΥΒΑΛΟΥ ΣΟΦΙΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΑΛΟΓΕΡΑΚΗ ΕΥΑΓΓΕΛΙΑ (ΛΙΛΗ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΣΑΚΕΛΛΑΡΙΑΔΗΣ ΜΑΡΙΝΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΑΡΙΝΗΣ ΓΕΩΡΓΙΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΑΠΠΑΣ ΧΡΗΣΤΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΝΑΓΝΩΣΤΟΥ ΠΑΝΑΓΙΩΤΗΣ (ΠΑΝΟΣ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΦΑΡΑΚΛΑΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΟΥΤΣΙΩΡΗΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΒΑΦΕΙΑΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΧΑΝΤΖΑΡΑ ΣΟΦΙΑ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΜΑΛΑΚΟΥ ΧΡΙΣΤΙΝΑ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΚΥΡΙΤΣΗ ΙΩΑΝΝΑ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΑΡΣΕΝΗ – ΛΑΜΠΡΟΥ ΠΑΡΑΣΚΕΥΗ (ΒΟΥΛΑ)",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΡΑΠΤΗ ΣΟΦΙΑ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΛΙΑΚΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΤΣΟΥΤΣΙΑΣ ΙΩΑΝΝΗΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΠΑΠΑΧΡΙΣΤΟΔΟΥΛΟΥ ΜΑΡΙΝΑ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΣΠΗΛΙΩΤΗΣ ΑΘΑΝΑΣΙΟΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΑΡΧΙΜΑΝΔΡΙΤΗΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "PRESENT"
+          },
+          {
+            "name": "ΒΗΤΤΟΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "PRESENT"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration dropped",
+            "verdict": "neither is right",
+            "note": "isntead of declaration it just says \"Αποφασίζει\nΜε δεκαέξι (16) θετικές ψήφους\""
+          },
+          {
+            "what": "named voters dropped",
+            "verdict": "neither is right",
+            "note": "it lists them below sayingh \"Οι κάτωθι Δημοτικοί Σύμβουλοι έδωσαν θετική ψήφο\" and then \"Οι κάτωθι Δημοτικοί Σύμβουλοι δήλωσαν «παρών»:\""
+          },
+          {
+            "what": "vote tally dropped",
+            "verdict": "neither is right",
+            "note": "it lists them below sayingh \"Οι κάτωθι Δημοτικοί Σύμβουλοι έδωσαν θετική ψήφο\" and then \"Οι κάτωθι Δημοτικοί Σύμβουλοι δήλωσαν «παρών»:\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "p.16: 16 «έδωσαν θετική ψήφο» and 12 «δήλωσαν παρών», all named; 17-page document, extraction never reached it"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "vrilissia/Δημοτικό Συμβούλιο",
+  "tags": [
+    "vrilissia",
+    "rollCallLayout=present_and_absent",
+    "arrival=yes",
+    "changeAnchor=session_phase",
+    "voteTally=yes",
+    "mayorStated=yes",
+    "reordering=yes",
+    "declaration=yes",
+    "embeddedDecision=yes",
+    "namedVoters=all"
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "id": "decisions.extraction/9Χ5ΘΩ6Μ-67Ν",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9Χ5ΘΩ6Μ-67Ν",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Χ5ΘΩ6Μ-67Ν",
+    "city": "athens",
+    "body": "4η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=all",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 453,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 4ΗΣ ΔΗΜΟΤΙΚΗΣ ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": 15,
+        "presentMembers": [
+          "ΑΡΒΑΝΙΤΗ ΕΥΑΝΘΙΑ",
+          "ΚΑΡΥΔΑΣ ΔΗΜΗΤΡΙΟΣ-ΕΥΑΓΓΕΛΟΣ",
+          "ΚΕΛΕΠΟΥΡΗ ΑΝΑΣΤΑΣΙΑ (ΝΑΤΑΣΑ)",
+          "ΚΟΛΛΙΟΠΟΥΛΟΣ ΔΙΟΝΥΣΙΟΣ",
+          "ΛΟΚΑ ΜΑΡΙΑ",
+          "ΜΗΤΡΟΠΟΥΛΟΥ-ΚΑΤΣΙΚΗ ΓΕΡΑΣΙΜΟΥΛΑ (ΜΙΝΑ)",
+          "ΜΟΝΑΣΤΗΡΙΩΤΗΣ ΑΝΑΣΤΑΣΙΟΣ (ΤΑΣΟΣ)",
+          "ΨΗΜΜΕΝΟΥ ΓΙΑΝΝΟΥΛΑ (ΓΙΑΝΝΑ)"
+        ],
+        "absentMembers": [
+          "Αρβανίτης Σπυρίδων",
+          "Γιαννοπούλου Γεωργία",
+          "Καλλίτσης Νικόλαος",
+          "Μαρκουίζος Ηρακλής",
+          "Πανόπουλος Απόστολος",
+          "Φραγκιουδάκη-Κωνσταντάκη Κυριακή"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 4,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 4,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Βαρδή Πολυξένη",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αρβανίτη Ευανθία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Καρύδας Δημήτριος-Ευάγγελος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κελεπούρη Αναστασία (Νατάσα)",
+            "vote": "FOR"
+          },
+          {
+            "name": "Κολλιόπουλος Διονύσιος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Λόκα Μαρία",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μητροπούλου-Κατσίκη Γερασιμούλα (Μίνα)",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μοναστηριώτης Αναστάσιος (Τάσος)",
+            "vote": "FOR"
+          },
+          {
+            "name": "Ψημμένου Γιαννούλα (Γιάννα)",
+            "vote": "FOR"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "named voters dropped",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "«ΥΠΕΡ ψήφισαν η Πρόεδρος … και οι κ.κ. Σύμβουλοι …»; ΟΡΘΗ ΕΠΑΝΑΛΗΨΗ ΩΣ ΠΡΟΣ ΤΗΝ ΨΗΦΟΦΟΡΙΑ"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/4η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=all",
+    "correctedRepost=yes"
+  ]
+}

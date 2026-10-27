@@ -1,0 +1,47 @@
+{
+  "id": "decisions.reading/9ΖΝΠΩΗ5-9ΛΥ",
+  "suite": "decisions.reading",
+  "split": "dev",
+  "input": {
+    "ada": "9ΖΝΠΩΗ5-9ΛΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΖΝΠΩΗ5-9ΛΥ",
+    "meta": {
+      "notes": "Page 1 carries four date strings and only the first is the session date: «σήμερα την 26η Μαρτίου 2025» is the sitting, while 27 Μαρτίου and 29η Μαρτίου (twice) appear in the decision body as the date of the event being approved. All three decoys fall in the same month as the session, so a reader cannot separate them by proximity alone. The session was held Διά Περιφοράς, which changes the wording of the opening sentence but not the position of the date."
+    }
+  },
+  "expect": {
+    "body": {
+      "value": "Δημοτικό Συμβούλιο",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "decisionNumber": {
+      "value": "100",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "kind": {
+      "value": "decision",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    },
+    "meetingDate": {
+      "value": "2025-03-26",
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-02",
+      "source": "fixture:decision-reading-golden@v3"
+    }
+  },
+  "cluster": "chania/Δημοτικό Συμβούλιο",
+  "tags": [
+    "chania",
+    "decision"
+  ]
+}

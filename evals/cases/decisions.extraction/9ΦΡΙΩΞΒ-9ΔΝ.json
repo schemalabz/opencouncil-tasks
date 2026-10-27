@@ -1,0 +1,135 @@
+{
+  "id": "decisions.extraction/9ΦΡΙΩΞΒ-9ΔΝ",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "9ΦΡΙΩΞΒ-9ΔΝ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9ΦΡΙΩΞΒ-9ΔΝ",
+    "city": "orestiada",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "mayorStated=yes",
+        "correctedRepost=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode",
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1887,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ",
+          "ΑΠΟΝΤΕΣ ΣΥΜΒΟΥΛΟΙ"
+        ],
+        "statedBodySize": 29,
+        "presentMembers": [
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΕΜΜΑΝΟΥΗΛ",
+          "ΓΚΙΛΙΛΟΥΔΗ ΧΡΙΣΤΙΝΑ",
+          "ΤΣΟΜΠΑΝΙΔΗΣ ΑΝΤΩΝΙΟΣ",
+          "ΤΣΕΛΕΜΠΗΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΑΣΤΕΡΙΑΔΗΣ ΜΑΡΓΑΡΙΤΗΣ",
+          "ΣΕΜΕΝ ΘΕΟΔΩΡΑ",
+          "ΔΗΜΟΥΤΣΗΣ ΠΑΝΤΕΛΗΣ",
+          "ΧΑΤΖΗΧΑΡΑΛΑΜΠΟΥΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΚΑΔΟΓΛΟΥ ΓΕΩΡΓΙΟΣ",
+          "ΣΤΑΥΡΙΔΗΣ ΑΠΟΣΤΟΛΟΣ",
+          "ΣΤΡΑΝΤΖΕΛΗΣ ΜΙΧΑΗΛ",
+          "ΠΑΠΑΛΑΜΠΙΔΗΣ ΖΗΣΗΣ",
+          "ΜΠΡΑΪΚΟΥΔΗ ΕΥΑΓΓΕΛΙΑ",
+          "ΧΑΤΖΗΠΑΝΑΓΙΩΤΟΥ ΑΘΗΝΟΔΩΡΟΣ",
+          "ΜΑΝΑΒΗ ΜΑΡΙΑ",
+          "ΝΑΣΤΟΥΛΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΔΟΜΠΑΣ ΑΘΑΝΑΣΙΟΣ",
+          "ΜΑΥΡΙΔΗΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΚΑΡΑΓΙΑΝΝΗΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΕΡΙΣΤΕΡΑΚΗΣ ΙΩΑΝΝΗΣ",
+          "ΑΡΧΟΝΤΙΔΗΣ ΑΡΧΟΝΤΗΣ",
+          "ΟΡΜΑΝΛΙΔΗΣ ΧΡΗΣΤΟΣ",
+          "ΚΑΖΑΛΤΖΗΣ ΧΡΗΣΤΟΣ",
+          "ΣΟΥΚΟΥΛΔΑΝΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΚΥΡΓΙΑΝΝΗΣ ΑΘΑΝΑΣΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΑΡΓΥΡΙΑΔΗΣ ΠΕΤΡΟΣ",
+          "ΣΤΑΜΑΤΙΟΥ ΔΗΜΗΤΡΙΟΣ",
+          "ΜΙΧΑΗΛΙΔΗΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΛΕΒΕΝΤΗΣ ΧΡΗΣΤΟΣ"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 5,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 5,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "orestiada/Δημοτική Επιτροπή",
+  "tags": [
+    "orestiada",
+    "rollCallLayout=present_and_absent",
+    "mayorStated=yes",
+    "correctedRepost=yes"
+  ]
+}

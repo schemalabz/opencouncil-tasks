@@ -1,0 +1,136 @@
+{
+  "id": "decisions.extraction/Ψ9ΜΓΩ9Ρ-81Π",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ9ΜΓΩ9Ρ-81Π",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ9ΜΓΩ9Ρ-81Π",
+    "city": "vrilissia",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 4,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "substitute=yes",
+        "mayorStated=yes",
+        "voteTally=yes",
+        "correctedRepost=yes",
+        "changeAnchor=agenda_item",
+        "arrival=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution",
+        "correctedRepost"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Σταματελόπουλος Νικήτας",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Ο κ. Σταματελόπουλος Νικήτας, Δημοτικός Σύμβουλος και τακτικό μέλος της Επιτροπής προσήλθε κατά τη συζήτηση του 1ου θέματος Ημερήσιας διάταξης με αποτέλεσμα ο κ. Φαράκλας Κωνσταντίνος Δημοτικός Σύμβουλος και αναπληρωματικό μέλος της Επιτροπής να μην έχει δικαίωμα ψήφου μετά τη ψήφιση του 1ου θέματος εκτός ημερήσιας διάταξης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1445,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "Συμμετέχοντες:",
+          "Μη συμμετέχοντες-Απόντες :"
+        ],
+        "statedBodySize": 7,
+        "presentMembers": [
+          "Πισιμίσης Ιωάννης",
+          "Δημαράς Θεόδωρος-Ερνέστος (Άκης)",
+          "Φαράκλας Κωνσταντίνος",
+          "Χρηστάκης Αναστάσιος (Τάσος)",
+          "Δημητρίου Αναστάσιος (Τάσος)",
+          "Παπαχριστοδούλου Μαρίνα"
+        ],
+        "absentMembers": [
+          "Σταματελόπουλος Νικήτας",
+          "Βαφειάδης Κωνσταντίνος",
+          "Λιακόπουλος Κωνσταντίνος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 8,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 8,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Ομόφωνα Με έξι (6) θετικές ψήφους",
+        "phraseAsExtracted": "Ομόφωνα με έξι (6) θετικές ψήφους",
+        "carriesTally": true,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "vrilissia/Δημοτική Επιτροπή",
+  "tags": [
+    "vrilissia",
+    "rollCallLayout=present_and_absent",
+    "substitute=yes",
+    "mayorStated=yes",
+    "voteTally=yes",
+    "correctedRepost=yes",
+    "changeAnchor=agenda_item",
+    "arrival=yes"
+  ]
+}

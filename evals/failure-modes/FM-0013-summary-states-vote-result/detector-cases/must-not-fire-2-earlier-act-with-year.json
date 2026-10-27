@@ -1,0 +1,15 @@
+{
+  "kind": "must-not-fire",
+  "note": "An earlier act the discussion cites, dated: the boundary in the entry",
+  "input": {
+    "label": "batch-processing:1/1",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 64000,
+      "messages": []
+    },
+    "response": {
+      "text": "{\"subjects\": [{\"description\": \"Τροποποίηση της μελέτης που εγκρίθηκε το 2020 για την ανάπλαση της πλατείας.\"}]}"
+    }
+  }
+}

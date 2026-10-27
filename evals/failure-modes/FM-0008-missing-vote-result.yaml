@@ -1,0 +1,19 @@
+id: FM-0008
+slug: missing_vote_result
+title: Decision extraction finds «ΑΠΟΦΑΣΙΖΕΙ» but no vote result
+definition: >
+  The excerpt contains «ΑΠΟΦΑΣΙΖΕΙ» (the decision section exists) but no vote phrase («Ομόφωνα», «Κατά πλειοψηφία») was extracted.
+  The pipeline's own MISSING_VOTE_RESULT warning (validateRawExtraction / validateProcessedDecision), run as a check.
+boundary: >
+  Only the whole-document read (label decision-extraction) is checked: partial, continuation and closing reads of long documents leave fields empty by instruction, and their merged result is not a single call.
+suite: decisions.extraction
+scope: call
+severity: degraded
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/decisionValidationCodes.ts
+  export: MISSING_VOTE_RESULT
+decision: monitor
+alert: "fail rate per city > 3× its 30-day baseline, min 5 decision-extraction calls"

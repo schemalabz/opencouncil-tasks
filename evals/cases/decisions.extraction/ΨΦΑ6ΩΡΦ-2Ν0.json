@@ -1,0 +1,291 @@
+{
+  "id": "decisions.extraction/ΨΦΑ6ΩΡΦ-2Ν0",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΦΑ6ΩΡΦ-2Ν0",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΦΑ6ΩΡΦ-2Ν0",
+    "city": "zografou",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 328,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "changeAnchor=agenda_item",
+        "mayorStated=yes",
+        "arrival=yes",
+        "namedVoters=all"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Κατά διάρκεια της συζήτησης του θέματος προσήλθαν οι Δ.Σ. κ.κ. ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)."
+          },
+          {
+            "name": "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+            "type": "arrival",
+            "agendaItem": null,
+            "timing": null,
+            "rawText": "Κατά διάρκεια της συζήτησης του θέματος προσήλθαν οι Δ.Σ. κ.κ. ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ και ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 634,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+          "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+          "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+          "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+          "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+          "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+          "ΧΡΙΣΤΟΦΟΡΙΔΟΥ-ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+          "ΑΛΕΞΑΝΔΡΗ-ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+          "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+          "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+          "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+          "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+          "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+          "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+          "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+          "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+          "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+          "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+          "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+          "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+          "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+          "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+          "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+          "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+          "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+          "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+          "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ"
+        ],
+        "absentMembers": [
+          "ΓΙΟΥΡΓΑΣ ΣΤΕΦΑΝΟΣ",
+          "ΚΑΜΙΝΑΡΗ ΕΥΑΝΘΙΑ (ΕΥΑ)",
+          "ΒΑΜΒΑΚΑ ΕΥΣΤΑΘΙΑ",
+          "ΧΑΛΚΙΑΔΑΚΗ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+          "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+          "ΓΙΑΝΝΑΚΟΠΟΥΛΟΣ ΓΕΩΡΓΙΟΣ",
+          "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 1,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": null
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "neither is right",
+            "note": "it was a meeting with a single item that's why the woridng is differnt \"Στην ημερήσια διάταξη υπήρχε το μοναδικό θέμα που αναφέρεται στην περίληψη της\nεπικεφαλίδας.\""
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "single-item session («το μοναδικό θέμα»): #1 by the rule the reviewer applied on Ψ75ΤΩ6Μ-6ΔΡ"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": null,
+        "phraseAsExtracted": "Κατά πλειοψηφία με ψήφους 18 υπέρ και 12 κατά",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "ΓΡΙΒΑΣ ΓΕΩΡΓΙΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΠΙΤΣΙΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΙΚΗ ΗΛΕΚΤΡΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΣΤΡΑΚΑΝΤΟΥΝΑ ΣΦΑΚΑΚΗ ΒΑΣΙΛΙΚΗ (ΒΑΣΩ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΝΕΝΕΔΑΚΗ ΟΥΡΑΝΙΑ (ΡΑΝΙΑ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΓΚΡΕΚΑΣ ΠΑΝΑΓΙΩΤΗΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΧΡΙΣΤΟΦΟΡΙΔΟΥ-ΤΣΙΛΙΓΚΙΡΗ ΘΕΚΛΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΛΕΞΑΝΔΡΗ-ΖΟΥΜΠΟΥΛΑΚΗ ΕΥΣΤΑΘΙΑ (ΕΦΗ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΠΟΣΤΟΛΟΥ ΣΤΥΛΙΑΝΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΓΓΕΛΑΚΟΠΟΥΛΟΥ ΕΙΡΗΝΗ (ΡΕΝΑ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΚΡΑΝΙΩΤΗΣ ΧΑΡΑΛΑΜΠΟΣ (ΜΠΑΜΠΗΣ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΣΤΑΜΑΤΑΚΗΣ ΖΑΧΑΡΙΑΣ (ΧΑΡΗΣ)",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΠΟΛΙΤΗΣ ΘΩΜΑΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΑΚΡΟΖΑΧΟΠΟΥΛΟΥ ΙΩΑΝΝΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΑΡΜΠΙΛΙΑΣ ΣΤΑΥΡΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΕΛΙΣΣΑΡΑΤΟΥ ΑΝΤΩΝΙΑ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΣΥΡΟΥΚΗΣ ΝΙΚΟΛΑΟΣ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΠΑΠΑΪΩΑΝΝΟΥ ΑΡΙΑΔΝΗ",
+            "vote": "FOR"
+          },
+          {
+            "name": "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΜΠΟΤΟΥ ΑΝΑΣΤΑΣΙΑ (ΤΑΣΙΑ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΑΖΑΚΟΣ ΑΝΑΣΤΑΣΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΓΚΟΥΜΑΣ ΑΛΕΞΑΝΔΡΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΛΑΠΠΑΣ ΒΑΣΙΛΕΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΜΠΟΥΛΟΥΚΟΣ ΔΗΜΟΣΘΕΝΗΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΚΑΡΑΒΙΔΑΣ ΑΝΔΡΕΑΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΒΟΥΡΝΑΣ ΔΗΜΗΤΡΙΟΣ",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΜΠΑΡΜΠΕΡΗΣ ΕΥΘΥΜΙΟΣ (ΜΑΚΗΣ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΠΑΠΑΝΑΣΤΑΣΟΠΟΥΛΟΣ ΚΩΝΣΤΑΝΤΙΝΟΣ (ΚΩΣΤΗΣ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΛΥΚΑΣ ΑΘΑΝΑΣΙΟΣ (ΣΑΚΗΣ)",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "ΔΗΜΟΣ ΔΗΜΗΤΡΙΟΣ",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτικό Συμβούλιο",
+  "tags": [
+    "zografou",
+    "rollCallLayout=composition_and_absent",
+    "changeAnchor=agenda_item",
+    "mayorStated=yes",
+    "arrival=yes",
+    "namedVoters=all"
+  ]
+}

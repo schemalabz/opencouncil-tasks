@@ -92,3 +92,21 @@ describe('describePageRanges', () => {
         expect(describePageRanges([0, 5, 6])).toBe('1 and 6-7');
     });
 });
+
+describe('deterministic output', () => {
+    it('gives byte-identical slices regardless of when they are made, so the slice can key a cache', async () => {
+        const src = await PDFDocument.create();
+        src.addPage(); src.addPage();
+        const bytes = Buffer.from(await src.save());
+        vi.useFakeTimers();
+        try {
+            vi.setSystemTime(new Date('2026-01-01T00:00:00Z'));
+            const first = await extractPdfPageSet(bytes, [0]);
+            vi.setSystemTime(new Date('2026-06-01T12:34:56Z'));
+            const second = await extractPdfPageSet(bytes, [0]);
+            expect(second).toBe(first);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+});

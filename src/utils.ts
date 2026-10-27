@@ -140,7 +140,9 @@ export class IdCompressor {
     private longIdToShort = new Map<string, string>();
 
     /**
-     * Adds a long ID to the maps, generating a random short ID.
+     * Adds a long ID to the maps, deriving its short ID from a hash of it.
+     * Short IDs end up in prompts, so they must not change between runs: random ones
+     * made every prompt unique and no run could be replayed or served from cache.
      * @param longId The long ID to compress
      * @returns The corresponding short ID
      */
@@ -149,15 +151,21 @@ export class IdCompressor {
             return this.longIdToShort.get(longId)!;
         }
 
-        // Short IDs are 8 characters long, using a-z, 0-9
-        const shortId = Math.random().toString(36).substring(2, 10);
-        if (this.shortIdToLong.has(shortId)) {
-            return this.addLongId(longId);
+        let shortId = IdCompressor.hashShortId(longId, 0);
+        for (let attempt = 1; this.shortIdToLong.has(shortId); attempt++) {
+            shortId = IdCompressor.hashShortId(longId, attempt);
         }
 
         this.shortIdToLong.set(shortId, longId);
         this.longIdToShort.set(longId, shortId);
         return shortId;
+    }
+
+    // 8 characters of a-z, 0-9
+    private static hashShortId(longId: string, attempt: number): string {
+        const digest = createHash('sha256').update(attempt ? `${longId}:${attempt}` : longId).digest();
+        const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        return Array.from(digest.subarray(0, 8), byte => alphabet[byte % alphabet.length]).join('');
     }
 
     /**

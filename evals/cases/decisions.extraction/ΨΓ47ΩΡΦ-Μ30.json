@@ -1,0 +1,106 @@
+{
+  "id": "decisions.extraction/ΨΓ47ΩΡΦ-Μ30",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "ΨΓ47ΩΡΦ-Μ30",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/ΨΓ47ΩΡΦ-Μ30",
+    "city": "zografou",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 0,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "presidedBy=vice-president"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": null,
+        "extractionFlaggedIncomplete": false,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "presidedBy": {
+      "value": {
+        "name": "ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ",
+        "verified": true,
+        "evidence": {
+          "quote": "Παρόντες κατά την έναρξη της συνεδρίασης ήταν ο Αντιπρόεδρος της Δημοτικής Επιτροπής κος ΜΕΤΙΚΑΡΙΔΗΣ ΘΕΟΔΩΡΟΣ ο οποίος προήδρευσε λόγω της απουσίας της Δημάρχου",
+          "ada": "ΨΓ47ΩΡΦ-Μ30",
+          "page": 1,
+          "adjudicatedAt": "2026-09-22T00:00:00Z"
+        }
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-22",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "",
+        "headingsAsPrinted": [],
+        "statedBodySize": null,
+        "presentMembers": [],
+        "absentMembers": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "",
+        "phraseAsExtracted": "",
+        "carriesTally": false,
+        "namedVoters": "",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": false
+      },
+      "tier": "contested",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "zografou/Δημοτική Επιτροπή",
+  "tags": [
+    "zografou",
+    "presidedBy=vice-president"
+  ]
+}

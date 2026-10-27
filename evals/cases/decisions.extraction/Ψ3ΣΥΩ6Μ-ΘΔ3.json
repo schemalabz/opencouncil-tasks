@@ -1,0 +1,170 @@
+{
+  "id": "decisions.extraction/Ψ3ΣΥΩ6Μ-ΘΔ3",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ3ΣΥΩ6Μ-ΘΔ3",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ3ΣΥΩ6Μ-ΘΔ3",
+    "city": "athens",
+    "body": "3η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "changeAnchor=agenda_item",
+        "namedVoters=dissenters_only",
+        "arrival=yes",
+        "outOfAgenda=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Μαρία Δεπούντη",
+            "type": "arrival",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": "outOfAgenda"
+            },
+            "timing": "during",
+            "rawText": "Προσήλθε κατά τη συζήτηση του 1ου Θέματος, που προτάχθηκε των προ Ημερησίας Διάταξης Θεμάτων, η κ. Μαρία Δεπούντη."
+          },
+          {
+            "name": "Μαρίνα Ζώντου",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 2,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Αποχώρησε πριν τη συζήτηση του 2ου Θέματος, η κ. Μαρίνα Ζώντου."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 2716,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΠΡΟΕΔΡΟΣ",
+          "ΜΕΛΗ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Φίλιππος Κέγκος",
+          "Παναγιώτα Αμανατίδου",
+          "Πέτρος Δεδούσης",
+          "Μαρία Δεπούντη",
+          "Μαρίνα Ζώντου",
+          "Γεώργιος Κόρκας",
+          "Μαρία Μαργαρίτα (Μαρίτα) Μελέτη",
+          "Πρόδρομος Πέρδικος"
+        ],
+        "absentMembers": [
+          "Νίκη Ανδρικοπούλου",
+          "Βασίλειος Δήμου",
+          "Ιωάννης Φελέκης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": true,
+        "asExtracted": {
+          "agendaItemIndex": 1,
+          "nonAgendaReason": "outOfAgenda"
+        },
+        "verified": true,
+        "review": [
+          {
+            "what": "agenda item invented",
+            "verdict": "survey is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "page prints no item number; null is the answer"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Παναγιώτα Αμανατίδου",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαρία Δεπούντη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Γεώργιος Κόρκας",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαρία Μαργαρίτα (Μαρίτα) Μελέτη",
+            "vote": "AGAINST"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/3η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "changeAnchor=agenda_item",
+    "namedVoters=dissenters_only",
+    "arrival=yes",
+    "outOfAgenda=yes"
+  ]
+}

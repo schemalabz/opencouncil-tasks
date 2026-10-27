@@ -1,0 +1,177 @@
+{
+  "id": "decisions.extraction/9Ω5ΟΩ6Μ-ΚΟΥ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "9Ω5ΟΩ6Μ-ΚΟΥ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Ω5ΟΩ6Μ-ΚΟΥ",
+    "city": "athens",
+    "body": "6η Δημοτική Κοινότητα",
+    "meta": {
+      "pages": 2,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=composition_and_absent",
+        "namedVoters=all",
+        "declaration=yes"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": []
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3138,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "composition_and_absent",
+        "headingsAsPrinted": [
+          "ΣΥΝΘΕΣΗ ΣΥΜΒΟΥΛΙΟΥ 6ης ΚΟΙΝΟΤΗΤΑΣ"
+        ],
+        "statedBodySize": null,
+        "presentMembers": [
+          "Αγγελιδάκης Παναγιώτης",
+          "Γεωργάτος Ιατρίδης Δημήτριος",
+          "Δήμου Δημήτριος",
+          "Ζαφείρης Ιωάννης",
+          "Καβέτσου Κωνσταντίνα (Ντιάνα)",
+          "Μεγαλοοικονόμου Νάκου Ελένη",
+          "Χαλικιά Ειρήνη Αγλαϊα",
+          "Πρεζεράκου Καλλιόπη (Πόπη)",
+          "Τσιμπλάκη Παναγιώτα (Γιώτα)",
+          "Αδαμοπούλου Μαριγώ (Μαίρη)",
+          "Γιακουμάτου Ελένη"
+        ],
+        "absentMembers": [
+          "Πρωτοψάλτης Ιωάννης",
+          "Λαγός Ευστάθιος",
+          "Αντωνάτος Αναστάσιος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 17,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 17,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΚΑΤΑ ΠΛΕΙΟΨΗΦΙΑ",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "all",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Παναγιώτα (Τέτα) Δρούλια",
+            "vote": "FOR"
+          },
+          {
+            "name": "Αγγελιδάκης Παναγιώτης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γεωργάτος Ιατρίδης Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Δήμου Δημήτριος",
+            "vote": "FOR"
+          },
+          {
+            "name": "Ζαφείρης Ιωάννης",
+            "vote": "FOR"
+          },
+          {
+            "name": "Καβέτσου Κωνσταντίνα (Ντιάνα)",
+            "vote": "FOR"
+          },
+          {
+            "name": "Μεγαλοοικονόμου Νάκου Ελένη",
+            "vote": "FOR"
+          },
+          {
+            "name": "Χαλικιά Ειρήνη Αγλαϊα",
+            "vote": "FOR"
+          },
+          {
+            "name": "Πρεζεράκου Καλλιόπη (Πόπη)",
+            "vote": "FOR"
+          },
+          {
+            "name": "Τσιμπλάκη Παναγιώτα (Γιώτα)",
+            "vote": "FOR"
+          },
+          {
+            "name": "Γιακουμάτου Ελένη",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Αδαμοπούλου Μαριγώ (Μαίρη)",
+            "vote": "ABSTAIN"
+          }
+        ],
+        "verified": true,
+        "review": [
+          {
+            "what": "declaration stored as a vote",
+            "verdict": "extraction is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "reviewer: what the page prints are votes, not declarations"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "athens/6η Δημοτική Κοινότητα",
+  "tags": [
+    "athens",
+    "rollCallLayout=composition_and_absent",
+    "namedVoters=all",
+    "declaration=yes"
+  ]
+}

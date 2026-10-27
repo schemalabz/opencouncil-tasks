@@ -1,0 +1,125 @@
+{
+  "id": "decisions.extraction/Ψ1ΦΞΩΗ5-ΧΧΓ",
+  "suite": "decisions.extraction",
+  "split": "dev",
+  "input": {
+    "ada": "Ψ1ΦΞΩΗ5-ΧΧΓ",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/Ψ1ΦΞΩΗ5-ΧΧΓ",
+    "city": "chania",
+    "body": "Δημοτική Επιτροπή",
+    "meta": {
+      "pages": 23,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "substitute=yes",
+        "departure=yes",
+        "changeAnchor=nothing"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "substitution"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": false,
+        "verified": true,
+        "review": [
+          {
+            "what": "attendance change dropped",
+            "verdict": "extraction is right",
+            "note": null
+          },
+          {
+            "what": "transcribed",
+            "verdict": null,
+            "note": "reviewer: extraction is right, no change on the page"
+          }
+        ]
+      },
+      "tier": "adjudicated",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 3399,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 9,
+        "presentMembers": [
+          "Αλόγλου Αναστάσιος",
+          "Γιαννακάκης Ιωάννης",
+          "Νικηφοράκης Ιωάννης",
+          "Βαρδάκης Αντώνιος – Ιωάννης",
+          "Μαυριδάκης Ζαχάρης",
+          "Τσουπάκης Μιχαήλ",
+          "Πετρουλάκης Βασίλης",
+          "Γεωργούλα Ζωή"
+        ],
+        "absentMembers": [
+          "Λουτσέτης Χαράλαμπος"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": null,
+        "isOutOfAgenda": false,
+        "asExtracted": null,
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "ΑΠΟΦΑΣΙΖΕΙ ΟΜΟΦΩΝΑ",
+        "phraseAsExtracted": "Ομόφωνα",
+        "carriesTally": false,
+        "namedVoters": "none",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "chania/Δημοτική Επιτροπή",
+  "tags": [
+    "chania",
+    "rollCallLayout=present_and_absent",
+    "substitute=yes",
+    "departure=yes",
+    "changeAnchor=nothing"
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "id": "decisions.extraction/9Φ9ΥΩ1Ν-98Ω",
+  "suite": "decisions.extraction",
+  "split": "holdout",
+  "input": {
+    "ada": "9Φ9ΥΩ1Ν-98Ω",
+    "pdfUrl": "https://diavgeia.gov.gr/doc/9Φ9ΥΩ1Ν-98Ω",
+    "city": "sparta",
+    "body": "Δημοτικό Συμβούλιο",
+    "meta": {
+      "pages": 13,
+      "alsoInReadingFixture": false,
+      "selectedBecause": [
+        "rollCallLayout=present_and_absent",
+        "changeAnchor=agenda_item",
+        "mayorStated=yes",
+        "departure=yes",
+        "namedVoters=dissenters_only"
+      ],
+      "namedEdgeCase": null,
+      "needsReview": false,
+      "statedButUnstorable": [
+        "participationMode"
+      ]
+    }
+  },
+  "expect": {
+    "attendanceChanges": {
+      "value": {
+        "stated": true,
+        "anchoredBy": "agenda_item",
+        "asExtracted": [
+          {
+            "name": "Γκολέμης Αναστάσιος",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Οι δημοτικοί σύμβουλοι Γκολέμης Αναστάσιος, Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Μπαρέλος Παναγιώτης αποχώρησαν κατά τη διάρκεια συζήτησης του 1ου θέματος της ημερήσιας διάταξης."
+          },
+          {
+            "name": "Δεδεδήμου Γεωργία",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Οι δημοτικοί σύμβουλοι Γκολέμης Αναστάσιος, Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Μπαρέλος Παναγιώτης αποχώρησαν κατά τη διάρκεια συζήτησης του 1ου θέματος της ημερήσιας διάταξης."
+          },
+          {
+            "name": "Ζαχαράκη Νίκη",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Οι δημοτικοί σύμβουλοι Γκολέμης Αναστάσιος, Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Μπαρέλος Παναγιώτης αποχώρησαν κατά τη διάρκεια συζήτησης του 1ου θέματος της ημερήσιας διάταξης."
+          },
+          {
+            "name": "Μπαρέλος Παναγιώτης",
+            "type": "departure",
+            "agendaItem": {
+              "agendaItemIndex": 1,
+              "nonAgendaReason": null
+            },
+            "timing": "during",
+            "rawText": "Οι δημοτικοί σύμβουλοι Γκολέμης Αναστάσιος, Δεδεδήμου Γεωργία, Ζαχαράκη Νίκη, Μπαρέλος Παναγιώτης αποχώρησαν κατά τη διάρκεια συζήτησης του 1ου θέματος της ημερήσιας διάταξης."
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "excerpt": {
+      "value": {
+        "chars": 1128,
+        "extractionFlaggedIncomplete": false,
+        "verified": "baseline"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "rollCall": {
+      "value": {
+        "layout": "present_and_absent",
+        "headingsAsPrinted": [
+          "ΠΑΡΟΝΤΕΣ",
+          "ΑΠΟΝΤΕΣ"
+        ],
+        "statedBodySize": 35,
+        "presentMembers": [
+          "Βρεττάκος Στέφανος",
+          "Δεδεδήμου Γεωργία",
+          "Αντωνάκος Χρήστος-Άγγελος",
+          "Αρβανίτης Δημήτριος",
+          "Βαγιακάκου-Δογαντζή Αδαμαντία",
+          "Βαλιώτης Ευάγγελος",
+          "Γιαννακόπουλος Παντελής",
+          "Γκολέμης Αναστάσιος",
+          "Δούκας Πέτρος",
+          "Ζαχαράκη Νίκη",
+          "Κακούρος Δημοσθένης",
+          "Κανελλοπούλου Αναστασία",
+          "Καρούνος Παναγιώτης",
+          "Κατσίχτης Θεόδωρος",
+          "Κοκκορός Ευστράτιος",
+          "Κουλουβάκος Γεώργιος",
+          "Κουρτσούνης Παναγιώτης",
+          "Κυριακούλιας Δημήτριος",
+          "Λάζαρης Θεοφάνης",
+          "Μαλλιαρός Δημήτριος",
+          "Μπαρέλος Παναγιώτης",
+          "Παυλής Παναγιώτης",
+          "Σελίμος Σπυρίδων",
+          "Σκιαδάς Απόστολος",
+          "Σοφού-Παπαστάθη Ευγενία",
+          "Τζανετέα Αδαμαντία",
+          "Τριτάκης Παναγιώτης",
+          "Τσιρώνη Μαρία",
+          "Τσούκλερης Νικόλαος",
+          "Φλώρος Νικόλαος"
+        ],
+        "absentMembers": [
+          "Κουρεμπής Γεώργιος",
+          "Αρφάνης Δημήτριος",
+          "Γιαννόπουλος Δημήτριος",
+          "Κανελλάκης Ηλίας",
+          "Καρμοίρης Ιωάννης"
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "subject": {
+      "value": {
+        "agendaItemNumber": 2,
+        "isOutOfAgenda": false,
+        "asExtracted": {
+          "agendaItemIndex": 2,
+          "nonAgendaReason": null
+        },
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    },
+    "votes": {
+      "value": {
+        "phraseAsPrinted": "Κατά πλειοψηφία",
+        "phraseAsExtracted": "Κατά πλειοψηφία",
+        "carriesTally": false,
+        "namedVoters": "dissenters_only",
+        "declarationsRecorded": false,
+        "perLineVote": false,
+        "asExtracted": [
+          {
+            "name": "Τζανετέα Αδαμαντία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Τσούκλερης Νικόλαος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Φλώρος Νικόλαος",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Κανελλοπούλου Αναστασία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Τσιρώνη Μαρία",
+            "vote": "AGAINST"
+          },
+          {
+            "name": "Μαλλιαρός Δημήτριος",
+            "vote": "DID_NOT_VOTE"
+          },
+          {
+            "name": "Κουρτσούνης Παναγιώτης",
+            "vote": "DID_NOT_VOTE"
+          }
+        ],
+        "verified": "agreed"
+      },
+      "tier": "drafted",
+      "by": "fixture",
+      "at": "2026-09-29",
+      "source": "fixture:extraction-golden@v1"
+    }
+  },
+  "cluster": "sparta/Δημοτικό Συμβούλιο",
+  "tags": [
+    "sparta",
+    "rollCallLayout=present_and_absent",
+    "changeAnchor=agenda_item",
+    "mayorStated=yes",
+    "departure=yes",
+    "namedVoters=dissenters_only"
+  ]
+}
