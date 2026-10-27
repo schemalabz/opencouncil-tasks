@@ -87,7 +87,11 @@ export type ProcessAgendaRequestBody = Omit<ProcessAgendaRequest, 'callbackUrl'>
 export type PollDecisionsRequestBody = Omit<PollDecisionsRequest, 'callbackUrl'>;
 
 // opencouncil's REALMS
-const REALM_COUNTRY: Record<string, CountryCode> = { greece: 'GR', france: 'FR', cyprus: 'CY', serbia: 'RS' };
+const REALM_COUNTRY: Record<string, CountryCode> = {
+    greece: 'GR', france: 'FR', cyprus: 'CY', serbia: 'RS',
+    austria: 'AT', belgium: 'BE', finland: 'FI', germany: 'DE', italy: 'IT',
+    netherlands: 'NL', poland: 'PL', portugal: 'PT', spain: 'ES',
+};
 // opencouncil's DEFAULT_WINDOW_DAYS
 const DEFAULT_WINDOW_DAYS = 30;
 
