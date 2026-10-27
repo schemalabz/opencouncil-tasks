@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection, isSilentAudio,
-  downloadUntilComplete, parseVideoInfoOutput, isCachedMediaFor,
+  downloadUntilComplete, parseVideoInfoOutput, isCachedMediaFor, parseVideoStartShift, buildRewriteArgs,
   type CompleteDownloadDeps, type CompleteDownloadConfig, type RawVideo,
 } from './downloadYTV.js';
 
@@ -281,6 +281,50 @@ describe('isSilentAudio', () => {
 
   it('accepts normal audio', () => {
     expect(isSilentAudio(stats('-27.10'))).toBe(false);
+  });
+});
+
+describe('parseVideoStartShift', () => {
+  // Facebook download (samothraki oct26_2026): edit list media time 10640/16000
+  it('measures the shift that the edit list hides', () => {
+    expect(parseVideoStartShift('0.000000', '0.665000')).toBeCloseTo(0.665);
+  });
+
+  it('is zero when the edit list does not move the first frame', () => {
+    expect(parseVideoStartShift('0.000000', '0.000000')).toBe(0);
+  });
+
+  it('is zero for a file with no video stream (ffprobe prints nothing)', () => {
+    expect(parseVideoStartShift('', '')).toBe(0);
+  });
+
+  it('is zero when ffprobe prints N/A', () => {
+    expect(parseVideoStartShift('N/A', 'N/A')).toBe(0);
+  });
+});
+
+describe('buildRewriteArgs', () => {
+  const FILTER = 'loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=-27.1:linear=true';
+
+  it('normalizes loudness: re-encodes the audio, copies the video, keeps the edit lists', () => {
+    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: FILTER, audioDelayMs: 0 })).toEqual([
+      '-i', 'in.mp4', '-c:v', 'copy', '-af', FILTER, '-c:a', 'aac', '-b:a', '128k', '-y', 'out.mp4',
+    ]);
+  });
+
+  it('delays the audio after loudness normalization in the same pass, and drops the edit lists', () => {
+    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: FILTER, audioDelayMs: 665 })).toEqual([
+      '-i', 'in.mp4', '-c:v', 'copy', '-af', `${FILTER},adelay=665:all=1`, '-c:a', 'aac', '-b:a', '128k',
+      '-use_editlist', '0', '-y', 'out.mp4',
+    ]);
+  });
+
+  // The SKIP_LOUDNORM and within-tolerance cases: the delay alone still needs an audio re-encode
+  it('delays the audio without loudness normalization', () => {
+    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: null, audioDelayMs: 665 })).toEqual([
+      '-i', 'in.mp4', '-c:v', 'copy', '-af', 'adelay=665:all=1', '-c:a', 'aac', '-b:a', '128k',
+      '-use_editlist', '0', '-y', 'out.mp4',
+    ]);
   });
 });
 

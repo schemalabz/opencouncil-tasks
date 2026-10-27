@@ -8,7 +8,7 @@ import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { childEnv } from '../lib/childEnv.js';
 import { assertFetchableUrl } from '../lib/fetchableUrl.js';
 import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
-import { getMediaDurationSeconds } from "./utils/mediaOperations.js";
+import { getMediaDurationSeconds, probeVideoStartTime } from "./utils/mediaOperations.js";
 import { isSpacesUrl } from "./utils/spacesUrl.js";
 
 dotenv.config();
@@ -69,7 +69,7 @@ const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Pr
 
 type ProgressFn = (stage: string, progressPercent: number) => void;
 
-/** A downloaded raw video file, before audio normalization/extraction. */
+/** A downloaded raw video file, before preparation (loudnorm, video start shift) and audio extraction. */
 export interface RawVideo {
     combined: string;
     sourceType: string;
@@ -79,7 +79,8 @@ export interface DownloadedMedia {
     audioOnly: string;
     combined: string;
     sourceType: string;
-    audioNormalized: boolean;
+    /** The file differs from the download (loudness normalized or audio delayed to match the video start shift), so a Spaces source must be overwritten. */
+    mediaRewritten: boolean;
 }
 
 /** What the source reports about a video, fetched independently of any download. */
@@ -385,8 +386,8 @@ function completeDownloadConfig(): CompleteDownloadConfig {
 
 /**
  * Downloads a YouTube/Facebook (or Spaces/direct) recording, retrying while it comes back incomplete —
- * a just-ended livestream VOD is still processing and can download truncated. Audio
- * normalization/extraction runs once, only after a download is confirmed complete. Same
+ * a just-ended livestream VOD is still processing and can download truncated. Video
+ * preparation and audio extraction run once, only after a download is confirmed complete. Same
  * signature as a plain single download, so all callers (pipeline, CLI) are unchanged.
  */
 export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
@@ -406,9 +407,9 @@ export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onP
     );
 
     const audioOnly = path.join(path.dirname(combined), `${path.basename(combined, path.extname(combined))}.mp3`);
-    const audioNormalized = await normalizeVideoAudio(combined);
+    const mediaRewritten = await prepareVideo(combined);
     await extractSoundFromMP4(combined, audioOnly);
-    return { audioOnly, combined, sourceType, audioNormalized };
+    return { audioOnly, combined, sourceType, mediaRewritten };
 };
 
 const randomId = () => Math.random().toString(36).substring(2, 15);
@@ -508,6 +509,9 @@ const LOUDNORM_TOLERANCE_LU = 1;
 // aborted streams measuring -inf (digital silence) with peaks around -72 dBTP.
 const SILENCE_FLOOR_LUFS = -60;
 const AUDIO_BITRATE = '128k';
+// Mux ignores MP4 edit lists, so it shows the picture this much behind the sound.
+// Facebook downloads carry 0.665 s and 2.387 s; a 0.08 s B-frame delay is normal.
+const VIDEO_START_SHIFT_TOLERANCE_SECONDS = 0.1;
 
 /**
  * Whether the source carries no usable audio. Normalization cannot rescue it:
@@ -580,12 +584,102 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
     });
 }
 
-async function normalizeVideoAudio(filePath: string): Promise<boolean> {
+/**
+ * Rewrites the downloaded file at most once, for either or both of two independent
+ * corrections: loudness normalization (audio re-encode) and the video start shift
+ * (audio delayed to match, video copied). Returns whether the file was rewritten.
+ */
+async function prepareVideo(filePath: string): Promise<boolean> {
+    const filename = path.basename(filePath);
+    const loudnormFilter = await measureLoudnormFilter(filePath);
+
+    const shift = await measureVideoStartShift(filePath);
+    const audioDelayMs = shift !== null && shift > VIDEO_START_SHIFT_TOLERANCE_SECONDS ? Math.round(shift * 1000) : 0;
+    if (shift !== null) {
+        console.log(`[video-start] ${filename}: edit list shifts the first frame by ${shift.toFixed(3)}s${audioDelayMs ? `, delaying the audio by ${audioDelayMs}ms to match` : ''}`);
+    }
+
+    if (!loudnormFilter && !audioDelayMs) {
+        return false;
+    }
+
+    const tempPath = filePath + '.rewritten.mp4';
+    const start = Date.now();
+    try {
+        await runFfmpeg(buildRewriteArgs(filePath, tempPath, { loudnormFilter, audioDelayMs }));
+    } catch (err) {
+        // A half-written temp file would otherwise linger in the media cache
+        fs.rmSync(tempPath, { force: true });
+        throw err;
+    }
+    fs.renameSync(tempPath, filePath);
+    console.log(`[prepare-video] ${filename}: rewrote in ${((Date.now() - start) / 1000).toFixed(1)}s (loudnorm=${loudnormFilter !== null}, audioDelayMs=${audioDelayMs})`);
+    return true;
+}
+
+/**
+ * Rewrite arguments: the video is always copied, and the audio is re-encoded only when
+ * a filter applies (with neither, the result is a plain remux). Mux places the video by its decode timestamps and ignores edit
+ * lists, so a video edit list cannot be moved into the video timestamps by a copy
+ * (the decode delay stays). Instead the audio gets the same delay as silence, and no
+ * edit list is written: Mux, browsers and the extracted transcript audio then all read
+ * one timeline, with picture and sound starting `audioDelayMs` in.
+ */
+export function buildRewriteArgs(
+    input: string,
+    output: string,
+    { loudnormFilter, audioDelayMs }: { loudnormFilter: string | null; audioDelayMs: number },
+): string[] {
+    const audioFilters = [
+        ...(loudnormFilter ? [loudnormFilter] : []),
+        ...(audioDelayMs ? [`adelay=${audioDelayMs}:all=1`] : []),
+    ];
+    return [
+        '-i', input,
+        '-c:v', 'copy',
+        ...(audioFilters.length
+            ? ['-af', audioFilters.join(','), '-c:a', 'aac', '-b:a', AUDIO_BITRATE]
+            : ['-c:a', 'copy']),
+        ...(audioDelayMs ? ['-use_editlist', '0'] : []),
+        '-y', output,
+    ];
+}
+
+// A failed probe must not fail the transcription: the file then plays as it did before.
+async function measureVideoStartShift(filePath: string): Promise<number | null> {
+    try {
+        const [presented, raw] = await Promise.all([
+            probeVideoStartTime(filePath, { ignoreEditList: false }),
+            probeVideoStartTime(filePath, { ignoreEditList: true }),
+        ]);
+        return parseVideoStartShift(presented, raw);
+    } catch (err) {
+        console.warn(`[video-start] ${path.basename(filePath)}: could not measure the video start shift, leaving it uncorrected: ${(err as Error).message}`);
+        return null;
+    }
+}
+
+/**
+ * Seconds by which the video edit list delays the first frame, from ffprobe's
+ * `start_time` with the edit list applied and ignored. A file with no video stream,
+ * or an unreadable value, has no shift to correct.
+ */
+export function parseVideoStartShift(presentedStart: string, rawStart: string): number {
+    const shift = parseFloat(rawStart) - parseFloat(presentedStart);
+    return Number.isFinite(shift) ? shift : 0;
+}
+
+/**
+ * Measures loudness (pass 1) and returns the audio filter that normalizes it in the
+ * rewrite, or null when the audio needs no correction.
+ */
+async function measureLoudnormFilter(filePath: string): Promise<string | null> {
     // An operator switch for when the time to a transcript matters more than even
-    // loudness: both passes are skipped, including the silent-audio check.
+    // loudness: the measurement and normalization are skipped, including the
+    // silent-audio check. The video start shift is still corrected.
     if (process.env.SKIP_LOUDNORM === '1') {
         console.log(`[loudnorm] ${path.basename(filePath)}: SKIP_LOUDNORM=1, skipping measurement and normalization`);
-        return false;
+        return null;
     }
     const { I, TP, LRA } = LOUDNORM_TARGET;
     const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
@@ -618,31 +712,11 @@ async function normalizeVideoAudio(filePath: string): Promise<boolean> {
 
     if (!needsLoudnormCorrection(stats)) {
         console.log(`[loudnorm] ${filename}: within ${LOUDNORM_TOLERANCE_LU} LU of the ${I} LUFS target, skipping normalization`);
-        return false;
+        return null;
     }
 
-    // Pass 2: apply normalization with linear mode
-    const tempPath = filePath + '.normalized.mp4';
-    const pass2Start = Date.now();
-    try {
-        await runFfmpeg([
-            '-i', filePath,
-            '-c:v', 'copy',
-            '-af', `${loudnormFilter}:measured_I=${stats.input_i}:measured_TP=${stats.input_tp}:measured_LRA=${stats.input_lra}:measured_thresh=${stats.input_thresh}:linear=true`,
-            '-c:a', 'aac', '-b:a', AUDIO_BITRATE,
-            '-y', tempPath,
-        ]);
-    } catch (err) {
-        // A half-written temp file would otherwise linger in the media cache
-        fs.rmSync(tempPath, { force: true });
-        throw err;
-    }
-    const pass2Duration = ((Date.now() - pass2Start) / 1000).toFixed(1);
-
-    // Replace original with normalized version
-    fs.renameSync(tempPath, filePath);
-    console.log(`[loudnorm] ${filename}: normalize=${pass2Duration}s, total=${((Date.now() - pass1Start) / 1000).toFixed(1)}s`);
-    return true;
+    // Pass 2 (in the rewrite): apply normalization with linear mode
+    return `${loudnormFilter}:measured_I=${stats.input_i}:measured_TP=${stats.input_tp}:measured_LRA=${stats.input_lra}:measured_thresh=${stats.input_thresh}:linear=true`;
 }
 
 const FREQUENCY_FILTER = true;

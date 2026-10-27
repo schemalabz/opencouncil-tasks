@@ -35,6 +35,23 @@ export async function getMediaDurationSeconds(filePath: string): Promise<number>
     return duration;
 }
 
+/**
+ * The first video stream's `start_time` as ffprobe prints it: empty when the file has
+ * no video stream. `ignoreEditList` reads the raw timestamps, which is what Mux plays.
+ */
+export async function probeVideoStartTime(filePath: string, { ignoreEditList }: { ignoreEditList: boolean }): Promise<string> {
+    const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
+    const { stdout } = await execFileAsync(ffprobePath, [
+        '-v', 'error',
+        ...(ignoreEditList ? ['-ignore_editlist', '1'] : []),
+        '-select_streams', 'v:0',
+        '-show_entries', 'stream=start_time',
+        '-of', 'csv=p=0',
+        filePath,
+    ], { env: childEnv() });
+    return stdout.trim();
+}
+
 // Create data directory if it doesn't exist
 const dataDir = getDataDir();
 if (!fs.existsSync(dataDir)) {
