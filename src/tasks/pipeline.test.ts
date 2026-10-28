@@ -22,7 +22,7 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
         downloadYTV: vi.fn(async () => ({
             audioOnly: "/tmp/audio.wav",
             combined: "/tmp/combined.mp4",
-            sourceType: "YouTube",
+            source: { kind: "yt-dlp" as const, extractor: "Youtube" },
             mediaRewritten: false,
         })),
         uploadToSpaces: vi.fn(async ({ files, spacesPath }) => {
@@ -66,6 +66,7 @@ describe("createPipeline", () => {
             muxPlaybackId: "mux-playback-id-123",
             muxAssetId: "mux-asset-id-456",
             transcript: fakeDiarizedTranscript,
+            source: { kind: "yt-dlp", extractor: "Youtube" },
         });
 
         // All deps called
@@ -84,7 +85,7 @@ describe("createPipeline", () => {
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
-                sourceType: "Spaces",
+                source: { kind: "spaces" as const },
                 mediaRewritten: false,
             })),
         });
@@ -109,7 +110,7 @@ describe("createPipeline", () => {
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
-                sourceType: "Spaces",
+                source: { kind: "spaces" as const },
                 mediaRewritten: true,
             })),
             overwriteSpacesObject: vi.fn(async () => OVERWRITTEN),
@@ -132,7 +133,7 @@ describe("createPipeline", () => {
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
-                sourceType: "Spaces",
+                source: { kind: "spaces" as const },
                 mediaRewritten: false,
             })),
         });

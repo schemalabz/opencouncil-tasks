@@ -12,7 +12,7 @@ The server supports the following processing tasks:
 - [`summarize`](src/tasks/summarize.ts) - Generates comprehensive content summaries with subject extraction
 
 ### Media Processing
-- [`downloadYTV`](src/tasks/downloadYTV.ts) - Downloads YouTube videos and extracts audio with optimized quality settings
+- [`downloadYTV`](src/tasks/downloadYTV.ts) - Downloads a meeting video from any source yt-dlp supports (YouTube, Facebook, Vimeo and ~1,700 more, including pages that embed a known player), a direct media file, or our Spaces storage, and extracts its audio. `POST /inspectMedia` (and `cli inspect-media <url>`) reports source metadata or a refusal without downloading the recording; [scope, limitations and verification](docs/media-sources.md)
 - [`splitMediaFile`](src/tasks/splitMediaFile.ts) - Splits media files into smaller segments with precise timestamp control
 - [`uploadToSpaces`](src/tasks/uploadToSpaces.ts) - Handles secure file uploads to cloud storage with public access URLs
 - [`generateHighlight`](docs/generateHighlight.md) - Produces short highlight clips from source videos with optional social media transforms, speaker overlays, and captions
@@ -93,7 +93,7 @@ npm run dev
 
 **Additional requirements for manual setup:**
 
-- **yt-dlp binary** (required for YouTube downloads): Install via `pip install yt-dlp` or download from [yt-dlp releases](https://github.com/yt-dlp/yt-dlp/releases). Set `YTDLP_BIN_PATH` to the binary location if not in PATH.
+- **yt-dlp binary** (every video download except Spaces and direct files): `ytdlp-nodejs` bundles one, which the server uses and keeps updated when `YTDLP_BIN_PATH` is unset. Set `YTDLP_BIN_PATH` to use another.
 
 ## 🔄 Callback Server
 
@@ -207,7 +207,8 @@ See [PGSync Setup Guide](docs/pgsync-setup.md) for detailed configuration.
 ### Task-Specific Configuration
 - `SCRIBE_MAX_CONCURRENT_TRANSCRIPTIONS` (default: 15) - Maximum concurrent transcription requests per process; account-wide overflow returns 429s, which are retried with backoff
 - `PYANNOTE_MAX_CONCURRENT_DIARIZATIONS` (default: 5) - Maximum concurrent diarization tasks
-- `YTDLP_PROXY` - Residential proxy for YouTube downloads ([pi-proxy](https://github.com/schemalabz/pi-proxy))
+- `YTDLP_AUTO_UPDATE` - Set to `false` to pin the configured/bundled yt-dlp binary (useful for reproducible checks); updates are enabled by default
+- `YTDLP_PROXY` - Residential proxy for yt-dlp lookups and downloads ([pi-proxy](https://github.com/schemalabz/pi-proxy))
 - `LIVESTREAM_DOWNLOAD_MAX_WAIT_MS` (default: 5400000 = 90min) - How long a download task retries while a just-ended livestream VOD is still processing
 - `LIVESTREAM_DOWNLOAD_POLL_MS` (default: 180000 = 3min) - Interval between download retries and live_status samples
 - `LIVESTREAM_DOWNLOAD_COMPLETENESS_RATIO` (default: 0.98) - Downloaded/reported duration ratio above which a recording counts as complete
