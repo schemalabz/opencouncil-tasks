@@ -23,7 +23,7 @@ function createStubDeps(overrides: Partial<PipelineDeps> = {}): PipelineDeps {
             audioOnly: "/tmp/audio.wav",
             combined: "/tmp/combined.mp4",
             sourceType: "YouTube",
-            audioNormalized: false,
+            mediaRewritten: false,
         })),
         uploadToSpaces: vi.fn(async ({ files, spacesPath }) => {
             if (spacesPath === "audio") return (files as string[]).map((_f: string, i: number) => `https://cdn.example.com/audio-${i}.wav`);
@@ -85,7 +85,7 @@ describe("createPipeline", () => {
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
                 sourceType: "Spaces",
-                audioNormalized: false,
+                mediaRewritten: false,
             })),
         });
         const pipeline = createPipeline(deps);
@@ -103,14 +103,14 @@ describe("createPipeline", () => {
         expect(spacePaths).not.toContain("council-meeting-videos");
     });
 
-    it("Spaces URL + normalized audio — overwrites the original object, Mux uses the overwrite's returned URL", async () => {
-        const OVERWRITTEN = "https://spaces.example.com/uploads/combined.mp4?after=normalize";
+    it("Spaces URL + rewritten file — overwrites the original object, Mux uses the overwrite's returned URL", async () => {
+        const OVERWRITTEN = "https://spaces.example.com/uploads/combined.mp4?after=rewrite";
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
                 sourceType: "Spaces",
-                audioNormalized: true,
+                mediaRewritten: true,
             })),
             overwriteSpacesObject: vi.fn(async () => OVERWRITTEN),
         });
@@ -127,13 +127,13 @@ describe("createPipeline", () => {
         expect(spacePaths).not.toContain("council-meeting-videos");
     });
 
-    it("Spaces URL + audio already normalized — no overwrite, Mux uses the original URL", async () => {
+    it("Spaces URL + file not rewritten — no overwrite, Mux uses the original URL", async () => {
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({
                 audioOnly: "/tmp/audio.wav",
                 combined: "/tmp/combined.mp4",
                 sourceType: "Spaces",
-                audioNormalized: false,
+                mediaRewritten: false,
             })),
         });
         const pipeline = createPipeline(deps);

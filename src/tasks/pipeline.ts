@@ -24,7 +24,7 @@ dotenv.config();
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
 export type PipelineDeps = {
-    downloadYTV: Task<string, { audioOnly: string; combined: string; sourceType: string; audioNormalized: boolean }>;
+    downloadYTV: Task<string, { audioOnly: string; combined: string; sourceType: string; mediaRewritten: boolean }>;
     uploadToSpaces: Task<UploadFilesArgs, string[]>;
     diarize: Task<Omit<DiarizeRequest, "callbackUrl">, DiarizeResult>;
     splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]>;
@@ -41,14 +41,15 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
             return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
         };
 
-        const { audioOnly, combined, sourceType, audioNormalized } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+        const { audioOnly, combined, sourceType, mediaRewritten } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
         // Only upload video if it's not already on our own Spaces storage. When it IS on our
-        // Spaces but loudnorm changed the audio, overwrite the original object in place so Mux
-        // (and the stored videoUrl) serve the normalized audio; otherwise use the URL as-is.
+        // Spaces but downloadYTV rewrote the file (loudnorm, video start shift), overwrite the
+        // original object in place so Mux (and the stored videoUrl) serve the rewritten file;
+        // otherwise use the URL as-is.
         const isSpacesUrl = sourceType === 'Spaces';
         const combinedVideoUploadPromise = isSpacesUrl
-            ? (audioNormalized
+            ? (mediaRewritten
                 ? deps.overwriteSpacesObject(request.youtubeUrl, combined).then((url) => [url])
                 : Promise.resolve([request.youtubeUrl]))
             : deps.uploadToSpaces({
