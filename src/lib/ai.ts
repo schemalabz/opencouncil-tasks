@@ -538,7 +538,7 @@ export async function aiChat<T>({ model, systemPrompt, userPrompt, prefillSystem
                   }]
                 : systemPrompt;
 
-        const resolvedModel = overrides.model ?? (model || process.env.ANTHROPIC_MODEL || "claude-sonnet-4-5-20250929");
+        const resolvedModel = overrides.model ?? (model || process.env.ANTHROPIC_MODEL || "claude-sonnet-5-5");
         const resolvedEffort = overrides.effort ?? effort;
         const sentEffort = resolvedEffort && acceptsEffort(resolvedModel) ? resolvedEffort : undefined;
         const requestParams: Anthropic.Messages.MessageCreateParamsNonStreaming = {

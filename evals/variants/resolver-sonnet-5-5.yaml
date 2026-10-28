@@ -1,8 +1,0 @@
-# Both decision resolvers on claude-sonnet-5-5 (production: claude-sonnet-4-5); everything else as in production.
-# Run it with --replay --live decision-resolver --live protocol-gap-resolver to pay for the resolvers only.
-name: resolver-sonnet-5-5
-overrides:
-  "decision-resolver":
-    model: claude-sonnet-5-5
-  "protocol-gap-resolver":
-    model: claude-sonnet-5-5

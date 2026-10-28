@@ -53,7 +53,7 @@ ALREADY LINKED decisions are CONFIRMED. Never propose moving them: their decisio
 
 Return structured JSON with matches and unmatched subjects.`;
 
-const RESOLVER_MODEL = 'claude-sonnet-4-5-20250929';
+const RESOLVER_MODEL = 'claude-sonnet-5-5';
 
 const RESOLVER_OUTPUT_SCHEMA = {
     type: 'object' as const,

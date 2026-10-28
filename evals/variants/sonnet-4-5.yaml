@@ -1,0 +1,10 @@
+# The calls that ran on claude-sonnet-4-5 before the move to claude-sonnet-5-5 (Sonnet 4.5 retires 2026-11-30), pinned back to it; everything else as in production.
+# Run it against production with --replay --live 'subject-context-search:*' --live decision-resolver --live protocol-gap-resolver to pay for those calls only.
+name: sonnet-4-5
+overrides:
+  "subject-context-search:*":
+    model: claude-sonnet-4-5-20250929
+  "decision-resolver":
+    model: claude-sonnet-4-5-20250929
+  "protocol-gap-resolver":
+    model: claude-sonnet-4-5-20250929
