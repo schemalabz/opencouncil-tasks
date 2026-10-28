@@ -4,17 +4,29 @@ import path from "path";
 import fs from "fs";
 import cp from "child_process";
 import { promisify } from "util";
+import { randomUUID } from "crypto";
+import { Readable } from "stream";
+import { pipeline as streamPipeline } from "stream/promises";
+import type { ReadableStream } from "stream/web";
 import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { childEnv } from '../lib/childEnv.js';
 import { assertFetchableUrl } from '../lib/fetchableUrl.js';
-import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
+import { YtDlp, helpers as ytdlpHelpers, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 import { getMediaDurationSeconds, probeVideoTiming } from "./utils/mediaOperations.js";
 import { isSpacesUrl } from "./utils/spacesUrl.js";
+import {
+    MEDIA_INFO_TEMPLATE, parseMediaInfo, isDirectFile, toSourceInfo, cacheKeyFor,
+    classifyMediaError, isPermanentMediaError, mediaErrorMessage, type MediaInfo,
+} from "./utils/mediaSource.js";
+import type { InspectMediaResponse, MediaSourceInfo } from "../types.js";
 
 dotenv.config();
 
 const DEFAULT_VIDEO_QUALITY = "1080";
 const YTDLP_BIN_PATH = process.env.YTDLP_BIN_PATH;
+// The binary downloads run: YTDLP_BIN_PATH, else the copy ytdlp-nodejs bundles. A bare
+// `yt-dlp` from PATH would be a second binary, updated separately (and absent in the dev shell).
+const ytdlpBinary = () => YTDLP_BIN_PATH || ytdlpHelpers.findYtdlpBinary() || 'yt-dlp';
 
 /**
  * A single raw video download attempt (no retry, no audio processing). Wrapped by
@@ -22,15 +34,21 @@ const YTDLP_BIN_PATH = process.env.YTDLP_BIN_PATH;
  * so the expensive loudnorm/extract passes only run once, after the download is confirmed
  * complete.
  */
-const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Promise<RawVideo> => {
+const downloadVideoOnce = async (source: MediaSource, onProgress: ProgressFn): Promise<RawVideo> => {
     const outputDir = process.env.DATA_DIR || "./data";
     if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
         console.log(`Created output directory: ${outputDir}`);
     }
 
-    const { videoId, videoUrl, sourceType, usesYtDlp } = getVideoIdAndUrl(youtubeUrl);
-    console.log(`Processing ${sourceType}: ${youtubeUrl}`);
+    const videoId = source.cacheKey();
+    if (!videoId) {
+        // Only a URL without an offline key gets here, after a lookup that failed in a way
+        // that may pass (a network blip); the caller retries, and the lookup with it.
+        throw new Error(`The media source is not resolved yet: ${source.lastLookupError ?? 'no lookup has succeeded'}`);
+    }
+    const usesYtDlp = source.kind() === 'yt-dlp';
+    console.log(`Processing ${source.describe()}: ${source.url}`);
 
     const videoOutputPath = path.join(outputDir, `${videoId}.mp4`);
     let finalVideoPath = videoOutputPath;
@@ -52,9 +70,9 @@ const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Pr
     const needsDownload = !fs.existsSync(videoOutputPath);
 
     if (needsDownload && usesYtDlp) {
-        finalVideoPath = await downloadWithYtDlp(youtubeUrl, videoOutputPath, videoId, onProgress);
+        finalVideoPath = await downloadWithYtDlp(source.url, videoOutputPath, videoId, onProgress);
     } else if (needsDownload) {
-        await downloadUrl(videoUrl, videoOutputPath);
+        await downloadUrl(source.url, videoOutputPath);
         finalVideoPath = videoOutputPath;
     }
 
@@ -64,7 +82,7 @@ const downloadVideoOnce = async (youtubeUrl: string, onProgress: ProgressFn): Pr
     }
 
     console.log(`Video downloaded successfully: ${formatBytes(videoSize)}`);
-    return { combined: finalVideoPath, sourceType };
+    return { combined: finalVideoPath };
 }
 
 type ProgressFn = (stage: string, progressPercent: number) => void;
@@ -72,13 +90,12 @@ type ProgressFn = (stage: string, progressPercent: number) => void;
 /** A downloaded raw video file, before preparation (loudnorm, video start shift) and audio extraction. */
 export interface RawVideo {
     combined: string;
-    sourceType: string;
 }
 
 export interface DownloadedMedia {
     audioOnly: string;
     combined: string;
-    sourceType: string;
+    source: MediaSourceInfo;
     /** The file differs from the download (loudness normalized or video decode timestamps rebuilt), so a Spaces source must be overwritten. */
     mediaRewritten: boolean;
 }
@@ -106,6 +123,11 @@ export interface CompleteDownloadDeps {
     dropCachedMedia: (url: string) => void | Promise<void>;
     /** Bytes currently on disk for the url's download — heartbeat/speed data, works in every downloader mode. */
     downloadedBytes: (url: string) => number | Promise<number>;
+    /**
+     * Whether a failed download attempt is worth retrying. Only a yt-dlp source has a
+     * post-live processing window; a Spaces or file download fails the same way again.
+     */
+    isRetryable: (err: unknown) => boolean;
     sleep: (ms: number) => Promise<void>;
     now: () => number;
 }
@@ -173,6 +195,9 @@ export async function downloadUntilComplete(
         // Fetched fresh each attempt: M over-reports while the VOD is still processing and
         // shrinks toward the true length.
         const info = await Promise.resolve(deps.getInfo(url)).catch((err): VideoInfo => {
+            // The lookup is where an unsupported page, an embed-only or DRM video shows up;
+            // the download would only fail the same way, after the whole wait.
+            if (isPermanentMediaError(err)) throw err;
             console.warn(`[download-complete] ${url}: could not fetch video info (${(err as Error).message})` +
                 (lastKnownDurationSec === undefined ? ' — completeness check skipped this attempt' : ` — using last known duration ${Math.round(lastKnownDurationSec)}s`));
             return {};
@@ -225,11 +250,10 @@ export async function downloadUntilComplete(
                 ` (${Math.round((actual / expected) * 100)}%)`;
         } catch (err) {
             // A still-processing VOD can make yt-dlp fail outright — treat it the same as an
-            // incomplete download: wait and retry rather than failing the whole task. But only
-            // a yt-dlp source (YouTube/Facebook VOD) has a post-live processing window:
-            // Spaces/direct failures and permanently-gone videos would just burn the full wait,
+            // incomplete download: wait and retry rather than failing the whole task.
+            // Spaces/file failures and permanently-gone videos would just burn the full wait,
             // so those fail fast with the original error.
-            if (!getVideoIdAndUrl(url).usesYtDlp || isPermanentDownloadError(err)) throw err;
+            if (!deps.isRetryable(err)) throw err;
             lastReason = `download failed (VOD may still be processing): ${(err as Error).message}`;
         } finally {
             clearInterval(sampler);
@@ -255,43 +279,18 @@ export async function downloadUntilComplete(
 
 const execFileAsync = promisify(cp.execFile);
 
-// Errors that no amount of waiting can fix — retrying would burn the whole maxWait.
-// Deliberately narrow: transient conditions (bot-check walls, network blips, 403s
-// during processing) must stay retryable. Facebook's "The video is not available,
-// Facebook said: ..." wrapper is deliberately NOT matched: yt-dlp emits it for ANY
-// interstitial page, including the transient one served while a post-live VOD is
-// still processing. The login wall (raise_login_required default message) is safe
-// to match — it only fires on a real login form in the page, never on bot-checks.
-const PERMANENT_DOWNLOAD_ERROR = /video unavailable|private video|has been removed|only available for registered users/i;
-
-function isPermanentDownloadError(err: unknown): boolean {
-    return PERMANENT_DOWNLOAD_ERROR.test((err as Error)?.message ?? '');
-}
-
-/** Parses the `--print "%(live_status)s|%(duration)s"` output line into a VideoInfo. */
-export function parseVideoInfoOutput(stdout: string): VideoInfo {
-    const [liveStatus, durationRaw] = (stdout.trim().split('\n').pop() ?? '').split('|');
-    const duration = Number(durationRaw);
-    return {
-        liveStatus: liveStatus && liveStatus !== 'NA' ? liveStatus : undefined,
-        durationSec: Number.isFinite(duration) && duration > 0 ? duration : undefined,
-    };
-}
-
 /**
- * Fetches the video's reported live_status and duration via `yt-dlp --print` — a few bytes,
- * vs a --write-info-json sidecar that runs to tens of MB for a multi-hour VOD (and
- * --dump-single-json, which overflows the exec output buffer). Sources not handled by yt-dlp
- * report nothing → `{}` → the first download is accepted without a completeness check.
- * Facebook reports `duration`; `live_status` may print `NA`, which `parseVideoInfoOutput`
- * already maps to `undefined`.
+ * Asks yt-dlp what a URL is: the extractor that handles it, the video id, duration, live
+ * status and the rest of MEDIA_INFO_TEMPLATE. yt-dlp's generic extractor also covers a
+ * plain media file (`direct`) and a page embedding any player it knows. Throws yt-dlp's
+ * error otherwise; `classifyMediaError` tells a permanent one from a passing one.
  */
-async function getInfo(url: string): Promise<VideoInfo> {
-    if (!getVideoIdAndUrl(url).usesYtDlp) return {};
-
+async function lookupMedia(url: string): Promise<MediaInfo> {
     // --no-playlist: a watch URL carrying &list= would otherwise print one line per playlist
-    // entry, and the fetch would enumerate the whole playlist on every attempt.
-    const args = ['--print', '%(live_status)s|%(duration)s', '--no-warnings', '--no-playlist'];
+    // entry, and the fetch would enumerate the whole playlist on every attempt. A URL that is
+    // only a playlist or channel still prints its entries: one is enough to see the playlist
+    // id that parseMediaInfo refuses.
+    const args = ['-O', MEDIA_INFO_TEMPLATE, '--no-warnings', '--no-playlist', '--playlist-items', '1'];
     // Same proxy as the download itself: the metadata fetch is throttled/blocked on the
     // datacenter IP just like the media fetch.
     const proxy = process.env.YTDLP_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
@@ -303,8 +302,8 @@ async function getInfo(url: string): Promise<VideoInfo> {
     // Without a timeout a hung fetch (proxy blackhole) would stall the attempt loop forever
     // and wedge the sampler's in-flight guard.
     try {
-        const { stdout } = await execFileAsync(YTDLP_BIN_PATH || 'yt-dlp', args, { timeout: 60_000 });
-        return parseVideoInfoOutput(stdout);
+        const { stdout } = await withYtDlpBinary(() => execFileAsync(ytdlpBinary(), args, { timeout: 60_000 }));
+        return parseMediaInfo(stdout);
     } catch (err) {
         // execFile errors embed the full argv; the proxy value may carry credentials and the
         // message gets logged by the callers, so redact it (mutate, don't wrap — the original
@@ -331,14 +330,88 @@ export function isCachedMediaFor(videoId: string, fileName: string): boolean {
 }
 
 /**
+ * One download's source. The URL alone settles Spaces, YouTube and Facebook (their cache
+ * keys come from the URL, so a lookup failing while a post-live VOD processes still leaves
+ * a key to retry under); anything else is resolved by its first successful lookup.
+ */
+class MediaSource {
+    private readonly offline: OfflineSource | undefined;
+    private info: MediaInfo | undefined;
+    private key: string | undefined;
+    lastLookupError: string | undefined;
+
+    constructor(readonly url: string) {
+        this.offline = offlineSource(url);
+        this.key = this.offline?.cacheKey;
+    }
+
+    /** Looks the URL up again: duration and live status change while a VOD processes. */
+    async lookup(): Promise<MediaInfo | undefined> {
+        if (this.offline?.kind === 'spaces') return undefined;
+        // A plain file does not change between attempts
+        if (this.info && isDirectFile(this.info)) return this.info;
+        try {
+            this.info = await lookupMedia(this.url);
+        } catch (err) {
+            const { permanent, hint } = classifyMediaError(err);
+            // A media file downloaded without yt-dlp before it was asked first: a lookup that
+            // fails for any passing reason (yt-dlp broken or blocked) must not stop one now.
+            if (!permanent && !this.offline) {
+                const contentType = await mediaFileType(this.url);
+                if (contentType) {
+                    console.warn(`[media-source] ${this.url}: lookup failed (${mediaErrorMessage(err)}); it serves ${contentType}, downloading it as a file`);
+                    this.info = { extractor: 'Generic', id: path.basename(new URL(this.url).pathname) || 'file', direct: true };
+                    this.key ??= cacheKeyFor(this.info, this.url);
+                    return this.info;
+                }
+            }
+            // The task's error goes back to the app: yt-dlp's own words and what to do
+            // instead, not the binary path and argv of the exec failure. Mutated, not
+            // wrapped, so the ERROR line that classifyMediaError reads stays in place.
+            this.lastLookupError = mediaErrorMessage(err);
+            if (err instanceof Error) err.message = this.lastLookupError + (hint ? ` (${hint})` : '');
+            throw err;
+        }
+        this.key ??= cacheKeyFor(this.info, this.url);
+        return this.info;
+    }
+
+    /** Undefined until a lookup succeeds, for a URL the offline rules do not cover. */
+    kind(): MediaSourceInfo['kind'] | undefined {
+        if (this.offline?.kind === 'spaces') return 'spaces';
+        if (this.info) return isDirectFile(this.info) ? 'file' : 'yt-dlp';
+        return this.offline?.kind;
+    }
+
+    cacheKey(): string | undefined {
+        return this.key;
+    }
+
+    isRetryable(err: unknown): boolean {
+        const kind = this.kind();
+        return kind !== 'spaces' && kind !== 'file' && !isPermanentMediaError(err);
+    }
+
+    describe(): string {
+        return this.info?.extractor ?? this.offline?.sourceType ?? 'unresolved source';
+    }
+
+    sourceInfo(): MediaSourceInfo {
+        if (this.info) return toSourceInfo(this.info);
+        // Downloaded without a successful lookup: a Spaces object, or YouTube/Facebook while
+        // their metadata fetch failed.
+        return { kind: this.kind() ?? 'yt-dlp', extractor: this.offline?.extractor };
+    }
+}
+
+/**
  * Removes ALL cached files for the video, so the next attempt re-downloads fresh against
  * the current manifest instead of resuming a stale/partial one (resume behaviour after a
  * manifestless→manifest transition is not something we want to rely on).
  */
-function dropCachedMedia(youtubeUrl: string): void {
+function dropCachedMedia(videoId: string | undefined): void {
     const outputDir = process.env.DATA_DIR || "./data";
-    const { videoId } = getVideoIdAndUrl(youtubeUrl);
-    if (!fs.existsSync(outputDir)) return;
+    if (!videoId || !fs.existsSync(outputDir)) return;
     for (const name of fs.readdirSync(outputDir)) {
         if (isCachedMediaFor(videoId, name)) {
             const file = path.join(outputDir, name);
@@ -353,10 +426,9 @@ function dropCachedMedia(youtubeUrl: string): void {
  * post_live heartbeat, and a previous run's split audio is already on disk at the first
  * attempt, so counting it would corrupt the byte curve.
  */
-function downloadedBytes(youtubeUrl: string): number {
+function downloadedBytes(videoId: string | undefined): number {
     const outputDir = process.env.DATA_DIR || "./data";
-    const { videoId } = getVideoIdAndUrl(youtubeUrl);
-    if (!fs.existsSync(outputDir)) return 0;
+    if (!videoId || !fs.existsSync(outputDir)) return 0;
     let total = 0;
     for (const name of fs.readdirSync(outputDir)) {
         if (name === videoId || name.startsWith(`${videoId}.`)) {
@@ -385,20 +457,25 @@ function completeDownloadConfig(): CompleteDownloadConfig {
 }
 
 /**
- * Downloads a YouTube/Facebook (or Spaces/direct) recording, retrying while it comes back incomplete —
- * a just-ended livestream VOD is still processing and can download truncated. Video
- * preparation and audio extraction run once, only after a download is confirmed complete. Same
- * signature as a plain single download, so all callers (pipeline, CLI) are unchanged.
+ * Downloads a recording from any source yt-dlp supports, a media file, or our Spaces
+ * storage, retrying while it comes back incomplete — a just-ended livestream VOD is still
+ * processing and can download truncated. Returns the raw media; downloadYTV prepares it
+ * and extracts audio after completeness is confirmed. Also used by CLI source verification.
  */
-export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
-    const { combined, sourceType } = await downloadUntilComplete(
+export const downloadMedia: Task<string, RawVideo & { source: MediaSourceInfo }> = async (youtubeUrl, onProgress) => {
+    const source = new MediaSource(youtubeUrl);
+    const { combined } = await downloadUntilComplete(
         youtubeUrl,
         {
-            download: downloadVideoOnce,
-            getInfo,
+            download: (_url, progress) => downloadVideoOnce(source, progress),
+            getInfo: async () => {
+                const info = await source.lookup();
+                return info ? { liveStatus: info.liveStatus, durationSec: info.durationSec } : {};
+            },
             probeDurationSeconds: getMediaDurationSeconds,
-            dropCachedMedia,
-            downloadedBytes,
+            dropCachedMedia: () => dropCachedMedia(source.cacheKey()),
+            downloadedBytes: () => downloadedBytes(source.cacheKey()),
+            isRetryable: (err) => source.isRetryable(err),
             sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
             now: () => Date.now(),
         },
@@ -406,26 +483,45 @@ export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onP
         onProgress,
     );
 
+    return { combined, source: source.sourceInfo() };
+};
+
+export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
+    const { combined, source } = await downloadMedia(youtubeUrl, onProgress);
     const audioOnly = path.join(path.dirname(combined), `${path.basename(combined, path.extname(combined))}.mp3`);
     const mediaRewritten = await prepareVideo(combined);
     await extractSoundFromMP4(combined, audioOnly);
-    return { audioOnly, combined, sourceType, mediaRewritten };
+    return { audioOnly, combined, source, mediaRewritten };
 };
 
-const randomId = () => Math.random().toString(36).substring(2, 15);
-
-const facebookHost = (mediaUrl: string): string | undefined => {
+/** Whether the server can download a URL, and what the source reports about it. Downloads nothing. */
+export async function inspectMedia(url: string): Promise<InspectMediaResponse> {
+    let source: MediaSource | undefined;
     try {
-        const host = new URL(mediaUrl).hostname;
-        return host === 'fb.watch' || host === 'facebook.com' || host === 'fb.com'
-            || host.endsWith('.facebook.com') || host.endsWith('.fb.com') ? host : undefined;
-    } catch {
-        return undefined;
+        source = new MediaSource(url);
+        await source.lookup();
+        return { supported: true, source: source.sourceInfo() };
+    } catch (err) {
+        const { reason, permanent, hint } = classifyMediaError(err);
+        return { supported: false, reason, retryable: !permanent, message: source?.lastLookupError ?? mediaErrorMessage(err), ...(hint && { hint }) };
     }
-};
+}
 
-const extractFacebookVideoId = (url: URL, host: string): string | undefined => {
-    if (host === 'fb.watch') {
+/** What the URL alone settles: our own storage, or a video whose cache key the URL carries. */
+interface OfflineSource {
+    kind: 'spaces' | 'yt-dlp';
+    cacheKey: string;
+    sourceType: string;
+    /** The yt-dlp extractor key, for the report when no lookup succeeds. */
+    extractor?: string;
+}
+
+const isFacebookHost = (host: string): boolean =>
+    host === 'fb.watch' || host === 'facebook.com' || host === 'fb.com'
+    || host.endsWith('.facebook.com') || host.endsWith('.fb.com');
+
+const extractFacebookVideoId = (url: URL): string | undefined => {
+    if (url.hostname === 'fb.watch') {
         const seg = url.pathname.split('/').filter(Boolean)[0];
         // Validate the share code — an unexpected path segment would produce a bad filename.
         return seg && /^[\w-]+$/.test(seg) ? seg : undefined;
@@ -445,52 +541,47 @@ const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com'
 // A YouTube id is exactly 11 url-safe characters. The id names files in the data dir.
 const YOUTUBE_VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
 
-export const getVideoIdAndUrl = (mediaUrl: string) => {
+const extractYouTubeVideoId = (url: URL): string | undefined => {
+    let videoId: string | undefined;
+    if (url.hostname.endsWith('youtu.be')) {
+        videoId = url.pathname.split('/')[1];
+    } else if (url.pathname === '/watch' || url.pathname === '/watch/') {
+        videoId = url.searchParams.get('v') || undefined;
+    } else {
+        // /embed/<id>, /live/<id> (a livestream's own URL), /shorts/<id>
+        videoId = url.pathname.match(/^\/(?:embed|live|shorts)\/([^/]+)/)?.[1];
+    }
+    if (videoId && !YOUTUBE_VIDEO_ID.test(videoId)) {
+        throw new Error('Invalid YouTube video ID');
+    }
+    return videoId || undefined;
+};
+
+/**
+ * Spaces, YouTube and Facebook from the URL alone; undefined for anything else, including a
+ * YouTube or Facebook URL of a form not parsed here (a lookup resolves those).
+ */
+export function offlineSource(mediaUrl: string): OfflineSource | undefined {
     // The string goes to yt-dlp as an argument and to fetch, so it must parse
     // as an http(s) URL: an option-like string or a path never gets that far.
     const parsed = assertFetchableUrl(mediaUrl, 'youtubeUrl');
     const hostname = parsed.hostname.toLowerCase();
 
     if (YOUTUBE_HOSTS.has(hostname)) {
-        // Extract video ID from various YouTube URL formats
-        let videoId: string | undefined;
-
-        if (hostname.endsWith('youtu.be')) {
-            videoId = parsed.pathname.split('/')[1];
-        } else if (parsed.pathname === '/watch' || parsed.pathname === '/watch/') {
-            videoId = parsed.searchParams.get('v') || undefined;
-        } else if (parsed.pathname.startsWith('/embed/')) {
-            videoId = parsed.pathname.split('/')[2];
-        }
-
-        if (!videoId || videoId.length === 0) {
-            throw new Error(`Could not extract video ID from YouTube URL: ${mediaUrl}`);
-        }
-        if (!YOUTUBE_VIDEO_ID.test(videoId)) {
-            throw new Error('Invalid YouTube video ID');
-        }
-
-        return { videoId, videoUrl: mediaUrl, sourceType: 'YouTube', usesYtDlp: true };
+        const id = extractYouTubeVideoId(parsed);
+        return id ? { kind: 'yt-dlp', cacheKey: id, sourceType: 'YouTube', extractor: 'Youtube' } : undefined;
     }
-
-    const fbHost = facebookHost(mediaUrl);
-    if (fbHost) {
-        const fbId = extractFacebookVideoId(new URL(mediaUrl), fbHost);
-        if (!fbId) {
-            throw new Error(`Could not extract video ID from Facebook URL: ${mediaUrl}`);
-        }
-        // fb- prefix namespaces the data-dir cache; dropCachedMedia/downloadedBytes prefix-match on videoId.
-        return { videoId: `fb-${fbId}`, videoUrl: mediaUrl, sourceType: 'Facebook', usesYtDlp: true };
+    if (isFacebookHost(hostname)) {
+        const id = extractFacebookVideoId(parsed);
+        return id ? { kind: 'yt-dlp', cacheKey: `fb-${id}`, sourceType: 'Facebook', extractor: 'Facebook' } : undefined;
     }
-
-    // Check if it's already on our own Spaces storage (front-end upload)
+    // Already on our own Spaces storage (front-end upload)
     if (isSpacesUrl(mediaUrl)) {
-        const fileName = path.basename(mediaUrl, path.extname(mediaUrl));
-        return { videoId: fileName, videoUrl: mediaUrl, sourceType: 'Spaces', usesYtDlp: false };
+        return { kind: 'spaces', cacheKey: path.basename(mediaUrl, path.extname(mediaUrl)), sourceType: 'Spaces' };
     }
-
-    return { videoId: randomId(), videoUrl: mediaUrl, sourceType: 'Direct URL', usesYtDlp: false };
+    return undefined;
 }
+
 type LoudnormStats = {
     input_i: string;
     input_tp: string;
@@ -838,102 +929,40 @@ const HEADERS = {
 }
 
 
+/** The content type when the URL serves a video or audio file, else undefined (a page, an error, no answer). */
+async function mediaFileType(url: string): Promise<string | undefined> {
+    try {
+        const res = await fetch(url, { method: 'HEAD', headers: HEADERS, signal: AbortSignal.timeout(15_000) });
+        const type = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
+        return res.ok && type && /^(video|audio)\//.test(type) ? type : undefined;
+    } catch {
+        return undefined;
+    }
+}
+
 const downloadUrl = async (url: string, outputPath: string) => {
     console.log(`Downloading from: ${url}`);
-    
-    let writer: fs.WriteStream | null = null;
-    
+    // Only complete downloads become cache entries. A disconnected stream or a killed
+    // process must never leave a nonempty final file that the next request reuses.
+    const partialPath = `${outputPath}.${randomUUID()}.part`;
     try {
         assertFetchableUrl(url, 'youtubeUrl');
         const response = await fetch(url, { headers: HEADERS });
-        
         if (!response.ok) {
-            const responseText = await response.text().catch(() => 'Unable to read response');
-            const truncatedResponse = responseText.length > 200 ? `${responseText.substring(0, 200)}...` : responseText;
-            throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}. Response: ${truncatedResponse}`);
+            await response.body?.cancel();
+            throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}`);
         }
-
-        // Check for file size from response headers
-        const contentLength = response.headers.get('content-length');
-        const estimatedLength = response.headers.get('estimated-content-length');
-        
-        if (contentLength) {
-            console.log(`Expected file size: ${formatBytes(parseInt(contentLength))}`);
-        } else if (estimatedLength) {
-            console.log(`Estimated file size: ${formatBytes(parseInt(estimatedLength))}`);
-        }
-
-        writer = fs.createWriteStream(outputPath);
-        // Attach error handler immediately so disk errors during writes are caught
-        const writeCompletion = new Promise<void>((resolve, reject) => {
-            writer!.once('finish', resolve);
-            writer!.once('error', (err) => {
-                reject(new Error(`Error writing file: ${err.message}`));
-            });
-        });
-        // Prevent unhandled rejection if the stream errors before we await it
-        writeCompletion.catch(() => {});
-        const reader = response.body?.getReader();
-
-        if (!reader) {
-            throw new Error("Unable to read response body - response.body is null");
-        }
-
-        let totalBytes = 0;
-        let lastLogTime = Date.now();
-
-        while (true) {
-            const { done, value } = await reader.read();
-
-            if (done) {
-                break;
-            }
-
-            if (!value || value.length === 0) {
-                console.warn(`Warning: Received empty chunk during download`);
-                continue;
-            }
-
-            writer.write(Buffer.from(value));
-            totalBytes += value.length;
-
-            const currentTime = Date.now();
-            if (currentTime - lastLogTime >= 5000) {
-                console.log(`  Downloading... ${formatBytes(totalBytes)}`);
-                lastLogTime = currentTime;
-            }
-        }
-
-        writer.end();
-        
-        // Wait for file to be fully written (with timeout)
-        await Promise.race([
-            writeCompletion,
-            new Promise<void>((_, reject) =>
-                setTimeout(() => reject(new Error('Write stream timeout after 30 seconds')), 30000)
-            )
-        ]);
-        
-        const finalSize = fs.statSync(outputPath).size;
+        if (!response.body) throw new Error('Unable to read response body');
+        await streamPipeline(
+            Readable.fromWeb(response.body as ReadableStream),
+            fs.createWriteStream(partialPath),
+        );
+        const finalSize = fs.statSync(partialPath).size;
+        if (finalSize === 0) throw new Error(`Download failed: empty file. URL: ${url}`);
+        fs.renameSync(partialPath, outputPath);
         console.log(`Downloaded video: ${formatBytes(finalSize)} -> ${path.basename(outputPath)}`);
-        
-        if (finalSize === 0) {
-            throw new Error(`Post-download validation failed: file is empty (0 bytes). URL: ${url}`);
-        }
-    } catch (error) {
-        // Close the writer stream if it was created
-        if (writer) {
-            writer.destroy();
-        }
-        
-        // Clean up empty file on error
-        if (fs.existsSync(outputPath)) {
-            const size = fs.statSync(outputPath).size;
-            if (size === 0) {
-                fs.unlinkSync(outputPath);
-            }
-        }
-        throw error;
+    } finally {
+        fs.rmSync(partialPath, { force: true });
     }
 }
 
@@ -946,18 +975,30 @@ export function formatBytes(bytes: number): string {
 }
 
 let lastYtDlpUpdateCheck = 0;
+let ytDlpUpdateInFlight: Promise<void> | undefined;
+let activeYtDlpCalls = 0;
+
+/** Do not read the Python zipapp while its updater is replacing it. */
+async function withYtDlpBinary<T>(call: () => Promise<T>): Promise<T> {
+    while (ytDlpUpdateInFlight) await ytDlpUpdateInFlight;
+    activeYtDlpCalls++;
+    try { return await call(); }
+    finally { activeYtDlpCalls--; }
+}
 
 async function updateYtDlp(): Promise<void> {
     // The retry loop calls the downloader once per attempt; re-checking for a yt-dlp
     // update on each of up to ~30 attempts adds a network round-trip (up to 60s) per
     // retry for nothing. Once an hour is plenty.
+    if (process.env.YTDLP_AUTO_UPDATE === 'false' || activeYtDlpCalls > 0) return;
+    if (ytDlpUpdateInFlight) return ytDlpUpdateInFlight;
     if (Date.now() - lastYtDlpUpdateCheck < 60 * 60_000) return;
     lastYtDlpUpdateCheck = Date.now();
 
-    const binaryPath = YTDLP_BIN_PATH || 'yt-dlp';
+    const binaryPath = ytdlpBinary();
     console.log('Checking for yt-dlp updates...');
 
-    return new Promise((resolve) => {
+    ytDlpUpdateInFlight = new Promise<void>((resolve) => {
         const updateProcess = cp.spawn(binaryPath, ['--update-to', 'nightly'], {
             stdio: ['pipe', 'pipe', 'pipe']
         });
@@ -996,11 +1037,13 @@ async function updateYtDlp(): Promise<void> {
 
         // Timeout after 60 seconds (nightly binary download can be slow)
         const killTimer = setTimeout(() => {
-            updateProcess.kill();
+            // Keep the read barrier until the close event confirms termination.
+            updateProcess.kill('SIGKILL');
             console.warn('yt-dlp update check timed out');
-            resolve();
         }, 60000);
     });
+    try { await ytDlpUpdateInFlight; }
+    finally { ytDlpUpdateInFlight = undefined; }
 }
 
 async function downloadWithYtDlp(
@@ -1013,7 +1056,7 @@ async function downloadWithYtDlp(
     await updateYtDlp();
 
     const ytdlp = new YtDlp({
-        binaryPath: YTDLP_BIN_PATH || undefined,
+        binaryPath: ytdlpBinary(),
         // we still rely on ffmpeg-static for audio extraction; yt-dlp uses system ffmpeg only if needed
     });
 
@@ -1032,7 +1075,10 @@ async function downloadWithYtDlp(
     let lastProgressLog = 0;
     const ytOptions: FormatOptions<'videoonly'> = {
         output: outputTemplate,
-        format: `bestvideo[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]/best`,
+        // The extension-free split pair is for Vimeo, which serves only separate HLS video and
+        // audio streams, both ext=mp4: the alternatives before it match neither.
+        format: `bestvideo[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${DEFAULT_VIDEO_QUALITY}][ext=mp4]` +
+            `/bestvideo[height<=${DEFAULT_VIDEO_QUALITY}]+bestaudio/best`,
         onProgress: (p: VideoProgress) => {
             if (onProgress && p.total > 0) {
                 const pct = (p.downloaded / p.total) * 100;
@@ -1067,7 +1113,7 @@ async function downloadWithYtDlp(
 
     try {
         console.log(`Downloading via yt-dlp: ${youtubeUrl}`);
-        await ytdlp.downloadAsync(youtubeUrl, ytOptions);
+        await withYtDlpBinary(() => ytdlp.downloadAsync(youtubeUrl, ytOptions));
 
         const expectedPath = path.join(outputDir, `${baseName}.mp4`);
         if (!fs.existsSync(expectedPath)) {

@@ -99,7 +99,69 @@ export interface TranscribeResult {
     muxPlaybackId: string;
     muxAssetId: string;
     transcript: TranscriptWithSpeakerIdentification;
+    /** What the requested media URL turned out to be. */
+    source: MediaSourceInfo;
 }
+
+/*
+ * Media sources: any URL yt-dlp supports, a direct media file, or our own Spaces storage
+ */
+
+/** What the task server learned about a media URL. Fields the source does not report are absent. */
+export interface MediaSourceInfo {
+    /** How the server fetches it: from our own storage, as a plain file, or through yt-dlp. */
+    kind: 'spaces' | 'file' | 'yt-dlp';
+    /** The yt-dlp extractor that handles it (Youtube, Facebook, Vimeo, VimeoEvent, Generic, ...). */
+    extractor?: string;
+    /** The video's id at its source. */
+    id?: string;
+    title?: string;
+    durationSeconds?: number;
+    /** yt-dlp's live_status: not_live, is_live, is_upcoming, was_live or post_live. */
+    liveStatus?: string;
+    /** Source release/upload timestamp, ISO 8601; may be a file's Last-Modified time. Not proof of the meeting start. */
+    startedAt?: string;
+    uploader?: string;
+    /** The page the video was found on, after following any embed. */
+    webpageUrl?: string;
+    thumbnailUrl?: string;
+    chapters?: { title: string; startSeconds: number; endSeconds: number }[];
+}
+
+/** Why a media URL cannot be downloaded. */
+export type MediaUnsupportedReason =
+    /** No yt-dlp extractor and no known embedded player on the page. */
+    | 'unsupported'
+    /** A playlist, a channel, or a page with several videos, rather than one meeting's video. */
+    | 'playlist'
+    /** The video plays only on the site that embeds it: send that page's URL instead. */
+    | 'embed_only'
+    | 'login_required'
+    /** The source serves the video encrypted. */
+    | 'drm'
+    /** Removed, private or otherwise gone at the source. */
+    | 'unavailable'
+    | 'not_found'
+    /** Anything else; may succeed on a later try. */
+    | 'error';
+
+export interface InspectMediaRequest {
+    url: string;
+}
+
+/** Metadata extraction result, not a guarantee that every media fragment can be downloaded.
+ * Spaces URLs are recognized without checking that the object exists. */
+export type InspectMediaResponse =
+    | { supported: true; source: MediaSourceInfo }
+    | {
+        supported: false;
+        reason: MediaUnsupportedReason;
+        /** Whether trying again later could succeed (only for `error`). */
+        retryable: boolean;
+        message: string;
+        /** What to do instead, when there is something to do. */
+        hint?: string;
+    };
 
 /*
  * Task: Diarize

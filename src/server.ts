@@ -15,6 +15,7 @@ import fs from 'fs';
 import { spawnSync } from 'child_process';
 import devRouter from './routes/dev.js';
 import uploadRouter from './routes/upload.js';
+import inspectMediaRouter from './routes/inspectMedia.js';
 import swaggerUi from 'swagger-ui-express';
 // Swagger will be imported after routes are defined
 
@@ -181,6 +182,12 @@ import('./lib/swaggerConfig.js').then(({ swaggerSpec }) => {
 // ============================================================================
 
 app.use('/upload-video', uploadRouter);
+
+// ============================================================================
+// MEDIA INSPECTION ENDPOINT (synchronous)
+// ============================================================================
+
+app.use('/inspectMedia', inspectMediaRouter);
 
 // ============================================================================
 // DEVELOPMENT ROUTES
