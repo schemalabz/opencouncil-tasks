@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { acceptActionable, acceptAtConfidence, aggregateSummaries, buildBacktestInput, describePerson, maySpeakAtMeeting, evidenceBreakdown, formatEvidenceTable, formatBacktestReport, formatMeetingTable, formatThresholdSweep, formatUnlistedEvidenceTable, scoreBacktest, thresholdSweep, truthSource, unlistedEvidenceBreakdown, unlistedLabelAgrees, MeetingApiData } from './speakerBacktest.js';
 import { costUsd } from '../../lib/pricing.js';
-import { SpeakerIdentification } from '../../lib/speakerIdentification.js';
+import { mergeChunkIdentifications, SpeakerIdentification } from '../../lib/speakerIdentification.js';
 
 const IMPORTED = '2026-09-14T15:01:46.215Z';
 const REVIEWED = '2026-09-14T16:30:00.000Z';
@@ -285,6 +285,18 @@ describe('scoreBacktest', () => {
         expect(scoreBacktest(input.speakers, []).summary.model.unlisted.silent).toEqual({ tags: 1, seconds: 20 });
         // A sweep by confidence alone takes the label the pass holds back.
         expect(scoreBacktest(input.speakers, [labelled('S4', 'Κάτοικος', null, 90, { actionable: false })], acceptAtConfidence(70)).scored.find(s => s.label === 'S4')?.outcome).toBe('unlistedMatch');
+    });
+
+    it('holds back what the pass held back when chunks are merged: a weak verdict\'s fuller form never makes the label acted on', () => {
+        // The floor grant gives a surname; only a doubtful address adds the capacity that would let the label stand alone.
+        const merged = mergeChunkIdentifications([
+            [{ speakerLabel: 'S4', personId: null, unlistedName: 'Κάτοικος', unlistedCapacity: null, evidenceKind: 'named', confidence: 90, evidence: 'given the floor' }],
+            [{ speakerLabel: 'S4', personId: null, unlistedName: 'Κάτοικος', unlistedCapacity: 'Σύλλογος', evidenceKind: 'addressed', confidence: 40, evidence: 'maybe addressed' }],
+        ], ['S4']);
+        expect(merged[0]).toMatchObject({ unlistedName: 'Κάτοικος', unlistedCapacity: null, actionable: false });
+        const { scored, summary } = scoreBacktest(input.speakers, merged, acceptActionable);
+        expect(scored.find(s => s.label === 'S4')).toMatchObject({ outcome: 'offRoster', heldBack: true });
+        expect(summary.model.unlisted.heldBackRight).toEqual({ tags: 1, seconds: 20 });
     });
 
     it('withholds a voiceprint match the model labels as a visitor, and counts the disagreement', () => {

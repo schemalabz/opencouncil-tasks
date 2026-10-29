@@ -397,8 +397,9 @@ export function mergeChunkIdentifications(
         // that name the same unlisted speaker (sameUnlistedSpeaker) share a candidate,
         // which keeps the fullest form of the name it was given.
         // strongest: the candidate's verdict with the strongest kind of evidence, the more confident one on a tie.
-        // supported: the fullest form among the verdicts that each meet the unlisted rule (kind and floor), the
-        // only form the pass may publish: a weak verdict may fill in a name a reviewer sees, never one that is acted on.
+        // supported: the fullest form among the verdicts that each meet the unlisted rule (kind and floor). It is the
+        // only form the pass reports once any verdict meets the rule, acted on or not, so a weak verdict can never
+        // fill in a name: the verdict says the same whether the pass or the backtest decides to act on it.
         type Candidate = { personId: string | null; unlisted: UnlistedSpeaker | null; supported: UnlistedSpeaker | null; total: number; max: number; strongest: { kindRank: number; confidence: number; evidence: string } };
         const candidates: Candidate[] = [];
         const candidateFor = (verdict: ChunkIdentification): Candidate | null => {
@@ -446,10 +447,11 @@ export function mergeChunkIdentifications(
         const contested = ranked.length > 1 && ranked[1].total >= CONTESTED_RATIO * best.total;
         const evidenceKind = SPEAKER_EVIDENCE_KINDS[best.strongest.kindRank] ?? null;
         const confidence = best.strongest.confidence;
-        // An unlisted label is acted on in the form its supporting verdicts gave; otherwise the fullest form is a suggestion.
+        // An unlisted label is reported in the form its supporting verdicts gave; the fullest form is a suggestion only
+        // when no verdict supports any form. Either way the verdict's own fields decide it (isActionable).
         const supportedActionable = best.supported !== null
             && isActionable({ personId: null, unlistedName: best.supported.name, unlistedCapacity: best.supported.capacity, evidenceKind, contested, confidence });
-        const unlisted = best.personId ? null : supportedActionable ? best.supported : best.unlisted;
+        const unlisted = best.personId ? null : best.supported ?? best.unlisted;
         const actionable = best.personId ? isActionable({ personId: best.personId, evidenceKind, contested, confidence }) : supportedActionable;
 
         return {
