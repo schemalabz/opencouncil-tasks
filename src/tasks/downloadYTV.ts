@@ -8,7 +8,7 @@ import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { childEnv } from '../lib/childEnv.js';
 import { assertFetchableUrl } from '../lib/fetchableUrl.js';
 import { YtDlp, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
-import { getMediaDurationSeconds, probeVideoStartTime } from "./utils/mediaOperations.js";
+import { getMediaDurationSeconds, probeVideoTiming } from "./utils/mediaOperations.js";
 import { isSpacesUrl } from "./utils/spacesUrl.js";
 
 dotenv.config();
@@ -79,7 +79,7 @@ export interface DownloadedMedia {
     audioOnly: string;
     combined: string;
     sourceType: string;
-    /** The file differs from the download (loudness normalized or audio delayed to match the video start shift), so a Spaces source must be overwritten. */
+    /** The file differs from the download (loudness normalized or video decode timestamps rebuilt), so a Spaces source must be overwritten. */
     mediaRewritten: boolean;
 }
 
@@ -510,8 +510,10 @@ const LOUDNORM_TOLERANCE_LU = 1;
 const SILENCE_FLOOR_LUFS = -60;
 const AUDIO_BITRATE = '128k';
 // Mux ignores MP4 edit lists, so it shows the picture this much behind the sound.
-// Facebook downloads carry 0.665 s and 2.387 s; a 0.08 s B-frame delay is normal.
+// Facebook downloads carry 0.665 s and 2.938 s (18 and 22 frames); a B-frame delay
+// of one or two frames is normal and is what a rebuild leaves.
 const VIDEO_START_SHIFT_TOLERANCE_SECONDS = 0.1;
+const VIDEO_START_SHIFT_TOLERANCE_FRAMES = 3;
 
 /**
  * Whether the source carries no usable audio. Normalization cannot rescue it:
@@ -587,72 +589,84 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
 /**
  * Rewrites the downloaded file at most once, for either or both of two independent
  * corrections: loudness normalization (audio re-encode) and the video start shift
- * (audio delayed to match, video copied). Returns whether the file was rewritten.
+ * (decode timestamps rebuilt, video copied). Returns whether the file was rewritten.
  */
 async function prepareVideo(filePath: string): Promise<boolean> {
     const filename = path.basename(filePath);
     const loudnormFilter = await measureLoudnormFilter(filePath);
 
-    const shift = await measureVideoStartShift(filePath);
-    const audioDelayMs = shift !== null && shift > VIDEO_START_SHIFT_TOLERANCE_SECONDS ? Math.round(shift * 1000) : 0;
-    if (shift !== null) {
-        console.log(`[video-start] ${filename}: edit list shifts the first frame by ${shift.toFixed(3)}s${audioDelayMs ? `, delaying the audio by ${audioDelayMs}ms to match` : ''}`);
+    const timing = await measureVideoStartShift(filePath);
+    let rebuildVideoDts = timing !== null && isVideoStartShifted(timing.shift, timing.frameSeconds);
+    if (timing !== null) {
+        console.log(`[video-start] ${filename}: edit list shifts the first frame by ${timing.shift.toFixed(3)}s${rebuildVideoDts ? ', rebuilding the video decode timestamps' : ''}`);
     }
 
-    if (!loudnormFilter && !audioDelayMs) {
+    if (!loudnormFilter && !rebuildVideoDts) {
         return false;
     }
 
     const tempPath = filePath + '.rewritten.mp4';
+    const rewrite = async (rebuild: boolean) => {
+        try {
+            await runFfmpeg(buildRewriteArgs(filePath, tempPath, { loudnormFilter, rebuildVideoDts: rebuild }));
+        } catch (err) {
+            // A half-written temp file would otherwise linger in the media cache
+            fs.rmSync(tempPath, { force: true });
+            throw err;
+        }
+    };
     const start = Date.now();
     try {
-        await runFfmpeg(buildRewriteArgs(filePath, tempPath, { loudnormFilter, audioDelayMs }));
+        await rewrite(rebuildVideoDts);
     } catch (err) {
-        // A half-written temp file would otherwise linger in the media cache
-        fs.rmSync(tempPath, { force: true });
-        throw err;
+        // The shift correction must not fail the transcription: the file then plays as downloaded
+        if (!rebuildVideoDts) throw err;
+        console.warn(`[video-start] ${filename}: rebuilding the video decode timestamps failed, leaving the shift uncorrected: ${(err as Error).message}`);
+        rebuildVideoDts = false;
+        if (!loudnormFilter) return false;
+        await rewrite(false);
     }
     fs.renameSync(tempPath, filePath);
-    console.log(`[prepare-video] ${filename}: rewrote in ${((Date.now() - start) / 1000).toFixed(1)}s (loudnorm=${loudnormFilter !== null}, audioDelayMs=${audioDelayMs})`);
+    console.log(`[prepare-video] ${filename}: rewrote in ${((Date.now() - start) / 1000).toFixed(1)}s (loudnorm=${loudnormFilter !== null}, rebuildVideoDts=${rebuildVideoDts})`);
     return true;
 }
 
 /**
  * Rewrite arguments: the video is always copied, and the audio is re-encoded only when
- * a filter applies (with neither, the result is a plain remux). Mux places the video by its decode timestamps and ignores edit
- * lists, so a video edit list cannot be moved into the video timestamps by a copy
- * (the decode delay stays). Instead the audio gets the same delay as silence, and no
- * edit list is written: Mux, browsers and the extracted transcript audio then all read
- * one timeline, with picture and sound starting `audioDelayMs` in.
+ * loudnorm applies (with neither correction, the result is a plain remux).
+ *
+ * A Facebook video carries decode timestamps that run a constant 0.6–3 s before its
+ * presentation timestamps, hidden by an edit list. Mux ignores edit lists and starts
+ * the video at its first decode timestamp, and the web player starts its clock at the
+ * first video frame, so neither the edit list nor a delayed audio track survives
+ * playback. `-fflags +igndts` drops the input decode timestamps, and ffmpeg derives
+ * new ones from the H.264 stream with the normal one- or two-frame delay: the first
+ * frame then starts at ~0 for Mux, the player, browsers and the transcript audio alike.
  */
 export function buildRewriteArgs(
     input: string,
     output: string,
-    { loudnormFilter, audioDelayMs }: { loudnormFilter: string | null; audioDelayMs: number },
+    { loudnormFilter, rebuildVideoDts }: { loudnormFilter: string | null; rebuildVideoDts: boolean },
 ): string[] {
-    const audioFilters = [
-        ...(loudnormFilter ? [loudnormFilter] : []),
-        ...(audioDelayMs ? [`adelay=${audioDelayMs}:all=1`] : []),
-    ];
     return [
+        ...(rebuildVideoDts ? ['-fflags', '+igndts'] : []),
         '-i', input,
         '-c:v', 'copy',
-        ...(audioFilters.length
-            ? ['-af', audioFilters.join(','), '-c:a', 'aac', '-b:a', AUDIO_BITRATE]
+        ...(loudnormFilter
+            ? ['-af', loudnormFilter, '-c:a', 'aac', '-b:a', AUDIO_BITRATE]
             : ['-c:a', 'copy']),
-        ...(audioDelayMs ? ['-use_editlist', '0'] : []),
         '-y', output,
     ];
 }
 
 // A failed probe must not fail the transcription: the file then plays as it did before.
-async function measureVideoStartShift(filePath: string): Promise<number | null> {
+async function measureVideoStartShift(filePath: string): Promise<{ shift: number; frameSeconds: number | null } | null> {
     try {
         const [presented, raw] = await Promise.all([
-            probeVideoStartTime(filePath, { ignoreEditList: false }),
-            probeVideoStartTime(filePath, { ignoreEditList: true }),
+            probeVideoTiming(filePath, { ignoreEditList: false }),
+            probeVideoTiming(filePath, { ignoreEditList: true }),
         ]);
-        return parseVideoStartShift(presented, raw);
+        return { shift: parseVideoStartShift(presented.startTime, raw.startTime), frameSeconds: parseFrameSeconds(presented.avgFrameRate) };
     } catch (err) {
         console.warn(`[video-start] ${path.basename(filePath)}: could not measure the video start shift, leaving it uncorrected: ${(err as Error).message}`);
         return null;
@@ -667,6 +681,23 @@ async function measureVideoStartShift(filePath: string): Promise<number | null> 
 export function parseVideoStartShift(presentedStart: string, rawStart: string): number {
     const shift = parseFloat(rawStart) - parseFloat(presentedStart);
     return Number.isFinite(shift) ? shift : 0;
+}
+
+/** One frame's duration from ffprobe's `avg_frame_rate` ("30000/1001"), or null when unknown. */
+export function parseFrameSeconds(avgFrameRate: string): number | null {
+    const [num, den] = avgFrameRate.split('/').map(Number);
+    const fps = den === undefined ? num : num / den;
+    return Number.isFinite(fps) && fps > 0 ? 1 / fps : null;
+}
+
+/**
+ * Whether the shift is the Facebook decode delay rather than a normal B-frame delay.
+ * The frame bound keeps a rebuilt file from being rebuilt again on every run: in a
+ * low-frame-rate video the normal one- or two-frame delay can exceed the time bound.
+ */
+export function isVideoStartShifted(shift: number, frameSeconds: number | null): boolean {
+    return shift > VIDEO_START_SHIFT_TOLERANCE_SECONDS
+        && (frameSeconds === null || shift > VIDEO_START_SHIFT_TOLERANCE_FRAMES * frameSeconds);
 }
 
 /**

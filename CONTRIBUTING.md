@@ -106,7 +106,7 @@ Run this after significant pipeline changes or when onboarding to verify the ful
 **Unit tests** (fast, no network, run in CI):
 
 - **`src/utils.test.ts`** — `IdCompressor`, `validateUrl`, `validateYoutubeUrl`, `formatTime`
-- **`src/tasks/downloadYTV.test.ts`** — `getVideoIdAndUrl`, `formatBytes`, loudnorm helpers, `parseVideoStartShift`, `buildRewriteArgs`, `parseVideoInfoOutput`, `isCachedMediaFor`, `downloadUntilComplete` (livestream retry loop, fake clock + injected deps)
+- **`src/tasks/downloadYTV.test.ts`** — `getVideoIdAndUrl`, `formatBytes`, loudnorm helpers, `parseVideoStartShift`, `parseFrameSeconds`, `isVideoStartShifted`, `buildRewriteArgs`, `parseVideoInfoOutput`, `isCachedMediaFor`, `downloadUntilComplete` (livestream retry loop, fake clock + injected deps)
 - **`src/tasks/generateHighlight.test.ts`** — `mergeConsecutiveSegments`, `bridgeUtteranceGaps`
 - **`src/tasks/utils/mediaOperations.test.ts`** — `normalizeUtteranceTimestamps`, `getPresetConfig`, `generateSocialFilter`, `generateBlurredMarginFilter`, `generateSolidMarginFilter`, `downloadFile`
 - **`src/tasks/pipeline.test.ts`** — pipeline orchestration via `createPipeline(deps)` with stubbed tasks (happy path, Spaces skip and in-place overwrite, progress stages, error propagation, data flow)

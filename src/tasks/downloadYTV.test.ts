@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import {
   getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection, isSilentAudio,
   downloadUntilComplete, parseVideoInfoOutput, isCachedMediaFor, parseVideoStartShift, buildRewriteArgs,
+  parseFrameSeconds, isVideoStartShifted,
   type CompleteDownloadDeps, type CompleteDownloadConfig, type RawVideo,
 } from './downloadYTV.js';
 
@@ -306,25 +307,63 @@ describe('parseVideoStartShift', () => {
 describe('buildRewriteArgs', () => {
   const FILTER = 'loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=-27.1:linear=true';
 
-  it('normalizes loudness: re-encodes the audio, copies the video, keeps the edit lists', () => {
-    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: FILTER, audioDelayMs: 0 })).toEqual([
+  it('normalizes loudness: re-encodes the audio, copies the video, keeps the timestamps', () => {
+    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: FILTER, rebuildVideoDts: false })).toEqual([
       '-i', 'in.mp4', '-c:v', 'copy', '-af', FILTER, '-c:a', 'aac', '-b:a', '128k', '-y', 'out.mp4',
     ]);
   });
 
-  it('delays the audio after loudness normalization in the same pass, and drops the edit lists', () => {
-    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: FILTER, audioDelayMs: 665 })).toEqual([
-      '-i', 'in.mp4', '-c:v', 'copy', '-af', `${FILTER},adelay=665:all=1`, '-c:a', 'aac', '-b:a', '128k',
-      '-use_editlist', '0', '-y', 'out.mp4',
+  it('rebuilds the video decode timestamps in the same pass as loudness normalization', () => {
+    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: FILTER, rebuildVideoDts: true })).toEqual([
+      '-fflags', '+igndts', '-i', 'in.mp4', '-c:v', 'copy', '-af', FILTER, '-c:a', 'aac', '-b:a', '128k', '-y', 'out.mp4',
     ]);
   });
 
-  // The SKIP_LOUDNORM and within-tolerance cases: the delay alone still needs an audio re-encode
-  it('delays the audio without loudness normalization', () => {
-    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: null, audioDelayMs: 665 })).toEqual([
-      '-i', 'in.mp4', '-c:v', 'copy', '-af', 'adelay=665:all=1', '-c:a', 'aac', '-b:a', '128k',
-      '-use_editlist', '0', '-y', 'out.mp4',
+  // The SKIP_LOUDNORM and within-tolerance cases: a remux only, both streams copied
+  it('rebuilds the video decode timestamps without touching the audio', () => {
+    expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: null, rebuildVideoDts: true })).toEqual([
+      '-fflags', '+igndts', '-i', 'in.mp4', '-c:v', 'copy', '-c:a', 'copy', '-y', 'out.mp4',
     ]);
+  });
+});
+
+describe('parseFrameSeconds', () => {
+  it('reads a rational frame rate', () => {
+    expect(parseFrameSeconds('30000/1001')).toBeCloseTo(1001 / 30000);
+  });
+
+  // Facebook's variable frame rate (samothraki oct26_2026)
+  it('reads an uneven average frame rate', () => {
+    expect(parseFrameSeconds('14111400/526567')).toBeCloseTo(526567 / 14111400);
+  });
+
+  it('is null for an unknown rate (ffprobe prints 0/0, or nothing without a video stream)', () => {
+    expect(parseFrameSeconds('0/0')).toBeNull();
+    expect(parseFrameSeconds('')).toBeNull();
+  });
+});
+
+describe('isVideoStartShifted', () => {
+  const FPS30 = 1 / 30;
+
+  it('flags the Facebook decode delay (samothraki: 0.665 s at ~27 fps, 2.938 s at ~15 fps)', () => {
+    expect(isVideoStartShifted(0.665, 1 / 26.8)).toBe(true);
+    expect(isVideoStartShifted(2.938, 1 / 15)).toBe(true);
+  });
+
+  it('leaves a normal one- or two-frame delay alone', () => {
+    expect(isVideoStartShifted(0.033, FPS30)).toBe(false);
+    expect(isVideoStartShifted(0.067, FPS30)).toBe(false);
+  });
+
+  // A rebuilt low-frame-rate file still starts two frames in; it must not be rebuilt on every run
+  it('leaves a two-frame delay alone at a low frame rate, even above 0.1 s', () => {
+    expect(isVideoStartShifted(0.267, 1 / 7.5)).toBe(false);
+  });
+
+  it('uses the time bound alone when the frame rate is unknown', () => {
+    expect(isVideoStartShifted(0.665, null)).toBe(true);
+    expect(isVideoStartShifted(0.08, null)).toBe(false);
   });
 });
 

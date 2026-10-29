@@ -36,20 +36,22 @@ export async function getMediaDurationSeconds(filePath: string): Promise<number>
 }
 
 /**
- * The first video stream's `start_time` as ffprobe prints it: empty when the file has
- * no video stream. `ignoreEditList` reads the raw timestamps, which is what Mux plays.
+ * The first video stream's `start_time` and `avg_frame_rate` as ffprobe prints them:
+ * empty strings when the file has no video stream. `ignoreEditList` reads the raw
+ * timestamps, which is what Mux plays.
  */
-export async function probeVideoStartTime(filePath: string, { ignoreEditList }: { ignoreEditList: boolean }): Promise<string> {
+export async function probeVideoTiming(filePath: string, { ignoreEditList }: { ignoreEditList: boolean }): Promise<{ startTime: string; avgFrameRate: string }> {
     const ffprobePath = process.env.FFPROBE_PATH || 'ffprobe';
     const { stdout } = await execFileAsync(ffprobePath, [
         '-v', 'error',
         ...(ignoreEditList ? ['-ignore_editlist', '1'] : []),
         '-select_streams', 'v:0',
-        '-show_entries', 'stream=start_time',
-        '-of', 'csv=p=0',
+        '-show_entries', 'stream=start_time,avg_frame_rate',
+        '-of', 'default=noprint_wrappers=1',
         filePath,
     ], { env: childEnv() });
-    return stdout.trim();
+    const field = (key: string) => stdout.match(new RegExp(`^${key}=(.*)$`, 'm'))?.[1].trim() ?? '';
+    return { startTime: field('start_time'), avgFrameRate: field('avg_frame_rate') };
 }
 
 // Create data directory if it doesn't exist
