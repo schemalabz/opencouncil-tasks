@@ -22,6 +22,12 @@ The floor is there because the kind alone does not carry the model's doubt. When
 
 The decision lives next to the prompt and the model on purpose. Change either, run this backtest, and read the evidence table before touching `ACTIONABLE_EVIDENCE_KINDS`, and the threshold table before touching `MIN_ACTIONABLE_CONFIDENCE`. The 75 was chosen on the meetings it was measured on, so it flatters itself, and it belongs to this prompt and this model.
 
+### Speakers who are not on the roster
+
+Residents, employees and representatives speak at meetings without a person record, so no voiceprint and no roster key can name them. When the text names such a speaker, the model reports them off the roster, in two fields: `unlistedName`, the name as the chair or the speaker said it (surname first, no honorific), and `unlistedCapacity`, what they were introduced as ("κάτοικος Χαλέπας", "Πρόεδρος Συλλόγου Γονέων"). The task returns them as `unlistedSpeakerHints`, apart from the roster hints, each with a label in the form reviewers write by hand, `Επώνυμο Όνομα - Ιδιότητα`, or whichever part there is.
+
+A wrong name on a private person is as serious as one on an official, and nothing can check it against a record, so the pass acts on an unlisted label under a narrower rule than on a roster name (`UNLISTED_ACTIONABLE_EVIDENCE_KINDS`, `MIN_UNLISTED_ACTIONABLE_CONFIDENCE`): the speaker was given the floor by name or introduced themselves, nobody contests the label, the confidence is 75 or more, and the label says enough to stand alone, a name of two words or a capacity. A surname alone is what speech-to-text most often garbles, so it reaches the reviewer as a suggestion. A name the roster has is never an unlisted speaker's: a full name that pins down one roster person is that person, and any other roster name leaves the speaker unresolved.
+
 Suite: `fix.speaker-id` (`src/evals/suites/fixSpeakerId.ts`)
 Scoring and tables: `src/evals/suites/speakerBacktest.ts`
 
@@ -48,7 +54,7 @@ A case is one meeting's public payload (`GET /api/cities/:cityId/meetings/:meeti
 
 - **Roster.** The people the model may answer with. By default these are the people who may speak at the meeting, which is what opencouncil sends `fixTranscript`: the members of the body that is meeting, the municipal council, city-level roles (mayor, deputy mayors, general secretary), community heads and people with no body. `--roster city` hands it everyone opencouncil has a person record for in the city instead.
 - **Speaker tag.** A stretch of the transcript attributed to one voice. Reviewers split tags freely, so one person can end up as many tags. The stats therefore never count tags.
-- **Off-roster speaker.** Someone with no person record, such as a resident or an employee. A reviewer can only give them a typed label.
+- **Off-roster speaker.** Someone with no person record, such as a resident or an employee. A reviewer can only give them a typed label, and the model can propose one (see above).
 
 ## What the record says about each tag
 
@@ -59,7 +65,9 @@ A case is one meeting's public payload (`GET /api/cities/:cityId/meetings/:meeti
 | Voiceprint, removed | A `SPEAKER_N` tag with no person, in a meeting imported since 2025-12-16. From then on the import only writes that label for a match, so a reviewer removed it. |
 | Reviewer | Linked to a person under any other label. |
 | Off roster | No person, and a label a reviewer typed. |
-| Unidentified | No person, and a placeholder label: `Άγνωστος Ομιλητής N` or the editor's `New ...`. |
+| Unidentified | No person, and a placeholder label: `Άγνωστος Ομιλητής N` or the editor's `New ...`, or one a reviewer typed to say they do not know (`Άγνωστος 2`, `Unknown Speaker`, `Ομιλητής 3`, with the typos the record holds). |
+
+A reviewer's off-roster label is read as `Επώνυμο Όνομα - Ιδιότητα`: the name before the first spaced dash, the capacity after it. The model's label agrees with it when the names match (one side may omit a token, as for roster names), or, when neither has a name, when one capacity contains the other.
 
 ## Reading the report
 
@@ -77,7 +85,8 @@ Each meeting prints one row per roster person who spoke, then the off-roster spe
 | Share of named time wrong | The wrong names' speaking time, over all speaking time the method put a name on. Fairer than the count, since reviewers split tags. |
 | Roster speech left to review | Roster speaking time the method did not name correctly: what a reviewer still has to link or fix. |
 | Names nobody can check | Names given to speakers nobody identified. |
-| Withheld, the methods disagree | Speakers the reconciled column leaves unnamed because the methods named different people. A reviewer is alerted to these. |
+| Withheld, the methods disagree | Speakers the reconciled column leaves unnamed because the methods named different people, or because the model would label a voiceprint match as a visitor. A reviewer is alerted to these. |
+| Unlisted labels | The model's labels for speakers it put off the roster, against the reviewer's: right, wrong, on a roster person, and unchecked, nobody having identified the speaker; then the labels the pass holds back, right and wrong; then the off-roster tags it gave no label. These stay out of the roster counts above: an unlisted label is a different kind of answer, with its own rule. |
 
 Below the summary:
 
@@ -92,6 +101,7 @@ A meeting where a chunk of the transcript got no answer is listed as failed and 
 At the end come two tables that score the same answers again. Neither needs a model call.
 
 - **Evidence.** One row per kind of evidence: the names that rest on that kind and are not contested, scored alone. For a kind the pass acts on, those are the names at a confidence of 75 or more. Then `under 75`, the names on those kinds that the confidence floor holds back, then contested labels, then what the pass acts on. A kind belongs in `ACTIONABLE_EVIDENCE_KINDS` only while its share of named time that is wrong stays low, and the floor earns its place only while the `under 75` row is wrong more often than the rows above it.
+- **Unlisted evidence.** The same breakdown for the model's unlisted labels alone, scored against the reviewer's labels, with a `bare surname` row for the labels held back for saying too little. `UNLISTED_ACTIONABLE_EVIDENCE_KINDS` holds the two kinds it does on the same terms: run the backtest on reviewed meetings with off-roster labels before widening it. The rule was set by reasoning, not measured; the first run on real meetings is owed.
 - **Confidence thresholds.** What a bare threshold of 50, 60, 70, 80 or 90 would do with the same answers, whatever their evidence. The pass acts on the kind of evidence with a floor on the confidence, not on a bare threshold. The table is there to compare against the evidence table.
 
 The figures in both tables come from the meetings they are computed on. A bar chosen from a table is flattered by that same table: check it on meetings that played no part in the choice.

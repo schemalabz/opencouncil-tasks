@@ -4,9 +4,14 @@ import { NO_USAGE } from "../../lib/ai.js";
 import { TaskCancelledError } from "../../lib/taskControl.js";
 
 const identifySpeakers = vi.fn();
-vi.mock("../../lib/speakerIdentification.js", () => ({ identifySpeakers: (...args: unknown[]) => identifySpeakers(...args) }));
+vi.mock("../../lib/speakerIdentification.js", async importOriginal => ({
+    ...(await importOriginal<typeof import("../../lib/speakerIdentification.js")>()),
+    identifySpeakers: (...args: unknown[]) => identifySpeakers(...args),
+}));
 
-const { buildIdentificationInput, toSpeakerHints, identifyTranscriptSpeakers } = await import("./speakerHints.js");
+const { buildIdentificationInput, toSpeakerHints, toUnlistedSpeakerHints, identifyTranscriptSpeakers } = await import("./speakerHints.js");
+
+const unlistedNone = { unlistedName: null, unlistedCapacity: null };
 
 type Segment = FixTranscriptRequest["transcript"][number];
 const segment = (speakerTagId: string | undefined, start: number, texts: string[], speakerName: string | null = null): Segment => ({
@@ -64,19 +69,36 @@ describe("buildIdentificationInput", () => {
 describe("toSpeakerHints", () => {
     it("keeps named speakers and maps labels back to tag ids", () => {
         const hints = toSpeakerHints([
-            { speakerLabel: "S1", personId: "p1", evidenceKind: "named", contested: false, actionable: true, confidence: 95, evidence: "e1", alternatives: [], known: false },
-            { speakerLabel: "S2", personId: null, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: "", alternatives: [], known: false },
-            { speakerLabel: "S9", personId: "p2", evidenceKind: "named", contested: false, actionable: true, confidence: 90, evidence: "no such label", alternatives: [], known: false },
-        ], new Map([["S1", "tag-a"], ["S2", "tag-b"]]));
+            { speakerLabel: "S1", personId: "p1", ...unlistedNone, evidenceKind: "named", contested: false, actionable: true, confidence: 95, evidence: "e1", alternatives: [], known: false },
+            { speakerLabel: "S2", personId: null, ...unlistedNone, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: "", alternatives: [], known: false },
+            { speakerLabel: "S9", personId: "p2", ...unlistedNone, evidenceKind: "named", contested: false, actionable: true, confidence: 90, evidence: "no such label", alternatives: [], known: false },
+            { speakerLabel: "S3", personId: null, unlistedName: "Παπαδόπουλος Γιώργος", unlistedCapacity: "κάτοικος", evidenceKind: "named", contested: false, actionable: true, confidence: 90, evidence: "e3", alternatives: [], known: false },
+        ], new Map([["S1", "tag-a"], ["S2", "tag-b"], ["S3", "tag-c"]]));
         expect(hints).toEqual([{ speakerTagId: "tag-a", personId: "p1", actionable: true, evidenceKind: "named", confidence: 95, evidence: "e1" }]);
     });
 
     it("keeps a name the pass would not act on, marked as such", () => {
         const hints = toSpeakerHints([
-            { speakerLabel: "S1", personId: "p1", evidenceKind: "roleBehaviour", contested: false, actionable: false, confidence: 60, evidence: "chairs", alternatives: [], known: false },
-            { speakerLabel: "S2", personId: "p2", evidenceKind: "named", contested: true, actionable: false, confidence: 90, evidence: "floor", alternatives: [{ personId: "p3", confidence: 80 }], known: false },
+            { speakerLabel: "S1", personId: "p1", ...unlistedNone, evidenceKind: "roleBehaviour", contested: false, actionable: false, confidence: 60, evidence: "chairs", alternatives: [], known: false },
+            { speakerLabel: "S2", personId: "p2", ...unlistedNone, evidenceKind: "named", contested: true, actionable: false, confidence: 90, evidence: "floor", alternatives: [{ personId: "p3", confidence: 80 }], known: false },
         ], new Map([["S1", "tag-a"], ["S2", "tag-b"]]));
         expect(hints.map(h => [h.speakerTagId, h.actionable, h.evidenceKind])).toEqual([["tag-a", false, "roleBehaviour"], ["tag-b", false, "named"]]);
+    });
+});
+
+describe("toUnlistedSpeakerHints", () => {
+    it("labels speakers off the roster the way reviewers write them, and leaves roster people and unnamed speakers out", () => {
+        const hints = toUnlistedSpeakerHints([
+            { speakerLabel: "S1", personId: "p1", ...unlistedNone, evidenceKind: "named", contested: false, actionable: true, confidence: 95, evidence: "e1", alternatives: [], known: false },
+            { speakerLabel: "S2", personId: null, unlistedName: "Παπαδόπουλος Γιώργος", unlistedCapacity: "κάτοικος Χαλέπας", evidenceKind: "selfIntroduced", contested: false, actionable: true, confidence: 90, evidence: "e2", alternatives: [], known: false },
+            { speakerLabel: "S3", personId: null, unlistedName: "Παπαδόπουλος", unlistedCapacity: null, evidenceKind: "named", contested: false, actionable: false, confidence: 90, evidence: "e3", alternatives: [], known: false },
+            { speakerLabel: "S4", personId: null, ...unlistedNone, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: "", alternatives: [], known: false },
+            { speakerLabel: "S9", personId: null, unlistedName: "Κάποιος Άλλος", unlistedCapacity: null, evidenceKind: "named", contested: false, actionable: true, confidence: 90, evidence: "no such label", alternatives: [], known: false },
+        ], new Map([["S1", "tag-a"], ["S2", "tag-b"], ["S3", "tag-c"], ["S4", "tag-d"]]));
+        expect(hints).toEqual([
+            { speakerTagId: "tag-b", name: "Παπαδόπουλος Γιώργος - κάτοικος Χαλέπας", actionable: true, evidenceKind: "selfIntroduced", confidence: 90, evidence: "e2" },
+            { speakerTagId: "tag-c", name: "Παπαδόπουλος", actionable: false, evidenceKind: "named", confidence: 90, evidence: "e3" },
+        ]);
     });
 });
 
@@ -90,12 +112,18 @@ describe("identifyTranscriptSpeakers", () => {
 
     it("runs blind to known speakers and returns hints by tag id", async () => {
         identifySpeakers.mockResolvedValue({
-            result: [{ speakerLabel: "S2", personId: "p1", evidenceKind: "named", contested: false, actionable: true, confidence: 92, evidence: "[00:00:00] floor grant", alternatives: [], known: false }],
+            result: [
+                { speakerLabel: "S2", personId: "p1", ...unlistedNone, evidenceKind: "named", contested: false, actionable: true, confidence: 92, evidence: "[00:00:00] floor grant", alternatives: [], known: false },
+                { speakerLabel: "S1", personId: null, unlistedName: "Παπαδόπουλος Γιώργος", unlistedCapacity: null, evidenceKind: "named", contested: false, actionable: true, confidence: 90, evidence: "[00:00:05] floor grant", alternatives: [], known: false },
+            ],
             usage: { ...NO_USAGE, input_tokens: 10 },
             failedChunks: [],
         });
         const { result, usage } = await identifyTranscriptSpeakers(request());
-        expect(result).toEqual([{ speakerTagId: "tag-b", personId: "p1", actionable: true, evidenceKind: "named", confidence: 92, evidence: "[00:00:00] floor grant" }]);
+        expect(result).toEqual({
+            speakerHints: [{ speakerTagId: "tag-b", personId: "p1", actionable: true, evidenceKind: "named", confidence: 92, evidence: "[00:00:00] floor grant" }],
+            unlistedSpeakerHints: [{ speakerTagId: "tag-a", name: "Παπαδόπουλος Γιώργος", actionable: true, evidenceKind: "named", confidence: 90, evidence: "[00:00:05] floor grant" }],
+        });
         expect(usage.input_tokens).toBe(10);
         const args = identifySpeakers.mock.calls[0][0];
         expect(args).toMatchObject({ cityName: "Χανιά", language: "el", meetingDate: "2026-09-09", administrativeBodyName: "Δημοτικό Συμβούλιο" });
@@ -105,18 +133,18 @@ describe("identifyTranscriptSpeakers", () => {
     it("returns the names the other chunks gave when a chunk failed", async () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
         identifySpeakers.mockResolvedValue({
-            result: [{ speakerLabel: "S2", personId: "p1", evidenceKind: "named", contested: false, actionable: true, confidence: 92, evidence: "e", alternatives: [], known: false }],
+            result: [{ speakerLabel: "S2", personId: "p1", ...unlistedNone, evidenceKind: "named", contested: false, actionable: true, confidence: 92, evidence: "e", alternatives: [], known: false }],
             usage: NO_USAGE,
             failedChunks: [{ chunk: 2, reason: "Claude declined this request." }],
         });
-        expect((await identifyTranscriptSpeakers(request())).result).toHaveLength(1);
+        expect((await identifyTranscriptSpeakers(request())).result?.speakerHints).toHaveLength(1);
         expect(warn).toHaveBeenCalledWith(expect.stringContaining("1 chunk(s) failed"));
         warn.mockRestore();
     });
 
-    it("returns an empty list when the pass ran and named nobody", async () => {
+    it("returns empty lists when the pass ran and named nobody", async () => {
         identifySpeakers.mockResolvedValue({ result: [], usage: NO_USAGE, failedChunks: [] });
-        expect((await identifyTranscriptSpeakers(request())).result).toEqual([]);
+        expect((await identifyTranscriptSpeakers(request())).result).toEqual({ speakerHints: [], unlistedSpeakerHints: [] });
     });
 
     it("swallows a failure but lets a cancellation through", async () => {
