@@ -31,6 +31,8 @@ export interface LanguageConfig {
     defaultAdministrativeBodyName: string;
     /** Localized fallback shown when a speaker-contribution summary fails. */
     summaryErrorText: string;
+    /** Heading of the "main issues" list in a complex subject's description; models copy a heading from the prompt verbatim, so it is given in the output language. */
+    mainIssuesHeading: string;
     /**
      * Language-specific "WHAT TO FIX / WHAT NOT TO TOUCH" block for the
      * fixTranscript system prompt. The correction examples are inherently
@@ -256,6 +258,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: '',
         defaultAdministrativeBodyName: 'Δημοτικό Συμβούλιο',
         summaryErrorText: 'Σφάλμα κατά τη δημιουργία περίληψης.',
+        mainIssuesHeading: 'Κύρια ζητήματα',
         fixTranscriptNotes: EL_FIX_TRANSCRIPT_NOTES,
     },
     fr: {
@@ -264,6 +267,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: FR_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Conseil Municipal',
         summaryErrorText: 'Erreur lors de la génération du résumé.',
+        mainIssuesHeading: 'Principaux enjeux',
         fixTranscriptNotes: FR_FIX_TRANSCRIPT_NOTES,
     },
     // Generated output uses Cyrillic — the official script for Serbian
@@ -275,6 +279,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: SR_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Скупштина града',
         summaryErrorText: 'Грешка при генерисању резимеа.',
+        mainIssuesHeading: 'Главна питања',
         fixTranscriptNotes: SR_FIX_TRANSCRIPT_NOTES,
     },
     de: {
@@ -283,6 +288,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: DE_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Gemeinderat',
         summaryErrorText: 'Fehler beim Erstellen der Zusammenfassung.',
+        mainIssuesHeading: 'Kernpunkte',
         fixTranscriptNotes: DE_FIX_TRANSCRIPT_NOTES,
     },
     nl: {
@@ -291,6 +297,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: NL_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Gemeenteraad',
         summaryErrorText: 'Fout bij het maken van de samenvatting.',
+        mainIssuesHeading: 'Belangrijkste punten',
         fixTranscriptNotes: NL_FIX_TRANSCRIPT_NOTES,
     },
     it: {
@@ -299,6 +306,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: IT_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Consiglio comunale',
         summaryErrorText: 'Errore durante la generazione del riepilogo.',
+        mainIssuesHeading: 'Questioni principali',
         fixTranscriptNotes: IT_FIX_TRANSCRIPT_NOTES,
     },
     pl: {
@@ -307,6 +315,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: PL_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Rada Gminy',
         summaryErrorText: 'Błąd podczas generowania podsumowania.',
+        mainIssuesHeading: 'Główne kwestie',
         fixTranscriptNotes: PL_FIX_TRANSCRIPT_NOTES,
     },
     pt: {
@@ -315,6 +324,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: PT_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Assembleia Municipal',
         summaryErrorText: 'Erro ao gerar o resumo.',
+        mainIssuesHeading: 'Principais questões',
         fixTranscriptNotes: PT_FIX_TRANSCRIPT_NOTES,
     },
     es: {
@@ -323,6 +333,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: ES_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Pleno del Ayuntamiento',
         summaryErrorText: 'Error al generar el resumen.',
+        mainIssuesHeading: 'Cuestiones principales',
         fixTranscriptNotes: ES_FIX_TRANSCRIPT_NOTES,
     },
     fi: {
@@ -331,6 +342,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: FI_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Valtuusto',
         summaryErrorText: 'Virhe yhteenvedon luomisessa.',
+        mainIssuesHeading: 'Keskeiset kysymykset',
         fixTranscriptNotes: FI_FIX_TRANSCRIPT_NOTES,
     },
     ca: {
@@ -339,6 +351,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: CA_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Ple de l\'Ajuntament',
         summaryErrorText: 'Error en generar el resum.',
+        mainIssuesHeading: 'Qüestions principals',
         fixTranscriptNotes: CA_FIX_TRANSCRIPT_NOTES,
     },
     sv: {
@@ -347,6 +360,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: SV_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Fullmäktige',
         summaryErrorText: 'Fel när sammanfattningen skapades.',
+        mainIssuesHeading: 'Huvudfrågor',
         fixTranscriptNotes: SV_FIX_TRANSCRIPT_NOTES,
     },
     gl: {
@@ -355,6 +369,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: GL_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Pleno do Concello',
         summaryErrorText: 'Erro ao xerar o resumo.',
+        mainIssuesHeading: 'Cuestións principais',
         fixTranscriptNotes: GL_FIX_TRANSCRIPT_NOTES,
     },
 };
