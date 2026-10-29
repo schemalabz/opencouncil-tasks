@@ -3,7 +3,7 @@ import { assignSplit } from '../cases/caseStore.js';
 import type { Case, Expected, FieldOutcome, ResultRow, Variant } from '../types.js';
 import {
     acceptActionable, aggregateSummaries, buildBacktestInput, evidenceBreakdown, formatBacktestReport, formatEvidenceTable,
-    formatMeetingTable, formatThresholdSweep, isRosterSource, scoreBacktest, thresholdSweep,
+    formatMeetingTable, formatThresholdSweep, formatUnlistedEvidenceTable, isRosterSource, scoreBacktest, thresholdSweep, unlistedEvidenceBreakdown,
     type AnchorMode, type BacktestSpeaker, type MeetingApiData, type Outcome, type RosterMode, type TruthSource,
 } from './speakerBacktest.js';
 import type { Suite } from './suite.js';
@@ -46,10 +46,10 @@ function expectedSpeakers(c: Case<SpeakerIdInput>): { speaker: BacktestSpeaker; 
 }
 
 const OUTCOME: Record<Outcome, FieldOutcome> = {
-    match: 'agree', offRoster: 'agree',
-    mismatch: 'disagree', wrongOffRoster: 'disagree',
+    match: 'agree', offRoster: 'agree', unlistedMatch: 'agree',
+    mismatch: 'disagree', wrongOffRoster: 'disagree', unlistedMismatch: 'disagree', unlistedOnRoster: 'disagree',
     missed: 'missing',
-    unverified: 'unscorable', unknown: 'unscorable',
+    unverified: 'unscorable', unlistedUnverified: 'unscorable', unknown: 'unscorable',
 };
 
 function scored(output: SpeakerIdOutput, c: Case<SpeakerIdInput>) {
@@ -114,6 +114,7 @@ function reportSpeakerId(rows: ResultRow[], cases: Case<SpeakerIdInput>[]): stri
     if (meetings.length === 1) out.push(formatBacktestReport(meetings[0].scored, meetings[0].summary, meetings[0].roster, 'acted on'), '');
     out.push(formatMeetingTable(meetings, aggregateSummaries(meetings.map(m => m.summary))), '');
     out.push('EVIDENCE', formatEvidenceTable(evidenceBreakdown(meetings), ACTIONABLE_EVIDENCE_KINDS), '');
+    out.push('UNLISTED EVIDENCE', formatUnlistedEvidenceTable(unlistedEvidenceBreakdown(meetings)), '');
     out.push('CONFIDENCE THRESHOLDS', formatThresholdSweep(thresholdSweep(meetings)));
     return out.join('\n');
 }

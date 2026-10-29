@@ -23,7 +23,10 @@ const data: MeetingApiData = {
 const c = speakerIdCase('demo/m1', data, new Map([['t-review', { by: 'user', at: '2026-09-15', signal: 'opencouncil:speaker-tag:person:t-review' }]]), new Date('2026-10-11T00:00:00Z'));
 const labelOf = new Map(buildBacktestInput(data, { anchor: 'none' }).speakers.map(s => [s.speakerTagId, s.label]));
 const named = (tagId: string, personId: string | null): SpeakerIdentification => ({
-    speakerLabel: labelOf.get(tagId)!, personId, evidenceKind: 'named', contested: false, actionable: true, confidence: 90, evidence: '', alternatives: [], known: false,
+    speakerLabel: labelOf.get(tagId)!, personId, unlistedName: null, unlistedCapacity: null, evidenceKind: 'named', contested: false, actionable: true, confidence: 90, evidence: '', alternatives: [], known: false,
+});
+const labelled = (tagId: string, unlistedName: string | null, unlistedCapacity: string | null): SpeakerIdentification => ({
+    ...named(tagId, null), unlistedName, unlistedCapacity, actionable: true,
 });
 
 describe('fix.speaker-id cases', () => {
@@ -49,5 +52,11 @@ describe('fix.speaker-id scoring', () => {
     it('counts a roster name on an off-roster speaker as wrong', () => {
         expect(scoreSpeakerId({ identifications: [named('t-resident', 'p-a'), named('t-review', 'p-a')] }, c))
             .toMatchObject({ 'speaker[t-resident]': 'disagree', 'speaker[t-review]': 'disagree' });
+    });
+
+    it('scores an unlisted label by the reviewer\'s, and a label on a roster person as wrong', () => {
+        expect(scoreSpeakerId({ identifications: [labelled('t-resident', 'Κάτοικος', 'Σύλλογος'), labelled('t-review', 'Βασιλείου Β', 'κάτοικος')] }, c))
+            .toMatchObject({ 'speaker[t-resident]': 'agree', 'speaker[t-review]': 'disagree' });
+        expect(scoreSpeakerId({ identifications: [labelled('t-resident', 'Άλλος Κάποιος', null)] }, c)).toMatchObject({ 'speaker[t-resident]': 'disagree' });
     });
 });

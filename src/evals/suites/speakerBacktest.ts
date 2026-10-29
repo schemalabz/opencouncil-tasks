@@ -1,5 +1,9 @@
 import { CityLanguage } from "../../types.js";
-import { ACTIONABLE_EVIDENCE_KINDS, isActionable, KnownSpeaker, MIN_ACTIONABLE_CONFIDENCE, RosterPerson, SpeakerEvidenceKind, SpeakerIdentification, SpeakerSegmentInput, SPEAKER_EVIDENCE_KINDS } from "../../lib/speakerIdentification.js";
+import {
+    ACTIONABLE_EVIDENCE_KINDS, formatUnlistedLabel, isActionable, isSpecificUnlistedName, KnownSpeaker, MIN_ACTIONABLE_CONFIDENCE, MIN_UNLISTED_ACTIONABLE_CONFIDENCE,
+    parseUnlistedLabel, RosterPerson, sameUnlistedSpeaker, SpeakerEvidenceKind, SpeakerIdentification, SpeakerSegmentInput, SPEAKER_EVIDENCE_KINDS,
+    UNLISTED_ACTIONABLE_EVIDENCE_KINDS, UnlistedSpeaker,
+} from "../../lib/speakerIdentification.js";
 
 /**
  * Backtest of text-only speaker identification against meetings a human has
@@ -68,11 +72,13 @@ type AssignmentSource = "voiceprint" | "transcript" | "both" | "user";
 // SPEAKER_N, matched or not, so for those meetings the label proves nothing.
 const VOICEPRINT_TAG_LABEL = /^SPEAKER_\d+$/;
 const LABELS_TELL_MATCHES_SINCE = Date.parse("2025-12-16T00:00:00Z");
-// Labels no human wrote. The editor names new tags "New speaker segment", or
-// "New " + the old tag's label when a segment moves to a fresh tag — which
-// describes the old tag, not this speaker.
+// Labels no human wrote, or wrote to say they do not know. The editor names new
+// tags "New speaker segment", or "New " + the old tag's label when a segment
+// moves to a fresh tag — which describes the old tag, not this speaker. By
+// hand, reviewers write "Άγνωστος 2", "Unknown Speaker", "Ομιλητής 3", with
+// the typos the record holds ("Unkown", "Ομλιητής").
 // A bare role such as "Γραμματέας" names no one: the council's secretary can be a roster person or an employee.
-const PLACEHOLDER_TAG_LABEL = /^(Άγνωστος Ομιλητής( \d+)?|New .*|Γραμματέας)$/iu;
+const PLACEHOLDER_TAG_LABEL = /^(Άγνωστος( Ομ[ιλ]+[ιη]τής)?( \d+)?|Unkn?own Speaker( \d+)?|(Ομιλητής|Speaker) \d+|New .*|Γραμματέας)$/iu;
 // The import creates a tag and connects its person in one write, so an
 // untouched tag has updatedAt equal to createdAt. Only a later edit — the
 // reviewer changing the person — moves updatedAt. A few seconds of slack.
@@ -264,17 +270,28 @@ export function buildBacktestInput(data: MeetingApiData, opts: { anchor: AnchorM
 
 /** What the model's answer on one tag amounts to, against the record. */
 export type Outcome =
-    | "match"           // roster person, model named them
-    | "mismatch"        // roster person, model named someone else
-    | "missed"          // roster person, model abstained
-    | "wrongOffRoster"  // off-roster speaker, model gave a roster name
-    | "offRoster"       // off-roster speaker, model abstained
-    | "unverified"      // nobody says who the speaker is, model gave a roster name
-    | "unknown";        // nobody says who the speaker is, model abstained
+    | "match"              // roster person, model named them
+    | "mismatch"           // roster person, model named someone else
+    | "unlistedOnRoster"   // roster person, model put them off the roster under a label
+    | "missed"             // roster person, model abstained
+    | "wrongOffRoster"     // off-roster speaker, model gave a roster name
+    | "unlistedMatch"      // off-roster speaker, model's label names the same speaker as the reviewer's
+    | "unlistedMismatch"   // off-roster speaker, model's label names someone else
+    | "offRoster"          // off-roster speaker, model abstained
+    | "unverified"         // nobody says who the speaker is, model gave a roster name
+    | "unlistedUnverified" // nobody says who the speaker is, model gave a label
+    | "unknown";           // nobody says who the speaker is, model abstained
+
+/** Whether the model's unlisted speaker is who the reviewer's label says. */
+export function unlistedLabelAgrees(tagLabel: string | null, predicted: UnlistedSpeaker): boolean {
+    return tagLabel !== null && sameUnlistedSpeaker(parseUnlistedLabel(tagLabel), predicted);
+}
 
 export type ScoredSpeaker = BacktestSpeaker & {
     outcome: Outcome;
     predictedPersonId: string | null;
+    /** The unlisted speaker the model proposed, held back or not. */
+    predictedUnlisted: UnlistedSpeaker | null;
     confidence: number;
     evidenceKind: SpeakerEvidenceKind | null;
     contested: boolean;
@@ -316,6 +333,26 @@ export type BacktestSummary = {
         /** Names given to speakers nobody identified: the record cannot say whether they are right. */
         unverifiedNames: number;
         unverifiedSeconds: number;
+        /**
+         * Labels the model gave to speakers it put off the roster, against the
+         * reviewer's label. Kept apart from the roster counts above: an unlisted
+         * label is a different kind of answer, with its own evidence rule.
+         */
+        unlisted: {
+            /** The reviewer's label names the same speaker. */
+            right: Tally;
+            /** The reviewer's label names someone else. */
+            wrong: Tally;
+            /** The record holds a roster person: the model took them for a visitor. */
+            onRoster: Tally;
+            /** Nobody identified the speaker. */
+            unverified: Tally;
+            /** Labels the pass would not act on, by whether the reviewer's label agrees. */
+            heldBackRight: Tally;
+            heldBackWrong: Tally;
+            /** Off-roster speakers the model gave no label. */
+            silent: Tally;
+        };
         /** Roster tags the model did not name, by reason. */
         missed: {
             /** No answer at all. */
@@ -361,7 +398,11 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
     const summary: BacktestSummary = {
         rosterPeople: 0, rosterSeconds: 0, offRosterSpeakers: 0, offRosterSeconds: 0, unlabelledSpeakers: 0, unlabelledSeconds: 0,
         voiceprint: emptyMethod(),
-        model: { ...emptyMethod(), wrongOnOffRoster: 0, unverifiedNames: 0, unverifiedSeconds: 0, missed: { silent: emptyTally(), heldBackRight: emptyTally(), heldBackWrong: emptyTally() } },
+        model: {
+            ...emptyMethod(), wrongOnOffRoster: 0, unverifiedNames: 0, unverifiedSeconds: 0,
+            unlisted: { right: emptyTally(), wrong: emptyTally(), onRoster: emptyTally(), unverified: emptyTally(), heldBackRight: emptyTally(), heldBackWrong: emptyTally(), silent: emptyTally() },
+            missed: { silent: emptyTally(), heldBackRight: emptyTally(), heldBackWrong: emptyTally() },
+        },
         combined: { ...emptyMethod(), unverifiedNames: 0, unverifiedSeconds: 0, withheldNames: 0, withheldSeconds: 0 },
         people: { both: 0, voiceprintOnly: 0, modelOnly: 0, neither: 0 },
         onVoiceprintTags: { agree: 0, voiceprintRight: 0, modelRight: 0, bothWrong: 0, modelSilent: 0 },
@@ -416,6 +457,19 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
             summary.model.missed[reason].seconds += t;
         }
 
+        const unlistedTally = (key: keyof BacktestSummary["model"]["unlisted"]) => {
+            summary.model.unlisted[key].tags++;
+            summary.model.unlisted[key].seconds += t;
+        };
+        if (s.outcome === "unlistedMatch") unlistedTally("right");
+        if (s.outcome === "unlistedMismatch") unlistedTally("wrong");
+        if (s.outcome === "unlistedOnRoster") unlistedTally("onRoster");
+        if (s.outcome === "unlistedUnverified") unlistedTally("unverified");
+        if (s.outcome === "offRoster") {
+            if (!s.predictedUnlisted) unlistedTally("silent");
+            else unlistedTally(unlistedLabelAgrees(s.tagLabel, s.predictedUnlisted) ? "heldBackRight" : "heldBackWrong");
+        }
+
         if (voiceprintMatched) {
             // opencouncil's reconcile: a name the model would act on that differs
             // from the voiceprint's leaves the speaker unnamed. The record holds
@@ -427,8 +481,10 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
             //   named a third person there, which would withhold it too, so this
             //   is the upper bound on wrong names.
             const modelName = s.known || s.heldBack ? null : s.predictedPersonId;
+            // An unlisted label the model would act on names someone else too.
+            const modelLabel = s.known || s.heldBack ? null : s.predictedUnlisted;
             const disagree = voiceprintRight
-                ? modelName !== null && modelName !== s.personId
+                ? (modelName !== null && modelName !== s.personId) || modelLabel !== null
                 : s.source === "voiceprintCorrected" && modelName === s.personId;
             if (disagree) {
                 summary.combined.withheldNames++;
@@ -501,22 +557,30 @@ export function scoreBacktest(
     const scored = speakers.map((speaker): ScoredSpeaker => {
         const verdict = byLabel.get(speaker.label);
         const proposed = verdict?.personId ?? null;
+        // An answer recorded before unlisted names has neither field.
+        const proposedUnlisted: UnlistedSpeaker | null = verdict && proposed === null && (verdict.unlistedName || verdict.unlistedCapacity)
+            ? { name: verdict.unlistedName ?? null, capacity: verdict.unlistedCapacity ?? null }
+            : null;
         const confidence = verdict?.confidence ?? 0;
-        const heldBack = verdict !== undefined && proposed !== null && !accept(verdict);
+        const heldBack = verdict !== undefined && (proposed !== null || proposedUnlisted !== null) && !accept(verdict);
         const predicted = heldBack ? null : proposed;
+        const predictedUnlisted = heldBack ? null : proposedUnlisted;
 
         let outcome: Outcome;
         if (isRosterSource(speaker.source)) {
-            outcome = predicted === speaker.personId ? "match" : predicted ? "mismatch" : "missed";
+            outcome = predicted === speaker.personId ? "match" : predicted ? "mismatch" : predictedUnlisted ? "unlistedOnRoster" : "missed";
         } else if (speaker.source === "offRoster") {
-            outcome = predicted ? "wrongOffRoster" : "offRoster";
+            outcome = predicted ? "wrongOffRoster"
+                : predictedUnlisted ? (unlistedLabelAgrees(speaker.tagLabel, predictedUnlisted) ? "unlistedMatch" : "unlistedMismatch")
+                : "offRoster";
         } else {
-            outcome = predicted ? "unverified" : "unknown";
+            outcome = predicted ? "unverified" : predictedUnlisted ? "unlistedUnverified" : "unknown";
         }
         return {
             ...speaker,
             outcome,
             predictedPersonId: proposed,
+            predictedUnlisted: proposedUnlisted,
             confidence,
             evidenceKind: verdict?.evidenceKind ?? null,
             contested: verdict?.contested ?? false,
@@ -571,6 +635,39 @@ export function evidenceBreakdown(meetings: { speakers: BacktestSpeaker[]; ident
     ];
 }
 
+const UNLISTED_LOW_CONFIDENCE_ROW = `under ${MIN_UNLISTED_ACTIONABLE_CONFIDENCE}`;
+const BARE_NAME_ROW = "bare surname";
+
+const isUnlisted = (i: SpeakerIdentification) => i.personId === null && (Boolean(i.unlistedName) || Boolean(i.unlistedCapacity));
+const onUnlistedKind = (i: SpeakerIdentification) => i.evidenceKind !== null && UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(i.evidenceKind);
+/** A label on evidence the pass acts on, at a confidence under the unlisted floor. */
+const isUnderUnlistedFloor = (i: SpeakerIdentification) => onUnlistedKind(i) && i.confidence < MIN_UNLISTED_ACTIONABLE_CONFIDENCE;
+/** A label on evidence the pass acts on, at or over the floor, held back only for saying too little (a surname alone). */
+const isBareName = (i: SpeakerIdentification) => onUnlistedKind(i) && i.confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE
+    && !isSpecificUnlistedName({ name: i.unlistedName ?? null, capacity: i.unlistedCapacity ?? null });
+
+/**
+ * The evidence table for unlisted labels: the same cached answers, the
+ * labels only, one kind of evidence at a time, then the labels the floor
+ * holds back, then bare surnames, then contested labels, then what the pass
+ * acts on. Each row's counts are in summary.model.unlisted; the roster
+ * columns of these summaries mean nothing, since every roster name is held
+ * back here.
+ */
+export function unlistedEvidenceBreakdown(meetings: { speakers: BacktestSpeaker[]; identifications: SpeakerIdentification[] }[]): EvidenceRow[] {
+    const score = (accept: AcceptAnswer) =>
+        aggregateSummaries(meetings.map(m => scoreBacktest(m.speakers, m.identifications, i => isUnlisted(i) && accept(i)).summary));
+    const plain = (i: SpeakerIdentification) => !i.contested && !isUnderUnlistedFloor(i) && !isBareName(i);
+    return [
+        ...SPEAKER_EVIDENCE_KINDS.map(kind => ({ label: kind, summary: score(i => plain(i) && i.evidenceKind === kind) })),
+        { label: "no kind given", summary: score(i => plain(i) && i.evidenceKind === null) },
+        { label: UNLISTED_LOW_CONFIDENCE_ROW, summary: score(i => !i.contested && isUnderUnlistedFloor(i)) },
+        { label: BARE_NAME_ROW, summary: score(i => !i.contested && isBareName(i)) },
+        { label: "contested", summary: score(i => i.contested) },
+        { label: "acted on", summary: score(acceptActionable) },
+    ];
+}
+
 const pad = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s.padEnd(n));
 const duration = (seconds: number) => (seconds < 60 ? `${Math.round(seconds)}s` : `${(seconds / 60).toFixed(1)}m`);
 // Small shares keep a decimal: "0%" would hide a wrong name among hours of correct ones.
@@ -592,6 +689,9 @@ export function formatBacktestReport(
 ): string {
     const basis = (s: ScoredSpeaker) => `${s.contested ? "contested, " : ""}${s.evidenceKind ?? "no kind"}, ${s.confidence}`;
     const nameOf = (id: string | null) => (id ? roster.find(p => p.id === id)?.name ?? id : "—");
+    const labelOf = (u: UnlistedSpeaker | null) => (u ? `"${formatUnlistedLabel(u) ?? ""}"` : "—");
+    /** What the model said about a tag: a roster name, or an unlisted label. */
+    const saidOf = (s: ScoredSpeaker) => (s.predictedPersonId ? nameOf(s.predictedPersonId) : labelOf(s.predictedUnlisted));
     const lines: string[] = [];
 
     if (opts.includeSpeakers ?? true) {
@@ -625,7 +725,11 @@ export function formatBacktestReport(
             lines.push("");
             lines.push(`${pad("off-roster speaker (reviewer's label)", 50)}${pad("time", 8)}model`);
             for (const s of offRoster) {
-                const model = s.outcome === "wrongOffRoster" ? `wrong: ${nameOf(s.predictedPersonId)} (${basis(s)})` : "not named";
+                const model = s.outcome === "wrongOffRoster" ? `wrong: ${nameOf(s.predictedPersonId)} (${basis(s)})`
+                    : s.outcome === "unlistedMatch" ? `named ${labelOf(s.predictedUnlisted)} (${basis(s)})`
+                    : s.outcome === "unlistedMismatch" ? `wrong: ${labelOf(s.predictedUnlisted)} (${basis(s)})`
+                    : s.predictedUnlisted ? `held back: ${labelOf(s.predictedUnlisted)} (${basis(s)})`
+                    : "not named";
                 lines.push(`${pad(s.tagLabel ?? "", 50)}${pad(duration(s.speakingSeconds), 8)}${model}`);
             }
         }
@@ -633,8 +737,8 @@ export function formatBacktestReport(
     }
 
     const voiceprintWrong = scored.filter(s => s.source === "voiceprintCorrected" || s.source === "voiceprintRemoved");
-    const modelWrong = scored.filter(s => s.outcome === "mismatch" || s.outcome === "wrongOffRoster");
-    const unverified = scored.filter(s => s.outcome === "unverified");
+    const modelWrong = scored.filter(s => s.outcome === "mismatch" || s.outcome === "wrongOffRoster" || s.outcome === "unlistedMismatch" || s.outcome === "unlistedOnRoster");
+    const unverified = scored.filter(s => s.outcome === "unverified" || s.outcome === "unlistedUnverified");
     if (voiceprintWrong.length + modelWrong.length + unverified.length > 0) {
         lines.push("Wrong and unchecked names");
         for (const s of voiceprintWrong) {
@@ -643,10 +747,10 @@ export function formatBacktestReport(
         }
         for (const s of modelWrong) {
             const record = s.source === "offRoster" ? `"${s.tagLabel}" (off roster)` : nameOf(s.personId);
-            lines.push(`  model      ${duration(s.speakingSeconds).padStart(6)}  ${s.label}: record says ${record}, model said ${nameOf(s.predictedPersonId)} (${basis(s)}). ${s.evidence.replace(/\s+/g, " ").slice(0, 160)}`);
+            lines.push(`  model      ${duration(s.speakingSeconds).padStart(6)}  ${s.label}: record says ${record}, model said ${saidOf(s)} (${basis(s)}). ${s.evidence.replace(/\s+/g, " ").slice(0, 160)}`);
         }
         for (const s of unverified) {
-            lines.push(`  unchecked  ${duration(s.speakingSeconds).padStart(6)}  ${s.label}: nobody identified this speaker; model said ${nameOf(s.predictedPersonId)} (${basis(s)})`);
+            lines.push(`  unchecked  ${duration(s.speakingSeconds).padStart(6)}  ${s.label}: nobody identified this speaker; model said ${saidOf(s)} (${basis(s)})`);
         }
         lines.push("");
     }
@@ -670,7 +774,29 @@ export function formatBacktestReport(
     lines.push(`  model on voiceprint matches: agreed ${v.agree}, disagreed ${disagreed} (voiceprint right ${v.voiceprintRight}, model right ${v.modelRight}), both wrong ${v.bothWrong}, no answer ${v.modelSilent}`);
     lines.push(`  roster speech the model missed, ${duration(miss.silent.seconds + miss.heldBackRight.seconds + miss.heldBackWrong.seconds)}: no answer ${duration(miss.silent.seconds)}, held back but right ${duration(miss.heldBackRight.seconds)}, held back and wrong ${duration(miss.heldBackWrong.seconds)}`);
     lines.push(`  model wrong names on off-roster speakers: ${summary.model.wrongOnOffRoster} (voiceprints: not measurable)`);
+    const u = summary.model.unlisted;
+    lines.push(`  unlisted labels: ${u.right.tags} right, ${u.wrong.tags} wrong, ${u.onRoster.tags} on roster people, ${u.unverified.tags} unchecked; held back ${u.heldBackRight.tags} right and ${u.heldBackWrong.tags} wrong; ${u.silent.tags} off-roster tags not labelled`);
     lines.push(`  also spoke: ${summary.offRosterSpeakers} off-roster speaker tags (${duration(summary.offRosterSeconds)}), ${summary.unlabelledSpeakers} unidentified (${duration(summary.unlabelledSeconds)})`);
+    return lines.join("\n");
+}
+
+export function formatUnlistedEvidenceTable(rows: EvidenceRow[]): string {
+    const header = `${pad("labels", 8)}${pad("right", 7)}${pad("wrong", 7)}${pad("on roster", 11)}${pad("wrong time", 12)}${pad("unchecked", 11)}`;
+    const lines = [`${pad("evidence", 18)}${pad("acted on", 10)}${header}`];
+    for (const { label, summary } of rows) {
+        const u = summary.model.unlisted;
+        const wrong = u.wrong.tags + u.onRoster.tags;
+        const wrongSeconds = u.wrong.seconds + u.onRoster.seconds;
+        const acted = label === "acted on" ? "" : UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(label as SpeakerEvidenceKind) ? "yes" : "no";
+        if (label === "acted on") lines.push("-".repeat(84));
+        lines.push(`${pad(label, 18)}${pad(acted, 10)}${pad(String(u.right.tags + wrong + u.unverified.tags), 8)}${pad(String(u.right.tags), 7)}${pad(String(u.wrong.tags), 7)}` +
+            `${pad(String(u.onRoster.tags), 11)}${pad(share(wrongSeconds, u.right.seconds + wrongSeconds), 12)}${pad(String(u.unverified.tags), 11)}`);
+    }
+    lines.push("");
+    lines.push("The model's labels for speakers it put off the roster, by the kind of evidence they rest on, scored against the label the");
+    lines.push("reviewer typed. right: the reviewer's label names the same speaker; wrong: it names someone else; on roster: the record holds");
+    lines.push(`a roster person. ${UNLISTED_LOW_CONFIDENCE_ROW}: labels on the kinds the pass acts on that the floor holds back; ${BARE_NAME_ROW}: a surname`);
+    lines.push("alone, held back for saying too little. acted on: the kinds together, as shipped.");
     return lines.join("\n");
 }
 
