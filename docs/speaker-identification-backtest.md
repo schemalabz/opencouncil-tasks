@@ -92,7 +92,7 @@ Below the summary:
 
 - **Roster people found** by both methods, by one only, or by neither.
 - **Model on voiceprint matches:** where both answered, whether they agreed, and when they disagreed, which one the reviewer backed. Removed matches are left out, since the true person is unknown.
-- **Roster speech the model missed,** split into no answer, held back but right, and held back and wrong. A held-back name is one the pass returned but does not act on. A lot of correct held-back names means the pass is too strict.
+- **Roster speech the model missed,** split into no answer, held back but right, and held back and wrong. A held-back name is one the pass returned but does not act on; a held-back unlisted label on a roster person counts as held back and wrong. A lot of correct held-back names means the pass is too strict.
 
 With several meetings, a table shows each meeting and the total, with an estimated cost for the run that produced each meeting's answers. It uses list prices.
 

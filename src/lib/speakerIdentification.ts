@@ -397,7 +397,9 @@ export function mergeChunkIdentifications(
         // that name the same unlisted speaker (sameUnlistedSpeaker) share a candidate,
         // which keeps the fullest form of the name it was given.
         // strongest: the candidate's verdict with the strongest kind of evidence, the more confident one on a tie.
-        type Candidate = { personId: string | null; unlisted: UnlistedSpeaker | null; total: number; max: number; strongest: { kindRank: number; confidence: number; evidence: string } };
+        // supported: the fullest form among the verdicts that each meet the unlisted rule (kind and floor), the
+        // only form the pass may publish: a weak verdict may fill in a name a reviewer sees, never one that is acted on.
+        type Candidate = { personId: string | null; unlisted: UnlistedSpeaker | null; supported: UnlistedSpeaker | null; total: number; max: number; strongest: { kindRank: number; confidence: number; evidence: string } };
         const candidates: Candidate[] = [];
         const candidateFor = (verdict: ChunkIdentification): Candidate | null => {
             if (verdict.personId) {
@@ -413,10 +415,14 @@ export function mergeChunkIdentifications(
                 if (!verdict.personId && !unlisted?.name && !unlisted?.capacity) continue;
                 let existing = candidateFor(verdict);
                 if (!existing) {
-                    existing = { personId: verdict.personId, unlisted, total: 0, max: 0, strongest: { kindRank: Infinity, confidence: 0, evidence: "" } };
+                    existing = { personId: verdict.personId, unlisted, supported: null, total: 0, max: 0, strongest: { kindRank: Infinity, confidence: 0, evidence: "" } };
                     candidates.push(existing);
                 } else if (existing.unlisted && unlisted) {
                     existing.unlisted = fullerUnlistedSpeaker(existing.unlisted, unlisted);
+                }
+                const meetsUnlistedRule = verdict.evidenceKind !== null && UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(verdict.evidenceKind) && verdict.confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE;
+                if (unlisted && meetsUnlistedRule) {
+                    existing.supported = existing.supported ? fullerUnlistedSpeaker(existing.supported, unlisted) : unlisted;
                 }
                 existing.total += verdict.confidence;
                 existing.max = Math.max(existing.max, verdict.confidence);
@@ -439,13 +445,16 @@ export function mergeChunkIdentifications(
             : { personId: null, unlistedLabel: formatUnlistedLabel(c.unlisted!) ?? "", confidence: c.max });
         const contested = ranked.length > 1 && ranked[1].total >= CONTESTED_RATIO * best.total;
         const evidenceKind = SPEAKER_EVIDENCE_KINDS[best.strongest.kindRank] ?? null;
-        const unlistedName = best.unlisted?.name ?? null;
-        const unlistedCapacity = best.unlisted?.capacity ?? null;
+        const confidence = best.strongest.confidence;
+        // An unlisted label is acted on in the form its supporting verdicts gave; otherwise the fullest form is a suggestion.
+        const supportedActionable = best.supported !== null
+            && isActionable({ personId: null, unlistedName: best.supported.name, unlistedCapacity: best.supported.capacity, evidenceKind, contested, confidence });
+        const unlisted = best.personId ? null : supportedActionable ? best.supported : best.unlisted;
+        const actionable = best.personId ? isActionable({ personId: best.personId, evidenceKind, contested, confidence }) : supportedActionable;
 
         return {
-            speakerLabel, personId: best.personId, unlistedName, unlistedCapacity, evidenceKind, contested,
-            actionable: isActionable({ personId: best.personId, unlistedName, unlistedCapacity, evidenceKind, contested, confidence: best.strongest.confidence }),
-            confidence: best.strongest.confidence, evidence: best.strongest.evidence, alternatives, known: false,
+            speakerLabel, personId: best.personId, unlistedName: unlisted?.name ?? null, unlistedCapacity: unlisted?.capacity ?? null, evidenceKind, contested,
+            actionable, confidence, evidence: best.strongest.evidence, alternatives, known: false,
         };
     });
 }
