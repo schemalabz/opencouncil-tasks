@@ -55,13 +55,21 @@ describe('mergeChunkIdentifications', () => {
         });
     });
 
-    it('publishes an unlisted label only in the form its supporting verdicts gave; a weak verdict fills in a suggestion, never a label', () => {
-        // The floor grant names a surname; only a doubtful address carries the first name.
+    it('reports an unlisted label only in the form its supporting verdicts gave; a weak verdict never fills in a name', () => {
+        // The floor grant names a surname; only a doubtful address carries the first name, which is dropped.
         const [suggested] = mergeChunkIdentifications([
             [u('S1', 'Παπαδόπουλος', null, 90, 'given the floor')],
             [u('S1', 'Παπαδόπουλος Γιώργος', null, 40, 'maybe addressed', 'addressed')],
         ], ['S1']);
-        expect(suggested).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', evidenceKind: 'named', confidence: 90, actionable: false });
+        expect(suggested).toMatchObject({ unlistedName: 'Παπαδόπουλος', unlistedCapacity: null, evidenceKind: 'named', confidence: 90, actionable: false });
+        expect(isActionable(suggested)).toBe(false);
+        // No verdict supports any form: the fullest form is the suggestion.
+        const [unsupported] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος', null, 60, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', 'κάτοικος', 50, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(unsupported).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', unlistedCapacity: 'κάτοικος', evidenceKind: 'named', confidence: 60, actionable: false });
+        expect(isActionable(unsupported)).toBe(false);
         // The full name rests on the floor grant; the capacity only on the doubtful address, so it is left off.
         const [published] = mergeChunkIdentifications([
             [u('S1', 'Παπαδόπουλος Γιώργος', null, 90, 'given the floor')],
