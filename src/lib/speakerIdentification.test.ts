@@ -55,6 +55,21 @@ describe('mergeChunkIdentifications', () => {
         });
     });
 
+    it('publishes an unlisted label only in the form its supporting verdicts gave; a weak verdict fills in a suggestion, never a label', () => {
+        // The floor grant names a surname; only a doubtful address carries the first name.
+        const [suggested] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος', null, 90, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 40, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(suggested).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', evidenceKind: 'named', confidence: 90, actionable: false });
+        // The full name rests on the floor grant; the capacity only on the doubtful address, so it is left off.
+        const [published] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 90, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος', 'κάτοικος', 40, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(published).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', unlistedCapacity: null, actionable: true });
+    });
+
     it('holds a roster person against an unlisted name as rivals, with the label in the alternatives', () => {
         const [merged] = mergeChunkIdentifications([
             [c('S1', 'a', 90, 'a1')],

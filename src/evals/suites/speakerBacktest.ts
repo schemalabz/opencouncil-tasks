@@ -284,7 +284,13 @@ export type Outcome =
 
 /** Whether the model's unlisted speaker is who the reviewer's label says. */
 export function unlistedLabelAgrees(tagLabel: string | null, predicted: UnlistedSpeaker): boolean {
-    return tagLabel !== null && sameUnlistedSpeaker(parseUnlistedLabel(tagLabel), predicted);
+    if (tagLabel === null) return false;
+    const reviewer = parseUnlistedLabel(tagLabel);
+    if (sameUnlistedSpeaker(reviewer, predicted)) return true;
+    // A label with no dash is read as a name, but a reviewer also writes a capacity
+    // alone ("Υπάλληλος Δήμου"): against an answer with no name, read it as one.
+    return reviewer.capacity === null && reviewer.name !== null && predicted.name === null
+        && sameUnlistedSpeaker({ name: null, capacity: reviewer.name }, predicted);
 }
 
 export type ScoredSpeaker = BacktestSpeaker & {
@@ -452,7 +458,7 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
             summary.model.unverifiedSeconds += t;
         }
         if (s.outcome === "missed") {
-            const reason = !s.predictedPersonId ? "silent" : s.predictedPersonId === s.personId ? "heldBackRight" : "heldBackWrong";
+            const reason = !s.predictedPersonId && !s.predictedUnlisted ? "silent" : s.predictedPersonId === s.personId ? "heldBackRight" : "heldBackWrong";
             summary.model.missed[reason].tags++;
             summary.model.missed[reason].seconds += t;
         }
@@ -500,7 +506,8 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
             }
         }
 
-        const answered = s.outcome === "match" || s.outcome === "mismatch";
+        // A visitor's label on a voiceprint match is an answer that names someone else.
+        const answered = s.outcome === "match" || s.outcome === "mismatch" || s.outcome === "unlistedOnRoster";
         if (s.known) continue;
         if (s.source === "voiceprint") {
             const k = !answered ? "modelSilent" : modelRight ? "agree" : "voiceprintRight";

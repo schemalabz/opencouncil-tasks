@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { acceptActionable, acceptAtConfidence, aggregateSummaries, buildBacktestInput, describePerson, maySpeakAtMeeting, evidenceBreakdown, formatEvidenceTable, formatBacktestReport, formatMeetingTable, formatThresholdSweep, formatUnlistedEvidenceTable, scoreBacktest, thresholdSweep, truthSource, unlistedEvidenceBreakdown, MeetingApiData } from './speakerBacktest.js';
+import { acceptActionable, acceptAtConfidence, aggregateSummaries, buildBacktestInput, describePerson, maySpeakAtMeeting, evidenceBreakdown, formatEvidenceTable, formatBacktestReport, formatMeetingTable, formatThresholdSweep, formatUnlistedEvidenceTable, scoreBacktest, thresholdSweep, truthSource, unlistedEvidenceBreakdown, unlistedLabelAgrees, MeetingApiData } from './speakerBacktest.js';
 import { costUsd } from '../../lib/pricing.js';
 import { SpeakerIdentification } from '../../lib/speakerIdentification.js';
 
@@ -287,11 +287,26 @@ describe('scoreBacktest', () => {
         expect(scoreBacktest(input.speakers, [labelled('S4', 'Κάτοικος', null, 90, { actionable: false })], acceptAtConfidence(70)).scored.find(s => s.label === 'S4')?.outcome).toBe('unlistedMatch');
     });
 
-    it('withholds a voiceprint match the model labels as a visitor', () => {
-        // S2 is the chair's standing match (15s).
-        const combined = (...answers: SpeakerIdentification[]) => scoreBacktest(input.speakers, answers).summary.combined;
-        expect(combined(labelled('S2', 'Προεδρίδης Μάρκος', 'κάτοικος', 90))).toMatchObject({ correctNames: 0, withheldNames: 1, withheldSeconds: 15 });
-        expect(combined(labelled('S2', 'Προεδρίδης', null, 90, { actionable: false }))).toMatchObject({ correctNames: 1, withheldNames: 0 });
+    it('withholds a voiceprint match the model labels as a visitor, and counts the disagreement', () => {
+        // S2 is the chair's standing match (15s); S5 a match a reviewer corrected to the mayor.
+        const summaryOf = (...answers: SpeakerIdentification[]) => scoreBacktest(input.speakers, answers).summary;
+        const visitor = summaryOf(labelled('S2', 'Προεδρίδης Μάρκος', 'κάτοικος', 90));
+        expect(visitor.combined).toMatchObject({ correctNames: 0, withheldNames: 1, withheldSeconds: 15 });
+        // The other voiceprint tag, S5, got no answer.
+        expect(visitor.onVoiceprintTags).toMatchObject({ voiceprintRight: 1, modelSilent: 1 });
+        expect(summaryOf(labelled('S5', 'Δημαρχίδης Κώστας', null, 90)).onVoiceprintTags).toMatchObject({ bothWrong: 1, modelSilent: 1 });
+        // A label the pass holds back leaves the match standing, and counts as held back and wrong, not silent.
+        const held = summaryOf(labelled('S2', 'Προεδρίδης', null, 90, { actionable: false }));
+        expect(held.combined).toMatchObject({ correctNames: 1, withheldNames: 0 });
+        expect(held.model.missed).toMatchObject({ silent: { tags: 3 }, heldBackWrong: { tags: 1, seconds: 15 } });
+    });
+
+    it('reads a reviewer\'s label with no dash as a capacity against an answer with no name', () => {
+        expect(unlistedLabelAgrees('Υπάλληλος Δήμου Αθηναίων', { name: null, capacity: 'υπάλληλος Δήμου' })).toBe(true);
+        expect(unlistedLabelAgrees('Υπάλληλος Δήμου Αθηναίων', { name: 'Υπάλληλος', capacity: null })).toBe(true);
+        expect(unlistedLabelAgrees('Υπάλληλος Δήμου Αθηναίων', { name: 'Παπαδόπουλος', capacity: 'υπάλληλος Δήμου' })).toBe(false);
+        expect(unlistedLabelAgrees('κ. Τσουκάτος - Πρωτοβουλία', { name: null, capacity: 'Πρωτοβουλία' })).toBe(false);
+        expect(unlistedLabelAgrees(null, { name: null, capacity: 'Πρωτοβουλία' })).toBe(false);
     });
 
     it('breaks the unlisted labels down by kind of evidence, then the floor, then bare surnames', () => {
