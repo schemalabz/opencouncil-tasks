@@ -175,9 +175,10 @@ describe("fixTranscript", () => {
             return { result: numbered.replace("Νέκας", "Λέκκας"), usage: NO_USAGE };
         });
         const hints: SpeakerHint[] = [{ speakerTagId: "a", personId: "p1", actionable: true, evidenceKind: "addressed", confidence: 90, evidence: "Τον λόγο έχει ο κύριος Λέκκας." }];
+        const unlisted = [{ speakerTagId: "b", name: "Παπαδόπουλος Γιώργος - κάτοικος", actionable: true, evidenceKind: "named" as const, confidence: 90, evidence: "Τον λόγο έχει ο κύριος Παπαδόπουλος." }];
         vi.mocked(identifyTranscriptSpeakers).mockImplementation(async () => {
             events.push("identified");
-            return { result: hints, usage: NO_USAGE };
+            return { result: { speakerHints: hints, unlistedSpeakerHints: unlisted }, usage: NO_USAGE };
         });
         const onProgress = vi.fn();
 
@@ -195,5 +196,6 @@ describe("fixTranscript", () => {
 
         expect(result.updateUtterances).toEqual([{ utteranceId: "u1", text: "Τον λόγο έχει ο κύριος Λέκκας.", markUncertain: false }]);
         expect(result.speakerHints).toBe(hints);
+        expect(result.unlistedSpeakerHints).toBe(unlisted);
     });
 });

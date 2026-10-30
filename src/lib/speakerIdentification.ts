@@ -24,6 +24,13 @@ export type { RosterPerson, SpeakerEvidenceKind };
  * (isActionable): by the kind of evidence, and by a floor on the model's
  * confidence. The number travels along for a reviewer to read; nothing
  * downstream thresholds it.
+ *
+ * Not everyone who speaks is on the roster: residents, employees,
+ * representatives of associations, invited experts. The text names them the
+ * same way, so the model reports such a speaker's name and capacity as
+ * spoken (unlistedName, unlistedCapacity) instead of a roster key. There is
+ * no person record for them; the name goes onto the speaker tag's label, in
+ * the form reviewers write there: "Επώνυμο Όνομα - Ιδιότητα".
  */
 
 /** Evidence kinds, strongest first. The order ranks a speaker's evidence across chunks. */
@@ -58,6 +65,23 @@ export const ACTIONABLE_EVIDENCE_KINDS: ReadonlySet<SpeakerEvidenceKind> = new S
  */
 export const MIN_ACTIONABLE_CONFIDENCE = 75;
 
+/**
+ * The evidence the pass acts on for a speaker who is not on the roster. There
+ * is no roster line to check the name against, and the name goes onto a
+ * private person, so only the cues that spell the name out count: the chair
+ * giving the floor by name, and the speaker introducing themselves. Being
+ * addressed is left to the reviewer: a vocative the model has to turn into a
+ * name, on a person nobody else names.
+ */
+export const UNLISTED_ACTIONABLE_EVIDENCE_KINDS: ReadonlySet<SpeakerEvidenceKind> = new Set<SpeakerEvidenceKind>(["named", "selfIntroduced"]);
+
+/**
+ * The lowest confidence the pass acts on for an unlisted name. It starts at
+ * the roster floor and has not been measured: read the backtest's unlisted
+ * evidence table before changing it.
+ */
+export const MIN_UNLISTED_ACTIONABLE_CONFIDENCE: number = MIN_ACTIONABLE_CONFIDENCE;
+
 export type SpeakerSegmentInput = {
     speakerLabel: string;
     start: number;
@@ -74,7 +98,11 @@ export type KnownSpeaker = {
 export type SpeakerIdentification = {
     speakerLabel: string;
     personId: string | null;
-    /** The strongest kind of evidence any chunk gave for the person. */
+    /** A speaker not on the roster: their name as spoken, surname first, or null when none was spoken. Null when personId is set. */
+    unlistedName: string | null;
+    /** The capacity an unlisted speaker stated ("κάτοικος Παγκρατίου"), or null. Null when personId is set. */
+    unlistedCapacity: string | null;
+    /** The strongest kind of evidence any chunk gave for the person or the unlisted name. */
     evidenceKind: SpeakerEvidenceKind | null;
     /** A rival candidate came close across chunks. The pass does not act on a contested label. */
     contested: boolean;
@@ -84,8 +112,8 @@ export type SpeakerIdentification = {
     confidence: number;
     /** The quote of the verdict with the strongest kind of evidence: the cue evidenceKind names. */
     evidence: string;
-    /** Competing candidates seen in other chunks, strongest first. */
-    alternatives: { personId: string; confidence: number }[];
+    /** Competing candidates seen in other chunks, strongest first: a roster person, or an unlisted label. */
+    alternatives: { personId: string | null; unlistedLabel?: string; confidence: number }[];
     /** Passed through from knownSpeakers instead of being asked of the model. */
     known: boolean;
 };
@@ -93,6 +121,8 @@ export type SpeakerIdentification = {
 export type ChunkIdentification = {
     speakerLabel: string;
     personId: string | null;
+    unlistedName: string | null;
+    unlistedCapacity: string | null;
     evidenceKind: SpeakerEvidenceKind | null;
     confidence: number;
     evidence: string;
@@ -103,6 +133,10 @@ export type ModelVerdict = {
     speakerLabel: string;
     person: string | null;
     personName: string | null;
+    /** A speaker not on the roster: their name as spoken, or null. */
+    unlistedName?: string | null;
+    /** The capacity such a speaker stated, or null. */
+    unlistedCapacity?: string | null;
     evidenceKind?: string | null;
     confidence: number;
     evidence: string;
@@ -152,12 +186,80 @@ const isEvidenceKind = (value: unknown): value is SpeakerEvidenceKind =>
     typeof value === "string" && (SPEAKER_EVIDENCE_KINDS as readonly string[]).includes(value);
 
 /**
- * The pass would act on this identification by itself: a person, uncontested,
- * on evidence that names them, at a confidence that reaches the floor.
+ * The pass would act on this identification by itself: uncontested, on
+ * evidence that names the speaker, at a confidence that reaches the floor.
+ * A roster person and an unlisted speaker each have their own evidence kinds
+ * and floor. An unlisted name must also say enough to label someone
+ * (isSpecificUnlistedName).
  */
-export function isActionable({ personId, evidenceKind, contested, confidence }: Pick<SpeakerIdentification, "personId" | "evidenceKind" | "contested" | "confidence">): boolean {
-    return personId !== null && !contested && evidenceKind !== null && ACTIONABLE_EVIDENCE_KINDS.has(evidenceKind)
-        && confidence >= MIN_ACTIONABLE_CONFIDENCE;
+export function isActionable({ personId, unlistedName = null, unlistedCapacity = null, evidenceKind, contested, confidence }:
+    Pick<SpeakerIdentification, "personId" | "evidenceKind" | "contested" | "confidence"> & { unlistedName?: string | null; unlistedCapacity?: string | null }): boolean {
+    if (contested || evidenceKind === null) return false;
+    if (personId !== null) return ACTIONABLE_EVIDENCE_KINDS.has(evidenceKind) && confidence >= MIN_ACTIONABLE_CONFIDENCE;
+    if (unlistedName !== null || unlistedCapacity !== null) {
+        return UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(evidenceKind) && confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE
+            && isSpecificUnlistedName({ name: unlistedName, capacity: unlistedCapacity });
+    }
+    return false;
+}
+
+/** What the model reports about a speaker who is not on the roster. */
+export type UnlistedSpeaker = { name: string | null; capacity: string | null };
+
+/**
+ * Whether an unlisted name says enough to label a speaker by itself: a name of
+ * two words or more, or a capacity. A bare surname is what the chair says
+ * ("ο κύριος Φωτίου") and what speech-to-text most often garbles, and a
+ * surname alone on a private person is the label most likely to be wrong, so
+ * it reaches the reviewer as a suggestion.
+ */
+export function isSpecificUnlistedName({ name, capacity }: UnlistedSpeaker): boolean {
+    if (capacity !== null && capacity.trim() !== "") return true;
+    return name !== null && nameTokens(name).length >= 2;
+}
+
+/** The label an unlisted speaker gets, in the form reviewers write: "Επώνυμο Όνομα - Ιδιότητα", or whichever part there is. */
+export function formatUnlistedLabel({ name, capacity }: UnlistedSpeaker): string | null {
+    const parts = [name, capacity].map(p => p?.trim() ?? "").filter(Boolean);
+    return parts.length > 0 ? parts.join(" - ") : null;
+}
+
+const HONORIFIC = /^(κ\.|κος\.?|κα\.?|κυρία|κύριος|κύριε|mr\.?|mrs\.?|ms\.?|dr\.?)(\s+|$)/iu;
+const LABEL_SEPARATOR = /\s+[-–—]\s+/u;
+
+/**
+ * Reads a label of the form "Επώνυμο Όνομα - Ιδιότητα": the name before the
+ * first spaced dash, the capacity after it. A label with no dash is read as a
+ * name: a reviewer's "Γραμματέας" cannot be told from a surname here, and the
+ * model reports a capacity in its own field. Honorifics and a trailing period
+ * are dropped, as they are from the model's names (cleanSpokenName).
+ */
+export function parseUnlistedLabel(label: string): UnlistedSpeaker {
+    const [head, ...rest] = label.split(LABEL_SEPARATOR);
+    const name = cleanSpokenName(head);
+    const capacity = rest.join(" - ").replace(/\s+/g, " ").replace(/[.\s]+$/u, "").trim() || null;
+    return { name, capacity };
+}
+
+/** A spoken name as a label carries it: no honorific, no trailing period, single spaces. */
+export function cleanSpokenName(raw: string | null | undefined): string | null {
+    const cleaned = (raw ?? "").replace(/\s+/g, " ").trim().replace(HONORIFIC, "").replace(/[.\s]+$/u, "").trim();
+    return cleaned || null;
+}
+
+const nameTokens = (name: string) => normalizeName(name).split(" ").filter(Boolean);
+
+/**
+ * Whether two unlisted speakers are the same, by the name when both have one
+ * (one side may omit tokens, as sameName allows), else by the capacity when
+ * neither has a name. A name against a bare capacity is not a match.
+ */
+export function sameUnlistedSpeaker(a: UnlistedSpeaker, b: UnlistedSpeaker): boolean {
+    if (a.name && b.name) return sameName(a.name, b.name);
+    if (a.name || b.name) return false;
+    if (!a.capacity || !b.capacity) return false;
+    const [ca, cb] = [normalizeName(a.capacity), normalizeName(b.capacity)];
+    return ca !== "" && cb !== "" && (ca.includes(cb) || cb.includes(ca));
 }
 
 /**
@@ -183,7 +285,9 @@ EVIDENCE TO USE, strongest first:
 - Being addressed by name or role title in the lines around them ("κύριε Δήμαρχε", "κυρία Πρόεδρε" — resolve the title with the roster).
 - Role behaviour: the person who opens the session, runs the roll call, puts items to a vote and grants the floor chairs THIS body. Resolve that to the head of the body that is meeting, never to the head of another body of the municipality. A vice-chair often presides for a stretch: a second label doing the chair's work is a stand-in, not the chair, unless its own name or title is spoken. The person answering as the executive is usually the mayor or a deputy mayor.
 
-The speech-to-text often misspells names phonetically. Match spoken names to the roster by sound, not by exact spelling. A name that matches nobody on the roster stays unresolved. Prefer members of the meeting body, but other people of the municipality (deputy mayors, officials, other councillors) do attend. Several roster names can sound alike; check the whole name before choosing.
+The speech-to-text often misspells names phonetically. Match spoken names to the roster by sound, not by exact spelling. Prefer members of the meeting body, but other people of the municipality (deputy mayors, officials, other councillors) do attend. Several roster names can sound alike; check the whole name before choosing.
+
+Not everyone who speaks is on the roster: residents, employees of the municipality, representatives of associations and schools, invited experts, lawyers. A name that matches nobody on the roster belongs to such an unlisted speaker — never to the closest roster person. Report an unlisted speaker with person null and their name and capacity as the text gives them (unlistedName, unlistedCapacity), on the same evidence and with the same care: the chair giving them the floor by name, a self-introduction ("είμαι ο Γιώργος Φωτίου, κάτοικος Παγκρατίου"), being addressed. A wrong name on a private person is as serious as one on an official.
 
 RULES:
 - Use only evidence in the text. Never guess from the party or the topic, and never because a line continues someone else's argument: diarization starts a new label because the voice changed.
@@ -193,7 +297,8 @@ RULES:
 - Diarization sometimes splits one voice into two labels or merges two voices into one. Assigning the same person to two labels is allowed only when each label has its own explicit evidence.
 - Include every label that appears in this chunk exactly once. Skip the speakers listed as already known.
 - person: the roster key of the speaker (for example P12), or null when unknown. personName: the name on that key's roster line, copied exactly, or null.
-- evidenceKind: the strongest kind of evidence you used for the person. "named": this label is given the floor by name right before it speaks. "rollCall": a name is read out and this label answers. "selfIntroduced": the speaker states their own name or role. "addressed": others address the speaker by name or role title in the lines around it. "roleBehaviour": only what the speaker does; no name or title is spoken. null when person is null.
+- unlistedName: for a speaker who is not on the roster, their name as spoken, surname first, in the nominative ("Φωτίου Γιώργος"; "κύριε Παπαδόπουλε" becomes "Παπαδόπουλος"), without κ./κα. and without a trailing period; null when no name is spoken. unlistedCapacity: the capacity they state or are given ("κάτοικος Παγκρατίου", "πρόεδρος του συλλόγου γονέων", "υπάλληλος της τεχνικής υπηρεσίας"), or null when none is stated; a capacity alone is a valid answer when no name is spoken. Both are null when person is set.
+- evidenceKind: the strongest kind of evidence you used for the person or the unlisted name. "named": this label is given the floor by name right before it speaks. "rollCall": a name is read out and this label answers. "selfIntroduced": the speaker states their own name or role. "addressed": others address the speaker by name or role title in the lines around it. "roleBehaviour": only what the speaker does; no name or title is spoken. null when person, unlistedName and unlistedCapacity are all null.
 - evidence: quote the decisive line(s) briefly, with their timestamp.
 
 Answer with JSON only.`;
@@ -284,16 +389,42 @@ export function mergeChunkIdentifications(
         const knownPersonId = knownByLabel.get(speakerLabel);
         if (knownPersonId) {
             // An anchor is an established identity, not a finding of this pass.
-            return { speakerLabel, personId: knownPersonId, evidenceKind: null, contested: false, actionable: true, confidence: 100, evidence: "known before identification", alternatives: [], known: true };
+            return { speakerLabel, personId: knownPersonId, unlistedName: null, unlistedCapacity: null, evidenceKind: null, contested: false, actionable: true, confidence: 100, evidence: "known before identification", alternatives: [], known: true };
         }
 
+        // A candidate is a roster person, or one unlisted speaker: the chunks spell an
+        // unlisted name differently ("Φωτίου", "Φωτίου Γιώργος - κάτοικος"), so verdicts
+        // that name the same unlisted speaker (sameUnlistedSpeaker) share a candidate,
+        // which keeps the fullest form of the name it was given.
         // strongest: the candidate's verdict with the strongest kind of evidence, the more confident one on a tie.
-        const candidates = new Map<string, { total: number; max: number; strongest: { kindRank: number; confidence: number; evidence: string } }>();
+        // supported: the fullest form among the verdicts that each meet the unlisted rule (kind and floor). It is the
+        // only form the pass reports once any verdict meets the rule, acted on or not, so a weak verdict can never
+        // fill in a name: the verdict says the same whether the pass or the backtest decides to act on it.
+        type Candidate = { personId: string | null; unlisted: UnlistedSpeaker | null; supported: UnlistedSpeaker | null; total: number; max: number; strongest: { kindRank: number; confidence: number; evidence: string } };
+        const candidates: Candidate[] = [];
+        const candidateFor = (verdict: ChunkIdentification): Candidate | null => {
+            if (verdict.personId) {
+                return candidates.find(c => c.personId === verdict.personId) ?? null;
+            }
+            const unlisted = { name: verdict.unlistedName, capacity: verdict.unlistedCapacity };
+            return candidates.find(c => c.unlisted !== null && sameUnlistedSpeaker(c.unlisted, unlisted)) ?? null;
+        };
         for (const chunk of chunkResults) {
             for (const verdict of chunk) {
-                if (verdict.speakerLabel !== speakerLabel || !verdict.personId || verdict.confidence <= 0) continue;
-                const existing = candidates.get(verdict.personId)
-                    ?? { total: 0, max: 0, strongest: { kindRank: Infinity, confidence: 0, evidence: "" } };
+                if (verdict.speakerLabel !== speakerLabel || verdict.confidence <= 0) continue;
+                const unlisted = verdict.personId ? null : { name: verdict.unlistedName, capacity: verdict.unlistedCapacity };
+                if (!verdict.personId && !unlisted?.name && !unlisted?.capacity) continue;
+                let existing = candidateFor(verdict);
+                if (!existing) {
+                    existing = { personId: verdict.personId, unlisted, supported: null, total: 0, max: 0, strongest: { kindRank: Infinity, confidence: 0, evidence: "" } };
+                    candidates.push(existing);
+                } else if (existing.unlisted && unlisted) {
+                    existing.unlisted = fullerUnlistedSpeaker(existing.unlisted, unlisted);
+                }
+                const meetsUnlistedRule = verdict.evidenceKind !== null && UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(verdict.evidenceKind) && verdict.confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE;
+                if (unlisted && meetsUnlistedRule) {
+                    existing.supported = existing.supported ? fullerUnlistedSpeaker(existing.supported, unlisted) : unlisted;
+                }
                 existing.total += verdict.confidence;
                 existing.max = Math.max(existing.max, verdict.confidence);
                 const kindRank = verdict.evidenceKind ? SPEAKER_EVIDENCE_KINDS.indexOf(verdict.evidenceKind) : SPEAKER_EVIDENCE_KINDS.length;
@@ -301,26 +432,42 @@ export function mergeChunkIdentifications(
                 if (kindRank < strongest.kindRank || (kindRank === strongest.kindRank && verdict.confidence > strongest.confidence)) {
                     existing.strongest = { kindRank, confidence: verdict.confidence, evidence: verdict.evidence };
                 }
-                candidates.set(verdict.personId, existing);
             }
         }
 
-        const ranked = [...candidates.entries()].sort((a, b) => b[1].total - a[1].total);
+        const ranked = [...candidates].sort((a, b) => b.total - a.total);
         if (ranked.length === 0) {
-            return { speakerLabel, personId: null, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: "", alternatives: [], known: false };
+            return { speakerLabel, personId: null, unlistedName: null, unlistedCapacity: null, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: "", alternatives: [], known: false };
         }
 
-        const [bestId, best] = ranked[0];
-        const alternatives = ranked.slice(1).map(([personId, c]) => ({ personId, confidence: c.max }));
-        const contested = ranked.length > 1 && ranked[1][1].total >= CONTESTED_RATIO * best.total;
+        const best = ranked[0];
+        const alternatives = ranked.slice(1).map(c => c.personId
+            ? { personId: c.personId, confidence: c.max }
+            : { personId: null, unlistedLabel: formatUnlistedLabel(c.unlisted!) ?? "", confidence: c.max });
+        const contested = ranked.length > 1 && ranked[1].total >= CONTESTED_RATIO * best.total;
         const evidenceKind = SPEAKER_EVIDENCE_KINDS[best.strongest.kindRank] ?? null;
+        const confidence = best.strongest.confidence;
+        // An unlisted label is reported in the form its supporting verdicts gave; the fullest form is a suggestion only
+        // when no verdict supports any form. Either way the verdict's own fields decide it (isActionable).
+        const supportedActionable = best.supported !== null
+            && isActionable({ personId: null, unlistedName: best.supported.name, unlistedCapacity: best.supported.capacity, evidenceKind, contested, confidence });
+        const unlisted = best.personId ? null : best.supported ?? best.unlisted;
+        const actionable = best.personId ? isActionable({ personId: best.personId, evidenceKind, contested, confidence }) : supportedActionable;
 
         return {
-            speakerLabel, personId: bestId, evidenceKind, contested,
-            actionable: isActionable({ personId: bestId, evidenceKind, contested, confidence: best.strongest.confidence }),
-            confidence: best.strongest.confidence, evidence: best.strongest.evidence, alternatives, known: false,
+            speakerLabel, personId: best.personId, unlistedName: unlisted?.name ?? null, unlistedCapacity: unlisted?.capacity ?? null, evidenceKind, contested,
+            actionable, confidence, evidence: best.strongest.evidence, alternatives, known: false,
         };
     });
+}
+
+/** Of two forms of one unlisted speaker, the one that says more: more name tokens, then a capacity, then the longer text. */
+function fullerUnlistedSpeaker(a: UnlistedSpeaker, b: UnlistedSpeaker): UnlistedSpeaker {
+    const score = (u: UnlistedSpeaker) => (u.name ? nameTokens(u.name).length : 0) * 2 + (u.capacity ? 1 : 0);
+    const [sa, sb] = [score(a), score(b)];
+    if (sa !== sb) return sa > sb ? a : b;
+    const length = (u: UnlistedSpeaker) => (formatUnlistedLabel(u) ?? "").length;
+    return length(b) > length(a) ? b : a;
 }
 
 /** Lower-case, accent-free, punctuation-free form of a name, for comparison. */
@@ -368,8 +515,35 @@ function resolvePerson(verdict: ModelVerdict, roster: RosterPerson[]): string | 
 }
 
 /**
+ * Resolves what the model says about a speaker it put off the roster. The
+ * name is cleaned as a label carries it. A name the roster has is not an
+ * unlisted speaker's: a full name that pins down one roster person is that
+ * person (the model forgot the key); any other roster name is unresolved,
+ * since an omission is harmless and a resident's label on a councillor, or a
+ * councillor's name on a resident, is not.
+ */
+function resolveUnlisted(verdict: ModelVerdict, roster: RosterPerson[]): { personId: string | null; unlisted: UnlistedSpeaker | null } {
+    const name = cleanSpokenName(verdict.unlistedName);
+    const capacity = cleanSpokenName(verdict.unlistedCapacity);
+    if (!name) return { personId: null, unlisted: capacity ? { name: null, capacity } : null };
+
+    const onRoster = roster.filter(p => sameName(p.name, name));
+    if (onRoster.length === 1 && nameTokens(name).length >= 2) {
+        console.warn(`Speaker identification: ${verdict.speakerLabel} was reported off the roster as "${name}", which is ${onRoster[0].name} on the roster; using them`);
+        return { personId: onRoster[0].id, unlisted: null };
+    }
+    if (onRoster.length > 0) {
+        console.warn(`Speaker identification: ${verdict.speakerLabel} was reported off the roster as "${name}", a name the roster has; treating as unresolved`);
+        return { personId: null, unlisted: null };
+    }
+    return { personId: null, unlisted: { name, capacity } };
+}
+
+/**
  * Drops verdicts the model was not entitled to give: labels absent from the
- * chunk, repeated labels, and people that key and name don't pin down.
+ * chunk, repeated labels, and people that key and name don't pin down. A
+ * verdict with a key is a roster person's, whatever else it says; one
+ * without is an unlisted speaker's when it names one.
  */
 export function sanitizeChunkVerdicts(
     verdicts: ModelVerdict[],
@@ -383,14 +557,20 @@ export function sanitizeChunkVerdicts(
         if (!chunkLabels.has(verdict.speakerLabel) || seen.has(verdict.speakerLabel)) continue;
         seen.add(verdict.speakerLabel);
 
-        const personId = resolvePerson(verdict, roster);
+        const keyed = Boolean(verdict.person?.trim());
+        const resolved = keyed
+            ? { personId: resolvePerson(verdict, roster), unlisted: null }
+            : resolveUnlisted(verdict, roster);
+        const named = resolved.personId !== null || resolved.unlisted !== null;
         const confidence = Math.max(0, Math.min(100, Math.round(verdict.confidence)));
         kept.push({
             speakerLabel: verdict.speakerLabel,
-            personId,
+            personId: resolved.personId,
+            unlistedName: resolved.unlisted?.name ?? null,
+            unlistedCapacity: resolved.unlisted?.capacity ?? null,
             // A kind the model made up counts as no kind: the pass then does not act on the name.
-            evidenceKind: personId && isEvidenceKind(verdict.evidenceKind) ? verdict.evidenceKind : null,
-            confidence: personId ? confidence : 0,
+            evidenceKind: named && isEvidenceKind(verdict.evidenceKind) ? verdict.evidenceKind : null,
+            confidence: named ? confidence : 0,
             evidence: verdict.evidence ?? "",
         });
     }
@@ -412,11 +592,13 @@ const CHUNK_OUTPUT_FORMAT = {
                         speakerLabel: { type: "string" },
                         person: { type: ["string", "null"] },
                         personName: { type: ["string", "null"] },
+                        unlistedName: { type: ["string", "null"] },
+                        unlistedCapacity: { type: ["string", "null"] },
                         evidenceKind: { anyOf: [{ type: "string", enum: [...SPEAKER_EVIDENCE_KINDS] }, { type: "null" }] },
                         confidence: { type: "integer" },
                         evidence: { type: "string" }
                     },
-                    required: ["speakerLabel", "person", "personName", "evidenceKind", "confidence", "evidence"],
+                    required: ["speakerLabel", "person", "personName", "unlistedName", "unlistedCapacity", "evidenceKind", "confidence", "evidence"],
                     additionalProperties: false
                 }
             }

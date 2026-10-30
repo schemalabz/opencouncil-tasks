@@ -5,7 +5,11 @@ import { TaskCancelledError } from './taskControl.js';
 const aiChat = vi.hoisted(() => vi.fn());
 vi.mock('./ai.js', async importOriginal => ({ ...(await importOriginal<typeof import('./ai.js')>()), aiChat }));
 
-import { chunkSegments, identifySpeakers, isActionable, MIN_ACTIONABLE_CONFIDENCE, mergeChunkIdentifications, sanitizeChunkVerdicts, sameName, buildSystemPrompt, buildUserPrompt, ChunkIdentification, SpeakerEvidenceKind, SpeakerSegmentInput, ModelVerdict, SPEAKER_EVIDENCE_KINDS } from './speakerIdentification.js';
+import {
+    chunkSegments, cleanSpokenName, formatUnlistedLabel, identifySpeakers, isActionable, isSpecificUnlistedName, MIN_ACTIONABLE_CONFIDENCE, MIN_UNLISTED_ACTIONABLE_CONFIDENCE,
+    mergeChunkIdentifications, parseUnlistedLabel, sanitizeChunkVerdicts, sameName, sameUnlistedSpeaker, buildSystemPrompt, buildUserPrompt, ChunkIdentification, SpeakerEvidenceKind,
+    SpeakerSegmentInput, ModelVerdict, SPEAKER_EVIDENCE_KINDS, UNLISTED_ACTIONABLE_EVIDENCE_KINDS,
+} from './speakerIdentification.js';
 
 const seg = (speakerLabel: string, start: number, text: string): SpeakerSegmentInput => ({ speakerLabel, start, end: start + 1, text });
 
@@ -24,7 +28,9 @@ describe('chunkSegments', () => {
 
 describe('mergeChunkIdentifications', () => {
     const c = (speakerLabel: string, personId: string | null, confidence: number, evidence: string, evidenceKind: SpeakerEvidenceKind | null = personId ? 'named' : null): ChunkIdentification =>
-        ({ speakerLabel, personId, evidenceKind, confidence, evidence });
+        ({ speakerLabel, personId, unlistedName: null, unlistedCapacity: null, evidenceKind, confidence, evidence });
+    const u = (speakerLabel: string, unlistedName: string | null, unlistedCapacity: string | null, confidence: number, evidence: string, evidenceKind: SpeakerEvidenceKind | null = 'named'): ChunkIdentification =>
+        ({ speakerLabel, personId: null, unlistedName, unlistedCapacity, evidenceKind, confidence, evidence });
 
     it('sums confidence per candidate across chunks and keeps the strongest evidence', () => {
         const merged = mergeChunkIdentifications([
@@ -32,9 +38,63 @@ describe('mergeChunkIdentifications', () => {
             [c('S1', 'a', 90, 'second', 'named'), c('S2', null, 0, '')],
         ], ['S1', 'S2']);
         expect(merged).toEqual([
-            { speakerLabel: 'S1', personId: 'a', evidenceKind: 'named', contested: false, actionable: true, confidence: 90, evidence: 'second', alternatives: [], known: false },
-            { speakerLabel: 'S2', personId: null, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: '', alternatives: [], known: false },
+            { speakerLabel: 'S1', personId: 'a', unlistedName: null, unlistedCapacity: null, evidenceKind: 'named', contested: false, actionable: true, confidence: 90, evidence: 'second', alternatives: [], known: false },
+            { speakerLabel: 'S2', personId: null, unlistedName: null, unlistedCapacity: null, evidenceKind: null, contested: false, actionable: false, confidence: 0, evidence: '', alternatives: [], known: false },
         ]);
+    });
+
+    it('clusters the chunks\' verdicts on an unlisted speaker by name, and keeps the fullest form', () => {
+        const [merged] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος', null, 80, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', 'κάτοικος Χαλέπας', 90, 'introduces himself', 'selfIntroduced')],
+            [u('S1', 'Παπαδόπουλος', null, 70, 'addressed', 'addressed')],
+        ], ['S1']);
+        expect(merged).toMatchObject({
+            personId: null, unlistedName: 'Παπαδόπουλος Γιώργος', unlistedCapacity: 'κάτοικος Χαλέπας',
+            evidenceKind: 'named', confidence: 80, evidence: 'given the floor', contested: false, actionable: true, alternatives: [],
+        });
+    });
+
+    it('reports an unlisted label only in the form its supporting verdicts gave; a weak verdict never fills in a name', () => {
+        // The floor grant names a surname; only a doubtful address carries the first name, which is dropped.
+        const [suggested] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος', null, 90, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 40, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(suggested).toMatchObject({ unlistedName: 'Παπαδόπουλος', unlistedCapacity: null, evidenceKind: 'named', confidence: 90, actionable: false });
+        expect(isActionable(suggested)).toBe(false);
+        // No verdict supports any form: the fullest form is the suggestion.
+        const [unsupported] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος', null, 60, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', 'κάτοικος', 50, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(unsupported).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', unlistedCapacity: 'κάτοικος', evidenceKind: 'named', confidence: 60, actionable: false });
+        expect(isActionable(unsupported)).toBe(false);
+        // The full name rests on the floor grant; the capacity only on the doubtful address, so it is left off.
+        const [published] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 90, 'given the floor')],
+            [u('S1', 'Παπαδόπουλος', 'κάτοικος', 40, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(published).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', unlistedCapacity: null, actionable: true });
+    });
+
+    it('holds a roster person against an unlisted name as rivals, with the label in the alternatives', () => {
+        const [merged] = mergeChunkIdentifications([
+            [c('S1', 'a', 90, 'a1')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 80, 'p1')],
+        ], ['S1']);
+        expect(merged).toMatchObject({ personId: 'a', unlistedName: null, contested: true, actionable: false });
+        expect(merged.alternatives).toEqual([{ personId: null, unlistedLabel: 'Παπαδόπουλος Γιώργος', confidence: 80 }]);
+    });
+
+    it('does not act on a bare surname off the roster, and reports it as a suggestion', () => {
+        const [merged] = mergeChunkIdentifications([[u('S1', 'Παπαδόπουλος', null, 95, 'given the floor')]], ['S1']);
+        expect(merged).toMatchObject({ unlistedName: 'Παπαδόπουλος', unlistedCapacity: null, confidence: 95, actionable: false });
+    });
+
+    it('does not act on an unlisted label from being addressed, however sure the model is', () => {
+        const [merged] = mergeChunkIdentifications([[u('S1', 'Παπαδόπουλος Γιώργος', 'κάτοικος', 95, 'addressed', 'addressed')]], ['S1']);
+        expect(merged).toMatchObject({ unlistedName: 'Παπαδόπουλος Γιώργος', evidenceKind: 'addressed', actionable: false });
     });
 
     it('reports the verdict with the strongest kind whole, so the quote is the cue the pass went by', () => {
@@ -101,6 +161,20 @@ describe('isActionable', () => {
         expect(isActionable({ personId: null, evidenceKind: 'named', contested: false, confidence: 90 })).toBe(false);
     });
 
+    it('acts on an unlisted label only when the speaker was named or introduced themselves, and the label says enough', () => {
+        const unlisted = { personId: null, unlistedName: 'Παπαδόπουλος Γιώργος', unlistedCapacity: null, contested: false, confidence: 90 };
+        const acted = SPEAKER_EVIDENCE_KINDS.filter(evidenceKind => isActionable({ ...unlisted, evidenceKind }));
+        expect(acted).toEqual([...UNLISTED_ACTIONABLE_EVIDENCE_KINDS]);
+        expect(acted).toEqual(['named', 'selfIntroduced']);
+        expect(MIN_UNLISTED_ACTIONABLE_CONFIDENCE).toBe(75);
+        expect(isActionable({ ...unlisted, evidenceKind: 'named', confidence: 74 })).toBe(false);
+        expect(isActionable({ ...unlisted, evidenceKind: 'named', contested: true })).toBe(false);
+        // A surname alone is a suggestion; a surname with a capacity, or a capacity alone, is a label.
+        expect(isActionable({ ...unlisted, unlistedName: 'Παπαδόπουλος', evidenceKind: 'named' })).toBe(false);
+        expect(isActionable({ ...unlisted, unlistedName: 'Παπαδόπουλος', unlistedCapacity: 'κάτοικος', evidenceKind: 'named' })).toBe(true);
+        expect(isActionable({ ...unlisted, unlistedName: null, unlistedCapacity: 'Υπάλληλος Τεχνικής Υπηρεσίας', evidenceKind: 'selfIntroduced' })).toBe(true);
+    });
+
     it('does not act on a name the model itself doubts, whatever kind it gives', () => {
         const at = (confidence: number) => isActionable({ personId: 'a', evidenceKind: 'named', contested: false, confidence });
         expect(MIN_ACTIONABLE_CONFIDENCE).toBe(75);
@@ -110,6 +184,39 @@ describe('isActionable', () => {
     it('is asked of the model in the same words the code uses', () => {
         const prompt = buildSystemPrompt('el');
         for (const kind of SPEAKER_EVIDENCE_KINDS) expect(prompt).toContain(`"${kind}"`);
+    });
+});
+
+describe('unlisted labels', () => {
+    it('writes a label the way reviewers do, and reads one back', () => {
+        expect(formatUnlistedLabel({ name: 'Παπαδόπουλος Γιώργος', capacity: 'Πρόεδρος Συλλόγου' })).toBe('Παπαδόπουλος Γιώργος - Πρόεδρος Συλλόγου');
+        expect(formatUnlistedLabel({ name: null, capacity: 'Γραμματέας' })).toBe('Γραμματέας');
+        expect(formatUnlistedLabel({ name: null, capacity: null })).toBeNull();
+        expect(parseUnlistedLabel('κ. Τσουκάτος - Πρωτοβουλία Χανιωτών')).toEqual({ name: 'Τσουκάτος', capacity: 'Πρωτοβουλία Χανιωτών' });
+        expect(parseUnlistedLabel('Παπαδόπουλος Γιώργος – Πρόεδρος – Σύλλογος')).toEqual({ name: 'Παπαδόπουλος Γιώργος', capacity: 'Πρόεδρος - Σύλλογος' });
+        expect(parseUnlistedLabel('Ελευθεριάδου-Παπαδάκη Σοφία')).toEqual({ name: 'Ελευθεριάδου-Παπαδάκη Σοφία', capacity: null });
+    });
+
+    it('cleans a spoken name of honorifics and a trailing period', () => {
+        expect(cleanSpokenName(' κ.  Παπαδόπουλος. ')).toBe('Παπαδόπουλος');
+        expect(cleanSpokenName('κυρία Παπαδοπούλου')).toBe('Παπαδοπούλου');
+        expect(cleanSpokenName('Mr. Smith')).toBe('Smith');
+        expect(cleanSpokenName('κ.')).toBeNull();
+        expect(cleanSpokenName(null)).toBeNull();
+    });
+
+    it('tells whether a label says enough to stand alone', () => {
+        expect(isSpecificUnlistedName({ name: 'Παπαδόπουλος', capacity: null })).toBe(false);
+        expect(isSpecificUnlistedName({ name: 'Παπαδόπουλος Γιώργος', capacity: null })).toBe(true);
+        expect(isSpecificUnlistedName({ name: 'Παπαδόπουλος', capacity: 'κάτοικος' })).toBe(true);
+        expect(isSpecificUnlistedName({ name: null, capacity: '  ' })).toBe(false);
+    });
+
+    it('matches two unlisted speakers by name, or by capacity when neither has a name', () => {
+        expect(sameUnlistedSpeaker({ name: 'Τσουκάτος', capacity: null }, { name: 'Τσουκάτος Νίκος', capacity: 'Πρωτοβουλία' })).toBe(true);
+        expect(sameUnlistedSpeaker({ name: 'Τσουκάτος', capacity: null }, { name: 'Τσουκαλάς', capacity: null })).toBe(false);
+        expect(sameUnlistedSpeaker({ name: null, capacity: 'Υπάλληλος Τεχνικής Υπηρεσίας' }, { name: null, capacity: 'υπάλληλος τεχνικής υπηρεσίας του Δήμου' })).toBe(true);
+        expect(sameUnlistedSpeaker({ name: null, capacity: 'Γραμματέας' }, { name: 'Παπαδόπουλος', capacity: 'Γραμματέας' })).toBe(false);
     });
 });
 
@@ -131,7 +238,9 @@ describe('sanitizeChunkVerdicts', () => {
         { id: 'id-b', name: 'Αλέξανδρος Κοντορινάκης', role: null, party: null },
     ];
     const v = (speakerLabel: string, person: string | null, personName: string | null, confidence = 80, evidence = '', evidenceKind: string | null = 'named'): ModelVerdict =>
-        ({ speakerLabel, person, personName, evidenceKind, confidence, evidence });
+        ({ speakerLabel, person, personName, unlistedName: null, unlistedCapacity: null, evidenceKind, confidence, evidence });
+    const uv = (speakerLabel: string, unlistedName: string | null, unlistedCapacity: string | null, confidence = 80, evidenceKind: string | null = 'named'): ModelVerdict =>
+        ({ speakerLabel, person: null, personName: null, unlistedName, unlistedCapacity, evidenceKind, confidence, evidence: '' });
 
     beforeEach(() => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -143,7 +252,7 @@ describe('sanitizeChunkVerdicts', () => {
             v('S1', 'P1', 'Βασίλειος Κωνστανταράκης', 80, 'first'),
             v('S1', null, null, 0, 'dup'),
         ], new Set(['S1']), roster);
-        expect(kept).toEqual([{ speakerLabel: 'S1', personId: 'id-a', evidenceKind: 'named', confidence: 80, evidence: 'first' }]);
+        expect(kept).toEqual([{ speakerLabel: 'S1', personId: 'id-a', unlistedName: null, unlistedCapacity: null, evidenceKind: 'named', confidence: 80, evidence: 'first' }]);
     });
 
     it('keeps a kind the code knows, and gives no kind to an unknown speaker or a made-up kind', () => {
@@ -180,6 +289,35 @@ describe('sanitizeChunkVerdicts', () => {
     it('drops a verdict that key and name do not pin to one roster person', () => {
         const kept = sanitizeChunkVerdicts([v('S1', 'P7', 'Κάποιος Άλλος', 90), v('S2', 'P9', null, 90), v('S3', 'P1', 'Κοντορινάκης Κάποιος', 90)], new Set(['S1', 'S2', 'S3']), roster);
         expect(kept.map(k => [k.personId, k.confidence])).toEqual([[null, 0], [null, 0], [null, 0]]);
+    });
+
+    it('keeps an unlisted speaker the model names without a key, cleaned as a label carries it', () => {
+        const kept = sanitizeChunkVerdicts([
+            uv('S1', 'κ. Παπαδόπουλος.', 'κάτοικος Χαλέπας', 85),
+            uv('S2', null, 'Υπάλληλος Τεχνικής Υπηρεσίας', 80, 'selfIntroduced'),
+            uv('S3', '  ', '', 50),
+        ], new Set(['S1', 'S2', 'S3']), roster);
+        expect(kept).toEqual([
+            { speakerLabel: 'S1', personId: null, unlistedName: 'Παπαδόπουλος', unlistedCapacity: 'κάτοικος Χαλέπας', evidenceKind: 'named', confidence: 85, evidence: '' },
+            { speakerLabel: 'S2', personId: null, unlistedName: null, unlistedCapacity: 'Υπάλληλος Τεχνικής Υπηρεσίας', evidenceKind: 'selfIntroduced', confidence: 80, evidence: '' },
+            { speakerLabel: 'S3', personId: null, unlistedName: null, unlistedCapacity: null, evidenceKind: null, confidence: 0, evidence: '' },
+        ]);
+    });
+
+    it('never lets an unlisted name carry a roster name: a full name is that person, a surname is unresolved', () => {
+        const kept = sanitizeChunkVerdicts([
+            uv('S1', 'Κωνστανταράκης Βασίλειος', 'κάτοικος', 90),
+            uv('S2', 'Κοντορινάκης', 'κάτοικος', 90),
+        ], new Set(['S1', 'S2']), roster);
+        expect(kept.map(k => [k.personId, k.unlistedName, k.unlistedCapacity, k.confidence])).toEqual([
+            ['id-a', null, null, 90],
+            [null, null, null, 0],
+        ]);
+    });
+
+    it('reads a verdict with a key as a roster person\'s, whatever unlisted fields it carries', () => {
+        const [kept] = sanitizeChunkVerdicts([{ ...v('S1', 'P1', 'Βασίλειος Κωνστανταράκης', 90), unlistedName: 'Κάποιος', unlistedCapacity: 'κάτοικος' }], new Set(['S1']), roster);
+        expect(kept).toMatchObject({ personId: 'id-a', unlistedName: null, unlistedCapacity: null });
     });
 });
 

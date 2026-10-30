@@ -440,6 +440,26 @@ export interface SpeakerHint {
     evidence: string;
 }
 
+/**
+ * Who a diarization speaker is when they are not on the roster — a resident,
+ * an employee, a representative — judged from the transcript text alone.
+ * There is no person record to point at, so the hint carries a label for the
+ * speaker tag, in the form reviewers write there.
+ */
+export interface UnlistedSpeakerHint {
+    speakerTagId: string;
+    /** "Επώνυμο Όνομα - Ιδιότητα": the capacity only when it was spoken, and alone when no name was. */
+    name: string;
+    /** Whether the task would act on this label by itself; see SpeakerHint.actionable. */
+    actionable: boolean;
+    /** The strongest kind of evidence behind the name. */
+    evidenceKind: SpeakerEvidenceKind | null;
+    /** 0–100, the model's own number. For a reviewer to read, not a contract. */
+    confidence: number;
+    /** The decisive transcript line(s) with their timestamp. */
+    evidence: string;
+}
+
 export interface FixTranscriptRequest extends RequestOnTranscript {
     // Agenda/subject titles of the meeting — a source for street, project, and
     // entity names that the meeting's people don't cover
@@ -452,8 +472,10 @@ export interface FixTranscriptResult {
         markUncertain: boolean;
         text: string;
     }[];
-    /** One entry per speaker the transcript identifies. Absent when the request had no `people` or no speaker tag ids. */
+    /** One entry per speaker the transcript identifies as a roster person. Absent when the request had no `people` or no speaker tag ids. */
     speakerHints?: SpeakerHint[];
+    /** One entry per speaker the transcript names who is not on the roster. Absent when speakerHints is. */
+    unlistedSpeakerHints?: UnlistedSpeakerHint[];
 }
 
 /*

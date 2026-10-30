@@ -1,16 +1,23 @@
-import { FixTranscriptRequest, SpeakerHint } from "../../types.js";
-import { identifySpeakers, SpeakerIdentification, SpeakerSegmentInput } from "../../lib/speakerIdentification.js";
+import { FixTranscriptRequest, SpeakerHint, UnlistedSpeakerHint } from "../../types.js";
+import { formatUnlistedLabel, identifySpeakers, SpeakerIdentification, SpeakerSegmentInput } from "../../lib/speakerIdentification.js";
 import { NO_USAGE, ResultWithUsage } from "../../lib/ai.js";
 import { isCancellation } from "../../lib/taskControl.js";
 
 /**
  * Speaker hints for fixTranscript: who each diarization speaker is, judged
- * from the transcript text alone.
+ * from the transcript text alone — a roster person, or a speaker the roster
+ * does not have, by the name the transcript gives them.
  *
  * The pass is deliberately blind to voiceprint matches. The model sees
  * speakers as S1, S2, ... and never the names the request carries, so the
  * caller can treat a hint and a voiceprint match as two independent opinions.
  */
+
+/** Both kinds of hint one identification pass produces. */
+export type TranscriptSpeakerHints = {
+    speakerHints: SpeakerHint[];
+    unlistedSpeakerHints: UnlistedSpeakerHint[];
+};
 
 type IdentificationInput = {
     segments: SpeakerSegmentInput[];
@@ -61,6 +68,19 @@ export function toSpeakerHints(identifications: SpeakerIdentification[], tagIdBy
 }
 
 /**
+ * The speakers the model put off the roster, each with the label the
+ * transcript gives them. Names the pass would not act on are kept too, marked
+ * as such, as for roster people.
+ */
+export function toUnlistedSpeakerHints(identifications: SpeakerIdentification[], tagIdByLabel: Map<string, string>): UnlistedSpeakerHint[] {
+    return identifications.flatMap(({ speakerLabel, personId, unlistedName, unlistedCapacity, actionable, evidenceKind, confidence, evidence }) => {
+        const speakerTagId = tagIdByLabel.get(speakerLabel);
+        const name = personId === null ? formatUnlistedLabel({ name: unlistedName, capacity: unlistedCapacity }) : null;
+        return speakerTagId && name ? [{ speakerTagId, name, actionable, evidenceKind, confidence, evidence }] : [];
+    });
+}
+
+/**
  * Runs the identification pass for a fixTranscript request.
  *
  * Returns undefined hints when the pass did not run — the request carries no
@@ -71,7 +91,7 @@ export function toSpeakerHints(identifications: SpeakerIdentification[], tagIdBy
  * A long transcript is read in chunks, and a failed chunk costs its own names
  * only (see identifySpeakers): the hints then hold what the other chunks said.
  */
-export async function identifyTranscriptSpeakers(request: FixTranscriptRequest): Promise<ResultWithUsage<SpeakerHint[] | undefined>> {
+export async function identifyTranscriptSpeakers(request: FixTranscriptRequest): Promise<ResultWithUsage<TranscriptSpeakerHints | undefined>> {
     if (!request.people || request.people.length === 0) return { result: undefined, usage: NO_USAGE };
 
     const { segments, tagIdByLabel } = buildIdentificationInput(request.transcript);
@@ -89,7 +109,13 @@ export async function identifyTranscriptSpeakers(request: FixTranscriptRequest):
         if (identified.failedChunks.length > 0) {
             console.warn(`Speaker identification: ${identified.failedChunks.length} chunk(s) failed; the hints cover the rest of the transcript`);
         }
-        return { result: toSpeakerHints(identified.result, tagIdByLabel), usage: identified.usage };
+        return {
+            result: {
+                speakerHints: toSpeakerHints(identified.result, tagIdByLabel),
+                unlistedSpeakerHints: toUnlistedSpeakerHints(identified.result, tagIdByLabel),
+            },
+            usage: identified.usage,
+        };
     } catch (error) {
         if (isCancellation(error)) throw error;
         console.error("Speaker identification failed; returning no speaker hints:", error);

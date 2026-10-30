@@ -136,14 +136,21 @@ export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = as
     // reviewers see, so the quotes in the hints match the transcript.
     const allResults = await correctTranscript(request, onProgress);
     onProgress("identifying speakers", 0);
-    const speakerHints = await identifyTranscriptSpeakers({ ...request, transcript: applyCorrections(transcript, allResults.result) });
-    const usage = addUsage(allResults.usage, speakerHints.usage);
+    const identified = await identifyTranscriptSpeakers({ ...request, transcript: applyCorrections(transcript, allResults.result) });
+    const usage = addUsage(allResults.usage, identified.usage);
     const markedUncertain = allResults.result.filter(r => r.markUncertain).length;
     console.log(`Proposing ${allResults.result.length} updates (${allResults.result.length / inputUtterances * 100}%), ${markedUncertain} marked uncertain`);
-    console.log(speakerHints.result ? `Identified ${speakerHints.result.length} speakers from the transcript` : "No speaker identification: the request has no people or speaker tag ids, or the pass failed");
+    console.log(identified.result
+        ? `Identified ${identified.result.speakerHints.length} roster speakers and ${identified.result.unlistedSpeakerHints.length} unlisted speakers from the transcript`
+        : "No speaker identification: the request has no people or speaker tag ids, or the pass failed");
     console.log(`Total usage: ${usage.input_tokens} input tokens, ${usage.output_tokens} output tokens`);
 
-    return { updateUtterances: allResults.result, speakerHints: speakerHints.result, usage };
+    return {
+        updateUtterances: allResults.result,
+        speakerHints: identified.result?.speakerHints,
+        unlistedSpeakerHints: identified.result?.unlistedSpeakerHints,
+        usage,
+    };
 };
 
 async function processSpeakerSegment(
