@@ -11,7 +11,25 @@ import {
   assertFiniteNumber,
   assertHexColor,
   assertSocialOptions,
+  planMediaRead,
 } from './mediaOperations.js';
+
+describe('planMediaRead', () => {
+  it('bounds decoding to requested material and preserves segment order and durations', () => {
+    expect(planMediaRead([
+      { startTimestamp: 100, endTimestamp: 102 },
+      { startTimestamp: 90, endTimestamp: 93 },
+    ])).toEqual({ start: 89, duration: 13, segments: [
+      { startTimestamp: 11, endTimestamp: 13 },
+      { startTimestamp: 1, endTimestamp: 4 },
+    ] });
+  });
+  it.each([[], [{ startTimestamp: -1, endTimestamp: 2 }],
+    [{ startTimestamp: 5, endTimestamp: 4 }],
+    [{ startTimestamp: 0, endTimestamp: Infinity }]].map(segments => ({ segments })))('rejects invalid cuts $segments', ({ segments }) => {
+    expect(() => planMediaRead(segments)).toThrow();
+  });
+});
 
 describe('normalizeUtteranceTimestamps', () => {
   it('produces sequential timeline from non-sequential sources', () => {

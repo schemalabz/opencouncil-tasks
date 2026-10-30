@@ -74,6 +74,42 @@ flowchart TD
 - generateSolidMarginFilter() / generateBlurredMarginFilter() build the scale/pad/blur chain
 5) Captions + speaker overlay (optional) — single ASS file
 - getFileParts(localVideoPath, segments, 'audio') extracts and concatenates the bridged segments' audio to one clip
+
+### Clipping performance
+
+`getFileParts` seeks before decoding and bounds the input read to the requested
+source window. It retains at least one second of decoder warmup, seeks at a whole
+second boundary, and shifts trim timestamps relative to that origin. This avoids
+decoding hours of discarded video for a few seconds of output. Cuts near the
+beginning omit seeking so the original audio priming is preserved. Caption and
+social filters still run after concatenation on the output timeline.
+
+During the October 30, 2026 production investigation, an eight core host was
+running eight FFmpeg processes with roughly 724% application CPU usage. Several
+6–14 second clips at source timestamps 1.7–7.2 hours had spent over an hour
+reading source files without producing output. Memory and disk IO pressure were
+low in the sampled intervals. The shared task limit was ten, with no separate
+limit for CPU work. These observations motivate avoiding unnecessary decoding
+before tuning concurrency.
+
+Run the local regression and benchmark without external services:
+
+```bash
+nix develop --command npx tsx scripts/verify-highlight-seeking.ts
+```
+
+It compares the previous full-input trim against the actual helper using a
+generated video and sine audio, including fractional cuts, separated and
+reordered segments, an added video filter, audio extraction, and nonzero source
+timestamps. It checks exact decoded video hashes and decoded PCM audio, and
+prints elapsed times. Synthetic timings establish the improvement mechanism;
+they do not predict production latency on different codecs or hardware.
+
+The source window still includes gaps between separated segments. Independent
+seeks per segment, a separate FFmpeg concurrency budget, coalescing simultaneous
+downloads, and bounded media cache retention remain further improvements to
+measure. Increasing task concurrency on an already CPU saturated host is not an
+established throughput improvement.
 - normalizeUtteranceTimestamps(adjustedUtterances) maps each utterance to clip-local ms timestamps (0-based, matching the extracted audio)
 - forcedAlign(clipAudioPath, concatenatedText) POSTs the audio + all utterance text joined with spaces to ElevenLabs `/v1/forced-alignment`; one retry inside forcedAlign on failure; throws AlignmentError if ELEVENLABS_API_KEY is unset or both attempts fail
 - resolveWordTimings pairs transcript tokens with aligner words by longest common subsequence on normalized text — the aligner sees the whole clip, so a word it adds or drops shifts every later position, and a positional slice would misattribute the entire tail. An utterance uses aligner timings only when every one of its tokens paired and its mean word loss is ≤ MAX_MEAN_LOSS; otherwise that utterance alone falls back to interpolateWords (duration split across words by character length). Rendered text is always the transcript token, and timings are clamped to the utterance window
