@@ -42,7 +42,15 @@ npm run cli -- runs compare --meeting <cityId/meetingId>                # diff t
 npm run cli -- eval task run <task> --request req.json --cassette <traceId>  # replay a run offline
 ```
 
-Model or prompt changes are evaluated with `eval run` / `eval compare` / `eval gate` against the cases in `evals/cases/` — never by eyeballing one run.
+Use `eval run` / `eval compare` / `eval gate` when the cases cover the changed behavior.
+Check the cases' languages, truth tiers, and recording compatibility before interpreting results.
+If coverage is missing or recordings are stale, compare affected archived calls before and after the change.
+Report the evidence and the coverage gap. Drafted expectations do not establish output quality.
+
+Keep production fixes separate from new detectors or evaluation infrastructure unless the fix requires them.
+Synthetic detector cases protect known behavior. They do not establish production accuracy.
+Before promoting a detector, measure false alerts and missed defects on representative labelled outputs.
+Reassess detector design and PR scope when repeated bot comments expose the same design limitation.
 
 ## Code conventions
 

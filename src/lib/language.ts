@@ -31,6 +31,8 @@ export interface LanguageConfig {
     defaultAdministrativeBodyName: string;
     /** Localized fallback shown when a speaker-contribution summary fails. */
     summaryErrorText: string;
+    /** Heading of the "main issues" list in a complex subject's description; models copy a heading from the prompt verbatim, so it is given in the output language. */
+    mainIssuesHeading: string;
     /**
      * Language-specific "WHAT TO FIX / WHAT NOT TO TOUCH" block for the
      * fixTranscript system prompt. The correction examples are inherently
@@ -92,7 +94,7 @@ WHAT NOT TO TOUCH:
 
 const FR_OUTPUT_DIRECTIVE = `**LANGUE DE SORTIE — RÉDIGE EN FRANÇAIS.** Tout le texte que tu génères (noms et descriptions des sujets, résumés, contributions, tout texte libre) DOIT être rédigé en français, même si les instructions ci-dessus sont en grec. Suis les conventions françaises : utilise « M./Mme » devant les noms de famille (jamais « κ./κα. »), les guillemets français « … » et la ponctuation française. Ne produis aucun texte en grec.`;
 
-const SR_OUTPUT_DIRECTIVE = `**ЈЕЗИК ИЗЛАЗА — ПИШИ НА СРПСКОМ.** Сав текст који генеришеш (називи и описи тема, резимеи, доприноси говорника, сваки слободан текст) МОРА бити написан на српском језику, ћириличким писмом, чак и када су упутства изнад на грчком. Прати српске конвенције: користи „г./гђа“ испред презимена (никада „κ./κα.“), српске наводнике („…“) и српску интерпункцију. Немој писати ниједан текст на грчком.`;
+const SR_OUTPUT_DIRECTIVE = `**ЈЕЗИК ИЗЛАЗА — ПИШИ НА СРПСКОМ.** Сав текст који генеришеш (називи и описи тема, резимеи, доприноси говорника, сваки слободан текст) МОРА бити написан на српском језику, ћириличким писмом, чак и када су упутства изнад на грчком. Прати српске конвенције: користи «г./гђа» испред презимена (никада «κ./κα.»), наводнике «…» (никада „…“) и српску интерпункцију. Немој писати ниједан текст на грчком.`;
 
 // German, Dutch, Italian, Polish, Portuguese (European), Spanish and Finnish
 // (the national languages of the realms added in 2026-10), and Catalan,
@@ -193,13 +195,13 @@ ${NAMES_RULE}
 
 ${notToTouch('Finnish', '«joo joo», «kirjasitteko sen?»')}`;
 
-const DE_OUTPUT_DIRECTIVE = `**AUSGABESPRACHE — SCHREIBE AUF DEUTSCH.** Der gesamte Text, den du erzeugst (Namen und Beschreibungen der Themen, Zusammenfassungen, Redebeiträge, jeder freie Text), MUSS auf Deutsch verfasst sein, auch wenn die Anweisungen oben auf Griechisch sind. Folge den deutschen Konventionen: verwende «Herr/Frau» vor Nachnamen (niemals «κ./κα.»), deutsche Anführungszeichen „…“ und deutsche Zeichensetzung. Schreibe keinen griechischen Text.`;
+const DE_OUTPUT_DIRECTIVE = `**AUSGABESPRACHE — SCHREIBE AUF DEUTSCH.** Der gesamte Text, den du erzeugst (Namen und Beschreibungen der Themen, Zusammenfassungen, Redebeiträge, jeder freie Text), MUSS auf Deutsch verfasst sein, auch wenn die Anweisungen oben auf Griechisch sind. Folge den deutschen Konventionen: verwende «Herr/Frau» vor Nachnamen (niemals «κ./κα.»), Anführungszeichen «…» (niemals „…“) und deutsche Zeichensetzung. Schreibe keinen griechischen Text.`;
 
 const NL_OUTPUT_DIRECTIVE = `**UITVOERTAAL — SCHRIJF IN HET NEDERLANDS.** Alle tekst die je genereert (namen en beschrijvingen van onderwerpen, samenvattingen, bijdragen van sprekers, elke vrije tekst) MOET in het Nederlands zijn geschreven, ook al zijn de instructies hierboven in het Grieks. Volg de Nederlandse conventies: gebruik «de heer/mevrouw» of de functie («wethouder», «raadslid», «de voorzitter», in België «schepen») vóór de achternaam (nooit «κ./κα.»), aanhalingstekens “…” en Nederlandse interpunctie. Schrijf geen Griekse tekst.`;
 
 const IT_OUTPUT_DIRECTIVE = `**LINGUA DI OUTPUT — SCRIVI IN ITALIANO.** Tutto il testo che generi (nomi e descrizioni degli argomenti, riassunti, interventi, qualsiasi testo libero) DEVE essere scritto in italiano, anche se le istruzioni qui sopra sono in greco. Segui le convenzioni italiane: usa «il consigliere/la consigliera» o «il sig./la sig.ra» davanti ai cognomi (mai «κ./κα.»), le virgolette «…» e la punteggiatura italiana. Non scrivere alcun testo in greco.`;
 
-const PL_OUTPUT_DIRECTIVE = `**JĘZYK WYJŚCIOWY — PISZ PO POLSKU.** Cały generowany przez ciebie tekst (nazwy i opisy tematów, streszczenia, wystąpienia, każdy tekst swobodny) MUSI być napisany po polsku, nawet jeśli powyższe instrukcje są po grecku. Stosuj polskie konwencje: odnoś się do osób imieniem i nazwiskiem z funkcją («radny Jan Kowalski», «radna», «burmistrz», «przewodniczący rady»); formy «pan/pani» używaj tylko z funkcją lub pełnym imieniem i nazwiskiem (nigdy «κ./κα.»). Stosuj polskie cudzysłowy „…” i polską interpunkcję. Nie pisz żadnego tekstu po grecku.`;
+const PL_OUTPUT_DIRECTIVE = `**JĘZYK WYJŚCIOWY — PISZ PO POLSKU.** Cały generowany przez ciebie tekst (nazwy i opisy tematów, streszczenia, wystąpienia, każdy tekst swobodny) MUSI być napisany po polsku, nawet jeśli powyższe instrukcje są po grecku. Stosuj polskie konwencje: odnoś się do osób imieniem i nazwiskiem z funkcją («radny Jan Kowalski», «radna», «burmistrz», «przewodniczący rady»); formy «pan/pani» używaj tylko z funkcją lub pełnym imieniem i nazwiskiem (nigdy «κ./κα.»). Stosuj cudzysłowy «…» (nigdy „…”) i polską interpunkcję. Nie pisz żadnego tekstu po grecku.`;
 
 const PT_OUTPUT_DIRECTIVE = `**LÍNGUA DE SAÍDA — ESCREVE EM PORTUGUÊS EUROPEU.** Todo o texto que gerares (nomes e descrições dos assuntos, resumos, intervenções, qualquer texto livre) TEM de ser escrito em português europeu, mesmo que as instruções acima estejam em grego. Segue as convenções portuguesas: usa o cargo com o nome («o Senhor Presidente da Câmara», «o vereador João Silva», «a deputada municipal Ana Costa»); não uses «Sr./Sr.ª» seguido só do apelido (nunca «κ./κα.»); as aspas «…» e a pontuação portuguesa. Não escrevas nenhum texto em grego.`;
 
@@ -256,6 +258,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: '',
         defaultAdministrativeBodyName: 'Δημοτικό Συμβούλιο',
         summaryErrorText: 'Σφάλμα κατά τη δημιουργία περίληψης.',
+        mainIssuesHeading: 'Κύρια ζητήματα',
         fixTranscriptNotes: EL_FIX_TRANSCRIPT_NOTES,
     },
     fr: {
@@ -264,6 +267,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: FR_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Conseil Municipal',
         summaryErrorText: 'Erreur lors de la génération du résumé.',
+        mainIssuesHeading: 'Principaux enjeux',
         fixTranscriptNotes: FR_FIX_TRANSCRIPT_NOTES,
     },
     // Generated output uses Cyrillic — the official script for Serbian
@@ -275,6 +279,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: SR_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Скупштина града',
         summaryErrorText: 'Грешка при генерисању резимеа.',
+        mainIssuesHeading: 'Главна питања',
         fixTranscriptNotes: SR_FIX_TRANSCRIPT_NOTES,
     },
     de: {
@@ -283,6 +288,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: DE_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Gemeinderat',
         summaryErrorText: 'Fehler beim Erstellen der Zusammenfassung.',
+        mainIssuesHeading: 'Kernpunkte',
         fixTranscriptNotes: DE_FIX_TRANSCRIPT_NOTES,
     },
     nl: {
@@ -291,6 +297,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: NL_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Gemeenteraad',
         summaryErrorText: 'Fout bij het maken van de samenvatting.',
+        mainIssuesHeading: 'Belangrijkste punten',
         fixTranscriptNotes: NL_FIX_TRANSCRIPT_NOTES,
     },
     it: {
@@ -299,6 +306,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: IT_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Consiglio comunale',
         summaryErrorText: 'Errore durante la generazione del riepilogo.',
+        mainIssuesHeading: 'Questioni principali',
         fixTranscriptNotes: IT_FIX_TRANSCRIPT_NOTES,
     },
     pl: {
@@ -307,6 +315,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: PL_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Rada Gminy',
         summaryErrorText: 'Błąd podczas generowania podsumowania.',
+        mainIssuesHeading: 'Główne kwestie',
         fixTranscriptNotes: PL_FIX_TRANSCRIPT_NOTES,
     },
     pt: {
@@ -315,6 +324,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: PT_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Assembleia Municipal',
         summaryErrorText: 'Erro ao gerar o resumo.',
+        mainIssuesHeading: 'Principais questões',
         fixTranscriptNotes: PT_FIX_TRANSCRIPT_NOTES,
     },
     es: {
@@ -323,6 +333,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: ES_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Pleno del Ayuntamiento',
         summaryErrorText: 'Error al generar el resumen.',
+        mainIssuesHeading: 'Cuestiones principales',
         fixTranscriptNotes: ES_FIX_TRANSCRIPT_NOTES,
     },
     fi: {
@@ -331,6 +342,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: FI_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Valtuusto',
         summaryErrorText: 'Virhe yhteenvedon luomisessa.',
+        mainIssuesHeading: 'Keskeiset kysymykset',
         fixTranscriptNotes: FI_FIX_TRANSCRIPT_NOTES,
     },
     ca: {
@@ -339,6 +351,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: CA_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Ple de l\'Ajuntament',
         summaryErrorText: 'Error en generar el resum.',
+        mainIssuesHeading: 'Qüestions principals',
         fixTranscriptNotes: CA_FIX_TRANSCRIPT_NOTES,
     },
     sv: {
@@ -347,6 +360,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: SV_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Fullmäktige',
         summaryErrorText: 'Fel när sammanfattningen skapades.',
+        mainIssuesHeading: 'Huvudfrågor',
         fixTranscriptNotes: SV_FIX_TRANSCRIPT_NOTES,
     },
     gl: {
@@ -355,6 +369,7 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
         outputDirective: GL_OUTPUT_DIRECTIVE,
         defaultAdministrativeBodyName: 'Pleno do Concello',
         summaryErrorText: 'Erro ao xerar o resumo.',
+        mainIssuesHeading: 'Cuestións principais',
         fixTranscriptNotes: GL_FIX_TRANSCRIPT_NOTES,
     },
 };
