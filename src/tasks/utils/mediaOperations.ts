@@ -511,8 +511,27 @@ export const downloadFile = async (url: string): Promise<string> => {
 };
 
 /**
- * Split a media file into segments with optional video filters
+ * Bound the input read while retaining decoder preroll and segment order.
  */
+export const planMediaRead = (segments: SplitMediaFileRequest["parts"][number]["segments"]) => {
+    if (segments.length === 0) throw new Error('At least one media segment is required');
+    for (const segment of segments) {
+        const start = assertFiniteNumber(segment.startTimestamp, 'segment.startTimestamp');
+        const end = assertFiniteNumber(segment.endTimestamp, 'segment.endTimestamp');
+        if (start < 0 || end < start) {
+            throw new Error('segment timestamps must satisfy 0 <= startTimestamp <= endTimestamp');
+        }
+    }
+    // Retain a second of decoder warmup (notably AAC) and use an integer
+    // origin to avoid shifting the video frame grid at fractional cuts.
+    const start = Math.max(0, Math.floor(Math.min(...segments.map(s => s.startTimestamp))) - 1);
+    const end = Math.max(...segments.map(s => s.endTimestamp));
+    return { start, duration: end - start, segments: segments.map(s => ({
+        startTimestamp: s.startTimestamp - start,
+        endTimestamp: s.endTimestamp - start,
+    })) };
+};
+
 export const getFileParts = async (
     filePath: string,
     segments: SplitMediaFileRequest["parts"][number]["segments"],
@@ -529,14 +548,11 @@ export const getFileParts = async (
     const outputExt = type === "audio" ? "mp3" : "mp4";
     const outputFilePath = path.join(dataDir, `${randomId}.${outputExt}`);
 
-    // The timestamps come from the request body and land in trim=start:end.
-    for (const segment of segments) {
-        const start = assertFiniteNumber(segment.startTimestamp, 'segment.startTimestamp');
-        const end = assertFiniteNumber(segment.endTimestamp, 'segment.endTimestamp');
-        if (start < 0 || end < start) {
-            throw new Error('segment timestamps must satisfy 0 <= startTimestamp <= endTimestamp');
-        }
-    }
+    // Input seeking avoids decoding hours of discarded frames before a short clip.
+    // Accurate seek (FFmpeg's transcoding default) resets the input timeline;
+    // keep trim/atrim relative to that origin and preserve the requested order.
+    const read = planMediaRead(segments);
+    segments = read.segments;
 
     const filterComplex = segments
         .map((segment, index) => {
@@ -598,7 +614,8 @@ export const getFileParts = async (
     }
     console.log(`📁 Filter script written to: ${filterScriptPath}`);
 
-    const args = ["-i", filePath, "-filter_complex_script", filterScriptPath];
+    const args = [...(read.start > 0 ? ["-ss", String(read.start)] : []), "-t", String(read.duration),
+        "-i", filePath, "-filter_complex_script", filterScriptPath];
 
     if (type === "audio") {
         args.push("-map", finalAudioOutput, "-c:a", "libmp3lame", "-b:a", "128k");
@@ -608,6 +625,7 @@ export const getFileParts = async (
 
     args.push("-y", outputFilePath);
 
+    const startedAt = Date.now();
     const ffmpegBin = ffmpegPath();
     console.log(`Executing ffmpeg command: ${ffmpegBin} ${args.join(" ")}`);
 
@@ -638,7 +656,7 @@ export const getFileParts = async (
                 } catch (e) {
                     console.warn(`⚠️ Failed to clean up filter script ${filterScriptPath}:`, e);
                 }
-                console.log(`FFmpeg process completed successfully for output: ${outputFilePath}`);
+                console.log(`FFmpeg process completed successfully for output: ${outputFilePath} (${Date.now() - startedAt}ms, source window ${read.start}s + ${read.duration}s)`);
                 resolve(outputFilePath);
             } else {
                 // Keep filter script file on failure for debugging
