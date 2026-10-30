@@ -175,7 +175,7 @@ describe("scribeResponseToTranscript", () => {
         expect(transcript.transcription.languages).toEqual(["fr"]);
     });
 
-    it("normalizes every registered Scribe code, Serbian included, and passes others through", () => {
+    it("normalizes known provider language codes, including languages without custom wording", () => {
         const languagesFor = (code: string) => scribeResponseToTranscript({
             language_code: code,
             language_probability: 0.99,
@@ -184,7 +184,7 @@ describe("scribeResponseToTranscript", () => {
             audio_duration_secs: 0.6,
         }, 10).transcription.languages;
         expect(languagesFor("srp")).toEqual(["sr"]);
-        expect(languagesFor("ukr")).toEqual(["ukr"]);
+        expect(languagesFor("ukr")).toEqual(["uk"]);
     });
 
     it("falls back to the last utterance end when audio_duration_secs is missing", () => {

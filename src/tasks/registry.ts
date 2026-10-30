@@ -27,7 +27,8 @@ export const TASKS = {
             // nearest segment instead of being dropped
             // v4: utterances carry minWordConfidence and totalConfidence alongside the
             // existing mean confidence, all derived from Scribe's per-word logprobs
-            version: 4,
+            // v5: provider language codes are normalized for every recognized language.
+            version: 5,
         },
     },
     summarize: {
