@@ -372,9 +372,10 @@ export const CUSTOMIZED_LANGUAGES = Object.keys(LANGUAGES);
 const languageNames = new Intl.DisplayNames(['en'], { type: 'language', fallback: 'none' });
 
 function resolveLanguage(value: string): { locale: Intl.Locale; name: string } | undefined {
+    if (typeof value !== 'string') return undefined;
     try {
         const locale = new Intl.Locale(value);
-        if (locale.language === 'und') return undefined;
+        if (['und', 'mul', 'zxx'].includes(locale.language)) return undefined;
         const name = languageNames.of(locale.baseName);
         return name ? { locale, name } : undefined;
     } catch {
@@ -396,6 +397,7 @@ const genericConfigs = new Map<string, LanguageConfig>();
 /** Only a missing language defaults to Greek. Invalid explicit identifiers fail. */
 export function getLanguageConfig(language: CityLanguage | undefined): LanguageConfig {
     if (language === undefined) return LANGUAGES[DEFAULT_LANGUAGE];
+    if (typeof language !== 'string') throw new RangeError('Invalid content language: expected a string');
     const resolved = resolveLanguage(language);
     if (!resolved) throw new RangeError(`Unknown content language: ${language}`);
     const { locale, name } = resolved;

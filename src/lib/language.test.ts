@@ -106,3 +106,21 @@ describe("languages without custom configuration", () => {
         expect(() => getLanguageConfig(code)).toThrow();
     });
 });
+
+
+describe("content language metadata markers", () => {
+    it.each(["und", "mul", "zxx", "mul-Latn", "zxx-US"])("rejects %s as a content target but retains provider diagnostics", (code) => {
+        expect(isCityLanguage(code)).toBe(false);
+        expect(() => getLanguageConfig(code)).toThrow(RangeError);
+        expect(cityLanguageForScribeCode(code)).toBe(code);
+    });
+});
+
+
+describe("nonstring content language inputs", () => {
+    it.each([null, 42, {}, ["el"], { toString: "el" }].map((value): [unknown] => [value]))("rejects %j without coercion or error-formatting failures", (value) => {
+        const language = value as unknown as string;
+        expect(isCityLanguage(language)).toBe(false);
+        expect(() => getLanguageConfig(language)).toThrow(RangeError);
+    });
+});
