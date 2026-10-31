@@ -1,23 +1,14 @@
 /**
- * Central registry for content-language-dependent behavior.
- *
- * `cityLanguage` (sent by the frontend on task requests) selects one of these
- * configs, which is the single home for every value that differs between
- * languages: the ASR language code, and the language-specific snippets injected
- * into otherwise-shared LLM prompts.
- *
- * Strategy: prompt bodies stay in their original language (Greek, or English for
- * fixTranscript). For non-Greek cities we keep that structural body and inject
- * `outputDirective` to force the output language; only genuinely
- * language-specific values (ASR code, default body name, fallback strings, the
- * fixTranscript correction examples) are swapped wholesale.
+ * Content-language configuration. Standard language identifiers use a generic
+ * configuration; the entries below preserve customized wording for existing
+ * languages. Adding a language does not require another registry entry.
  */
 import { CityLanguage } from "../types.js";
 
 export const DEFAULT_LANGUAGE: CityLanguage = 'el';
 
 export interface LanguageConfig {
-    /** ISO-639-3 code sent to ElevenLabs Scribe (e.g. 'ell', 'fra'). */
+    /** ISO-639-1 or ISO-639-3 code accepted by ElevenLabs Scribe. */
     scribeCode: string;
     /** Human name of the language, used inline in prompt prose ("Greek", "French"). */
     promptName: string;
@@ -29,10 +20,10 @@ export interface LanguageConfig {
     outputDirective: string;
     /** Fallback administrative-body name when the request omits one. */
     defaultAdministrativeBodyName: string;
-    /** Localized fallback shown when a speaker-contribution summary fails. */
+    /** Failure fallback; customized languages have localized wording. */
     summaryErrorText: string;
-    /** Heading of the "main issues" list in a complex subject's description; models copy a heading from the prompt verbatim, so it is given in the output language. */
-    mainIssuesHeading: string;
+    /** Exact localized heading when customized; otherwise the prompt requests a translation. */
+    mainIssuesHeading?: string;
     /**
      * Language-specific "WHAT TO FIX / WHAT NOT TO TOUCH" block for the
      * fixTranscript system prompt. The correction examples are inherently
@@ -251,7 +242,8 @@ const SV_OUTPUT_DIRECTIVE = `**UTDATASPRÅK — SKRIV PÅ SVENSKA.** All text so
 
 const GL_OUTPUT_DIRECTIVE = `**LINGUA DE SAÍDA — ESCRIBE EN GALEGO.** Todo o texto que xeres (nomes e descricións dos asuntos, resumos, intervencións, calquera texto libre) TEN que estar escrito en galego, aínda que as instrucións anteriores estean en grego. Segue as convencións galegas: usa «o Sr./a Sra.» ou o cargo («o concelleiro», «a concelleira», «o alcalde») diante dos apelidos (nunca «κ./κα.»), as comiñas «…» e a puntuación galega. Non escribas ningún texto en grego.`;
 
-export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
+/** Optional overrides. These are not a list of supported languages. */
+export const LANGUAGES: Record<string, LanguageConfig> = {
     el: {
         scribeCode: 'ell',
         promptName: 'Greek',
@@ -374,27 +366,63 @@ export const LANGUAGES: Record<CityLanguage, LanguageConfig> = {
     },
 };
 
-/** Every supported content language, in registry order. */
-export const CITY_LANGUAGES = Object.keys(LANGUAGES) as CityLanguage[];
+/** Languages with custom wording; standard language codes work without an entry. */
+export const CUSTOMIZED_LANGUAGES = Object.keys(LANGUAGES);
+
+const languageNames = new Intl.DisplayNames(['en'], { type: 'language', fallback: 'none' });
+
+function resolveLanguage(value: string): { locale: Intl.Locale; name: string } | undefined {
+    if (typeof value !== 'string') return undefined;
+    try {
+        const locale = new Intl.Locale(value);
+        if (['und', 'mul', 'zxx'].includes(locale.language)) return undefined;
+        const name = languageNames.of(locale.baseName);
+        return name ? { locale, name } : undefined;
+    } catch {
+        return undefined;
+    }
+}
 
 export function isCityLanguage(value: string): value is CityLanguage {
-    return Object.prototype.hasOwnProperty.call(LANGUAGES, value);
+    return resolveLanguage(value) !== undefined;
 }
 
-/**
- * The content language whose Scribe code is `code` ("ell" → "el"), or the code
- * itself when no registered language uses it (Scribe detected something else).
- */
+/** Normalize provider language codes, retaining an unknown provider value for diagnostics. */
 export function cityLanguageForScribeCode(code: string): string {
-    return CITY_LANGUAGES.find((language) => LANGUAGES[language].scribeCode === code) ?? code;
+    return resolveLanguage(code)?.locale.language ?? code;
 }
 
-/**
- * Resolve a language's config, defaulting to Greek when the field is missing —
- * a defensive fallback for older clients that omit `cityLanguage`.
- */
+const genericConfigs = new Map<string, LanguageConfig>();
+
+/** Only a missing language defaults to Greek. Invalid explicit identifiers fail. */
 export function getLanguageConfig(language: CityLanguage | undefined): LanguageConfig {
-    return LANGUAGES[language ?? DEFAULT_LANGUAGE] ?? LANGUAGES[DEFAULT_LANGUAGE];
+    if (language === undefined) return LANGUAGES[DEFAULT_LANGUAGE];
+    if (typeof language !== 'string') throw new RangeError('Invalid content language: expected a string');
+    const resolved = resolveLanguage(language);
+    if (!resolved) throw new RangeError(`Unknown content language: ${language}`);
+    const { locale, name } = resolved;
+    if (Object.prototype.hasOwnProperty.call(LANGUAGES, locale.baseName)) return LANGUAGES[locale.baseName];
+    const cached = genericConfigs.get(locale.baseName);
+    if (cached) return cached;
+    const config: LanguageConfig = {
+        scribeCode: locale.language,
+        promptName: name,
+        outputDirective: `OUTPUT LANGUAGE — WRITE IN ${name}. All generated free text, including subject titles, descriptions, summaries, contributions and headings, must be in ${name}, even when the instructions or examples use another language. Translate generic example headings into ${name}. Use the requested language's spelling and punctuation conventions. Preserve proper names and verbatim quotations as written in the source.`,
+        defaultAdministrativeBodyName: 'Municipal Council',
+        summaryErrorText: 'Summary generation failed.',
+        fixTranscriptNotes: `WHAT TO FIX:
+1. Check names against the provided roster and agenda. Keep unmatched names as transcribed.
+2. Correct clear transcription spelling errors using the requested language's orthography and punctuation.
+3. Use digits for dates, numbers, money and percentages, following local conventions.
+
+WHAT NOT TO TOUCH:
+- Never change the meaning, add content, summarize or translate the speaker.
+- Do not repair factual errors, spoken grammar, dialect or colloquial choices. Spoken ${name} in the record stays spoken ${name}.
+- Preserve the source script and words from other languages; never transliterate between scripts.
+- Keep interjections and crosstalk. Leave an uncertain word unchanged.`,
+    };
+    genericConfigs.set(locale.baseName, config);
+    return config;
 }
 
 /**

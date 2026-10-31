@@ -146,6 +146,20 @@ npm run cli:dev -- --help
 
 **Tip**: Use `cli:dev` during development to ensure your changes are compiled.
 
+## Content languages
+
+Task requests accept standard language identifiers through `cityLanguage`. The CLI uses `--language`.
+For example, `bs` selects Bosnian, `ja` selects Japanese, and `pt-BR` selects Brazilian Portuguese.
+ISO aliases such as `bos` resolve to the same language as `bs`.
+
+The task server derives a language name, ASR hint, output-language directive and transcript-correction guidance.
+A new language needs no registry entry. Existing customized configurations remain in `src/lib/language.ts` as optional overrides.
+Invalid explicit codes fail instead of selecting Greek. Only an omitted language keeps the legacy Greek default.
+The transcription provider still determines which languages it can transcribe.
+
+Generated headings use the requested language. Generic fallback body names and failure messages use English when no custom wording exists.
+The frontend's database language choices and realm configuration remain separate from this task-server capability.
+
 ## Configuration
 
 The service uses environment variables for configuration. Not all variables are required for all tasks - you only need to configure the ones relevant to the tasks you plan to use.
