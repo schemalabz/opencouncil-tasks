@@ -10,6 +10,7 @@ import { uploadToSpaces, overwriteSpacesObject } from "./uploadToSpaces.js";
 import { type UploadFilesArgs } from "./uploadToSpaces.js";
 import { createMuxAsset, deleteMuxAsset, type MuxResult } from "../lib/mux.js";
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from "../lib/ScribeTranscribe.js";
+import { getLanguageConfig } from "../lib/language.js";
 import _ from 'underscore';
 import dotenv from "dotenv";
 
@@ -37,6 +38,8 @@ export type PipelineDeps = {
 
 export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest, "callbackUrl">, TranscribeResult> {
     return async (request, onProgress) => {
+        // Direct callers bypass the HTTP boundary; reject before media work.
+        getLanguageConfig(request.cityLanguage);
         const createProgressHandler = (stage: string) => {
             return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
         };

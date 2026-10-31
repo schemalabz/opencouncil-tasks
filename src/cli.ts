@@ -14,7 +14,7 @@ import { pollDecisions } from './tasks/pollDecisions.js';
 import { extractAgenda, processAgenda } from './tasks/processAgenda.js';
 import { extractAgendaMeetings, readExportedMeeting, type MeetingRecordExportRow } from './lib/agendaMeetingRecord.js';
 import { fetchAgendaDocument } from './lib/documentConversion.js';
-import { CITY_LANGUAGES, isCityLanguage } from './lib/language.js';
+import { isCityLanguage } from './lib/language.js';
 import { extractDecisionFromPdf, adaToPdfUrl, allowLocalPdfFiles, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { readDecisionDocument } from './tasks/utils/readDecisionDocument.js';
 import { bodyTypeOfLabel } from './tasks/utils/decisionPartition.js';
@@ -51,11 +51,10 @@ const program = new Command();
 const app = getExpressAppWithCallbacks();
 
 // Commander coercion for the --language option: reject anything but a
-// registered content language, so a typo errors out instead of silently
-// falling back to Greek.
-const LANGUAGE_CHOICES = CITY_LANGUAGES.join('|');
+// standard content-language identifier, so a typo errors out instead of
+// silently falling back to Greek.
 function parseLanguageOption(value: string): CityLanguage {
-    if (!isCityLanguage(value)) throw new InvalidArgumentError(`expected one of ${CITY_LANGUAGES.join(', ')}`);
+    if (!isCityLanguage(value)) throw new InvalidArgumentError('expected a recognized language code, such as el, bs or ja');
     return value;
 }
 
@@ -107,7 +106,7 @@ program
     .command('pipeline <youtubeUrl>')
     .description('Run the full pipeline on a YouTube video')
     .requiredOption('-O, --output-file <file>', 'Output file for the pipeline')
-    .option('-l, --language <language>', `Content language of the meeting (${LANGUAGE_CHOICES})`, parseLanguageOption, 'el')
+    .option('-l, --language <language>', `Content language of the meeting (standard language code)`, parseLanguageOption, 'el')
     .action(async (youtubeUrl: string, options: { outputFile: string; language: CityLanguage }) => {
         console.log('Running pipeline, output to', options.outputFile);
         const result = await pipeline(
@@ -151,7 +150,7 @@ program
     .command('transcribe-single <url>')
     .description('Transcribe an audio url')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
-    .option('-l, --language <language>', `Content language of the audio (${LANGUAGE_CHOICES})`, parseLanguageOption, 'el')
+    .option('-l, --language <language>', `Content language of the audio (standard language code)`, parseLanguageOption, 'el')
     .action(async (url: string, options: { outputFile: string; language: CityLanguage }) => {
         const result = await transcribe({ segments: [{ url, start: 0 }], language: options.language }, (stage: string, progressPercent: number) => {
             process.stdout.write(`\rTranscribing audio... [${stage}] ${progressPercent.toFixed(2)}%`);
@@ -168,7 +167,7 @@ program
     .description('Transcribe an audio file')
     .requiredOption('-O, --output-file <file>', 'Output file for the transcription')
     .option('-v, --voiceprints <file>', 'JSON file containing voiceprints array')
-    .option('-l, --language <language>', `Content language of the audio (${LANGUAGE_CHOICES})`, parseLanguageOption, 'el')
+    .option('-l, --language <language>', `Content language of the audio (standard language code)`, parseLanguageOption, 'el')
     .action(async (file: string, options: { outputFile: string; voiceprints?: string; language: CityLanguage }) => {
         const createProgressHandler = (stage: string) => {
             return (subStage: string, perc: number) => {
@@ -501,7 +500,7 @@ program
     .description('Run a full pipeline smoke test and validate the result')
     .option('-O, --output-file <file>', 'Save full result to a JSON file')
     .option('--skip-preflight', 'Skip the callback server reachability check')
-    .option('-l, --language <language>', `Content language of the meeting (${LANGUAGE_CHOICES})`, parseLanguageOption, 'el')
+    .option('-l, --language <language>', `Content language of the meeting (standard language code)`, parseLanguageOption, 'el')
     .action(async (youtubeUrl: string | undefined, options: { outputFile?: string; skipPreflight?: boolean; language: CityLanguage }) => {
         const url = youtubeUrl || process.env.SMOKE_TEST_VIDEO_URL || DEFAULT_SMOKE_TEST_VIDEO;
         console.log(`Running smoke test with: ${url}\n`);
@@ -1081,7 +1080,7 @@ program
     .description('Run the agenda extraction on one document (PDF or .docx URL) and print the subjects, section by section')
     .option('--city <name>', 'City name given to the model', 'Δήμος')
     .option('--date <date>', 'Meeting date given to the model (YYYY-MM-DD)', new Date().toISOString().slice(0, 10))
-    .option('--language <language>', `City language (${LANGUAGE_CHOICES})`, parseLanguageOption, 'el')
+    .option('--language <language>', `City language (standard language code)`, parseLanguageOption, 'el')
     .option('--body <name>', 'The body that holds the meeting, e.g. "Δημοτικό Συμβούλιο"')
     .option('--body-type <type>', 'council, committee or community (default: read from --body)', parseBodyType)
     .option('--time <HH:MM>', "The meeting's start in the city's time")

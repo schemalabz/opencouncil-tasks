@@ -73,7 +73,21 @@ export function getBatchProcessingSystemPrompt(metadata: {
     ? `\nΌργανο: ${metadata.administrativeBodyName}`
     : '';
   const formattedTopicLabels = formatTopicLabels(metadata.topicLabels);
-  const { mainIssuesHeading } = getLanguageConfig(metadata.cityLanguage);
+  const { mainIssuesHeading, promptName } = getLanguageConfig(metadata.cityLanguage);
+  const issuesSection = mainIssuesHeading
+    ? `Για πολύπλοκα θέματα μόνο, πρόσθεσε μια σύντομη ενότητα με επικεφαλίδα «${mainIssuesHeading}», γραμμένη ακριβώς έτσι (μέχρι 3 ζητήματα):
+${mainIssuesHeading}:
+- Ζήτημα 1: σύντομη περιγραφή με τις διάφορες απόψεις
+- Ζήτημα 2: σύντομη περιγραφή με τις διάφορες απόψεις`
+    : `For complex subjects only, add a short section with a localized heading meaning "Main issues" in ${promptName}. Use at most three bullet points describing the issues and positions, also in ${promptName}. Do not copy the English heading literally.`;
+
+  const complexExample = mainIssuesHeading
+    ? `"Πεζοδρόμηση της οδού Ερμού και μονοδρομήσεις γύρω από τις πλατείες.
+
+${mainIssuesHeading}:
+- Η κα. Αθανασίου ζητά μελέτη επίπτωσης στα τοπικά καταστήματα
+- Ο κ. Βασιλείου θέτει ζήτημα διαβούλευσης με τους εμπόρους πριν την εφαρμογή"`
+    : `For a complex subject, describe the proposal briefly and follow it with the localized issues section described above. Write the entire description in ${promptName}.`;
 
   if (!metadata.administrativeBodyName) {
     console.warn('⚠️  WARNING: administrativeBodyName not provided in batch processing prompt. Using generic description.');
@@ -238,10 +252,7 @@ description (2-3 προτάσεις, σύντομη επισκόπηση με λ
 1. Τι είναι το θέμα και τι καλύπτει (χωρίς reference)
 2. Ποια ήταν η κύρια συζήτηση/αντιπαράθεση - σύντομα (1 reference max)
 
-Για πολύπλοκα θέματα μόνο, πρόσθεσε μια σύντομη ενότητα με επικεφαλίδα «${mainIssuesHeading}», γραμμένη ακριβώς έτσι (μέχρι 3 ζητήματα):
-${mainIssuesHeading}:
-- Ζήτημα 1: σύντομη περιγραφή με τις διάφορες απόψεις
-- Ζήτημα 2: σύντομη περιγραφή με τις διάφορες απόψεις
+${issuesSection}
 
 REFERENCES - Πότε:
 - Συγκεκριμένα νούμερα: [το κόστος είναι 300 χιλιάδες ευρώ](REF:UTTERANCE:xxx)
@@ -262,11 +273,7 @@ REFERENCES - Πότε:
 "Ερώτημα για τις καθυστερήσεις στα οδικά έργα της Λ. Αλεξάνδρας. Η εργολαβία είναι σε φάση παράδοσης."
 
 ΠΟΛΥΠΛΟΚΟ:
-"Πεζοδρόμηση της οδού Ερμού και μονοδρομήσεις γύρω από τις πλατείες.
-
-${mainIssuesHeading}:
-- Η κα. Αθανασίου ζητά μελέτη επίπτωσης στα τοπικά καταστήματα
-- Ο κ. Βασιλείου θέτει ζήτημα διαβούλευσης με τους εμπόρους πριν την εφαρμογή"
+${complexExample}
 
 ${MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS}
 

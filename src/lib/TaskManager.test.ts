@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import { DuplicateTaskIdError, TaskManager, taskManager } from './TaskManager.js';
 import { Task } from '../tasks/pipeline.js';
+import type { FixTranscriptRequest } from '../types.js';
 import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 
 // serveTask is the funnel every task endpoint goes through, so the callback
@@ -353,5 +354,45 @@ describe('task ids derived from the callback URL', () => {
         const { taskId, completion } = manager.runTaskWithCallback(slowTask, { steps: 1 }, callbackUrl, 'test');
         expect(taskId).toBe('clx123');
         await completion;
+    });
+});
+
+
+describe('serveTask language validation', () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it.each(['xx', 'not_a_language', '', 'und', 'mul', 'zxx', null, 42, {}, ['el'], { toString: 'el' }].map((value): [unknown] => [value]))('rejects explicit invalid language %j before enqueueing', (cityLanguage) => {
+        const manager = new TaskManager(1);
+        const run = vi.spyOn(manager, 'runTaskWithCallback').mockReturnValue({ taskId: 'unused', completion: Promise.resolve() });
+        const task = vi.fn(async () => ({}));
+        const res = buildResponse();
+        manager.serveTask(task)(buildRequest({ callbackUrl: 'https://example.com/cb', cityLanguage }), res);
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toEqual({ error: expect.stringContaining('content language') });
+        expect(run).not.toHaveBeenCalled();
+        expect(task).not.toHaveBeenCalled();
+    });
+
+    it.each([undefined, 'el', 'bs', 'bos', 'pt-BR', 'sr-Latn'])('accepts omitted or supported language %s, including tasks without language', (cityLanguage) => {
+        const manager = new TaskManager(1);
+        const run = vi.spyOn(manager, 'runTaskWithCallback').mockReturnValue({ taskId: 'accepted', completion: Promise.resolve() });
+        const body = { callbackUrl: 'https://example.com/cb', ...(cityLanguage === undefined ? {} : { cityLanguage }) };
+        const res = buildResponse();
+        manager.serveTask(vi.fn(async () => ({})))(buildRequest(body), res);
+        expect(res.statusCode).toBe(202);
+        expect(run).toHaveBeenCalledWith(expect.any(Function), body, body.callbackUrl, 'someTask', undefined);
+    });
+
+    it('rejects an invalid empty transcript correction before its early success path', async () => {
+        const { fixTranscript } = await import('../tasks/fixTranscript.js');
+        const manager = new TaskManager(1);
+        const run = vi.spyOn(manager, 'runTaskWithCallback').mockReturnValue({ taskId: 'unused', completion: Promise.resolve() });
+        const res = buildResponse();
+        const body: FixTranscriptRequest = { callbackUrl: 'https://example.com/cb', cityLanguage: 'xx', transcript: [], people: [], topicLabels: [], cityName: 'Test city', administrativeBodyName: 'Council', date: '2026-10-31' };
+        const req = buildRequest(body);
+        Object.defineProperty(req, 'path', { value: '/fixTranscript' });
+        manager.serveTask(fixTranscript)(req, res);
+        expect(res.statusCode).toBe(400);
+        expect(run).not.toHaveBeenCalled();
     });
 });

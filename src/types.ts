@@ -52,7 +52,8 @@ export type MediaType = "audio" | "video";
  * of all LLM-generated output. Independent of the UI locale a user views the
  * site in. Sent by the frontend on task requests alongside cityName.
  */
-export type CityLanguage = 'el' | 'fr' | 'sr' | 'de' | 'nl' | 'it' | 'pl' | 'pt' | 'es' | 'fi' | 'ca' | 'sv' | 'gl';
+// A standard language identifier, resolved and validated by lib/language.ts.
+export type CityLanguage = string;
 
 /**
  * ISO 3166-1 alpha-2 country code of the city (e.g. 'GR', 'FR', 'RS'). Used to
