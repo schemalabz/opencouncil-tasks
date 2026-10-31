@@ -8,7 +8,7 @@ The server supports the following processing tasks:
 
 ### Content Processing
 - [`processAgenda`](src/tasks/processAgenda.ts) - Extracts and structures agenda information from documents (PDF, or `.docx` converted to HTML first)
-- [`fixTranscript`](src/tasks/fixTranscript.ts) - Cleans and corrects transcription output for improved accuracy. Given the people who may speak at the meeting, it also returns speaker hints: who each diarization speaker is, read from the transcript text alone and independent of voiceprint matching
+- [`fixTranscript`](src/tasks/fixTranscript.ts) - Cleans and corrects transcription output for improved accuracy. Given the people who may speak at the meeting, it also returns speaker hints: who each diarization speaker is, read from the transcript text alone and independent of voiceprint matching, and labels for speakers who are not on the roster (residents, employees, representatives) when the text names them
 - [`summarize`](src/tasks/summarize.ts) - Generates comprehensive content summaries with subject extraction
 
 ### Media Processing

@@ -56,7 +56,9 @@ export const TASKS = {
             // v3: with the meeting's people in the request, the result carries speakerHints — who each
             // diarization speaker is, judged from the transcript text alone, each marked
             // with the kind of evidence and whether the task would act on it
-            version: 3,
+            // v4: the result also carries unlistedSpeakerHints — speakers the transcript names
+            // who are not on the roster, each with a label for the speaker tag
+            version: 4,
         },
     },
     processAgenda: {

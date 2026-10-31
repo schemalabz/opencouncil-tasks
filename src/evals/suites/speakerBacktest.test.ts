@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { acceptAtConfidence, aggregateSummaries, buildBacktestInput, describePerson, maySpeakAtMeeting, evidenceBreakdown, formatEvidenceTable, formatBacktestReport, formatMeetingTable, formatThresholdSweep, scoreBacktest, thresholdSweep, truthSource, MeetingApiData } from './speakerBacktest.js';
+import { acceptActionable, acceptAtConfidence, aggregateSummaries, buildBacktestInput, describePerson, maySpeakAtMeeting, evidenceBreakdown, formatEvidenceTable, formatBacktestReport, formatMeetingTable, formatThresholdSweep, formatUnlistedEvidenceTable, scoreBacktest, thresholdSweep, truthSource, unlistedEvidenceBreakdown, unlistedLabelAgrees, MeetingApiData } from './speakerBacktest.js';
 import { costUsd } from '../../lib/pricing.js';
-import { SpeakerIdentification } from '../../lib/speakerIdentification.js';
+import { mergeChunkIdentifications, SpeakerIdentification } from '../../lib/speakerIdentification.js';
 
 const IMPORTED = '2026-09-14T15:01:46.215Z';
 const REVIEWED = '2026-09-14T16:30:00.000Z';
@@ -83,7 +83,7 @@ describe('truthSource', () => {
     });
 
     it('treats labels no human wrote as unidentified', () => {
-        for (const label of ['Άγνωστος Ομιλητής 3', 'άγνωστος ομιλητής 3', 'Άγνωστος Ομιλητής', 'Γραμματέας', 'New speaker segment', 'New κ. Τσουκάτος', '  ', null]) {
+        for (const label of ['Άγνωστος Ομιλητής 3', 'άγνωστος ομιλητής 3', 'Άγνωστος Ομιλητής', 'Άγνωστος', 'Άγνωστος 2', 'Άγνωστος Ομλιητής', 'Unknown Speaker', 'Unkown Speaker 2', 'Ομιλητής 3', 'Γραμματέας', 'New speaker segment', 'New κ. Τσουκάτος', '  ', null]) {
             expect(truthSource({ label, personId: null })).toBe('none');
         }
     });
@@ -197,7 +197,10 @@ describe('the roster', () => {
 describe('scoreBacktest', () => {
     const input = buildBacktestInput(meeting(), { anchor: 'none' });
     const verdict = (speakerLabel: string, personId: string | null, confidence: number, over: Partial<SpeakerIdentification> = {}): SpeakerIdentification =>
-        ({ speakerLabel, personId, evidenceKind: personId ? 'named' : null, contested: false, actionable: personId !== null, confidence, evidence: 'e', alternatives: [], known: false, ...over });
+        ({ speakerLabel, personId, unlistedName: null, unlistedCapacity: null, evidenceKind: personId ? 'named' : null, contested: false, actionable: personId !== null, confidence, evidence: 'e', alternatives: [], known: false, ...over });
+    const labelled = (speakerLabel: string, unlistedName: string | null, unlistedCapacity: string | null, confidence: number, over: Partial<SpeakerIdentification> = {}): SpeakerIdentification =>
+        ({ ...verdict(speakerLabel, null, confidence), unlistedName, unlistedCapacity, evidenceKind: 'named', actionable: true, ...over });
+    const noUnlisted = { right: { tags: 0, seconds: 0 }, wrong: { tags: 0, seconds: 0 }, onRoster: { tags: 0, seconds: 0 }, unverified: { tags: 0, seconds: 0 }, heldBackRight: { tags: 0, seconds: 0 }, heldBackWrong: { tags: 0, seconds: 0 }, silent: { tags: 0, seconds: 0 } };
 
     const allOutcomesAnswers = () => [
         verdict('S1', 'p-old', 90),      // unidentified speaker → unverified
@@ -230,6 +233,7 @@ describe('scoreBacktest', () => {
             // The mayor is named on both tags; the chair on none, and the chair's short tag was right but under the threshold.
             model: {
                 peopleNamed: 1, secondsNamed: 40, correctNames: 2, wrongNames: 2, wrongSeconds: 35, wrongOnOffRoster: 1, unverifiedNames: 1, unverifiedSeconds: 5,
+                unlisted: noUnlisted,
                 missed: { silent: { tags: 0, seconds: 0 }, heldBackRight: { tags: 1, seconds: 2 }, heldBackWrong: { tags: 0, seconds: 0 } },
             },
             // Reconciled: the model names someone else on both voiceprint tags, so both are withheld — the chair's
@@ -255,6 +259,90 @@ describe('scoreBacktest', () => {
         expect(combinedWith(verdict('S5', 'p-chair', 90))).toMatchObject({ wrongNames: 1, wrongSeconds: 10, withheldNames: 0 });
     });
 
+    it('scores an unlisted label against the reviewer\'s, apart from the roster counts', () => {
+        // S4 is the resident, labelled "κ. Κάτοικος - Σύλλογος" by a reviewer; S1 nobody identified; S2 is the chair.
+        const { scored, summary } = scoreBacktest(input.speakers, [
+            labelled('S4', 'Κάτοικος', 'Σύλλογος Γονέων', 90),
+            labelled('S1', 'Περαστικός Γιάννης', null, 90),
+            labelled('S2', 'Προεδρίδης Μάρκος', 'κάτοικος', 90),
+        ]);
+        expect(Object.fromEntries(scored.map(s => [s.label, s.outcome]))).toMatchObject({ S4: 'unlistedMatch', S1: 'unlistedUnverified', S2: 'unlistedOnRoster' });
+        expect(summary.model.unlisted).toEqual({ ...noUnlisted, right: { tags: 1, seconds: 20 }, unverified: { tags: 1, seconds: 5 }, onRoster: { tags: 1, seconds: 15 } });
+        // The roster counts see a missed chair, not a wrong name.
+        expect(summary.model).toMatchObject({ wrongNames: 0, wrongOnOffRoster: 0, unverifiedNames: 0, missed: { silent: { tags: 3 } } });
+
+        const wrong = scoreBacktest(input.speakers, [labelled('S4', 'Άλλος Κάποιος', null, 90)]);
+        expect(wrong.scored.find(s => s.label === 'S4')).toMatchObject({ outcome: 'unlistedMismatch', predictedUnlisted: { name: 'Άλλος Κάποιος', capacity: null } });
+        expect(wrong.summary.model.unlisted.wrong).toEqual({ tags: 1, seconds: 20 });
+    });
+
+    it('holds back an unlisted label the pass would not act on, and says whether it was right', () => {
+        const held = (over: Partial<SpeakerIdentification>) => scoreBacktest(input.speakers, [labelled('S4', 'Κάτοικος', 'Σύλλογος', 90, over)]);
+        const bare = held({ unlistedCapacity: null, actionable: false });
+        expect(bare.scored.find(s => s.label === 'S4')).toMatchObject({ outcome: 'offRoster', heldBack: true, predictedUnlisted: { name: 'Κάτοικος', capacity: null } });
+        expect(bare.summary.model.unlisted.heldBackRight).toEqual({ tags: 1, seconds: 20 });
+        expect(held({ unlistedName: 'Άλλος', evidenceKind: 'addressed' }).summary.model.unlisted.heldBackWrong).toEqual({ tags: 1, seconds: 20 });
+        expect(scoreBacktest(input.speakers, []).summary.model.unlisted.silent).toEqual({ tags: 1, seconds: 20 });
+        // A sweep by confidence alone takes the label the pass holds back.
+        expect(scoreBacktest(input.speakers, [labelled('S4', 'Κάτοικος', null, 90, { actionable: false })], acceptAtConfidence(70)).scored.find(s => s.label === 'S4')?.outcome).toBe('unlistedMatch');
+    });
+
+    it('holds back what the pass held back when chunks are merged: a weak verdict\'s fuller form never makes the label acted on', () => {
+        // The floor grant gives a surname; only a doubtful address adds the capacity that would let the label stand alone.
+        const merged = mergeChunkIdentifications([
+            [{ speakerLabel: 'S4', personId: null, unlistedName: 'Κάτοικος', unlistedCapacity: null, evidenceKind: 'named', confidence: 90, evidence: 'given the floor' }],
+            [{ speakerLabel: 'S4', personId: null, unlistedName: 'Κάτοικος', unlistedCapacity: 'Σύλλογος', evidenceKind: 'addressed', confidence: 40, evidence: 'maybe addressed' }],
+        ], ['S4']);
+        expect(merged[0]).toMatchObject({ unlistedName: 'Κάτοικος', unlistedCapacity: null, actionable: false });
+        const { scored, summary } = scoreBacktest(input.speakers, merged, acceptActionable);
+        expect(scored.find(s => s.label === 'S4')).toMatchObject({ outcome: 'offRoster', heldBack: true });
+        expect(summary.model.unlisted.heldBackRight).toEqual({ tags: 1, seconds: 20 });
+    });
+
+    it('withholds a voiceprint match the model labels as a visitor, and counts the disagreement', () => {
+        // S2 is the chair's standing match (15s); S5 a match a reviewer corrected to the mayor.
+        const summaryOf = (...answers: SpeakerIdentification[]) => scoreBacktest(input.speakers, answers).summary;
+        const visitor = summaryOf(labelled('S2', 'Προεδρίδης Μάρκος', 'κάτοικος', 90));
+        expect(visitor.combined).toMatchObject({ correctNames: 0, withheldNames: 1, withheldSeconds: 15 });
+        // The other voiceprint tag, S5, got no answer.
+        expect(visitor.onVoiceprintTags).toMatchObject({ voiceprintRight: 1, modelSilent: 1 });
+        expect(summaryOf(labelled('S5', 'Δημαρχίδης Κώστας', null, 90)).onVoiceprintTags).toMatchObject({ bothWrong: 1, modelSilent: 1 });
+        // A label the pass holds back leaves the match standing, and counts as held back and wrong, not silent.
+        const held = summaryOf(labelled('S2', 'Προεδρίδης', null, 90, { actionable: false }));
+        expect(held.combined).toMatchObject({ correctNames: 1, withheldNames: 0 });
+        expect(held.model.missed).toMatchObject({ silent: { tags: 3 }, heldBackWrong: { tags: 1, seconds: 15 } });
+    });
+
+    it('reads a reviewer\'s label with no dash as a capacity against an answer with no name', () => {
+        expect(unlistedLabelAgrees('Υπάλληλος Δήμου Αθηναίων', { name: null, capacity: 'υπάλληλος Δήμου' })).toBe(true);
+        expect(unlistedLabelAgrees('Υπάλληλος Δήμου Αθηναίων', { name: 'Υπάλληλος', capacity: null })).toBe(true);
+        expect(unlistedLabelAgrees('Υπάλληλος Δήμου Αθηναίων', { name: 'Παπαδόπουλος', capacity: 'υπάλληλος Δήμου' })).toBe(false);
+        expect(unlistedLabelAgrees('κ. Τσουκάτος - Πρωτοβουλία', { name: null, capacity: 'Πρωτοβουλία' })).toBe(false);
+        expect(unlistedLabelAgrees(null, { name: null, capacity: 'Πρωτοβουλία' })).toBe(false);
+    });
+
+    it('breaks the unlisted labels down by kind of evidence, then the floor, then bare surnames', () => {
+        const answers = [
+            labelled('S4', 'Κάτοικος', 'Σύλλογος', 90),
+            labelled('S1', 'Περαστικός Γιάννης', null, 95, { evidenceKind: 'selfIntroduced' }),
+            labelled('S2', 'Προεδρίδης Μάρκος', null, 60, { actionable: false }),
+            labelled('S6', 'Προεδρίδης', null, 95, { actionable: false }),
+            verdict('S3', 'p-mayor', 95),
+        ];
+        const rows = unlistedEvidenceBreakdown([{ speakers: input.speakers, identifications: answers }]);
+        const byLabel = Object.fromEntries(rows.map(r => [r.label, r.summary.model.unlisted]));
+        expect(byLabel.named).toMatchObject({ right: { tags: 1 }, unverified: { tags: 0 }, onRoster: { tags: 0 } });
+        expect(byLabel.selfIntroduced).toMatchObject({ unverified: { tags: 1 } });
+        expect(byLabel['under 75']).toMatchObject({ onRoster: { tags: 1, seconds: 15 } });
+        expect(byLabel['bare surname']).toMatchObject({ onRoster: { tags: 1, seconds: 2 } });
+        expect(byLabel['acted on']).toMatchObject({ right: { tags: 1 }, unverified: { tags: 1 }, onRoster: { tags: 0 } });
+        // The roster name is never scored in these rows.
+        expect(rows.every(r => r.summary.model.peopleNamed === 0)).toBe(true);
+        const table = formatUnlistedEvidenceTable(rows);
+        expect(table).toContain('named');
+        expect(table).toContain('bare surname');
+    });
+
     it('counts a removed voiceprint match as a voiceprint error on an unidentified speaker', () => {
         const data = meeting();
         data.transcript.push({ startTimestamp: 100, endTimestamp: 130, speakerTag: tag('t-gone', 'SPEAKER_9', null, REVIEWED), utterances: [{ text: 'Κάτι.' }] });
@@ -270,7 +358,7 @@ describe('scoreBacktest', () => {
     it('does not credit the model with speakers it was handed as known', () => {
         const anchored = buildBacktestInput(meeting(), { anchor: 'voiceprint' });
         const { scored, summary } = scoreBacktest(anchored.speakers, [
-            { speakerLabel: 'S2', personId: 'p-chair', evidenceKind: null, contested: false, actionable: true, confidence: 100, evidence: 'known before identification', alternatives: [], known: true },
+            { speakerLabel: 'S2', personId: 'p-chair', unlistedName: null, unlistedCapacity: null, evidenceKind: null, contested: false, actionable: true, confidence: 100, evidence: 'known before identification', alternatives: [], known: true },
             verdict('S3', 'p-mayor', 95),
         ]);
 
