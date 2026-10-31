@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { Task } from '../tasks/pipeline.js';
 import { TaskUpdate } from '../types.js';
 import chalk from 'chalk';
+import { getLanguageConfig } from './language.js';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
 import { validateCallbackUrl, extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
@@ -359,6 +360,17 @@ export class TaskManager {
             // means the result would be produced and then have nowhere to go.
             if (!validateCallbackUrl(req.body?.callbackUrl)) {
                 return res.status(400).json({ error: 'Invalid callback URL' });
+            }
+
+            // Validate explicit content language before queueing, including tasks
+            // whose empty-input path never needs a language configuration.
+            try {
+                getLanguageConfig((req.body as { cityLanguage?: string }).cityLanguage);
+            } catch (error) {
+                if (error instanceof RangeError) {
+                    return res.status(400).json({ error: error.message });
+                }
+                throw error;
             }
 
             let taskId: string;

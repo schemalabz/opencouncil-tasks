@@ -234,3 +234,29 @@ describe("createPipeline", () => {
         ]);
     });
 });
+
+
+describe("pipeline language boundary", () => {
+    it("accepts an omitted language from legacy clients", async () => {
+        const deps = createStubDeps();
+        const request = { ...baseRequest };
+        // The current type requires language, but older runtime requests omit it.
+        Reflect.deleteProperty(request, 'cityLanguage');
+        await createPipeline(deps)(request, vi.fn());
+        expect(deps.transcribe).toHaveBeenCalledWith(expect.objectContaining({ language: undefined }), expect.any(Function));
+    });
+
+    it.each(["xx", "not_a_language", "", "und", "mul", "zxx"])("rejects %s before calling any dependency", async (cityLanguage) => {
+        const deps = createStubDeps();
+        const onProgress = vi.fn();
+        await expect(createPipeline(deps)({ ...baseRequest, cityLanguage }, onProgress)).rejects.toThrow(RangeError);
+        for (const dependency of Object.values(deps)) expect(dependency).not.toHaveBeenCalled();
+        expect(onProgress).not.toHaveBeenCalled();
+    });
+
+    it.each(["bos", "pt-BR", "sr-Latn"])("preserves accepted or omitted language %s", async (cityLanguage) => {
+        const deps = createStubDeps();
+        await createPipeline(deps)({ ...baseRequest, cityLanguage }, vi.fn());
+        expect(deps.transcribe).toHaveBeenCalledWith(expect.objectContaining({ language: cityLanguage }), expect.any(Function));
+    });
+});
