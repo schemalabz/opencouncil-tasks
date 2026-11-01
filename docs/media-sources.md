@@ -25,7 +25,7 @@ sequenceDiagram
     Note over Tasks,Site: Refusals stop early; other failures may retry
     Tasks-->>App: Async success with source, or error with mediaFailure
     Agent->>App: get_meeting to check task status
-    App-->>Agent: Status, source on success, mediaFailure on source errors
+    App-->>Agent: Status and transcript presence; mediaFailure on source errors
 ```
 
 The agent does not get a synchronous video-validation verdict from `start_task`: acceptance
@@ -51,7 +51,7 @@ be its upload time or HTTP Last-Modified date; it must not automatically set a m
 
 The OpenCouncil app already accepts HTTP(S) URLs and preserves the complete result JSON.
 The companion OpenCouncil branch adds the synchronous inspection client and MCP tool, and
-preserves source/error metadata through the existing callback and task-status projection.
+preserves source metadata in saved success results and projects media failures through task status.
 The existing task submission (`src/lib/tasks/transcribeInternal.ts` and `src/lib/tasks/tasks.ts`
 in the app) stays async. Media metadata is optional in the app contract so older callbacks,
 tasks and replays remain readable. Automated discovery is separate: the livestream poller
@@ -67,12 +67,14 @@ existing result JSON in `responseBody`. A source failure stores a small, namespa
 envelope there while keeping `failureReason` as readable error text. The envelope is explicitly
 not a successful result: replay, callback-claim and transcript-supersession guards distinguish it.
 
-The status query projects only source/failure metadata out of the existing JSON in PostgreSQL.
-It parses at most the bounded newest transcribe rows and does not transfer transcripts to the
-app or MCP. This trades some database JSON parsing for avoiding additional columns.
+The status query uses Prisma to fetch only bounded failed transcribe rows with canonical
+failure envelopes, then parses their media failures. It does not read successful result bodies
+or project source metadata. No raw SQL or additional columns are needed.
 
-MCP `get_meeting` exposes `mediaFailure` on failed transcribes and `source` on successful
-ones, alongside the existing status/error fields. Error prose remains capped at 500 characters;
+MCP `get_meeting` exposes `mediaFailure` on failed transcribes alongside the existing
+status/error fields. Task status omits `source`, including after success; agents use
+`inspect_media` for source discovery. Successful pipeline verification requires a persisted
+transcript, while the full saved success payload retains source metadata. Error prose remains capped at 500 characters;
 the structured hint remains available independently. Duplicate and late callbacks retain the
 existing guarded-write behavior. These details stay behind existing task-admin access and
 are removed from seed exports.
@@ -102,12 +104,28 @@ new extractors also distinguish tenant origins and original ids, since page-gene
 such as `index-1` are not unique across councils. Mutable content at the same URL can still
 reuse the cached recording; replacing that recording requires clearing its cache.
 
+Within a server process, downloads sharing a cache key serialize through completeness
+checks, retry invalidation and copying. Each transcription then prepares its own copy in
+a separate working directory: normalization, extracted audio and split segments never
+modify another task's files or the raw cache. Upload basenames stay stable. The pipeline
+removes the working directory after all local consumers and parallel uploads settle;
+the download CLI retains its output for inspection. Separate server processes must use
+separate data directories. Keeping the raw cache means repeated transcriptions prepare
+their copies again rather than reusing previously normalized media.
+
+Inspection logs contain only the URL origin and verdict. Input paths, credentials,
+queries, fragments and source IDs are omitted; this does not change existing download
+logging elsewhere in the pipeline.
+
 ## What using yt-dlp means
 
 Supporting yt-dlp's extractor registry is different from exposing every yt-dlp option.
 The configured binary's `--list-extractors` and `--help` show its current registry and options.
 The server uses its existing quality/container policy, proxy configuration, and post-live
-completeness checks. Generic HTML5 players, HLS and DASH should work through extraction.
+completeness checks. Both merged streams and single-file yt-dlp outputs are remuxed to
+MP4, including a single WebM selected by the format fallback. Remuxing preserves codecs;
+it does not promise conversion of every codec to an MP4-compatible codec.
+Generic HTML5 players, HLS and DASH should work through extraction.
 Authentication cookies, passwords, explicit referers, browser impersonation and provider
 extractor arguments require deliberate configuration and matching lookup/download behavior.
 They are not available as arbitrary request arguments. The plain HTTP file path does not
@@ -137,6 +155,9 @@ longer than ten minutes are inspected but skipped for full transfer. Other downl
 
 ```sh
 nix develop --command npx tsx scripts/verify-media-sources.ts --output /tmp/media-local.json
+nix develop --command npx tsx scripts/verify-media-sources.ts --only concurrency --output /tmp/media-concurrency.json
+nix develop --command npx tsx scripts/verify-media-sources.ts --only webm --output /tmp/media-webm.json
+nix develop --command npx tsx scripts/verify-media-sources.ts --only logging --inspection-fallback --output /tmp/media-logging.json
 nix develop --command npx tsx scripts/verify-media-sources.ts --update-race --output /tmp/media-update.json
 nix develop --command npx tsx scripts/verify-media-sources.ts --callback-contract --output /tmp/media-callbacks.json
 nix develop --command npx tsx scripts/verify-media-sources.ts \
@@ -147,12 +168,17 @@ nix develop --command npx tsx scripts/verify-media-sources.ts \
 
 Add new real sources to the JSON fixture rather than writing another probe. An inspection-only
 case proves extraction, not downloading; use `download: true` to exercise full transfer and
-cache reuse. Use `--only html5,hls` to repeat selected cases. `--update-race` uses a
+cache reuse. `--only concurrency` runs real concurrent direct-file and yt-dlp HTML5
+preparation, checks raw-cache preservation and independent cleanup, and verifies lock
+release after cancellation and failed transfer. The route checks also reject private URL
+components in inspection logs. `--inspection-fallback` uses a failing metadata binary to
+exercise the direct-file fallback's warning log as well. Use `--only html5,hls` to repeat selected cases. `--update-race` uses a
 deterministic updater fixture to prove that inspection waits for a running update.
 `--update-timeout` additionally tests a stuck updater that ignores SIGTERM (takes a minute).
 `--callback-contract` checks actual local HTTP callbacks. `--app-root` also checks the paired
 JSON fixture, the app's actual inspection client against the authenticated local route, and
-MCP projection of the serialized failure/source. Database persistence is covered by the app's
+MCP projection of the serialized failure, source retention in the serialized success callback,
+and omission of source from MCP task status. Database persistence is covered by the app's
 integration tests. This matrix does not exercise paid transcription services or claim to validate
 every upstream extractor. Use the existing full smoke test for the rest of the pipeline.
 
