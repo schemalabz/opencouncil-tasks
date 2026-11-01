@@ -28,7 +28,7 @@ export const TASKS = {
             // v4: utterances carry minWordConfidence and totalConfidence alongside the
             // existing mean confidence, all derived from Scribe's per-word logprobs
             // v5: provider language codes are normalized for every recognized language.
-            // v6: accepts any URL yt-dlp supports; results carry source metadata.
+            // v6: accepts yt-dlp sources; results carry source metadata and source errors carry mediaFailure.
             version: 6,
         },
     },

@@ -22,6 +22,8 @@ export interface TaskUpdate<T> {
     progressPercent: number;
     result?: T;
     error?: string;
+    /** Structured source-resolution/download failure; absent for other errors and older servers. */
+    mediaFailure?: MediaFailure;
     version: number | undefined;
 }
 
@@ -144,6 +146,14 @@ export type MediaUnsupportedReason =
     | 'not_found'
     /** Anything else; may succeed on a later try. */
     | 'error';
+
+/** Machine-readable detail alongside the task callback's existing error text. */
+export interface MediaFailure {
+    reason: MediaUnsupportedReason;
+    /** The condition might clear later; not permission for unbounded resubmission. */
+    retryable: boolean;
+    hint?: string;
+}
 
 export interface InspectMediaRequest {
     url: string;

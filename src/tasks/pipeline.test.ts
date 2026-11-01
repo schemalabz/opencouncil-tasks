@@ -53,6 +53,51 @@ const baseRequest = {
 };
 
 describe("createPipeline", () => {
+    it.each([false, true])("cleanup failure preserves the task outcome (audio failure=%s)", async (failAudio) => {
+        const deps = createStubDeps();
+        const download = deps.downloadYTV;
+        deps.downloadYTV = async (...args) => ({ ...await download(...args), cleanup: () => { throw new Error('cleanup failed'); } });
+        if (failAudio) deps.diarize = async () => { throw new Error('audio failed'); };
+        const result = createPipeline(deps)(baseRequest, vi.fn());
+        if (failAudio) await expect(result).rejects.toThrow('audio failed');
+        else await expect(result).resolves.toHaveProperty('transcript');
+    });
+
+    it.each([false, true])("keeps task-local files until parallel consumers finish (audio failure=%s)", async (failAudio) => {
+        let finishVideo!: () => void;
+        const videoPending = new Promise<void>(resolve => { finishVideo = resolve; });
+        let audioReached!: () => void;
+        const audioStarted = new Promise<void>(resolve => { audioReached = resolve; });
+        const cleanup = vi.fn();
+        const deps = createStubDeps();
+        const download = deps.downloadYTV;
+        deps.downloadYTV = async (...args) => ({ ...await download(...args), cleanup });
+        const upload = deps.uploadToSpaces;
+        deps.uploadToSpaces = async (args, progress) => {
+            if (args.spacesPath === 'council-meeting-videos') await videoPending;
+            expect(cleanup).not.toHaveBeenCalled();
+            return upload(args, progress);
+        };
+        const diarize = deps.diarize;
+        deps.diarize = async (...args) => {
+            audioReached();
+            if (failAudio) throw new Error('audio failed');
+            return diarize(...args);
+        };
+        const transcribe = deps.transcribe;
+        deps.transcribe = async (...args) => {
+            expect(cleanup).not.toHaveBeenCalled();
+            return transcribe(...args);
+        };
+        const result = createPipeline(deps)(baseRequest, vi.fn());
+        const checked = failAudio ? expect(result).rejects.toThrow('audio failed') : expect(result).resolves.toHaveProperty('transcript');
+        await audioStarted;
+        expect(cleanup).not.toHaveBeenCalled();
+        finishVideo();
+        await checked;
+        expect(cleanup).toHaveBeenCalledOnce();
+    });
+
     it("happy path — returns correct shape and calls tasks in order", async () => {
         const deps = createStubDeps();
         const pipeline = createPipeline(deps);

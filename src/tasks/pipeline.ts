@@ -44,7 +44,7 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
             return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
         };
 
-        const { audioOnly, combined, source, mediaRewritten } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+        const { audioOnly, combined, source, mediaRewritten, cleanup } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
         // Only upload video if it's not already on our own Spaces storage. When it IS on our
         // Spaces but downloadYTV rewrote the file (loudnorm, video start shift), overwrite the
@@ -138,6 +138,12 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
                 // Mux creation itself may have failed, or deletion failed — nothing to clean up
             }
             throw error;
+        } finally {
+            // A failed audio branch can finish before the parallel video upload.
+            // Keep its input alive until the upload has settled too.
+            await Promise.allSettled([combinedVideoUploadPromise, muxPromise]);
+            try { cleanup?.(); }
+            catch (err) { console.warn('Could not clean up task-local media:', err); }
         }
     };
 }

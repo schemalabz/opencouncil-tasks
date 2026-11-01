@@ -11,12 +11,13 @@ import type { ReadableStream } from "stream/web";
 import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { childEnv } from '../lib/childEnv.js';
 import { assertFetchableUrl } from '../lib/fetchableUrl.js';
+import { isCancellation } from '../lib/taskControl.js';
 import { YtDlp, helpers as ytdlpHelpers, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 import { getMediaDurationSeconds, probeVideoTiming } from "./utils/mediaOperations.js";
 import { isSpacesUrl } from "./utils/spacesUrl.js";
 import {
     MEDIA_INFO_TEMPLATE, parseMediaInfo, isDirectFile, toSourceInfo, cacheKeyFor,
-    classifyMediaError, isPermanentMediaError, mediaErrorMessage, type MediaInfo,
+    classifyMediaError, isPermanentMediaError, mediaErrorMessage, MediaDownloadError, MediaHttpError, type MediaInfo,
 } from "./utils/mediaSource.js";
 import type { InspectMediaResponse, MediaSourceInfo } from "../types.js";
 
@@ -98,6 +99,8 @@ export interface DownloadedMedia {
     source: MediaSourceInfo;
     /** The file differs from the download (loudness normalized or video decode timestamps rebuilt), so a Spaces source must be overwritten. */
     mediaRewritten: boolean;
+    /** Release task-local files after all uploads and audio consumers finish. */
+    cleanup?: () => void;
 }
 
 /** What the source reports about a video, fetched independently of any download. */
@@ -353,13 +356,13 @@ class MediaSource {
         try {
             this.info = await lookupMedia(this.url);
         } catch (err) {
-            const { permanent, hint } = classifyMediaError(err);
+            const { permanent, hint, reason } = classifyMediaError(err);
             // A media file downloaded without yt-dlp before it was asked first: a lookup that
             // fails for any passing reason (yt-dlp broken or blocked) must not stop one now.
             if (!permanent && !this.offline) {
                 const contentType = await mediaFileType(this.url);
                 if (contentType) {
-                    console.warn(`[media-source] ${this.url}: lookup failed (${mediaErrorMessage(err)}); it serves ${contentType}, downloading it as a file`);
+                    console.warn(`[media-source] ${new URL(this.url).origin}: lookup failed (${reason}); it serves ${contentType}, downloading it as a file`);
                     this.info = { extractor: 'Generic', id: path.basename(new URL(this.url).pathname) || 'file', direct: true };
                     this.key ??= cacheKeyFor(this.info, this.url);
                     return this.info;
@@ -456,42 +459,101 @@ function completeDownloadConfig(): CompleteDownloadConfig {
     };
 }
 
-/**
- * Downloads a recording from any source yt-dlp supports, a media file, or our Spaces
- * storage, retrying while it comes back incomplete — a just-ended livestream VOD is still
- * processing and can download truncated. Returns the raw media; downloadYTV prepares it
- * and extracts audio after completeness is confirmed. Also used by CLI source verification.
- */
-export const downloadMedia: Task<string, RawVideo & { source: MediaSourceInfo }> = async (youtubeUrl, onProgress) => {
-    const source = new MediaSource(youtubeUrl);
-    const { combined } = await downloadUntilComplete(
-        youtubeUrl,
-        {
-            download: (_url, progress) => downloadVideoOnce(source, progress),
-            getInfo: async () => {
-                const info = await source.lookup();
-                return info ? { liveStatus: info.liveStatus, durationSec: info.durationSec } : {};
-            },
-            probeDurationSeconds: getMediaDurationSeconds,
-            dropCachedMedia: () => dropCachedMedia(source.cacheKey()),
-            downloadedBytes: () => downloadedBytes(source.cacheKey()),
-            isRetryable: (err) => source.isRetryable(err),
-            sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-            now: () => Date.now(),
-        },
-        completeDownloadConfig(),
-        onProgress,
-    );
+// One server process owns DATA_DIR. Protect the raw cache through completeness retries
+// and the task-local copy; releasing after the HTTP transfer alone would let another
+// retry delete the file while it is being probed or copied. Different keys run in parallel.
+const cacheDownloads = new Map<string, Promise<void>>();
+function removeWorkDirectory(dir: string): void {
+    try { fs.rmSync(dir, { recursive: true, force: true }); }
+    catch (err) { console.warn(`[media-work] Could not remove ${dir}:`, err); }
+}
 
-    return { combined, source: source.sourceInfo() };
-};
+async function acquireMediaCache(key: string): Promise<() => void> {
+    const previous = cacheDownloads.get(key);
+    let release!: () => void;
+    const current = new Promise<void>(resolve => { release = resolve; });
+    cacheDownloads.set(key, current);
+    await previous;
+    return () => {
+        if (cacheDownloads.get(key) === current) cacheDownloads.delete(key);
+        release();
+    };
+}
+
+async function acquireDownload(youtubeUrl: string, onProgress: ProgressFn, taskLocal: boolean): Promise<RawVideo & { source: MediaSourceInfo }> {
+    let resolved: MediaSource | undefined;
+    let release: (() => void) | undefined;
+    let rawDownloadComplete = false;
+    try {
+        const source = new MediaSource(youtubeUrl);
+        resolved = source;
+        const { combined } = await downloadUntilComplete(
+            youtubeUrl,
+            {
+                download: async (_url, progress) => {
+                    const key = source.cacheKey();
+                    if (key && !release) {
+                        release = await acquireMediaCache(path.resolve(process.env.DATA_DIR || './data', key));
+                        progress('downloading', 0);
+                    }
+                    return downloadVideoOnce(source, progress);
+                },
+                getInfo: async () => {
+                    const info = await source.lookup();
+                    return info ? { liveStatus: info.liveStatus, durationSec: info.durationSec } : {};
+                },
+                probeDurationSeconds: getMediaDurationSeconds,
+                dropCachedMedia: () => { if (release) dropCachedMedia(source.cacheKey()); },
+                downloadedBytes: () => downloadedBytes(source.cacheKey()),
+                isRetryable: (err) => !isCancellation(err) && source.isRetryable(err),
+                sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+                now: () => Date.now(),
+            },
+            completeDownloadConfig(),
+            onProgress,
+        );
+        rawDownloadComplete = true;
+
+        if (!taskLocal) return { combined, source: source.sourceInfo() };
+        const workRoot = path.join(path.dirname(combined), 'work');
+        fs.mkdirSync(workRoot, { recursive: true });
+        const workDir = fs.mkdtempSync(path.join(workRoot, 'media-'));
+        try {
+            const local = path.join(workDir, path.basename(combined));
+            // A copy, never a hard link: preparation must not change the raw cache.
+            await fs.promises.copyFile(combined, local, fs.constants.COPYFILE_FICLONE);
+            return { combined: local, source: source.sourceInfo() };
+        } catch (err) {
+            removeWorkDirectory(workDir);
+            throw err;
+        }
+    } catch (err) {
+        // Copying into a task workspace is local preparation, not a source failure.
+        if (rawDownloadComplete || isCancellation(err) || err instanceof MediaDownloadError) throw err;
+        // Agent recovery is separate from the worker retry loop: a transient HTTP
+        // failure can clear later even though files are not automatically retried here.
+        throw new MediaDownloadError(err, resolved ? undefined : false);
+    } finally {
+        release?.();
+    }
+}
+
+/** Download and verify raw media, retaining stable cache paths for CLI verification. */
+export const downloadMedia: Task<string, RawVideo & { source: MediaSourceInfo }> =
+    (url, onProgress) => acquireDownload(url, onProgress, false);
 
 export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
-    const { combined, source } = await downloadMedia(youtubeUrl, onProgress);
+    const { combined, source } = await acquireDownload(youtubeUrl, onProgress, true);
+    const cleanup = () => removeWorkDirectory(path.dirname(combined));
     const audioOnly = path.join(path.dirname(combined), `${path.basename(combined, path.extname(combined))}.mp3`);
-    const mediaRewritten = await prepareVideo(combined);
-    await extractSoundFromMP4(combined, audioOnly);
-    return { audioOnly, combined, source, mediaRewritten };
+    try {
+        const mediaRewritten = await prepareVideo(combined);
+        await extractSoundFromMP4(combined, audioOnly);
+        return { audioOnly, combined, source, mediaRewritten, cleanup };
+    } catch (err) {
+        cleanup();
+        throw err;
+    }
 };
 
 /** Whether the server can download a URL, and what the source reports about it. Downloads nothing. */
@@ -950,7 +1012,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
         const response = await fetch(url, { headers: HEADERS });
         if (!response.ok) {
             await response.body?.cancel();
-            throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}`);
+            throw new MediaHttpError(response.status, url, response.statusText);
         }
         if (!response.body) throw new Error('Unable to read response body');
         await streamPipeline(
