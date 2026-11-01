@@ -8,24 +8,35 @@ page with its resolved video URL loses the referer that domain-restricted player
 
 ## Where inspection fits
 
+The primary caller is an agent using OpenCouncil's MCP. Starting a task must work without
+a separate inspection tool call:
+
 ```mermaid
 sequenceDiagram
-    participant Admin as Admin UI or agent
+    participant Agent as Agent through MCP
     participant App as OpenCouncil server
     participant Tasks as Task server
     participant Site as Video source
-    Admin->>App: Check a media URL (optional)
-    App->>Tasks: POST /inspectMedia with server-held bearer token
-    Tasks->>Site: Extract metadata
-    Tasks-->>App: Source metadata or reason and hint
-    App-->>Admin: Preview or explain refusal
-    Admin->>App: Start transcription
+    Agent->>App: start_task(type=transcribe, videoUrl)
     App->>Tasks: POST /transcribe with URL and callback
-    Tasks-->>App: Task accepted
-    Tasks->>Site: Resolve again, then download
-    Note over Tasks,Site: Retry and check duration for post-live processing
-    Tasks-->>App: Async result with source metadata and task version
+    Tasks-->>App: Task accepted or queued
+    App-->>Agent: Task id and status
+    Tasks->>Site: Resolve URL, then download
+    Note over Tasks,Site: Refusals stop early; other failures may retry
+    Tasks-->>App: Async success with source, or error with mediaFailure
+    Agent->>App: get_meeting to check task status
+    App-->>Agent: Status, source on success, mediaFailure on source errors
 ```
+
+The agent does not get a synchronous video-validation verdict from `start_task`: acceptance
+means queued/running, not downloadable. A permanent source refusal happens when the worker
+runs its lookup, before uploads or transcription. The callback persists the failure; the
+agent learns it on its next status read. Other failures may occupy the existing retry window.
+
+The MCP `inspect_media(url)` tool supports source discovery before choosing a URL or creating
+a meeting. It proxies the synchronous `/inspectMedia` endpoint with the app's server-held key.
+It requires administrator access but does not require a meeting to exist. It is not a mandatory approval step or a prerequisite to
+`start_task`, and successful inspection must not suppress the worker's later lookup.
 
 Inspection is optional. Transcription performs its own lookup even if the app previously
 inspected the URL: manifests, availability and duration can change after a live meeting.
@@ -39,13 +50,52 @@ Spaces inspection recognizes the URL without fetching the object. A source times
 be its upload time or HTTP Last-Modified date; it must not automatically set a meeting date.
 
 The OpenCouncil app already accepts HTTP(S) URLs and preserves the complete result JSON.
-No app change is required for new sources to transcribe. The existing task submission
-(`src/lib/tasks/transcribeInternal.ts` and `src/lib/tasks/tasks.ts` in the app) stays async.
-To use inspection, add an authorized synchronous server-side client and a preview/check
-action in the existing media form; keep the task API
-key on the server. An MCP inspection tool can call the same client. If consuming `source`,
-make it optional in the app type so old callbacks and replays remain valid. Automated
-provider discovery is separate: the livestream poller still discovers YouTube videos.
+The companion OpenCouncil branch adds the synchronous inspection client and MCP tool, and
+preserves source/error metadata through the existing callback and task-status projection.
+The existing task submission (`src/lib/tasks/transcribeInternal.ts` and `src/lib/tasks/tasks.ts`
+in the app) stays async. Media metadata is optional in the app contract so older callbacks,
+tasks and replays remain readable. Automated discovery is separate: the livestream poller
+still discovers YouTube videos. A UI preview could reuse the inspection client later.
+
+### Agent-facing result and recovery
+
+The task server wraps failures only while resolving/downloading media. Its terminal callback
+keeps the existing error text and adds `mediaFailure` (reason, retryable, optional hint).
+FFmpeg, ASR and other task failures retain their existing error shape; cancellation remains
+cancellation. No database schema change is needed. Successful source metadata stays in the
+existing result JSON in `responseBody`. A source failure stores a small, namespaced failure
+envelope there while keeping `failureReason` as readable error text. The envelope is explicitly
+not a successful result: replay, callback-claim and transcript-supersession guards distinguish it.
+
+The status query projects only source/failure metadata out of the existing JSON in PostgreSQL.
+It parses at most the bounded newest transcribe rows and does not transfer transcripts to the
+app or MCP. This trades some database JSON parsing for avoiding additional columns.
+
+MCP `get_meeting` exposes `mediaFailure` on failed transcribes and `source` on successful
+ones, alongside the existing status/error fields. Error prose remains capped at 500 characters;
+the structured hint remains available independently. Duplicate and late callbacks retain the
+existing guarded-write behavior. These details stay behind existing task-admin access and
+are removed from seed exports.
+
+An agent can therefore:
+
+- Start a transcribe directly and poll its accepted task with `get_meeting`.
+- Use an `embed_only` hint to find the embedding page and submit that URL instead.
+- Stop repeating a permanent refusal and find another recording or report the blocker.
+- Use bounded retries or escalation for transient failures. `retryable` means the condition
+  might clear later; it is neither permission for an endless loop nor a promise that the
+  worker itself automatically retries that transport. A disconnected direct file may be
+  recoverable even though only yt-dlp downloads enter the post-live retry loop.
+- Inspect candidate URLs first when that avoids creating the wrong meeting or choosing the
+  wrong recording. Inspection still does not prove full transfer or the meeting date.
+
+### Rollout
+
+There is no migration or backfill: the app schema remains identical to its main branch.
+Deploy the task server endpoint before using the new app's inspection tool. Old callbacks
+without metadata remain readable. Legacy result payloads remain replayable, while the new
+source-failure envelope cannot be replayed as a transcript result. No deployment is applied
+by this implementation work.
 
 Direct transfers publish their cache file only after the stream finishes. Cache keys for
 new extractors also distinguish tenant origins and original ids, since page-generated ids
@@ -88,6 +138,9 @@ longer than ten minutes are inspected but skipped for full transfer. Other downl
 ```sh
 nix develop --command npx tsx scripts/verify-media-sources.ts --output /tmp/media-local.json
 nix develop --command npx tsx scripts/verify-media-sources.ts --update-race --output /tmp/media-update.json
+nix develop --command npx tsx scripts/verify-media-sources.ts --callback-contract --output /tmp/media-callbacks.json
+nix develop --command npx tsx scripts/verify-media-sources.ts \
+  --app-root /path/to/opencouncil --output /tmp/media-app-bridge.json
 nix develop --command npx tsx scripts/verify-media-sources.ts \
   --remote scripts/fixtures/media-sources.json --output /tmp/media-expanded.json
 ```
@@ -96,7 +149,11 @@ Add new real sources to the JSON fixture rather than writing another probe. An i
 case proves extraction, not downloading; use `download: true` to exercise full transfer and
 cache reuse. Use `--only html5,hls` to repeat selected cases. `--update-race` uses a
 deterministic updater fixture to prove that inspection waits for a running update.
-`--update-timeout` additionally tests a stuck updater that ignores SIGTERM (takes a minute). This matrix does not exercise paid transcription services or claim to validate
+`--update-timeout` additionally tests a stuck updater that ignores SIGTERM (takes a minute).
+`--callback-contract` checks actual local HTTP callbacks. `--app-root` also checks the paired
+JSON fixture, the app's actual inspection client against the authenticated local route, and
+MCP projection of the serialized failure/source. Database persistence is covered by the app's
+integration tests. This matrix does not exercise paid transcription services or claim to validate
 every upstream extractor. Use the existing full smoke test for the rest of the pipeline.
 
 A downloader may update the yt-dlp binary at runtime. The server guards its own lookups and

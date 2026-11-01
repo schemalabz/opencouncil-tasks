@@ -1,4 +1,4 @@
-/** Download/inspection integration checks. No uploads, transcription, or callbacks.
+/** Download/inspection integration checks. No uploads, paid services, or external callbacks.
  * nix develop --command npx tsx scripts/verify-media-sources.ts [--remote cases.json] [--output report.json]
  * Remote cases: [{name,url,download?:boolean}]. Each download is complete, not a sample.
  */
@@ -6,6 +6,7 @@ import express from 'express';
 import { mkdtempSync, mkdirSync, writeFileSync, statSync, rmSync, copyFileSync, chmodSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFileSync } from 'node:fs';
@@ -16,6 +17,11 @@ import { getMediaDurationSeconds } from '../src/tasks/utils/mediaOperations.js';
 
 
 const dir = mkdtempSync(path.join(tmpdir(), 'media-sources-'));
+const appRootAt = process.argv.indexOf('--app-root');
+const appRoot = appRootAt >= 0 ? path.resolve(process.argv[appRootAt + 1]) : undefined;
+const callbackContract = process.argv.includes('--callback-contract') || Boolean(appRoot);
+const bridgeToken = 'local-media-bridge';
+const routeHeaders = { 'content-type': 'application/json', ...(appRoot && { authorization: `Bearer ${bridgeToken}` }) };
 const updateTimeout = process.argv.includes('--update-timeout');
 const updateRace = process.argv.includes('--update-race') || updateTimeout;
 // Pin a private copy: another download process may self-update the shared bundled zipapp.
@@ -55,6 +61,7 @@ if (args.includes('--update-to')) {
     chmodSync(process.env.YTDLP_BIN_PATH, 0o755);
 }
 const { downloadMedia, inspectMedia } = await import('../src/tasks/downloadYTV.js');
+const { MediaDownloadError } = await import('../src/tasks/utils/mediaSource.js');
 const version = (await promisify(execFile)(process.env.YTDLP_BIN_PATH, ['--version'])).stdout.trim();
 const fixtures = path.join(dir, 'fixtures');
 mkdirSync(fixtures);
@@ -65,8 +72,13 @@ const run = promisify(execFile);
 const ff = (args: string[]) => run(ffmpegPath(), ['-v', 'error', '-y', ...args], { timeout: 60_000 });
 const { default: inspectRouter } = await import('../src/routes/inspectMedia.js');
 const app = express();
+const callbacks: any[] = [];
 app.use(express.json());
-app.use('/inspectMedia', inspectRouter);
+app.post('/task-callback', (req, res) => { callbacks.push(req.body); res.sendStatus(204); });
+app.use('/inspectMedia', (req, res, next) => {
+    if (appRoot && req.headers.authorization !== `Bearer ${bridgeToken}`) return res.sendStatus(401);
+    next();
+}, inspectRouter);
 app.get('/redirect', (_req, res) => res.redirect('/fixture.mp4'));
 app.get('/page', (_req, res) => res.type('html').send('<video controls src="/fixture.mp4"></video>'));
 app.get('/multiple', (_req, res) => res.type('html').send('<video src="/fixture.mp4"></video><video src="/second.mp4"></video>'));
@@ -91,7 +103,7 @@ const reports: object[] = [];
 const onlyAt = process.argv.indexOf('--only');
 const selected = onlyAt < 0 ? undefined : new Set(process.argv[onlyAt + 1].split(','));
 async function check(name: string, url: string, download: boolean, expected?: boolean) {
-    if (updateRace || (selected && !selected.has(name))) return;
+    if (callbackContract || updateRace || (selected && !selected.has(name))) return;
     const start = Date.now();
     const inspection = await inspectMedia(url);
     const row: Record<string, unknown> = { name, url, inspection };
@@ -124,10 +136,14 @@ try {
     await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-vn', path.join(fixtures, 'audio.mp3')]);
     await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-c', 'copy', '-hls_time', '1', '-hls_list_size', '0', path.join(fixtures, 'stream.m3u8')]);
     await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-c', 'copy', '-f', 'dash', path.join(fixtures, 'stream.mpd')]);
-    if (!updateRace && (!selected || selected.has('interrupted'))) {
+    if (!callbackContract && !updateRace && (!selected || selected.has('interrupted'))) {
         const row: Record<string, unknown> = { name: 'interrupted' };
         try {
-            await assert.rejects(downloadMedia(base + '/interrupted.mp4', () => {}));
+            await assert.rejects(downloadMedia(base + '/interrupted.mp4', () => {}), (err: unknown) => {
+                assert(err instanceof MediaDownloadError);
+                assert.equal(err.mediaFailure.retryable, true, 'a disconnected file may succeed on a later bounded retry');
+                return true;
+            });
             const retried = await downloadMedia(base + '/interrupted.mp4', () => {});
             assert.equal(statSync(retried.combined).size, statSync(path.join(fixtures, 'fixture.mp4')).size, 'partial file reused');
             assert(interruptedTransfers >= 2, 'retry must fetch again');
@@ -146,6 +162,51 @@ try {
     process.env.PUBLIC_URL = base;
     app.get('/dev/files/fixture-bucket/video.mp4', (_req, res) => res.sendFile(path.join(fixtures, 'fixture.mp4')));
     await check('spaces', base + '/dev/files/fixture-bucket/video.mp4', true, true);
+    if (callbackContract) {
+        process.env.ENABLE_TELEMETRY = 'false';
+        process.env.CAPTURE_PAYLOADS = 'false';
+        const { TaskManager } = await import('../src/lib/TaskManager.js');
+        const manager = new TaskManager(1);
+        await manager.runTaskWithCallback(downloadMedia, 'https://www.youtube.com/watch?v=bad', base + '/task-callback', 'transcribe', 6).completion;
+        const failure = callbacks.at(-1);
+        assert.equal(failure.status, 'error');
+        assert.equal(failure.error, 'Invalid YouTube video ID');
+        assert.deepEqual(failure.mediaFailure, {
+            reason: 'unsupported', retryable: false,
+            hint: 'Send the URL of a video page, a page that embeds a video player, or a media file.',
+        });
+        await manager.runTaskWithCallback(downloadMedia, base + '/fixture.mp4', base + '/task-callback', 'transcribe', 6).completion;
+        const success = callbacks.at(-1);
+        assert.equal(success.status, 'success');
+        assert.equal(success.result.source.kind, 'file');
+        assert.equal(success.result.source.extractor, 'Generic');
+        assert.equal(success.mediaFailure, undefined);
+        reports.push({ name: 'callback-contract', failure, source: success.result.source });
+        if (appRoot) {
+            const payload = path.join(dir, 'bridge.json');
+            writeFileSync(payload, JSON.stringify({ failure, source: success.result.source }));
+            const worker = fileURLToPath(new URL('./verify-agent-media-client.ts', import.meta.url));
+            // Next resolves this marker at compile time; plain tsx needs the same server alias.
+            const tsconfig = path.join(dir, 'app-tsconfig.json');
+            writeFileSync(tsconfig, JSON.stringify({
+                extends: path.join(appRoot, 'tsconfig.json'),
+                compilerOptions: { baseUrl: appRoot, paths: {
+                    '@/*': [path.join(appRoot, 'src/*')],
+                    'server-only': [path.join(appRoot, 'node_modules/next/dist/compiled/server-only/empty.js')],
+                } },
+            }));
+            const { stdout } = await run(process.execPath, [
+                '--conditions=react-server', '--import', 'tsx', worker, appRoot, base, payload,
+            ], {
+                cwd: appRoot,
+                env: { ...process.env, TSX_TSCONFIG_PATH: tsconfig,
+                    SKIP_ENV_VALIDATION: '1', TASK_API_URL: base, TASK_API_KEY: bridgeToken },
+                timeout: 90_000,
+            });
+            const result = JSON.parse(stdout.trim().split('\n').at(-1)!);
+            reports.push({ name: 'app-bridge', result });
+        }
+    }
     if (updateRace) {
         const downloading = downloadMedia(base + '/page', () => {});
         const deadline = Date.now() + 5000;
@@ -158,13 +219,13 @@ try {
         assert.equal(statSync(downloaded.combined).size, statSync(path.join(fixtures, 'fixture.mp4')).size);
         reports.push({ name: updateTimeout ? 'update-timeout' : 'update-race', download: 'passed', inspection });
     }
-    const response = await fetch(base + '/inspectMedia', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: base + '/fixture.mp4' }) });
+    const response = await fetch(base + '/inspectMedia', { method: 'POST', headers: routeHeaders, body: JSON.stringify({ url: base + '/fixture.mp4' }) });
     assert.equal(response.status, 200);
     assert.equal((await response.json() as { supported: boolean }).supported, true);
-    const malformed = await fetch(base + '/inspectMedia', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=bad' }) });
+    const malformed = await fetch(base + '/inspectMedia', { method: 'POST', headers: routeHeaders, body: JSON.stringify({ url: 'https://www.youtube.com/watch?v=bad' }) });
     assert.equal(malformed.status, 200);
     assert.equal((await malformed.json() as { supported: boolean }).supported, false);
-    const bad = await fetch(base + '/inspectMedia', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url: 'file:///etc/passwd' }) });
+    const bad = await fetch(base + '/inspectMedia', { method: 'POST', headers: routeHeaders, body: JSON.stringify({ url: 'file:///etc/passwd' }) });
     assert.equal(bad.status, 400);
     reports.push({ name: 'inspect-route', checks: ['valid URL: 200', 'invalid protocol: 400', 'malformed YouTube id: handled refusal'] });
     const remote = process.argv.indexOf('--remote');

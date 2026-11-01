@@ -11,12 +11,13 @@ import type { ReadableStream } from "stream/web";
 import { ffmpegPath } from '../lib/ffmpegPath.js';
 import { childEnv } from '../lib/childEnv.js';
 import { assertFetchableUrl } from '../lib/fetchableUrl.js';
+import { isCancellation } from '../lib/taskControl.js';
 import { YtDlp, helpers as ytdlpHelpers, type FormatOptions, type VideoProgress } from "ytdlp-nodejs";
 import { getMediaDurationSeconds, probeVideoTiming } from "./utils/mediaOperations.js";
 import { isSpacesUrl } from "./utils/spacesUrl.js";
 import {
     MEDIA_INFO_TEMPLATE, parseMediaInfo, isDirectFile, toSourceInfo, cacheKeyFor,
-    classifyMediaError, isPermanentMediaError, mediaErrorMessage, type MediaInfo,
+    classifyMediaError, isPermanentMediaError, mediaErrorMessage, MediaDownloadError, MediaHttpError, type MediaInfo,
 } from "./utils/mediaSource.js";
 import type { InspectMediaResponse, MediaSourceInfo } from "../types.js";
 
@@ -463,27 +464,36 @@ function completeDownloadConfig(): CompleteDownloadConfig {
  * and extracts audio after completeness is confirmed. Also used by CLI source verification.
  */
 export const downloadMedia: Task<string, RawVideo & { source: MediaSourceInfo }> = async (youtubeUrl, onProgress) => {
-    const source = new MediaSource(youtubeUrl);
-    const { combined } = await downloadUntilComplete(
-        youtubeUrl,
-        {
-            download: (_url, progress) => downloadVideoOnce(source, progress),
-            getInfo: async () => {
-                const info = await source.lookup();
-                return info ? { liveStatus: info.liveStatus, durationSec: info.durationSec } : {};
+    let resolved: MediaSource | undefined;
+    try {
+        const source = new MediaSource(youtubeUrl);
+        resolved = source;
+        const { combined } = await downloadUntilComplete(
+            youtubeUrl,
+            {
+                download: (_url, progress) => downloadVideoOnce(source, progress),
+                getInfo: async () => {
+                    const info = await source.lookup();
+                    return info ? { liveStatus: info.liveStatus, durationSec: info.durationSec } : {};
+                },
+                probeDurationSeconds: getMediaDurationSeconds,
+                dropCachedMedia: () => dropCachedMedia(source.cacheKey()),
+                downloadedBytes: () => downloadedBytes(source.cacheKey()),
+                isRetryable: (err) => source.isRetryable(err),
+                sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+                now: () => Date.now(),
             },
-            probeDurationSeconds: getMediaDurationSeconds,
-            dropCachedMedia: () => dropCachedMedia(source.cacheKey()),
-            downloadedBytes: () => downloadedBytes(source.cacheKey()),
-            isRetryable: (err) => source.isRetryable(err),
-            sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
-            now: () => Date.now(),
-        },
-        completeDownloadConfig(),
-        onProgress,
-    );
+            completeDownloadConfig(),
+            onProgress,
+        );
 
-    return { combined, source: source.sourceInfo() };
+        return { combined, source: source.sourceInfo() };
+    } catch (err) {
+        if (isCancellation(err) || err instanceof MediaDownloadError) throw err;
+        // Agent recovery is separate from the worker retry loop: a transient HTTP
+        // failure can clear later even though files are not automatically retried here.
+        throw new MediaDownloadError(err, resolved ? undefined : false);
+    }
 };
 
 export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
@@ -950,7 +960,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
         const response = await fetch(url, { headers: HEADERS });
         if (!response.ok) {
             await response.body?.cancel();
-            throw new Error(`HTTP error getting ${url}: status: ${response.status} ${response.statusText}`);
+            throw new MediaHttpError(response.status, url, response.statusText);
         }
         if (!response.body) throw new Error('Unable to read response body');
         await streamPipeline(

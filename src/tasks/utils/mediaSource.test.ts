@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseMediaInfo, toSourceInfo, cacheKeyFor, classifyMediaError, mediaErrorMessage, type MediaInfo } from './mediaSource.js';
+import { parseMediaInfo, toSourceInfo, cacheKeyFor, classifyMediaError, mediaErrorMessage, MediaDownloadError, MediaHttpError, sanitizeMediaUrl, type MediaInfo } from './mediaSource.js';
 
 // Real `yt-dlp -O MEDIA_INFO_TEMPLATE` output for the KEX TV page of Raseborg's 12.10.2026 council
 const KEXTV = JSON.stringify({
@@ -133,5 +133,61 @@ describe('mediaErrorMessage', () => {
     const err = new Error('Command failed: yt-dlp -O ... https://vimeo.com/1\nWARNING: [vimeo] impersonation\n' +
       'ERROR: This format is DRM protected\nERROR: This format is DRM protected\n');
     expect(mediaErrorMessage(err)).toBe('ERROR: This format is DRM protected');
+  });
+});
+
+
+describe('MediaDownloadError', () => {
+  it('keeps the cause and exposes an actionable source refusal separately from prose', () => {
+    const cause = new Error('ERROR: Cannot download embed-only video without embedding URL.');
+    const error = new MediaDownloadError(cause);
+    expect(error.cause).toBe(cause);
+    expect(error.message).toBe(cause.message);
+    expect(error.mediaFailure).toEqual({
+      reason: 'embed_only', retryable: false,
+      hint: 'The video plays only where it is embedded: send the URL of the page that embeds it.',
+    });
+  });
+
+  it('can mark invalid inputs as nonretryable without treating transient failures that way', () => {
+    expect(new MediaDownloadError(new Error('invalid input'), false).mediaFailure)
+      .toEqual({ reason: 'error', retryable: false });
+    expect(new MediaDownloadError(new Error('ERROR: HTTP Error 503')).mediaFailure)
+      .toEqual({ reason: 'error', retryable: true });
+    expect(new MediaDownloadError(new Error('socket disconnected')).mediaFailure)
+      .toEqual({ reason: 'error', retryable: true });
+  });
+});
+
+
+describe('direct HTTP failure classification', () => {
+  it.each([404, 410])('marks HTTP %i as missing without classifying media-fragment errors by text', (status) => {
+    expect(new MediaDownloadError(new MediaHttpError(status, 'https://example.org/video.mp4', 'Gone')).mediaFailure)
+      .toEqual({ reason: 'not_found', retryable: false });
+  });
+  it('keeps temporary HTTP failures recoverable for agents', () => {
+    expect(new MediaDownloadError(new MediaHttpError(503, 'https://example.org/video.mp4', 'Unavailable')).mediaFailure)
+      .toEqual({ reason: 'error', retryable: true });
+  });
+});
+
+
+describe('media URL redaction', () => {
+  it('removes access credentials but keeps public video identifiers', () => {
+    expect(sanitizeMediaUrl('https://user:password@www.youtube.com/watch?v=dQw4w9WgXcQ&t=12&access_token=secret&api_key=private&X-Amz-Signature=private#token'))
+      .toBe('https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=12');
+    expect(sanitizeMediaUrl('https://vimeo.com/123?h=unlisted-secret')).toBe('https://vimeo.com/123');
+  });
+  it('sanitizes source URLs before exposing metadata to callers', () => {
+    const source = toSourceInfo(info({
+      webpageUrl: 'https://city.example/watch?id=123&token=secret',
+      thumbnailUrl: 'https://cdn.example/image.jpg?sig=secret',
+    }));
+    expect(source.webpageUrl).toBe('https://city.example/watch?id=123');
+    expect(source.thumbnailUrl).toBe('https://cdn.example/image.jpg');
+  });
+  it('keeps only the origin of URLs mentioned in failure prose', () => {
+    const message = mediaErrorMessage(new Error('ERROR: Download https://user:password@cdn.example/private-name.mp4?token=secret failed'));
+    expect(message).toBe('ERROR: Download https://cdn.example failed');
   });
 });

@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import type { MediaSourceInfo, MediaUnsupportedReason } from '../../types.js';
+import type { MediaSourceInfo, MediaUnsupportedReason, MediaFailure } from '../../types.js';
 
 /**
  * `yt-dlp -O` template: a JSON object of just these fields. A full --dump-single-json
@@ -78,6 +78,35 @@ export function parseMediaInfo(stdout: string): MediaInfo {
 /** Whether a lookup result is a plain media file rather than a page yt-dlp extracts from. */
 export const isDirectFile = (info: MediaInfo): boolean => info.extractor === 'Generic' && info.direct;
 
+const sensitiveMediaQueryKeys = new Set([
+    'keypairid', 'token', 'accesstoken', 'authtoken', 'auth', 'authorization', 'signature', 'sig', 'key', 'apikey',
+    'password', 'passwd', 'credential', 'credentials', 'h', 'hash', 'jwt', 'bearer', 'policy',
+    'expires', 'expiry', 'session', 'sessionid', 'secret', 'clientsecret', 'oauthtoken',
+    'awsaccesskeyid', 'googleaccessid', 'hdnts', 'hdnea', 'authkey', 'securitytoken', 'cookie',
+]);
+
+/** Informational URLs must not expose access credentials. The input URL is kept for transfer. */
+export function sanitizeMediaUrl(value: string | undefined): string | undefined {
+    if (!value) return undefined;
+    try {
+        const url = new URL(value);
+        if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;
+        url.username = '';
+        url.password = '';
+        url.hash = '';
+        for (const key of [...url.searchParams.keys()]) {
+            const normalized = key.toLowerCase().replace(/[-_]/g, '');
+            if (sensitiveMediaQueryKeys.has(normalized) || /token|password|passwd|secret|credential|signature|(^|[-_])sig($|[-_])/i.test(key)
+                || normalized.startsWith('xamz') || normalized.startsWith('xgoog')) {
+                url.searchParams.delete(key);
+            }
+        }
+        return url.toString();
+    } catch {
+        return undefined;
+    }
+}
+
 /** The API view of a looked-up source. */
 export function toSourceInfo(info: MediaInfo): MediaSourceInfo {
     return {
@@ -89,8 +118,8 @@ export function toSourceInfo(info: MediaInfo): MediaSourceInfo {
         liveStatus: info.liveStatus,
         startedAt: info.startedAt,
         uploader: info.uploader,
-        webpageUrl: info.webpageUrl,
-        thumbnailUrl: info.thumbnailUrl,
+        webpageUrl: sanitizeMediaUrl(info.webpageUrl),
+        thumbnailUrl: sanitizeMediaUrl(info.thumbnailUrl),
         chapters: info.chapters,
     };
 }
@@ -141,8 +170,19 @@ const PERMANENT_ERRORS: ErrorClass[] = [
     { reason: 'not_found', pattern: /Unable to download webpage: HTTP Error (?:404|410)/i },
 ];
 
+/** A status returned by the plain HTTP transfer, not by a fragment downloader. */
+export class MediaHttpError extends Error {
+    constructor(readonly status: number, url: string, statusText: string) {
+        super(`HTTP error getting ${url}: status: ${status} ${statusText}`);
+        this.name = 'MediaHttpError';
+    }
+}
+
 /** Classifies a yt-dlp failure. `reason: 'error'` is the retryable remainder. */
 export function classifyMediaError(err: unknown): { reason: MediaUnsupportedReason; permanent: boolean; hint?: string } {
+    if (err instanceof MediaHttpError && (err.status === 404 || err.status === 410)) {
+        return { reason: 'not_found', permanent: true };
+    }
     const message = (err as Error)?.message ?? '';
     const match = PERMANENT_ERRORS.find((c) => c.pattern.test(message));
     return match
@@ -156,5 +196,28 @@ export const isPermanentMediaError = (err: unknown): boolean => classifyMediaErr
 export function mediaErrorMessage(err: unknown): string {
     const message = (err as Error)?.message ?? String(err);
     const errors = message.split('\n').map((l) => l.trim()).filter((l) => l.startsWith('ERROR:'));
-    return errors.length ? [...new Set(errors)].join('\n') : message;
+    const selected = errors.length ? [...new Set(errors)].join('\n') : message;
+    // Failure prose does not need the object path or query. Preserve the provider origin
+    // so callbacks, MCP histories and seed exports cannot become usable signed links.
+    return selected.replace(/https?:\/\/[^\s"'<>]+/gi, value => {
+        try { return new URL(value).origin; }
+        catch { return '[redacted media URL]'; }
+    });
+}
+
+
+/** A failure of source resolution or raw transfer, distinguished from later processing. */
+export class MediaDownloadError extends Error {
+    readonly mediaFailure: MediaFailure;
+
+    constructor(cause: unknown, retryable?: boolean) {
+        super(mediaErrorMessage(cause), { cause });
+        this.name = 'MediaDownloadError';
+        const classified = classifyMediaError(cause);
+        this.mediaFailure = {
+            reason: classified.reason,
+            retryable: !classified.permanent && retryable !== false,
+            ...(classified.hint && { hint: classified.hint }),
+        };
+    }
 }

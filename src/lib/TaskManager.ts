@@ -2,6 +2,7 @@ import express from 'express';
 import { randomUUID } from 'node:crypto';
 import { Task } from '../tasks/pipeline.js';
 import { TaskUpdate } from '../types.js';
+import { MediaDownloadError } from '../tasks/utils/mediaSource.js';
 import chalk from 'chalk';
 import { getLanguageConfig } from './language.js';
 import dotenv from 'dotenv';
@@ -194,7 +195,10 @@ export class TaskManager {
                 status: cancelled ? "cancelled" : "error",
                 stage: cancelled ? "cancelled" : "finished",
                 progressPercent: 100,
-                ...(cancelled ? {} : { error: error.message }),
+                ...(cancelled ? {} : {
+                    error: error.message,
+                    ...(error instanceof MediaDownloadError && { mediaFailure: error.mediaFailure }),
+                }),
                 createdAt,
                 lastUpdatedAt: new Date(),
                 taskType,

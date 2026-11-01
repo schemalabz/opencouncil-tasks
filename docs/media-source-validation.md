@@ -80,4 +80,6 @@ Known limits:
   does not check object existence. Source timestamps are not proof of meeting dates.
 
 The source-resolution and application integration flow is documented in
-[`media-sources.md`](media-sources.md). No app code was changed.
+[`media-sources.md`](media-sources.md). This table records the download-validation phase.
+The subsequent companion app implementation and cross-repo checks are recorded in
+[`agent-media-integration-plan.md`](agent-media-integration-plan.md).
