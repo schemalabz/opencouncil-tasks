@@ -1,7 +1,7 @@
 import { TranscribeRequest, TranscribeResult, TranscriptWithSpeakerIdentification, DiarizeRequest, DiarizeResult, Diarization, DiarizationSpeaker, Transcript } from "../types.js";
 import { applyDiarization } from "./applyDiarization.js";
 import { diarize } from "./diarize.js";
-import { downloadYTV } from "./downloadYTV.js";
+import { downloadYTV, type DownloadedMedia } from "./downloadYTV.js";
 import { splitAudioDiarization } from "./splitAudioDiarization.js";
 import { type SplitAudioArgs, type AudioSegment } from "./splitAudioDiarization.js";
 import { transcribe } from "./transcribe.js";
@@ -25,7 +25,7 @@ dotenv.config();
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
 export type PipelineDeps = {
-    downloadYTV: Task<string, { audioOnly: string; combined: string; sourceType: string; mediaRewritten: boolean }>;
+    downloadYTV: Task<string, DownloadedMedia>;
     uploadToSpaces: Task<UploadFilesArgs, string[]>;
     diarize: Task<Omit<DiarizeRequest, "callbackUrl">, DiarizeResult>;
     splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]>;
@@ -44,13 +44,13 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
             return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
         };
 
-        const { audioOnly, combined, sourceType, mediaRewritten } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+        const { audioOnly, combined, source, mediaRewritten } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
 
         // Only upload video if it's not already on our own Spaces storage. When it IS on our
         // Spaces but downloadYTV rewrote the file (loudnorm, video start shift), overwrite the
         // original object in place so Mux (and the stored videoUrl) serve the rewritten file;
         // otherwise use the URL as-is.
-        const isSpacesUrl = sourceType === 'Spaces';
+        const isSpacesUrl = source.kind === 'spaces';
         const combinedVideoUploadPromise = isSpacesUrl
             ? (mediaRewritten
                 ? deps.overwriteSpacesObject(request.youtubeUrl, combined).then((url) => [url])
@@ -125,7 +125,8 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
                 audioUrl,
                 muxPlaybackId: muxResult.playbackId,
                 muxAssetId: muxResult.assetId,
-                transcript: diarizedTranscript
+                transcript: diarizedTranscript,
+                source,
             };
         } catch (error) {
             // Clean up the Mux asset if the pipeline fails — don't leave orphaned assets

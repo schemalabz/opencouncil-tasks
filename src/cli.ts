@@ -42,7 +42,7 @@ import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js'
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
 import { listFailedCallbacks } from './lib/failedCallbackStore.js';
 import { replayStoredCallback } from './lib/callbackReplay.js';
-import { getVideoIdAndUrl } from './tasks/downloadYTV.js';
+import { inspectMedia, downloadMedia } from './tasks/downloadYTV.js';
 
 // Only the CLI may read a decision PDF from a local path; the server fetches URLs only.
 allowLocalPdfFiles();
@@ -121,13 +121,22 @@ program
     });
 
 program
+    .command('inspect-media <url>')
+    .description('Check whether a media URL can be downloaded, and what it is (same as POST /inspectMedia; downloads nothing)')
+    .action(async (url: string) => {
+        console.log(JSON.stringify(await inspectMedia(url), null, 2));
+        server.close();
+    });
+
+program
     .command('download-ytv <youtubeUrl>')
-    .description('Download a YouTube video')
-    .action(async (youtubeUrl: string) => {
-        const result = await downloadYTV(youtubeUrl, (stage: string, progressPercent: number) => {
-            process.stdout.write(`\rDownloading YouTube video... [${stage}] ${progressPercent.toFixed(2)}%`);
+    .description('Download a video from any source yt-dlp supports, a media file, or Spaces')
+    .option('--download-only', 'Download and verify completeness, without normalization or audio extraction')
+    .action(async (youtubeUrl: string, options: { downloadOnly?: boolean }) => {
+        const result = await (options.downloadOnly ? downloadMedia : downloadYTV)(youtubeUrl, (stage: string, progressPercent: number) => {
+            process.stdout.write(`\rDownloading video... [${stage}] ${progressPercent.toFixed(2)}%`);
         });
-        console.log('\nYouTube video downloaded');
+        console.log('\nVideo downloaded');
         console.log(result);
         server.close();
     });
@@ -615,7 +624,8 @@ program
             // Clean up S3 objects if we used real DO Spaces
             if (usingRealSpaces) {
                 try {
-                    const { videoId } = getVideoIdAndUrl(url);
+                    // Uploads are named <cache key>_v<N>.<ext>, and the audio shares the key
+                    const videoId = path.basename(result.videoUrl).replace(/_v\d+\.\w+$/, '');
                     console.log(`\nCleaning up S3 objects for videoId: ${videoId}`);
                     await deleteFromSpacesByPrefix(`audio/${videoId}`);
                     await deleteFromSpacesByPrefix(`council-meeting-videos/${videoId}`);
