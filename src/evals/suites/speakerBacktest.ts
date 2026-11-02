@@ -1,6 +1,6 @@
 import { CityLanguage } from "../../types.js";
 import {
-    ACTIONABLE_EVIDENCE_KINDS, formatUnlistedLabel, isActionable, isSpecificUnlistedName, KnownSpeaker, MIN_ACTIONABLE_CONFIDENCE, MIN_UNLISTED_ACTIONABLE_CONFIDENCE,
+    ACTIONABLE_EVIDENCE_KINDS, formatUnlistedLabel, hasActionableEvidence, isActionable, isSpecificUnlistedName, KnownSpeaker, MIN_ACTIONABLE_CONFIDENCE, MIN_UNLISTED_ACTIONABLE_CONFIDENCE,
     parseUnlistedLabel, RosterPerson, sameUnlistedSpeaker, SpeakerEvidenceKind, SpeakerIdentification, SpeakerSegmentInput, SPEAKER_EVIDENCE_KINDS,
     UNLISTED_ACTIONABLE_EVIDENCE_KINDS, UnlistedSpeaker,
 } from "../../lib/speakerIdentification.js";
@@ -370,10 +370,11 @@ export type BacktestSummary = {
         };
     };
     /**
-     * What production would show in a city with voiceprints: the two methods
-     * reconciled the way opencouncil reconciles them. Where both name the same
-     * person or only one names anyone, that name; where they name different
-     * people, nobody, and the speaker is withheld for a reviewer.
+     * The automatic roster-person policy, estimated from the reviewed record:
+     * agreeing roster hints keep the person; conflicting ones withhold it.
+     * Visitor suggestions leave a standing voiceprint person in place.
+     * Historical corrections/removals do not retain the original matched person,
+     * so their wrong-name counts remain an upper bound, not an application replay.
      */
     combined: MethodStats & {
         unverifiedNames: number;
@@ -477,7 +478,9 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
         }
 
         if (voiceprintMatched) {
-            // opencouncil's reconcile: a name the model would act on that differs
+            // opencouncil reconciles roster person hints only. A visitor suggestion
+            // leaves a standing voiceprint person in place, even when actionable.
+            // A roster name the model would act on that differs
             // from the voiceprint's leaves the speaker unnamed. The record holds
             // the voiceprint's own person only while the match stands, so:
             // - a standing match is withheld when the model names someone else;
@@ -487,10 +490,8 @@ export function summarizeScored(scored: ScoredSpeaker[]): BacktestSummary {
             //   named a third person there, which would withhold it too, so this
             //   is the upper bound on wrong names.
             const modelName = s.known || s.heldBack ? null : s.predictedPersonId;
-            // An unlisted label the model would act on names someone else too.
-            const modelLabel = s.known || s.heldBack ? null : s.predictedUnlisted;
             const disagree = voiceprintRight
-                ? (modelName !== null && modelName !== s.personId) || modelLabel !== null
+                ? modelName !== null && modelName !== s.personId
                 : s.source === "voiceprintCorrected" && modelName === s.personId;
             if (disagree) {
                 summary.combined.withheldNames++;
@@ -650,7 +651,7 @@ const onUnlistedKind = (i: SpeakerIdentification) => i.evidenceKind !== null && 
 /** A label on evidence the pass acts on, at a confidence under the unlisted floor. */
 const isUnderUnlistedFloor = (i: SpeakerIdentification) => onUnlistedKind(i) && i.confidence < MIN_UNLISTED_ACTIONABLE_CONFIDENCE;
 /** A label on evidence the pass acts on, at or over the floor, held back only for saying too little (a surname alone). */
-const isBareName = (i: SpeakerIdentification) => onUnlistedKind(i) && i.confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE
+const isBareName = (i: SpeakerIdentification) => hasActionableEvidence(i)
     && !isSpecificUnlistedName({ name: i.unlistedName ?? null, capacity: i.unlistedCapacity ?? null });
 
 /**

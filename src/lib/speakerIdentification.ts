@@ -185,6 +185,14 @@ const CONTESTED_RATIO = 0.6;
 const isEvidenceKind = (value: unknown): value is SpeakerEvidenceKind =>
     typeof value === "string" && (SPEAKER_EVIDENCE_KINDS as readonly string[]).includes(value);
 
+/** Kind and confidence only: partial unlisted forms may still contribute to a supported label. */
+export function hasActionableEvidence({ personId, evidenceKind, confidence }:
+    Pick<SpeakerIdentification, "personId" | "evidenceKind" | "confidence">): boolean {
+    const kinds = personId !== null ? ACTIONABLE_EVIDENCE_KINDS : UNLISTED_ACTIONABLE_EVIDENCE_KINDS;
+    const floor = personId !== null ? MIN_ACTIONABLE_CONFIDENCE : MIN_UNLISTED_ACTIONABLE_CONFIDENCE;
+    return evidenceKind !== null && kinds.has(evidenceKind) && confidence >= floor;
+}
+
 /**
  * The pass would act on this identification by itself: uncontested, on
  * evidence that names the speaker, at a confidence that reaches the floor.
@@ -194,11 +202,10 @@ const isEvidenceKind = (value: unknown): value is SpeakerEvidenceKind =>
  */
 export function isActionable({ personId, unlistedName = null, unlistedCapacity = null, evidenceKind, contested, confidence }:
     Pick<SpeakerIdentification, "personId" | "evidenceKind" | "contested" | "confidence"> & { unlistedName?: string | null; unlistedCapacity?: string | null }): boolean {
-    if (contested || evidenceKind === null) return false;
-    if (personId !== null) return ACTIONABLE_EVIDENCE_KINDS.has(evidenceKind) && confidence >= MIN_ACTIONABLE_CONFIDENCE;
+    if (contested || !hasActionableEvidence({ personId, evidenceKind, confidence })) return false;
+    if (personId !== null) return true;
     if (unlistedName !== null || unlistedCapacity !== null) {
-        return UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(evidenceKind) && confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE
-            && isSpecificUnlistedName({ name: unlistedName, capacity: unlistedCapacity });
+        return isSpecificUnlistedName({ name: unlistedName, capacity: unlistedCapacity });
     }
     return false;
 }
@@ -375,8 +382,9 @@ export function chunkSegments(segments: SpeakerSegmentInput[], maxChars: number)
  * confidence is summed across chunks and the best total wins. The winner
  * reports its strongest single verdict whole: the strongest kind of evidence
  * any chunk gave, with that verdict's own quote and number, so the quote a
- * reviewer reads is the cue the pass went by. A close runner-up marks the
- * verdict as contested.
+ * reviewer reads is the cue the pass went by. A close rival marks the verdict
+ * as contested. Against a roster winner, an unlisted rival must also meet the
+ * unlisted publication rule.
  */
 export function mergeChunkIdentifications(
     chunkResults: ChunkIdentification[][],
@@ -421,8 +429,7 @@ export function mergeChunkIdentifications(
                 } else if (existing.unlisted && unlisted) {
                     existing.unlisted = fullerUnlistedSpeaker(existing.unlisted, unlisted);
                 }
-                const meetsUnlistedRule = verdict.evidenceKind !== null && UNLISTED_ACTIONABLE_EVIDENCE_KINDS.has(verdict.evidenceKind) && verdict.confidence >= MIN_UNLISTED_ACTIONABLE_CONFIDENCE;
-                if (unlisted && meetsUnlistedRule) {
+                if (unlisted && hasActionableEvidence(verdict)) {
                     existing.supported = existing.supported ? fullerUnlistedSpeaker(existing.supported, unlisted) : unlisted;
                 }
                 existing.total += verdict.confidence;
@@ -444,7 +451,21 @@ export function mergeChunkIdentifications(
         const alternatives = ranked.slice(1).map(c => c.personId
             ? { personId: c.personId, confidence: c.max }
             : { personId: null, unlistedLabel: formatUnlistedLabel(c.unlisted!) ?? "", confidence: c.max });
-        const contested = ranked.length > 1 && ranked[1].total >= CONTESTED_RATIO * best.total;
+        // Keep every rival as an alternative. Against a roster winner, a visitor
+        // can contest only in a supported form and on a cue we would act on.
+        // Visitor winners and roster rivals retain their existing policy. Check
+        // all rivals so an ineligible visitor cannot hide an eligible candidate.
+        const contested = best.personId === null
+            ? ranked.length > 1 && ranked[1].total >= CONTESTED_RATIO * best.total
+            : ranked.slice(1).some(candidate => {
+                if (candidate.total < CONTESTED_RATIO * best.total) return false;
+                if (candidate.personId !== null) return true;
+                return candidate.supported !== null && isActionable({
+                    personId: null, unlistedName: candidate.supported.name, unlistedCapacity: candidate.supported.capacity,
+                    evidenceKind: SPEAKER_EVIDENCE_KINDS[candidate.strongest.kindRank] ?? null,
+                    confidence: candidate.strongest.confidence, contested: false,
+                });
+            });
         const evidenceKind = SPEAKER_EVIDENCE_KINDS[best.strongest.kindRank] ?? null;
         const confidence = best.strongest.confidence;
         // An unlisted label is reported in the form its supporting verdicts gave; the fullest form is a suggestion only

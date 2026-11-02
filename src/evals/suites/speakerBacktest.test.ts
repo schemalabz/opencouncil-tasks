@@ -299,11 +299,11 @@ describe('scoreBacktest', () => {
         expect(summary.model.unlisted.heldBackRight).toEqual({ tags: 1, seconds: 20 });
     });
 
-    it('withholds a voiceprint match the model labels as a visitor, and counts the disagreement', () => {
+    it('keeps a standing voiceprint person for a visitor suggestion, while counting the model disagreement', () => {
         // S2 is the chair's standing match (15s); S5 a match a reviewer corrected to the mayor.
         const summaryOf = (...answers: SpeakerIdentification[]) => scoreBacktest(input.speakers, answers).summary;
         const visitor = summaryOf(labelled('S2', 'Προεδρίδης Μάρκος', 'κάτοικος', 90));
-        expect(visitor.combined).toMatchObject({ correctNames: 0, withheldNames: 1, withheldSeconds: 15 });
+        expect(visitor.combined).toMatchObject({ correctNames: 1, secondsNamed: 15, withheldNames: 0, withheldSeconds: 0 });
         // The other voiceprint tag, S5, got no answer.
         expect(visitor.onVoiceprintTags).toMatchObject({ voiceprintRight: 1, modelSilent: 1 });
         expect(summaryOf(labelled('S5', 'Δημαρχίδης Κώστας', null, 90)).onVoiceprintTags).toMatchObject({ bothWrong: 1, modelSilent: 1 });

@@ -87,6 +87,61 @@ describe('mergeChunkIdentifications', () => {
         expect(merged.alternatives).toEqual([{ personId: null, unlistedLabel: 'Παπαδόπουλος Γιώργος', confidence: 80 }]);
     });
 
+    it.each([
+        ['below floor', 'Παπαδόπουλος', null, 60, 'named'],
+        ['bare surname', 'Παπαδόπουλος', null, 90, 'named'],
+        ['addressed full name', 'Παπαδόπουλος Γιώργος', null, 90, 'addressed'],
+    ] as const)('keeps a %s visitor alternative without contesting a strong roster verdict', (_, name, capacity, confidence, kind) => {
+        const [merged] = mergeChunkIdentifications([
+            [c('S1', 'a', 90, 'a1')],
+            [c('S1', 'a', 90, 'a2')],
+            [u('S1', name, capacity, confidence, 'visitor1', kind)],
+            [u('S1', name, capacity, confidence, 'visitor2', kind)],
+        ], ['S1']);
+        expect(merged).toMatchObject({ personId: 'a', contested: false, actionable: true });
+        expect(merged.alternatives).toEqual([{ personId: null, unlistedLabel: name, confidence }]);
+    });
+
+    it('does not let an ineligible visitor hide an eligible rival further down the ranking', () => {
+        const [merged] = mergeChunkIdentifications([
+            [c('S1', 'a', 90, 'a1')], [c('S1', 'a', 90, 'a2')],
+            [u('S1', 'Αδύναμος', null, 85, 'weak1')], [u('S1', 'Αδύναμος', null, 85, 'weak2')],
+            [u('S1', 'Παπαδόπουλος', null, 80, 'floor grant')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 80, 'introduction', 'selfIntroduced')],
+        ], ['S1']);
+        expect(merged).toMatchObject({ personId: 'a', contested: true, actionable: false });
+    });
+
+    it('preserves visitor-versus-visitor arbitration even when the rival is only a suggestion', () => {
+        const [merged] = mergeChunkIdentifications([
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 90, 'floor1')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 90, 'floor2')],
+            [u('S1', 'Άλλος', null, 60, 'weak1')],
+            [u('S1', 'Άλλος', null, 60, 'weak2')],
+        ], ['S1']);
+        expect(merged).toMatchObject({ personId: null, unlistedName: 'Παπαδόπουλος Γιώργος', contested: true, actionable: false });
+        expect(merged.alternatives).toEqual([{ personId: null, unlistedLabel: 'Άλλος', confidence: 60 }]);
+    });
+
+    it('checks the visitor rival against its selected cue as well as its supported form', () => {
+        const [merged] = mergeChunkIdentifications([
+            [c('S1', 'a', 90, 'a1')], [c('S1', 'a', 90, 'a2')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 60, 'doubtful floor grant')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 90, 'introduction', 'selfIntroduced')],
+        ], ['S1']);
+        expect(merged).toMatchObject({ personId: 'a', contested: false, actionable: true });
+    });
+
+    it('does not use a weak fuller form to make a visitor rival eligible', () => {
+        const [merged] = mergeChunkIdentifications([
+            [c('S1', 'a', 90, 'a1')], [c('S1', 'a', 90, 'a2')],
+            [u('S1', 'Παπαδόπουλος', null, 90, 'floor grant')],
+            [u('S1', 'Παπαδόπουλος Γιώργος', null, 40, 'maybe addressed', 'addressed')],
+        ], ['S1']);
+        expect(merged).toMatchObject({ personId: 'a', contested: false, actionable: true });
+        expect(merged.alternatives).toEqual([{ personId: null, unlistedLabel: 'Παπαδόπουλος Γιώργος', confidence: 90 }]);
+    });
+
     it('does not act on a bare surname off the roster, and reports it as a suggestion', () => {
         const [merged] = mergeChunkIdentifications([[u('S1', 'Παπαδόπουλος', null, 95, 'given the floor')]], ['S1']);
         expect(merged).toMatchObject({ unlistedName: 'Παπαδόπουλος', unlistedCapacity: null, confidence: 95, actionable: false });
