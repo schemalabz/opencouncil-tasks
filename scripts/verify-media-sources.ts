@@ -143,6 +143,22 @@ try {
     await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-vn', path.join(fixtures, 'audio.mp3')]);
     await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-c', 'copy', '-hls_time', '1', '-hls_list_size', '0', path.join(fixtures, 'stream.m3u8')]);
     await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-c', 'copy', '-f', 'dash', path.join(fixtures, 'stream.mpd')]);
+    if (!callbackContract && !updateRace && (!selected || selected.has('audio-preparation'))) {
+        await ff(['-f', 'lavfi', '-i', 'color=size=32x32:color=blue', '-frames:v', '1', path.join(fixtures, 'cover.jpg')]);
+        await ff(['-i', path.join(fixtures, 'audio.mp3'), '-i', path.join(fixtures, 'cover.jpg'), '-map', '0:a:0', '-map', '1:v:0', '-c', 'copy', '-disposition:v', 'attached_pic', path.join(fixtures, 'audio-cover.mp3')]);
+        for (const route of ['/audio.mp3', '/audio-cover.mp3']) {
+            const prepared = await downloadYTV(base + route, () => {});
+            try {
+                assert.equal(path.extname(prepared.combined), '.mp3', 'audio-only preparation must preserve an MP3 recording');
+                assert.notEqual(prepared.combined, prepared.audioOnly, 'recording and transcription audio share a path');
+                const probe = JSON.parse((await run(process.env.FFPROBE_PATH || 'ffprobe', ['-v', 'error', '-show_format', '-show_streams', '-of', 'json', prepared.combined])).stdout);
+                assert.equal(probe.format.format_name, 'mp3');
+                assert(probe.streams.every((s: { codec_type: string }) => s.codec_type === 'audio'));
+                assert(await getMediaDurationSeconds(prepared.audioOnly) > 2.9);
+                reports.push({ name: 'audio-preparation', route, durationSeconds: await getMediaDurationSeconds(prepared.combined), sizeBytes: statSync(prepared.combined).size, format: 'mp3' });
+            } finally { prepared.cleanup?.(); }
+        }
+    }
     if (!callbackContract && !updateRace && (!selected || selected.has('webm'))) {
         await ff(['-i', path.join(fixtures, 'fixture.mp4'), '-c:v', 'libvpx-vp9', '-deadline', 'realtime', '-c:a', 'libopus', path.join(fixtures, 'fixture.webm')]);
         const url = base + '/webm-page';

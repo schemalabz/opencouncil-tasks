@@ -59,6 +59,19 @@ async function verifyCallbackGuards(db, config) {
         row.createdAt < new Date(test.notAfter ?? '2026-11-02T00:00:00Z') &&
         row.type === 'transcribe' && row.status === test.status && row.version === 6,
       'TASK_SCOPE_OR_TERMINAL_CHECK_FAILED');
+      if (test.expectMp3) {
+        const result = JSON.parse(row.responseBody);
+        const request = JSON.parse(row.requestBody);
+        const meeting = await tx.councilMeeting.findUnique({
+          where: { cityId_id: { cityId: row.cityId, id: row.councilMeetingId } }, select: { videoUrl: true },
+        });
+        // The HTTP/ffprobe check read the uploaded object. Prove that this is
+        // also the actual processed result and persisted meeting recording.
+        requireGuard(result.source?.kind === 'spaces' && result.videoUrl === request.youtubeUrl &&
+          new URL(result.videoUrl).hostname === 'opencouncil-previews.fra1.digitaloceanspaces.com' &&
+          new URL(result.videoUrl).pathname.endsWith('.mp3') && meeting?.videoUrl === result.videoUrl,
+        'PROCESSED_MP3_RECORDING_MISMATCH');
+      }
       const scope = { cityId: row.cityId, meetingId: row.councilMeetingId };
       const counters = {
         speakerSegments: await tx.speakerSegment.count({ where: scope }),
@@ -148,7 +161,7 @@ async function verifyCallbackGuards(db, config) {
     report.status = 'passed';
   } catch (error) {
     const allowed = ['ISOLATION_CHECK_FAILED', 'TASK_SCOPE_OR_TERMINAL_CHECK_FAILED', 'CALLBACK_URL_SCOPE_FAILED',
-      'FAILURE_METADATA_FAILED', 'SUCCESS_METADATA_FAILED', 'CALLBACK_CHANGED_TERMINAL_STATE', 'CALLBACK_HTTP_STATUS_FAILED'];
+      'FAILURE_METADATA_FAILED', 'SUCCESS_METADATA_FAILED', 'CALLBACK_CHANGED_TERMINAL_STATE', 'CALLBACK_HTTP_STATUS_FAILED', 'PROCESSED_MP3_RECORDING_MISMATCH'];
     report.error = allowed.includes(error.message) ? error.message : 'CALLBACK_GUARD_OPERATION_FAILED';
   }
   report.finishedAt = new Date().toISOString();
@@ -273,6 +286,7 @@ try {
       const test = reportFiles.length ? {
         name: 'report-' + (index + 1), id: accepted[0].details.taskId, meetingId: accepted[0].details.meetingId,
         status: terminal.status, retryable: terminal.mediaFailure?.retryable, notBefore: before.toISOString(), notAfter: after.toISOString(),
+        expectMp3: terminal.uploadedRecording?.format === 'mp3',
       } : guardCases[index];
       if (accepted[0].details.taskId !== test.id || accepted[0].details.meetingId !== test.meetingId || terminal.status !== test.status)
         throw new Error('Task report does not match the designated test case');

@@ -113,6 +113,12 @@ the download CLI retains its output for inspection. Separate server processes mu
 separate data directories. Keeping the raw cache means repeated transcriptions prepare
 their copies again rather than reusing previously normalized media.
 
+MP3 recordings use the same pipeline. Preparation keeps an audio-only recording in
+MP3, with a separate filtered MP3 for transcription. Cover art does not count as a video
+stream. When a Spaces MP3 is normalized in place, its file remains MP3 with `audio/mpeg`;
+the worker does not replace it with MP4 bytes under an `.mp3` URL. Video preparation
+continues to use MP4. This needs no separate audio endpoint or database field.
+
 Inspection logs contain only the URL origin and verdict. Input paths, credentials,
 queries, fragments and source IDs are omitted; this does not change existing download
 logging elsewhere in the pipeline.

@@ -4,6 +4,7 @@ import { readFileSync, writeFileSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { parseArgs } from 'node:util';
+import { extname } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import type { InspectMediaResponse } from '../src/types.js';
 
@@ -175,12 +176,40 @@ async function matchFixture(url: string, bytes: Buffer, timeout: number) {
         requireThat(offset === bytes.length, 'Remote fixture bytes differ from local fixture');
     } finally { await reader.cancel(); }
 }
+function fixtureUploadFormat(file: string): 'mp4' | 'mov' | 'mp3' {
+    const format = extname(file).slice(1).toLowerCase();
+    requireThat(format === 'mp4' || format === 'mov' || format === 'mp3', 'Upload fixture must be MP4, MOV or MP3');
+    return format;
+}
+function verifyUploadPlan(plan: Json, format: 'mp4' | 'mov' | 'mp3') {
+    requireThat(plan.method === 'PUT' && plan.completion === null && plan.parts?.length === 1 && plan.parts[0].partNumber === 1 && typeof plan.parts[0].uploadUrl === 'string' && typeof plan.publicUrl === 'string' && plan.headers && Object.values(plan.headers).every(h => typeof h === 'string'), 'Expected a single-part PUT upload plan');
+    const contentType = { mp4: 'video/mp4', mov: 'video/quicktime', mp3: 'audio/mpeg' }[format];
+    requireThat(plan.headers['Content-Type'] === contentType, 'Upload plan has the wrong media content type');
+    for (const raw of [plan.parts[0].uploadUrl, plan.publicUrl]) {
+        const url = new URL(raw);
+        requireThat(url.protocol === 'https:' && url.hostname === 'opencouncil-previews.fra1.digitaloceanspaces.com', 'Upload must target the preview-only storage bucket');
+    }
+}
+async function verifyUploadedMp3(url: string, timeout: number) {
+    const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(timeout) });
+    requireThat(response.ok && response.headers.get('content-type')?.split(';')[0] === 'audio/mpeg', 'Processed MP3 upload lost its audio MIME type');
+    const bytes = Buffer.from(await response.arrayBuffer());
+    requireThat(bytes.length > 0 && bytes.length <= 32 * 1024 * 1024, 'Processed audio fixture has an invalid size');
+    const probe = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format=format_name:stream=codec_type', '-of', 'json', 'pipe:0'], { input: bytes, encoding: 'utf8', timeout: 30000 });
+    // ffprobe can finish after reading its headers, before all stdin is written.
+    // Node reports EPIPE even with exit 0; still require valid audio-only MP3 JSON.
+    const probeError = probe.error as NodeJS.ErrnoException | undefined;
+    requireThat(probe.status === 0 && (!probeError || probeError.code === 'EPIPE'), `Processed MP3 upload is not readable (status ${probe.status}, code ${probeError?.code ?? 'none'})`);
+    const info = JSON.parse(probe.stdout);
+    requireThat(info.format?.format_name === 'mp3' && info.streams?.length > 0 && info.streams.every((s: Json) => s.codec_type === 'audio'), 'Processed MP3 upload changed its media format');
+    return { format: 'mp3', contentType: 'audio/mpeg', audioOnly: true, sizeBytes: bytes.length };
+}
 const help = `Usage: nix develop --command npx tsx scripts/verify-media-preview.ts
   --tasks-url https://pr-121.tasks.opencouncil.dev --app-url https://pr-N.opencouncil.dev
   [--credentials-file private.json] [--matrix cases.json] [--only comma,separated,names] [--output report.json]
   [--test-meeting cityId/meetingId | --create-test-meeting cityId]
   [--run-failure-task | --run-pipeline]
-  [--video-url https://... [--fixture-file local.mp4] | --upload-fixture local.mp4]
+  [--video-url https://... [--fixture-file local.mp4] | --upload-fixture local.mp4|local.mov|local.mp3]
   [--timeout-ms 180000] [--poll-ms 5000] [--wait-ms 900000] [--max-duration 60]
   [--self-test] [--help]
 Environment: PREVIEW_TASK_TOKEN, PREVIEW_MCP_TOKEN (personal mcp_ admin token),
@@ -324,9 +353,9 @@ async function main() {
                 if (v['upload-fixture']) {
                     requireThat(fixture && meetingArgs, 'Upload requires a verified local fixture and test meeting');
                     const identifier = `media-preview-${randomUUID().slice(0, 12)}`;
-                    const plan = await mcp.call('create_upload_url', { cityId: meetingArgs.cityId, kind: 'recording', identifier, format: 'mp4', sizeBytes: fixture.bytes.length });
-                    requireThat(plan.method === 'PUT' && plan.completion === null && plan.parts?.length === 1 && plan.parts[0].partNumber === 1 && typeof plan.parts[0].uploadUrl === 'string' && typeof plan.publicUrl === 'string' && plan.headers && Object.values(plan.headers).every(h => typeof h === 'string'), 'Expected a single-part PUT upload plan');
-                    requireThat(new URL(plan.parts[0].uploadUrl).protocol === 'https:' && new URL(plan.publicUrl).protocol === 'https:', 'Upload plan must use HTTPS');
+                    const format = fixtureUploadFormat(v['upload-fixture']);
+                    const plan = await mcp.call('create_upload_url', { cityId: meetingArgs.cityId, kind: 'recording', identifier, format, sizeBytes: fixture.bytes.length });
+                    verifyUploadPlan(plan, format);
                     // Never put signed URLs, storage keys, completion tokens or headers in checks/errors.
                     const response = await fetch(plan.parts[0].uploadUrl, { method: 'PUT', headers: plan.headers, body: new Uint8Array(fixture.bytes), redirect: 'error', signal: AbortSignal.timeout(timeout) });
                     await response.body?.cancel();
@@ -339,6 +368,7 @@ async function main() {
                     checks.push({ name: 'fixture.local-verified', status: 'passed', elapsedMs: 0, details: { durationSeconds: fixture.durationSeconds, sizeBytes: fixture.bytes.length, remoteBytesMatch: true } });
                 }
                 const metadata = await direct({ url: videoUrl });
+                if (v['upload-fixture']) requireThat(metadata.supported && metadata.source.kind === 'spaces', 'Uploaded fixture must use the task preview storage path');
                 boundedFixture(metadata, maxDuration, fixture?.durationSeconds);
             }
             const task = await mcp.call('start_task', { ...meetingArgs, type: 'transcribe', videoUrl, force: false });
@@ -358,7 +388,9 @@ async function main() {
                         requireThat(failure && ['unsupported', 'playlist', 'embed_only', 'login_required', 'drm', 'unavailable', 'not_found', 'error'].includes(failure.reason) && failure.reason === expectedReason && typeof failure.retryable === 'boolean' && failure.retryable === Boolean(v['expect-retryable']) && (failure.hint === undefined || typeof failure.hint === 'string'), 'Failure callback missing expected mediaFailure reason/retryability');
                     }
                     else successfulStatus(current, row);
-                    return { taskId: task.id, status: current.status, sourceOmitted: !('source' in current), mediaFailure: current.mediaFailure, hasTranscript: row.hasTranscript, evidence: 'get_meeting terminal task projection', realMux: 'unverified: missing Mux credentials may produce MOCK IDs', downstreamFixTranscript: 'not awaited' };
+                    const uploadedRecording = v['upload-fixture'] && fixtureUploadFormat(v['upload-fixture']) === 'mp3' && current.status === 'succeeded'
+                        ? await verifyUploadedMp3(videoUrl, timeout) : undefined;
+                    return { taskId: task.id, status: current.status, sourceOmitted: !('source' in current), mediaFailure: current.mediaFailure, hasTranscript: row.hasTranscript, uploadedRecording, evidence: 'get_meeting terminal task projection', realMux: 'unverified: missing Mux credentials may produce MOCK IDs', downstreamFixTranscript: 'not awaited' };
                 }
                 await delay(Math.min(poll, Math.max(1, deadline - Date.now())));
             }
@@ -380,6 +412,12 @@ async function selfTest(fixtureFile?: string) {
     for (const url of ['https://opencouncil.gr', 'https://pr-1.opencouncil.dev.evil.test', 'http://pr-1.opencouncil.dev', 'https://pr-1.opencouncil.dev/path']) assert.throws(() => previewUrl(url, false));
     assert.equal(inspection({ supported: true, source: { kind: 'file', durationSeconds: 3 } }).supported, true);
     assert.throws(() => inspection({ supported: false, reason: 'oops' }));
+    assert.equal(fixtureUploadFormat('speech.MP3'), 'mp3');
+    assert.throws(() => fixtureUploadFormat('speech.exe'));
+    const upload = { method: 'PUT', completion: null, publicUrl: 'https://opencouncil-previews.fra1.digitaloceanspaces.com/test.mp3', headers: { 'Content-Type': 'audio/mpeg' }, parts: [{ partNumber: 1, uploadUrl: 'https://opencouncil-previews.fra1.digitaloceanspaces.com/test.mp3?signature=dummy' }] };
+    verifyUploadPlan(upload, 'mp3');
+    assert.throws(() => verifyUploadPlan(upload, 'mp4'));
+    assert.throws(() => verifyUploadPlan({ ...upload, publicUrl: 'https://townhalls-gr.fra1.digitaloceanspaces.com/test.mp3' }, 'mp3'));
     boundedFixture(inspection({ supported: true, source: { kind: 'spaces' } }), 60, 15.4);
     for (const duration of [0, -1, NaN, Infinity, 121]) assert.throws(() => boundedFixture(inspection({ supported: true, source: { kind: 'spaces' } }), 120, duration));
     assert.throws(() => boundedFixture(inspection({ supported: true, source: { kind: 'file' } }), 60));
@@ -411,6 +449,17 @@ async function selfTest(fixtureFile?: string) {
         }
     } finally { globalThis.fetch = originalFetch; }
     const fixture = fixtureFile ? localFixture(fixtureFile, 120) : undefined;
+    if (fixture && fixtureFile && extname(fixtureFile).toLowerCase() === '.mp3') {
+        const fetchBeforeAudioCheck = globalThis.fetch;
+        try {
+            for (const bytes of [fixture.bytes, Buffer.concat(Array.from({ length: 8 }, () => fixture.bytes))]) {
+                globalThis.fetch = async () => new Response(bytes, { headers: { 'content-type': 'audio/mpeg' } });
+                await verifyUploadedMp3('https://opencouncil-previews.fra1.digitaloceanspaces.com/self-test.mp3', 1000);
+            }
+            globalThis.fetch = async () => new Response('not an MP3', { headers: { 'content-type': 'audio/mpeg' } });
+            await assert.rejects(verifyUploadedMp3('https://opencouncil-previews.fra1.digitaloceanspaces.com/self-test.mp3', 1000));
+        } finally { globalThis.fetch = fetchBeforeAudioCheck; }
+    }
     console.log(JSON.stringify({ ...(fixture && { fixture: { durationSeconds: fixture.durationSeconds, sizeBytes: fixture.bytes.length } }), selfTest: 'passed', checks: ['preview-only targets', 'inspection contract', 'success requires transcript and omits status source', 'read-only meeting status omits source and retains mediaFailure', 'JSON and SSE transport', 'RPC errors', 'URL redaction', 'bounded local fixture duration fallback', 'remote byte equality and mismatch rejection'] }));
 }
 

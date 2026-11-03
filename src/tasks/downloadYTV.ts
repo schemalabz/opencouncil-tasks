@@ -545,11 +545,12 @@ export const downloadMedia: Task<string, RawVideo & { source: MediaSourceInfo }>
 export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
     const { combined, source } = await acquireDownload(youtubeUrl, onProgress, true);
     const cleanup = () => removeWorkDirectory(path.dirname(combined));
-    const audioOnly = path.join(path.dirname(combined), `${path.basename(combined, path.extname(combined))}.mp3`);
     try {
-        const mediaRewritten = await prepareVideo(combined);
-        await extractSoundFromMP4(combined, audioOnly);
-        return { audioOnly, combined, source, mediaRewritten, cleanup };
+        const prepared = await prepareMedia(combined);
+        const stem = path.basename(prepared.combined, path.extname(prepared.combined));
+        const audioOnly = path.join(path.dirname(combined), `${stem}${path.extname(prepared.combined) === '.mp3' ? '_audio' : ''}.mp3`);
+        await extractSoundFromMP4(prepared.combined, audioOnly);
+        return { audioOnly, ...prepared, source, cleanup };
     } catch (err) {
         cleanup();
         throw err;
@@ -740,22 +741,30 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
 }
 
 /**
- * Rewrites the downloaded file at most once, for either or both of two independent
- * corrections: loudness normalization (audio re-encode) and the video start shift
- * (decode timestamps rebuilt, video copied). Returns whether the file was rewritten.
+ * Prepare a task-local recording: audio-only sources stay MP3; video keeps the
+ * existing normalization and timestamp correction. Return the prepared path because
+ * an audio source must not be uploaded under the raw cache's .mp4 extension.
  */
-async function prepareVideo(filePath: string): Promise<boolean> {
+async function prepareMedia(filePath: string): Promise<{ combined: string; mediaRewritten: boolean }> {
     const filename = path.basename(filePath);
     const loudnormFilter = await measureLoudnormFilter(filePath);
 
     const timing = await measureVideoStartShift(filePath);
+    if (timing?.hasVideo === false) {
+        // Spaces inputs can be overwritten in place. Keep audio as MP3, rather
+        // than replacing a .mp3 object with an AAC-in-MP4 file and video MIME type.
+        const audioPath = path.join(path.dirname(filePath), `${path.basename(filePath, path.extname(filePath))}.mp3`);
+        await runFfmpeg(['-i', filePath, '-vn', ...(loudnormFilter ? ['-af', loudnormFilter] : []),
+            '-c:a', 'libmp3lame', '-b:a', AUDIO_BITRATE, '-y', audioPath]);
+        return { combined: audioPath, mediaRewritten: true };
+    }
     let rebuildVideoDts = timing !== null && isVideoStartShifted(timing.shift, timing.frameSeconds);
     if (timing !== null) {
         console.log(`[video-start] ${filename}: edit list shifts the first frame by ${timing.shift.toFixed(3)}s${rebuildVideoDts ? ', rebuilding the video decode timestamps' : ''}`);
     }
 
     if (!loudnormFilter && !rebuildVideoDts) {
-        return false;
+        return { combined: filePath, mediaRewritten: false };
     }
 
     const tempPath = filePath + '.rewritten.mp4';
@@ -776,12 +785,12 @@ async function prepareVideo(filePath: string): Promise<boolean> {
         if (!rebuildVideoDts) throw err;
         console.warn(`[video-start] ${filename}: rebuilding the video decode timestamps failed, leaving the shift uncorrected: ${(err as Error).message}`);
         rebuildVideoDts = false;
-        if (!loudnormFilter) return false;
+        if (!loudnormFilter) return { combined: filePath, mediaRewritten: false };
         await rewrite(false);
     }
     fs.renameSync(tempPath, filePath);
     console.log(`[prepare-video] ${filename}: rewrote in ${((Date.now() - start) / 1000).toFixed(1)}s (loudnorm=${loudnormFilter !== null}, rebuildVideoDts=${rebuildVideoDts})`);
-    return true;
+    return { combined: filePath, mediaRewritten: true };
 }
 
 /**
@@ -813,13 +822,12 @@ export function buildRewriteArgs(
 }
 
 // A failed probe must not fail the transcription: the file then plays as it did before.
-async function measureVideoStartShift(filePath: string): Promise<{ shift: number; frameSeconds: number | null } | null> {
+async function measureVideoStartShift(filePath: string): Promise<{ shift: number; frameSeconds: number | null; hasVideo: boolean } | null> {
     try {
-        const [presented, raw] = await Promise.all([
-            probeVideoTiming(filePath, { ignoreEditList: false }),
-            probeVideoTiming(filePath, { ignoreEditList: true }),
-        ]);
-        return { shift: parseVideoStartShift(presented.startTime, raw.startTime), frameSeconds: parseFrameSeconds(presented.avgFrameRate) };
+        const presented = await probeVideoTiming(filePath, { ignoreEditList: false });
+        if (!presented.avgFrameRate) return { shift: 0, frameSeconds: null, hasVideo: false };
+        const raw = await probeVideoTiming(filePath, { ignoreEditList: true });
+        return { shift: parseVideoStartShift(presented.startTime, raw.startTime), frameSeconds: parseFrameSeconds(presented.avgFrameRate), hasVideo: true };
     } catch (err) {
         console.warn(`[video-start] ${path.basename(filePath)}: could not measure the video start shift, leaving it uncorrected: ${(err as Error).message}`);
         return null;

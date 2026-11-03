@@ -45,7 +45,8 @@ export async function probeVideoTiming(filePath: string, { ignoreEditList }: { i
     const { stdout } = await execFileAsync(ffprobePath, [
         '-v', 'error',
         ...(ignoreEditList ? ['-ignore_editlist', '1'] : []),
-        '-select_streams', 'v:0',
+        // Uppercase V excludes cover art, which must not turn an MP3 into a video.
+        '-select_streams', 'V:0',
         '-show_entries', 'stream=start_time,avg_frame_rate',
         '-of', 'default=noprint_wrappers=1',
         filePath,

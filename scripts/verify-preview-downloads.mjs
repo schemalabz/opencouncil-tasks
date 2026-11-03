@@ -60,7 +60,7 @@ for (const c of cases) {
      for(const r of prepared) {
       assert(await getMediaDurationSeconds(r.combined)>0,'Invalid prepared video');
       assert(await getMediaDurationSeconds(r.audioOnly)>0,'Invalid extracted audio');
-      assert.equal(path.basename(r.combined),path.basename(media.combined),'Upload basename changed');
+      assert.equal(path.parse(r.combined).name,path.parse(media.combined).name,'Upload name stem changed');
      }
      assert.equal(digest(media.combined),rawDigest,'Preparation mutated raw cache');
      row.preparation={tasks:concurrency,isolated:true,rawCacheUnchanged:true};
