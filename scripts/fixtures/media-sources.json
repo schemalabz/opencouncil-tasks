@@ -1,0 +1,60 @@
+[
+  {
+    "name": "youtube",
+    "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "download": true
+  },
+  {
+    "name": "wistia",
+    "url": "https://fast.wistia.net/embed/iframe/sh7fpupwlt",
+    "download": true
+  },
+  {
+    "name": "peertube",
+    "url": "https://framatube.org/videos/watch/9c9de5e8-0a1e-484a-b099-e80766180a6d",
+    "download": true
+  },
+  {
+    "name": "dailymotion",
+    "url": "https://www.dailymotion.com/video/x2iuewm",
+    "download": true
+  },
+  {
+    "name": "kextv-page",
+    "url": "https://www.kextv.fi/sv/programarkiv/524:raseborgs-fullmaktige-12-10-2026"
+  },
+  {
+    "name": "vimeo-event-embed-only",
+    "url": "https://vimeo.com/event/6265464"
+  },
+  {
+    "name": "vimeo-video",
+    "url": "https://vimeo.com/1234971994"
+  },
+  {
+    "name": "facebook",
+    "url": "https://www.facebook.com/share/v/1JGm6KHxyJ/"
+  },
+  {
+    "name": "youtube-channel",
+    "url": "https://www.youtube.com/@YouTube/streams"
+  },
+  {
+    "name": "krakow-file",
+    "url": "https://mediampi.krakow.pl/mktv/2026/10/20261021_RMK__LXIII_CZ4_720.mp4"
+  },
+  {
+    "name": "krakow-rss",
+    "url": "https://www.krakow.pl/mktv/rss/352"
+  },
+  {
+    "name": "wistia-channel-media",
+    "url": "https://fast.wistia.net/embed/iframe/sp5dqjzw3n",
+    "download": true
+  },
+  {
+    "name": "dailymotion-player",
+    "url": "https://geo.dailymotion.com/player.html?video=x89eyek",
+    "download": false
+  }
+]

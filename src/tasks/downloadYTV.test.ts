@@ -1,58 +1,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  getVideoIdAndUrl, formatBytes, parseLoudnormStats, needsLoudnormCorrection, isSilentAudio,
-  downloadUntilComplete, parseVideoInfoOutput, isCachedMediaFor, parseVideoStartShift, buildRewriteArgs,
+  offlineSource, formatBytes, parseLoudnormStats, needsLoudnormCorrection, isSilentAudio,
+  downloadUntilComplete, isCachedMediaFor, parseVideoStartShift, buildRewriteArgs,
   parseFrameSeconds, isVideoStartShifted,
   type CompleteDownloadDeps, type CompleteDownloadConfig, type RawVideo,
 } from './downloadYTV.js';
+import { isPermanentMediaError } from './utils/mediaSource.js';
 
-describe('parseVideoInfoOutput', () => {
-  it('parses live_status and duration from the --print line', () => {
-    expect(parseVideoInfoOutput('was_live|537\n')).toEqual({ liveStatus: 'was_live', durationSec: 537 });
-  });
-
-  it('maps NA fields to undefined (a still-live stream has no duration)', () => {
-    expect(parseVideoInfoOutput('is_live|NA')).toEqual({ liveStatus: 'is_live', durationSec: undefined });
-  });
-
-  it('uses the last line when yt-dlp prints extra output before the template', () => {
-    expect(parseVideoInfoOutput('some stray warning\npost_live|19116')).toEqual({ liveStatus: 'post_live', durationSec: 19116 });
-  });
-});
-
-describe('getVideoIdAndUrl', () => {
-  it('extracts ID from youtube.com/watch?v=...', () => {
-    const result = getVideoIdAndUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
-    expect(result.videoId).toBe('dQw4w9WgXcQ');
-    expect(result.sourceType).toBe('YouTube');
-    expect(result.usesYtDlp).toBe(true);
-  });
-
-  it('extracts ID from youtu.be/ short links', () => {
-    const result = getVideoIdAndUrl('https://youtu.be/dQw4w9WgXcQ');
-    expect(result.videoId).toBe('dQw4w9WgXcQ');
-    expect(result.sourceType).toBe('YouTube');
-  });
-
-  it('extracts ID from youtube.com/embed/', () => {
-    const result = getVideoIdAndUrl('https://www.youtube.com/embed/dQw4w9WgXcQ');
-    expect(result.videoId).toBe('dQw4w9WgXcQ');
-    expect(result.sourceType).toBe('YouTube');
-  });
-
-  it('strips query params from youtu.be links', () => {
-    const result = getVideoIdAndUrl('https://youtu.be/dQw4w9WgXcQ?t=42');
-    expect(result.videoId).toBe('dQw4w9WgXcQ');
-  });
-
-  it('accepts the mobile host', () => {
-    expect(getVideoIdAndUrl('https://m.youtube.com/watch?v=dQw4w9WgXcQ').videoId).toBe('dQw4w9WgXcQ');
-  });
-
-  it('throws on malformed YouTube URL with no video ID', () => {
-    expect(() => getVideoIdAndUrl('https://youtube.com/watch')).toThrow(
-      'Could not extract video ID',
-    );
+describe('offlineSource', () => {
+  it.each([
+    ['https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+    ['https://youtu.be/dQw4w9WgXcQ'],
+    ['https://youtu.be/dQw4w9WgXcQ?t=42'],
+    ['https://www.youtube.com/embed/dQw4w9WgXcQ'],
+    ['https://www.youtube.com/live/dQw4w9WgXcQ?si=abc'],
+    ['https://m.youtube.com/watch?v=dQw4w9WgXcQ'],
+  ])('keys the YouTube URL %s by its video id', (url) => {
+    expect(offlineSource(url)).toMatchObject({ kind: 'yt-dlp', cacheKey: 'dQw4w9WgXcQ', sourceType: 'YouTube' });
   });
 
   // The id becomes a file name in the data dir, so only the 11 url-safe
@@ -63,7 +27,7 @@ describe('getVideoIdAndUrl', () => {
     'https://youtu.be/short',
     'https://www.youtube.com/embed/dQw4w9WgXcQdQw4w9WgXcQ',
   ])('rejects a YouTube id that is not 11 url-safe characters: %s', (url) => {
-    expect(() => getVideoIdAndUrl(url)).toThrow('Invalid YouTube video ID');
+    expect(() => offlineSource(url)).toThrow('Invalid YouTube video ID');
   });
 
   // yt-dlp gets the string as an argument, so a value that is not a URL
@@ -75,80 +39,45 @@ describe('getVideoIdAndUrl', () => {
     'data:text/plain,youtu.be/dQw4w9WgXcQ',
     '/data/other-task.mp4',
   ])('rejects a value that is not an http(s) URL: %s', (url) => {
-    expect(() => getVideoIdAndUrl(url)).toThrow(/^youtubeUrl /);
+    expect(() => offlineSource(url)).toThrow(/^youtubeUrl /);
   });
 
-  it('does not treat a host that only contains "youtube.com" as YouTube', () => {
-    const result = getVideoIdAndUrl('https://youtube.com.example.org/watch?v=dQw4w9WgXcQ');
-    expect(result.sourceType).toBe('Direct URL');
+  it.each([
+    ['https://www.facebook.com/100064500710523/videos/985543467438673', 'fb-985543467438673'],
+    ['https://m.facebook.com/somepage/videos/meeting-24-06/985543467438673/', 'fb-985543467438673'],
+    ['https://mbasic.facebook.com/100064500710523/videos/985543467438673', 'fb-985543467438673'],
+    ['https://www.facebook.com/watch/?v=985543467438673', 'fb-985543467438673'],
+    // An opaque share code, not the numeric id: yt-dlp follows Facebook's redirect to the
+    // canonical video URL. It is stable, so it works as a cache key.
+    ['https://www.facebook.com/share/v/1JGm6KHxyJ/', 'fb-1JGm6KHxyJ'],
+    ['https://fb.watch/aBcD3fGh1/', 'fb-aBcD3fGh1'],
+  ])('keys the Facebook URL %s as %s', (url, cacheKey) => {
+    expect(offlineSource(url)).toMatchObject({ kind: 'yt-dlp', cacheKey, sourceType: 'Facebook' });
   });
 
-  it('falls back to Direct URL for non-YouTube, non-CDN URLs', () => {
-    const result = getVideoIdAndUrl('https://example.com/video.mp4');
-    expect(result.sourceType).toBe('Direct URL');
-    expect(result.videoId).toBeTruthy();
-    expect(result.videoUrl).toBe('https://example.com/video.mp4');
-    expect(result.usesYtDlp).toBe(false);
+  it('keys our own Spaces object by its name, so it never reaches yt-dlp', () => {
+    vi.stubEnv('DO_SPACES_BUCKET', 'opencouncil');
+    vi.stubEnv('DO_SPACES_ENDPOINT', 'https://fra1.digitaloceanspaces.com');
+    try {
+      expect(offlineSource('https://opencouncil.fra1.digitaloceanspaces.com/council-meeting-videos/athens-2026-10-01_v3.mp4'))
+        .toEqual({ kind: 'spaces', cacheKey: 'athens-2026-10-01_v3', sourceType: 'Spaces' });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
-  it('extracts video ID from a Facebook page video URL', () => {
-    const result = getVideoIdAndUrl('https://www.facebook.com/100064500710523/videos/985543467438673');
-    expect(result).toEqual({
-      videoId: 'fb-985543467438673',
-      videoUrl: 'https://www.facebook.com/100064500710523/videos/985543467438673',
-      sourceType: 'Facebook',
-      usesYtDlp: true,
-    });
-  });
-
-  it('extracts video ID from a Facebook page video URL with a title slug and trailing slash', () => {
-    const result = getVideoIdAndUrl('https://m.facebook.com/somepage/videos/meeting-24-06/985543467438673/');
-    expect(result.videoId).toBe('fb-985543467438673');
-    expect(result.sourceType).toBe('Facebook');
-  });
-
-  it('extracts video ID from facebook.com/watch/?v= URLs', () => {
-    const result = getVideoIdAndUrl('https://www.facebook.com/watch/?v=985543467438673');
-    expect(result.videoId).toBe('fb-985543467438673');
-    expect(result.sourceType).toBe('Facebook');
-  });
-
-  it('uses the share code of a facebook.com/share/v/ URL as the video ID', () => {
-    // The code is opaque (not the numeric video id); yt-dlp resolves it by following
-    // Facebook's redirect to the canonical video URL. It is stable, so it works as a cache key.
-    const result = getVideoIdAndUrl('https://www.facebook.com/share/v/1JGm6KHxyJ/');
-    expect(result.videoId).toBe('fb-1JGm6KHxyJ');
-    expect(result.sourceType).toBe('Facebook');
-  });
-
-  it('uses the short code of an fb.watch URL as the video ID', () => {
-    const result = getVideoIdAndUrl('https://fb.watch/aBcD3fGh1/');
-    expect(result.videoId).toBe('fb-aBcD3fGh1');
-    expect(result.sourceType).toBe('Facebook');
-  });
-
-  it('throws on a Facebook URL that is not a recognizable video (plain fetch would download page HTML)', () => {
-    expect(() => getVideoIdAndUrl('https://www.facebook.com/somepage')).toThrow(
-      /Could not extract video ID from Facebook URL/
-    );
-  });
-
-  it('routes mbasic.facebook.com to the Facebook branch (not silent plain-fetch fallthrough)', () => {
-    const result = getVideoIdAndUrl('https://mbasic.facebook.com/100064500710523/videos/985543467438673');
-    expect(result.videoId).toBe('fb-985543467438673');
-    expect(result.sourceType).toBe('Facebook');
-  });
-
-  it('throws loudly on l.facebook.com link-shim URLs (no silent plain-fetch fallthrough)', () => {
-    expect(() =>
-      getVideoIdAndUrl('https://l.facebook.com/l.php?u=https%3A%2F%2Fexample.com')
-    ).toThrow(/Could not extract video ID from Facebook URL/);
-  });
-
-  it('throws on a Facebook video URL where the numeric ID has non-numeric characters (anchoring fix)', () => {
-    expect(() =>
-      getVideoIdAndUrl('https://www.facebook.com/somepage/videos/123abc')
-    ).toThrow(/Could not extract video ID from Facebook URL/);
+  // A lookup resolves these: yt-dlp knows more URL forms than we parse, and a page
+  // that is not a video fails there as unsupported.
+  it.each([
+    'https://youtube.com/watch',
+    'https://www.youtube.com/@somecity/streams',
+    'https://www.facebook.com/somepage',
+    'https://www.facebook.com/somepage/videos/123abc',
+    'https://youtube.com.example.org/watch?v=dQw4w9WgXcQ',
+    'https://vimeo.com/event/6265464',
+    'https://mediampi.krakow.pl/mktv/2026/10/20261021_RMK__LXIII_CZ4_720.mp4',
+  ])('leaves %s to the lookup', (url) => {
+    expect(offlineSource(url)).toBeUndefined();
   });
 });
 
@@ -375,7 +304,7 @@ describe('downloadUntilComplete', () => {
     minShortfallSeconds: 120,
   };
 
-  const RAW: RawVideo = { combined: 'v.mp4', sourceType: 'YouTube' };
+  const RAW: RawVideo = { combined: 'v.mp4' };
 
   // A fake clock that `sleep` advances, so timeout logic runs without real waiting.
   function makeClock() {
@@ -391,6 +320,7 @@ describe('downloadUntilComplete', () => {
       probeDurationSeconds: vi.fn().mockResolvedValue(7200),
       dropCachedMedia: vi.fn(),
       downloadedBytes: vi.fn().mockReturnValue(0),
+      isRetryable: (err) => !isPermanentMediaError(err),
       sleep: clock.sleep,
       now: clock.now,
       ...overrides,
@@ -440,9 +370,9 @@ describe('downloadUntilComplete', () => {
     expect(deps.download).toHaveBeenCalledTimes(2);
   });
 
-  it('does not retry non-YouTube download errors (no processing window — fail fast like a plain download)', async () => {
+  it('does not retry a download its source says is not retryable (a file or Spaces object fails the same way again)', async () => {
     const download = vi.fn().mockRejectedValue(new Error('HTTP error getting url: status: 404 Not Found'));
-    const deps = makeDeps({ download, getInfo: vi.fn().mockResolvedValue({}) });
+    const deps = makeDeps({ download, getInfo: vi.fn().mockResolvedValue({}), isRetryable: () => false });
 
     const err = await downloadUntilComplete('https://cdn.example.com/v.mp4', deps, CONFIG, () => {})
       .catch((e) => e as Error) as Error;
@@ -494,19 +424,33 @@ describe('downloadUntilComplete', () => {
 
   it('accepts the first download when there is no reported duration (non-YouTube source)', async () => {
     const deps = makeDeps({
-      download: vi.fn().mockResolvedValue({ combined: 'v.mp4', sourceType: 'Spaces' }),
+      download: vi.fn().mockResolvedValue(RAW),
       getInfo: vi.fn().mockResolvedValue({}), // non-YouTube: nothing to verify against
       probeDurationSeconds: vi.fn().mockResolvedValue(123),
     });
 
     const result = await downloadUntilComplete('https://cdn.example.com/v.mp4', deps, CONFIG, () => {});
 
-    expect(result.sourceType).toBe('Spaces');
+    expect(result).toEqual(RAW);
     expect(deps.download).toHaveBeenCalledTimes(1);
     expect(deps.sleep).not.toHaveBeenCalled();
     // With no M there is nothing to verify, so the file must not be probed at all —
     // a valid recording whose container reports no duration would otherwise fail the task.
     expect(deps.probeDurationSeconds).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    'ERROR: Unsupported URL: https://www.krakow.pl/',
+    'ERROR: [vimeo:event] 6265464: Cannot download embed-only video without embedding URL.',
+  ])('fails at the lookup, before any download, when it says waiting cannot help: %s', async (message) => {
+    const deps = makeDeps({ getInfo: vi.fn().mockRejectedValue(new Error(message)) });
+
+    const err = await downloadUntilComplete('https://example.org/page', deps, CONFIG, () => {})
+      .catch((e) => e as Error) as Error;
+
+    expect(err.message).toBe(message);
+    expect(deps.download).not.toHaveBeenCalled();
+    expect(deps.sleep).not.toHaveBeenCalled();
   });
 
   it('accepts the download when fetching video info fails (no M to verify against)', async () => {
@@ -673,6 +617,26 @@ describe('downloadUntilComplete', () => {
       .catch((e) => e as Error) as Error;
 
     expect(err.message).toContain('registered users');
+    expect(download).toHaveBeenCalledTimes(1);
+    expect(deps.sleep).not.toHaveBeenCalled();
+  });
+
+  // Exact messages from yt-dlp 2026.08.19: KEX TV's domain-restricted videos, and a
+  // Vimeo video served only as FairPlay-encrypted HLS.
+  it.each([
+    ['https://vimeo.com/event/6265464',
+      'yt-dlp download failed: ERROR: [vimeo:event] 6265464: Cannot download embed-only video without embedding URL. Please call yt-dlp with the URL of the page that embeds this video.'],
+    ['https://vimeo.com/1234971994',
+      'yt-dlp download failed: ERROR: [vimeo] 1234971994: The web client only works when logged-in. Use --cookies, --cookies-from-browser, --username and --password, --netrc-cmd, or --netrc (vimeo) to provide account credentials.'],
+    ['https://player.vimeo.com/video/76979871',
+      'yt-dlp download failed: yt-dlp exited with code 1: ERROR: This format is DRM protected; Try selecting another format with --format or add --check-formats to automatically fallback to the next best format'],
+  ])('fails fast on a Vimeo video waiting cannot fix (%s)', async (url, message) => {
+    const download = vi.fn().mockRejectedValue(new Error(message));
+    const deps = makeDeps({ download });
+
+    const err = await downloadUntilComplete(url, deps, CONFIG, () => {}).catch((e) => e as Error) as Error;
+
+    expect(err.message).toBe(message);
     expect(download).toHaveBeenCalledTimes(1);
     expect(deps.sleep).not.toHaveBeenCalled();
   });

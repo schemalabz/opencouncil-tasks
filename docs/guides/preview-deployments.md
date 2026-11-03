@@ -338,17 +338,21 @@ ssh opencouncil@<DROPLET_IP> "sudo opencouncil-tasks-preview-destroy 999"
 
 When testing both services together:
 
-1. Deploy opencouncil preview at `https://pr-N.preview.opencouncil.gr`
+1. Deploy opencouncil preview at `https://pr-N.opencouncil.dev`
 2. Deploy opencouncil-tasks preview at `https://pr-M.tasks.opencouncil.dev`
 
-Configure the opencouncil preview's environment to use the tasks preview:
+Configure only that OpenCouncil preview using `/var/lib/opencouncil-previews/pr-N/.env.local` on the preview host (do not edit the shared environment):
 
 ```env
-TASKS_API_URL=https://pr-M.tasks.opencouncil.dev
-TASKS_API_TOKEN=your-preview-api-token-here  # Same as in tasks .env
+TASK_API_URL=https://pr-M.tasks.opencouncil.dev
+TASK_API_KEY=your-preview-api-token-here  # Same as in tasks .env
 ```
 
 ---
+
+Also align that instance's `DO_SPACES_ENDPOINT`, `DO_SPACES_BUCKET`, `DO_SPACES_KEY`, `DO_SPACES_SECRET`, and `CDN_URL` with preview-only storage before upload tests. Verify the running bucket: older shared app preview environments may still point at the production bucket. A URL from a different bucket correctly takes the direct-file path instead of the own-Spaces path.
+
+Restart `opencouncil-preview@<3000+N>` after changing its override. Verify the running process uses the paired tasks URL and that callbacks point back to `https://pr-N.opencouncil.dev`. Keep API keys out of logs and PR comments.
 
 ## Testing a preview during PR review
 

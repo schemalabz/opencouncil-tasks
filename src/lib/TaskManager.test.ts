@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import express from 'express';
 import { DuplicateTaskIdError, TaskManager, taskManager } from './TaskManager.js';
 import { Task } from '../tasks/pipeline.js';
+import mediaContract from '../../scripts/fixtures/media-contract.json' with { type: 'json' };
+import { MediaDownloadError } from '../tasks/utils/mediaSource.js';
 import type { FixTranscriptRequest } from '../types.js';
 import { abortableSleep, getTaskControl, throwIfCancelled } from './taskControl.js';
 
@@ -95,6 +97,7 @@ describe('TaskManager cancellation', () => {
 
         const terminal = callbacks.payloads.at(-1);
         expect(terminal.status).toBe('cancelled');
+        expect(terminal).not.toHaveProperty('mediaFailure');
         expect(manager.getTaskUpdates()).toHaveLength(0);
     });
 
@@ -394,5 +397,29 @@ describe('serveTask language validation', () => {
         manager.serveTask(fixTranscript)(req, res);
         expect(res.statusCode).toBe(400);
         expect(run).not.toHaveBeenCalled();
+    });
+});
+
+
+describe('TaskManager media failure callbacks', () => {
+    afterEach(() => vi.unstubAllGlobals());
+
+    it.each([mediaContract.permanentUpdate, mediaContract.retryableUpdate])(
+        'preserves structured media failures alongside the legacy error text: $mediaFailure.reason', async (expected) => {
+            const callbacks = stubCallbacks();
+            const manager = new TaskManager(1);
+            const task: Task<{}, never> = async () => { throw new MediaDownloadError(new Error(expected.error)); };
+            const { completion } = manager.runTaskWithCallback(task, {}, 'http://cb', 'transcribe', 6);
+            await completion;
+            expect(callbacks.payloads.at(-1)).toMatchObject(expected);
+        },
+    );
+
+    it('does not classify arbitrary task failures as media problems', async () => {
+        const callbacks = stubCallbacks();
+        const manager = new TaskManager(1);
+        const { completion } = manager.runTaskWithCallback(async () => { throw new Error('ASR failed'); }, {}, 'http://cb', 'transcribe', 6);
+        await completion;
+        expect(callbacks.payloads.at(-1)).not.toHaveProperty('mediaFailure');
     });
 });
