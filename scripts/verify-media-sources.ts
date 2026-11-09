@@ -147,7 +147,7 @@ try {
         await ff(['-f', 'lavfi', '-i', 'color=size=32x32:color=blue', '-frames:v', '1', path.join(fixtures, 'cover.jpg')]);
         await ff(['-i', path.join(fixtures, 'audio.mp3'), '-i', path.join(fixtures, 'cover.jpg'), '-map', '0:a:0', '-map', '1:v:0', '-c', 'copy', '-disposition:v', 'attached_pic', path.join(fixtures, 'audio-cover.mp3')]);
         for (const route of ['/audio.mp3', '/audio-cover.mp3']) {
-            const prepared = await downloadYTV(base + route, () => {});
+            const prepared = await downloadYTV({ url: base + route, normalizeLoudness: true }, () => {});
             try {
                 assert.equal(path.extname(prepared.combined), '.mp3', 'audio-only preparation must preserve an MP3 recording');
                 assert.notEqual(prepared.combined, prepared.audioOnly, 'recording and transcription audio share a path');
@@ -169,7 +169,7 @@ try {
         assert(probe.streams.some((s: { codec_type: string }) => s.codec_type === 'video'));
         assert(probe.streams.some((s: { codec_type: string }) => s.codec_type === 'audio'));
         const mtime = statSync(raw.combined).mtimeMs;
-        const prepared = await downloadYTV(url, () => {});
+        const prepared = await downloadYTV({ url, normalizeLoudness: true }, () => {});
         assert(await getMediaDurationSeconds(prepared.combined) > 2.9);
         assert(await getMediaDurationSeconds(prepared.audioOnly) > 2.9);
         assert.equal(statSync(raw.combined).mtimeMs, mtime, 'raw MP4 cache changed during preparation');
@@ -180,11 +180,10 @@ try {
     if (!callbackContract && !updateRace && (!selected || selected.has('concurrency'))) {
         // Real downloads and FFmpeg: both cold-cache writers and later consumers must
         // be isolated. Retain the first result while another preparation runs.
-        delete process.env.SKIP_LOUDNORM;
         const hash = (file: string) => createHash('sha256').update(readFileSync(file)).digest('hex');
         for (const route of ['/fixture.mp4', '/page']) {
             const url = base + route;
-            const results = await Promise.allSettled([downloadYTV(url, () => {}), downloadYTV(url, () => {})]);
+            const results = await Promise.allSettled([downloadYTV({ url, normalizeLoudness: true }, () => {}), downloadYTV({ url, normalizeLoudness: true }, () => {})]);
             const [a, b] = results.map(result => {
                 if (result.status === 'rejected') throw result.reason;
                 return result.value;
@@ -195,7 +194,7 @@ try {
             const before = [hash(a.combined), hash(a.audioOnly)];
             const raw = await downloadMedia(url, () => {});
             assert.equal(hash(raw.combined), hash(path.join(fixtures, 'fixture.mp4')), 'preparation mutated the raw cache');
-            const c = await downloadYTV(url, () => {});
+            const c = await downloadYTV({ url, normalizeLoudness: true }, () => {});
             assert.deepEqual([hash(a.combined), hash(a.audioOnly)], before, 'later preparation changed a prior consumer’s files');
             for (const result of [a, b, c]) {
                 assert.equal(result.mediaRewritten, true, 'fixture must exercise the rewrite');
@@ -232,7 +231,7 @@ try {
         rmSync(workRoot, { recursive: true, force: true });
         writeFileSync(workRoot, 'simulate an unavailable task workspace');
         try {
-            await assert.rejects(downloadYTV(base + '/fixture.mp4', () => {}), (err: unknown) => {
+            await assert.rejects(downloadYTV({ url: base + '/fixture.mp4', normalizeLoudness: true }, () => {}), (err: unknown) => {
                 assert(!(err instanceof MediaDownloadError), 'local preparation was misreported as a source failure');
                 assert.equal((err as NodeJS.ErrnoException).code, 'EEXIST');
                 return true;

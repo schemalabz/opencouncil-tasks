@@ -103,6 +103,12 @@ export interface DownloadedMedia {
     cleanup?: () => void;
 }
 
+export interface DownloadArgs {
+    url: string;
+    /** False skips both loudnorm passes, including the silent-audio check. */
+    normalizeLoudness: boolean;
+}
+
 /** What the source reports about a video, fetched independently of any download. */
 export interface VideoInfo {
     /** yt-dlp `live_status` (e.g. `post_live`, `was_live`). Logged for data-gathering, never gated on. */
@@ -542,11 +548,11 @@ async function acquireDownload(youtubeUrl: string, onProgress: ProgressFn, taskL
 export const downloadMedia: Task<string, RawVideo & { source: MediaSourceInfo }> =
     (url, onProgress) => acquireDownload(url, onProgress, false);
 
-export const downloadYTV: Task<string, DownloadedMedia> = async (youtubeUrl, onProgress) => {
+export const downloadYTV: Task<DownloadArgs, DownloadedMedia> = async ({ url: youtubeUrl, normalizeLoudness }, onProgress) => {
     const { combined, source } = await acquireDownload(youtubeUrl, onProgress, true);
     const cleanup = () => removeWorkDirectory(path.dirname(combined));
     try {
-        const prepared = await prepareMedia(combined);
+        const prepared = await prepareMedia(combined, { normalizeLoudness });
         const stem = path.basename(prepared.combined, path.extname(prepared.combined));
         const audioOnly = path.join(path.dirname(combined), `${stem}${path.extname(prepared.combined) === '.mp3' ? '_audio' : ''}.mp3`);
         await extractSoundFromMP4(prepared.combined, audioOnly);
@@ -745,9 +751,14 @@ function runFfmpeg(args: string[]): Promise<{ stderr: string }> {
  * existing normalization and timestamp correction. Return the prepared path because
  * an audio source must not be uploaded under the raw cache's .mp4 extension.
  */
-async function prepareMedia(filePath: string): Promise<{ combined: string; mediaRewritten: boolean }> {
+async function prepareMedia(filePath: string, { normalizeLoudness }: { normalizeLoudness: boolean }): Promise<{ combined: string; mediaRewritten: boolean }> {
     const filename = path.basename(filePath);
-    const loudnormFilter = await measureLoudnormFilter(filePath);
+    let loudnormFilter: string | null = null;
+    if (normalizeLoudness) {
+        loudnormFilter = await measureLoudnormFilter(filePath);
+    } else {
+        console.log(`[loudnorm] ${filename}: fast request, skipping measurement and normalization`);
+    }
 
     const timing = await measureVideoStartShift(filePath);
     if (timing?.hasVideo === false) {
@@ -866,13 +877,6 @@ export function isVideoStartShifted(shift: number, frameSeconds: number | null):
  * rewrite, or null when the audio needs no correction.
  */
 async function measureLoudnormFilter(filePath: string): Promise<string | null> {
-    // An operator switch for when the time to a transcript matters more than even
-    // loudness: the measurement and normalization are skipped, including the
-    // silent-audio check. The video start shift is still corrected.
-    if (process.env.SKIP_LOUDNORM === '1') {
-        console.log(`[loudnorm] ${path.basename(filePath)}: SKIP_LOUDNORM=1, skipping measurement and normalization`);
-        return null;
-    }
     const { I, TP, LRA } = LOUDNORM_TARGET;
     const loudnormFilter = `loudnorm=I=${I}:TP=${TP}:LRA=${LRA}`;
     const filename = path.basename(filePath);
