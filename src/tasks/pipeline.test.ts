@@ -125,6 +125,19 @@ describe("createPipeline", () => {
         expect(deps.uploadToSpaces).toHaveBeenCalledTimes(3);
     });
 
+    it("a fast request skips loudness normalization, any other request normalizes", async () => {
+        const deps = createStubDeps();
+        const pipeline = createPipeline(deps);
+
+        await pipeline({ ...baseRequest, fast: true }, vi.fn());
+        expect(deps.downloadYTV).toHaveBeenLastCalledWith(
+            { url: baseRequest.youtubeUrl, normalizeLoudness: false }, expect.any(Function));
+
+        await pipeline(baseRequest, vi.fn());
+        expect(deps.downloadYTV).toHaveBeenLastCalledWith(
+            { url: baseRequest.youtubeUrl, normalizeLoudness: true }, expect.any(Function));
+    });
+
     it("Spaces URL skip — uploadToSpaces is NOT called for video", async () => {
         const deps = createStubDeps({
             downloadYTV: vi.fn(async () => ({

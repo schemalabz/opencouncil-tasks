@@ -248,7 +248,7 @@ describe('buildRewriteArgs', () => {
     ]);
   });
 
-  // The SKIP_LOUDNORM and within-tolerance cases: a remux only, both streams copied
+  // The fast-request and within-tolerance cases: a remux only, both streams copied
   it('rebuilds the video decode timestamps without touching the audio', () => {
     expect(buildRewriteArgs('in.mp4', 'out.mp4', { loudnormFilter: null, rebuildVideoDts: true })).toEqual([
       '-fflags', '+igndts', '-i', 'in.mp4', '-c:v', 'copy', '-c:a', 'copy', '-y', 'out.mp4',

@@ -51,7 +51,7 @@ for (const c of cases) {
     // same basenames must not mean shared working files or a mutated raw cache.
     const digest=file=>createHash('sha256').update(readFileSync(file)).digest('hex');
     const rawDigest=digest(media.combined);
-    const results=await Promise.allSettled(Array.from({length:concurrency},()=>downloadYTV(c.url,()=>{})));
+    const results=await Promise.allSettled(Array.from({length:concurrency},()=>downloadYTV({url:c.url,normalizeLoudness:true},()=>{})));
     const prepared=results.filter(r=>r.status==='fulfilled').map(r=>r.value);
     try {
      for(const r of results)if(r.status==='rejected')throw r.reason;

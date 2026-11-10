@@ -107,10 +107,11 @@ program
     .description('Run the full pipeline on a YouTube video')
     .requiredOption('-O, --output-file <file>', 'Output file for the pipeline')
     .option('-l, --language <language>', `Content language of the meeting (standard language code)`, parseLanguageOption, 'el')
-    .action(async (youtubeUrl: string, options: { outputFile: string; language: CityLanguage }) => {
+    .option('--fast', 'Skip loudness normalization for a sooner transcript')
+    .action(async (youtubeUrl: string, options: { outputFile: string; language: CityLanguage; fast?: boolean }) => {
         console.log('Running pipeline, output to', options.outputFile);
         const result = await pipeline(
-            { youtubeUrl, cityLanguage: options.language },
+            { youtubeUrl, cityLanguage: options.language, fast: options.fast },
             (stage: string, progressPercent: number) => {
                 process.stdout.write(`\rRunning pipeline... [${stage}] ${progressPercent.toFixed(2)}%`);
             }
@@ -133,9 +134,12 @@ program
     .description('Download a video from any source yt-dlp supports, a media file, or Spaces')
     .option('--download-only', 'Download and verify completeness, without normalization or audio extraction')
     .action(async (youtubeUrl: string, options: { downloadOnly?: boolean }) => {
-        const result = await (options.downloadOnly ? downloadMedia : downloadYTV)(youtubeUrl, (stage: string, progressPercent: number) => {
+        const onProgress = (stage: string, progressPercent: number) => {
             process.stdout.write(`\rDownloading video... [${stage}] ${progressPercent.toFixed(2)}%`);
-        });
+        };
+        const result = options.downloadOnly
+            ? await downloadMedia(youtubeUrl, onProgress)
+            : await downloadYTV({ url: youtubeUrl, normalizeLoudness: true }, onProgress);
         console.log('\nVideo downloaded');
         console.log(result);
         server.close();

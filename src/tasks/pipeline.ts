@@ -1,7 +1,7 @@
 import { TranscribeRequest, TranscribeResult, TranscriptWithSpeakerIdentification, DiarizeRequest, DiarizeResult, Diarization, DiarizationSpeaker, Transcript } from "../types.js";
 import { applyDiarization } from "./applyDiarization.js";
 import { diarize } from "./diarize.js";
-import { downloadYTV, type DownloadedMedia } from "./downloadYTV.js";
+import { downloadYTV, type DownloadArgs, type DownloadedMedia } from "./downloadYTV.js";
 import { splitAudioDiarization } from "./splitAudioDiarization.js";
 import { type SplitAudioArgs, type AudioSegment } from "./splitAudioDiarization.js";
 import { transcribe } from "./transcribe.js";
@@ -25,7 +25,7 @@ dotenv.config();
 export type Task<Args, Ret> = (args: Args, onProgress: (stage: string, progressPercent: number) => void) => Promise<Ret>;
 
 export type PipelineDeps = {
-    downloadYTV: Task<string, DownloadedMedia>;
+    downloadYTV: Task<DownloadArgs, DownloadedMedia>;
     uploadToSpaces: Task<UploadFilesArgs, string[]>;
     diarize: Task<Omit<DiarizeRequest, "callbackUrl">, DiarizeResult>;
     splitAudioDiarization: Task<SplitAudioArgs, AudioSegment[]>;
@@ -44,7 +44,10 @@ export function createPipeline(deps: PipelineDeps): Task<Omit<TranscribeRequest,
             return _.throttle((subStage: string, perc: number) => onProgress(`${stage}:${subStage}`, perc), 10000, { leading: true, trailing: false });
         };
 
-        const { audioOnly, combined, source, mediaRewritten, cleanup } = await deps.downloadYTV(request.youtubeUrl, createProgressHandler("downloading-video"));
+        const { audioOnly, combined, source, mediaRewritten, cleanup } = await deps.downloadYTV(
+            { url: request.youtubeUrl, normalizeLoudness: !request.fast },
+            createProgressHandler("downloading-video"),
+        );
 
         // Only upload video if it's not already on our own Spaces storage. When it IS on our
         // Spaces but downloadYTV rewrote the file (loudnorm, video start shift), overwrite the
