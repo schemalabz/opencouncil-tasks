@@ -7,7 +7,7 @@ vi.mock('./ai.js', async importOriginal => ({ ...(await importOriginal<typeof im
 
 import {
     chunkSegments, cleanSpokenName, formatUnlistedLabel, identifySpeakers, isActionable, isSpecificUnlistedName, MIN_ACTIONABLE_CONFIDENCE, MIN_UNLISTED_ACTIONABLE_CONFIDENCE,
-    mergeChunkIdentifications, parseUnlistedLabel, sanitizeChunkVerdicts, sameName, sameUnlistedSpeaker, buildSystemPrompt, buildUserPrompt, ChunkIdentification, SpeakerEvidenceKind,
+    dominantScript, mergeChunkIdentifications, parseUnlistedLabel, sanitizeChunkVerdicts, sameName, sameUnlistedSpeaker, buildSystemPrompt, buildUserPrompt, ChunkIdentification, SpeakerEvidenceKind,
     SpeakerSegmentInput, ModelVerdict, SPEAKER_EVIDENCE_KINDS, UNLISTED_ACTIONABLE_EVIDENCE_KINDS,
 } from './speakerIdentification.js';
 
@@ -275,6 +275,15 @@ describe('unlisted labels', () => {
     });
 });
 
+describe('dominantScript', () => {
+    it('names the script most letters are in', () => {
+        expect(dominantScript('Ο κ. Παπαδόπουλος για το Wi-Fi')).toBe('Greek');
+        expect(dominantScript('Реч има одборник')).toBe('Cyrillic');
+        expect(dominantScript('Reč ima odbornik')).toBe('Latin');
+        expect(dominantScript('12:30 - 45')).toBeNull();
+    });
+});
+
 describe('sameName', () => {
     it('ignores accents, case and final sigma, and allows a surname alone', () => {
         expect(sameName('Βασίλειος Κωνστανταράκης', 'ΚΩΝΣΤΑΝΤΑΡΑΚΗΣ')).toBe(true);
@@ -367,6 +376,36 @@ describe('sanitizeChunkVerdicts', () => {
         expect(kept.map(k => [k.personId, k.unlistedName, k.unlistedCapacity, k.confidence])).toEqual([
             ['id-a', null, null, 90],
             [null, null, null, 0],
+        ]);
+    });
+
+    it('drops a capacity the model guessed, so a bare surname stays a suggestion', () => {
+        const kept = sanitizeChunkVerdicts([
+            uv('S1', 'Παπαδημητρίου', 'presents the agenda items (likely a municipal employee)', 90),
+            uv('S2', 'Παπαδόπουλος', 'υπάλληλος του δήμου;', 90),
+            uv('S3', 'Γεωργίου', 'υπάλληλος (τεχνική υπηρεσία;)', 90),
+            uv('S4', 'Φωτίου', 'municipal employee', 90),
+            uv('S5', 'Νικολάου', 'κάτοικος Παγκρατίου', 90),
+        ], new Set(['S1', 'S2', 'S3', 'S4', 'S5']), roster, 'Greek');
+        expect(kept.map(k => [k.unlistedName, k.unlistedCapacity])).toEqual([
+            ['Παπαδημητρίου', null],
+            ['Παπαδόπουλος', null],
+            ['Γεωργίου', null],
+            ['Φωτίου', null],
+            ['Νικολάου', 'κάτοικος Παγκρατίου'],
+        ]);
+        const merged = mergeChunkIdentifications([kept], ['S1', 'S5']);
+        expect(merged.map(m => m.actionable)).toEqual([false, true]);
+    });
+
+    it('keeps a spoken capacity in the script of the transcript, in any script', () => {
+        const kept = sanitizeChunkVerdicts([
+            uv('S1', null, 'directeur des services techniques', 90, 'selfIntroduced'),
+            uv('S2', null, 'запослени у општини', 90, 'selfIntroduced'),
+        ], new Set(['S1', 'S2']), roster, 'Latin');
+        expect(kept.map(k => [k.unlistedCapacity, k.confidence])).toEqual([
+            ['directeur des services techniques', 90],
+            [null, 0],
         ]);
     });
 

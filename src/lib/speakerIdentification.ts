@@ -304,7 +304,7 @@ RULES:
 - Diarization sometimes splits one voice into two labels or merges two voices into one. Assigning the same person to two labels is allowed only when each label has its own explicit evidence.
 - Include every label that appears in this chunk exactly once. Skip the speakers listed as already known.
 - person: the roster key of the speaker (for example P12), or null when unknown. personName: the name on that key's roster line, copied exactly, or null.
-- unlistedName: for a speaker who is not on the roster, their name as spoken, surname first, in the nominative ("Φωτίου Γιώργος"; "κύριε Παπαδόπουλε" becomes "Παπαδόπουλος"), without κ./κα. and without a trailing period; null when no name is spoken. unlistedCapacity: the capacity they state or are given ("κάτοικος Παγκρατίου", "πρόεδρος του συλλόγου γονέων", "υπάλληλος της τεχνικής υπηρεσίας"), or null when none is stated; a capacity alone is a valid answer when no name is spoken. Both are null when person is set.
+- unlistedName: for a speaker who is not on the roster, their name as spoken, surname first, in the nominative ("Φωτίου Γιώργος"; "κύριε Παπαδόπουλε" becomes "Παπαδόπουλος"), without κ./κα. and without a trailing period; null when no name is spoken. unlistedCapacity: the capacity as it is spoken in the transcript, by the speaker or by whoever gives them the floor ("κάτοικος Παγκρατίου", "πρόεδρος του συλλόγου γονέων", "υπάλληλος της τεχνικής υπηρεσίας"): a short noun phrase in the language of the transcript, never translated. Never describe what the speaker does ("presents the agenda items"), never infer a capacity from what they do or talk about, and never hedge ("likely", "probably", a remark in parentheses): when no capacity is spoken, answer null. A capacity alone is a valid answer when no name is spoken. Both are null when person is set.
 - evidenceKind: the strongest kind of evidence you used for the person or the unlisted name. "named": this label is given the floor by name right before it speaks. "rollCall": a name is read out and this label answers. "selfIntroduced": the speaker states their own name or role. "addressed": others address the speaker by name or role title in the lines around it. "roleBehaviour": only what the speaker does; no name or title is spoken. null when person, unlistedName and unlistedCapacity are all null.
 - evidence: quote the decisive line(s) briefly, with their timestamp.
 
@@ -535,17 +535,54 @@ function resolvePerson(verdict: ModelVerdict, roster: RosterPerson[]): string | 
     return null;
 }
 
+export type Script = "Greek" | "Cyrillic" | "Latin";
+const SCRIPT_LETTERS: Record<Script, RegExp> = {
+    Greek: /\p{Script=Greek}/gu,
+    Cyrillic: /\p{Script=Cyrillic}/gu,
+    Latin: /\p{Script=Latin}/gu,
+};
+
+/** The script most letters of the text are written in, or null when the text has no letters of these scripts. */
+export function dominantScript(text: string): Script | null {
+    let best: Script | null = null;
+    let bestCount = 0;
+    for (const script of Object.keys(SCRIPT_LETTERS) as Script[]) {
+        const count = text.match(SCRIPT_LETTERS[script])?.length ?? 0;
+        if (count > bestCount) [best, bestCount] = [script, count];
+    }
+    return best;
+}
+
+/**
+ * Whether a capacity reads as the model's guess rather than words spoken in
+ * the meeting: it carries a remark in parentheses or a question mark, or has
+ * no letter in the script of the transcript (an English description of a
+ * Greek speaker). A hedge in the transcript's own words is left to the prompt.
+ * A capacity makes a bare surname specific enough to publish
+ * (isSpecificUnlistedName), so a guessed one would publish a label nobody said.
+ */
+export function isGuessedCapacity(capacity: string, transcriptScript: Script | null): boolean {
+    // A Greek question mark is written ";" (or U+037E).
+    if (/[()[\]?;\u037E]/u.test(capacity)) return true;
+    return transcriptScript !== null && capacity.match(SCRIPT_LETTERS[transcriptScript]) === null;
+}
+
 /**
  * Resolves what the model says about a speaker it put off the roster. The
- * name is cleaned as a label carries it. A name the roster has is not an
+ * name is cleaned as a label carries it, and a guessed capacity is dropped
+ * (isGuessedCapacity). A name the roster has is not an
  * unlisted speaker's: a full name that pins down one roster person is that
  * person (the model forgot the key); any other roster name is unresolved,
  * since an omission is harmless and a resident's label on a councillor, or a
  * councillor's name on a resident, is not.
  */
-function resolveUnlisted(verdict: ModelVerdict, roster: RosterPerson[]): { personId: string | null; unlisted: UnlistedSpeaker | null } {
+function resolveUnlisted(verdict: ModelVerdict, roster: RosterPerson[], transcriptScript: Script | null): { personId: string | null; unlisted: UnlistedSpeaker | null } {
     const name = cleanSpokenName(verdict.unlistedName);
-    const capacity = cleanSpokenName(verdict.unlistedCapacity);
+    let capacity = cleanSpokenName(verdict.unlistedCapacity);
+    if (capacity !== null && isGuessedCapacity(capacity, transcriptScript)) {
+        console.warn(`Speaker identification: ${verdict.speakerLabel} was given the capacity "${capacity}", which was not spoken; dropping it`);
+        capacity = null;
+    }
     if (!name) return { personId: null, unlisted: capacity ? { name: null, capacity } : null };
 
     const onRoster = roster.filter(p => sameName(p.name, name));
@@ -564,12 +601,15 @@ function resolveUnlisted(verdict: ModelVerdict, roster: RosterPerson[]): { perso
  * Drops verdicts the model was not entitled to give: labels absent from the
  * chunk, repeated labels, and people that key and name don't pin down. A
  * verdict with a key is a roster person's, whatever else it says; one
- * without is an unlisted speaker's when it names one.
+ * without is an unlisted speaker's when it names one. transcriptScript is the
+ * script the chunk is written in (dominantScript), which an unlisted
+ * capacity must share.
  */
 export function sanitizeChunkVerdicts(
     verdicts: ModelVerdict[],
     chunkLabels: Set<string>,
-    roster: RosterPerson[]
+    roster: RosterPerson[],
+    transcriptScript: Script | null = null,
 ): ChunkIdentification[] {
     const seen = new Set<string>();
     const kept: ChunkIdentification[] = [];
@@ -581,7 +621,7 @@ export function sanitizeChunkVerdicts(
         const keyed = Boolean(verdict.person?.trim());
         const resolved = keyed
             ? { personId: resolvePerson(verdict, roster), unlisted: null }
-            : resolveUnlisted(verdict, roster);
+            : resolveUnlisted(verdict, roster, transcriptScript);
         const named = resolved.personId !== null || resolved.unlisted !== null;
         const confidence = Math.max(0, Math.min(100, Math.round(verdict.confidence)));
         kept.push({
@@ -686,7 +726,8 @@ export async function identifySpeakers(args: IdentifySpeakersArgs): Promise<Iden
         });
         usage = addUsage(usage, result.usage);
         const chunkLabels = new Set(labelsInOrder(chunk).filter(l => !knownLabels.has(l)));
-        return sanitizeChunkVerdicts(result.result.identifications ?? [], chunkLabels, roster);
+        const transcriptScript = dominantScript(chunk.map(s => s.text).join(" "));
+        return sanitizeChunkVerdicts(result.result.identifications ?? [], chunkLabels, roster, transcriptScript);
     };
 
     const runChunk = async (chunk: SpeakerSegmentInput[], index: number) => {
