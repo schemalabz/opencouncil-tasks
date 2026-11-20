@@ -6,7 +6,7 @@ import { getBatchProcessingSystemPrompt, getSpeakerContributionsSystemPrompt } f
 import { getMergeSubjectsSystemPrompt } from "../tasks/summarize/mergeSubjects.js";
 import { getSystemPrompt as getAgendaSystemPrompt, getUserPrompt as getAgendaUserPrompt } from "../tasks/processAgenda.js";
 import { buildSystemPrompt as buildFixSystemPrompt, buildUserPrompt as buildFixUserPrompt } from "../tasks/fixTranscript.js";
-import { MEETINGS_ONLY_SYSTEM_PROMPT } from "./agendaMeetingRecord.js";
+import { meetingsOnlySystemPrompt } from "./agendaMeetingRecord.js";
 import { buildSubjectContextPrompts } from "./claudeSearch.js";
 import { buildSystemPrompt as buildSpeakerSystemPrompt, buildUserPrompt as buildSpeakerUserPrompt } from "./speakerIdentification.js";
 import type { ProcessAgendaRequest, RosterPerson } from "../types.js";
@@ -61,7 +61,7 @@ describe("the prompts of a municipality", () => {
     });
 
     it("the meeting record of an invitation", () => {
-        expect(MEETINGS_ONLY_SYSTEM_PROMPT).toMatchSnapshot();
+        expect(meetingsOnlySystemPrompt()).toMatchSnapshot();
     });
 
     it("fixTranscript", () => {
