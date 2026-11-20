@@ -42,10 +42,19 @@ export function speakerPositions(subject: SubjectInProgress, statuses: Utterance
 /** Speech below this is a remark or a short question; the description may leave it out. */
 const SUBSTANTIAL_SPEECH_CHARS = 500;
 
-/** The description grows with the number of people who took a position, not with how long they spoke. */
+const substantialCount = (positions: SpeakerPosition[]) => positions.filter(p => p.chars >= SUBSTANTIAL_SPEECH_CHARS).length;
+
+/** A debate of more people than this cannot name each of them in the room a normal subject gets. */
+const LARGE_DEBATE_SPEAKERS = 5;
+
+/**
+ * The description grows with the number of people who took a position, not with how long they
+ * spoke. A large debate (a budget, a yearly review, where the meeting is the subject) gets room
+ * for one phrase per speaker, up to a ceiling a reader still finishes.
+ */
 export function wordLimit(positions: SpeakerPosition[]): number {
-    const substantial = positions.filter(p => p.chars >= SUBSTANTIAL_SPEECH_CHARS).length;
-    return [35, 60, 80, 100, 110][substantial] ?? 130;
+    const substantial = substantialCount(positions);
+    return [35, 60, 80, 100, 110][substantial] ?? Math.min(130 + 15 * (substantial - LARGE_DEBATE_SPEAKERS), 300);
 }
 
 /**
@@ -132,7 +141,7 @@ export async function writeSubjectDescription(
 ${subject.description}
 
 ΟΡΙΟ ΜΗΚΟΥΣ: έως ${wordLimit(positions)} λέξεις συνολικά.
-
+${substantialCount(positions) > LARGE_DEBATE_SPEAKERS ? `ΠΟΛΛΟΙ ΟΜΙΛΗΤΕΣ: ${substantialCount(positions)} ομιλητές έχουν ουσιαστική τοποθέτηση. Κάθε ένας πρέπει να φαίνεται με το όνομά του. Ομαδοποίησε όσους είπαν το ίδιο ή μίλησαν με τον ίδιο ρόλο (π.χ. αντιδήμαρχοι που παρουσιάζουν τον τομέα τους), με μία σύντομη φράση ή ένα στοιχείο για τον καθένα. ΜΗΝ γράφεις «οι λοιποί» ή «άλλοι ομιλητές» στη θέση ονομάτων.\n` : ''}
 ΣΕΙΡΑ ΤΩΝ ΟΜΙΛΙΩΝ (ποιος πήρε τον λόγο και πότε· όποιος εμφανίζεται ξανά, απαντά ή δευτερολογεί):
 ${turns.join(' → ')}
 
