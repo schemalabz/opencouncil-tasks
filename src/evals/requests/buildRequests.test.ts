@@ -31,7 +31,7 @@ function payload(body: typeof COUNCIL, conventions?: unknown): PublicMeetingPayl
             administrativeBodyId: body.id,
             administrativeBody: { ...body, diavgeiaUnitIds: ['12345'], decisionConventions: conventions },
         },
-        city: { name: 'Δοκιμούπολη', language: 'el', realm: 'greece', timezone: 'Europe/Athens', diavgeiaUid: '999' },
+        city: { name: 'Δοκιμούπολη', language: 'el', realm: 'greece', timezone: 'Europe/Athens', diavgeiaUid: '999', authorityType: 'municipality' },
         people: [
             { id: 'mayor', name: 'Ζωή Δημάρχου', roles: [role({ cityId: 'testville', isHead: true, name: 'Δήμαρχος' }), bodyRole(COMMITTEE, { isHead: true, name: 'Πρόεδρος' })] },
             { id: 'chair', name: 'Άννα Προέδρου', roles: [bodyRole(COUNCIL, { isHead: true, name: 'Πρόεδρος' }), role(blue)] },
@@ -85,7 +85,7 @@ describe('buildFixTranscriptRequest', () => {
         // The community member is not on the list; the mayor is, by a city-level role.
         expect(request.people?.map(p => p.id)).toEqual(['chair', 'member', 'mayor']);
         expect(request.people?.find(p => p.id === 'member')).toMatchObject({ party: null, memberOfMeetingBody: true });
-        expect(request).toMatchObject({ cityName: 'Δοκιμούπολη', cityLanguage: 'el', country: 'GR', administrativeBodyName: 'Δημοτικό Συμβούλιο', date: '2026-09-07', topicLabels: topics });
+        expect(request).toMatchObject({ cityName: 'Δοκιμούπολη', authorityType: 'municipality', cityLanguage: 'el', country: 'GR', administrativeBodyName: 'Δημοτικό Συμβούλιο', date: '2026-09-07', topicLabels: topics });
         expect(request).not.toHaveProperty('agendaItems');
     });
 });
@@ -115,7 +115,7 @@ describe('buildProcessAgendaRequest', () => {
             { id: 'member', name: 'Βασίλης Μέλους', role: 'Δημοτική Επιτροπή', party: '' },
             { id: 'mayor', name: 'Ζωή Δημάρχου', role: 'Πρόεδρος', party: '' },
         ]);
-        expect(request).toMatchObject({ agendaUrl: 'https://example.org/agenda.pdf', date: '2026-09-07T21:00:00.000Z', country: 'GR', cityName: 'Δοκιμούπολη' });
+        expect(request).toMatchObject({ agendaUrl: 'https://example.org/agenda.pdf', date: '2026-09-07T21:00:00.000Z', country: 'GR', cityName: 'Δοκιμούπολη', authorityType: 'municipality' });
     });
 });
 
