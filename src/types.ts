@@ -68,6 +68,14 @@ export type CityLanguage = string;
  */
 export type CountryCode = string;
 
+/**
+ * The kind of the authority that holds a meeting: a municipality, or a Greek
+ * region (Περιφέρεια). Sent by the frontend next to cityName. A request with
+ * none is the request of a municipality. lib/authority.ts holds the wording
+ * that each kind gets in the prompts.
+ */
+export type AuthorityType = 'municipality' | 'region';
+
 /*
  * Task: Transcribe
  */
@@ -228,6 +236,8 @@ export interface ProcessAgendaRequest extends TaskRequest {
     }[];
     topicLabels: TopicLabelInfo[];
     cityName: string;
+    /** The kind of the authority. A request with none is a municipality's. */
+    authorityType?: AuthorityType;
     cityLanguage: CityLanguage;
     country?: CountryCode;
     date: string;
@@ -439,6 +449,8 @@ export interface RequestOnTranscript extends TaskRequest {
     }[];
     topicLabels: TopicLabelInfo[];
     cityName: string;
+    /** The kind of the authority. A request with none is a municipality's. */
+    authorityType?: AuthorityType;
     cityLanguage: CityLanguage;
     administrativeBodyName: string;  // e.g., "Δημοτικό Συμβούλιο"
     /**
