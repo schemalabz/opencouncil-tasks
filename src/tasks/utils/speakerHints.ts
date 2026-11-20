@@ -100,6 +100,7 @@ export async function identifyTranscriptSpeakers(request: FixTranscriptRequest):
     try {
         const identified = await identifySpeakers({
             cityName: request.cityName,
+            authorityType: request.authorityType,
             language: request.cityLanguage,
             meetingDate: request.date,
             administrativeBodyName: request.administrativeBodyName,
