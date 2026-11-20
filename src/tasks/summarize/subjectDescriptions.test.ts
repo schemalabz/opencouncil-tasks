@@ -42,6 +42,13 @@ describe('wordLimit', () => {
         expect(wordLimit([speaker(40_000)])).toBe(wordLimit([speaker(600)]));
         expect(wordLimit([speaker(600), speaker(600), speaker(100)])).toBeGreaterThan(wordLimit([speaker(600)]));
     });
+
+    it('gives a large debate room for every speaker, up to a ceiling', () => {
+        const debate = (n: number) => Array.from({ length: n }, () => speaker(600));
+        expect(wordLimit(debate(16))).toBeGreaterThan(wordLimit(debate(8)));
+        expect(wordLimit(debate(8))).toBeGreaterThan(wordLimit(debate(5)));
+        expect(wordLimit(debate(60))).toBe(wordLimit(debate(30)));
+    });
 });
 
 describe('speakerPositions and turnOrder', () => {
