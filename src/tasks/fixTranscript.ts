@@ -1,7 +1,8 @@
-import { CityLanguage, FixTranscriptResult } from "../types.js";
+import { AuthorityType, CityLanguage, FixTranscriptResult } from "../types.js";
 import { FixTranscriptRequest } from "../types.js";
 import { Task } from "../tasks/pipeline.js";
 import { addUsage, aiChat, NO_USAGE, ResultWithUsage } from "../lib/ai.js";
+import { authorityTerms, DEFAULT_AUTHORITY_TYPE } from "../lib/authority.js";
 import { getLanguageConfig } from "../lib/language.js";
 import { identifyTranscriptSpeakers } from "./utils/speakerHints.js";
 
@@ -10,9 +11,12 @@ const MAX_PARALLEL_API_CALLS = 20;
 // programmatically, and a count mismatch gets a fresh retry
 const MAX_FIX_ATTEMPTS = 3;
 
-export function buildSystemPrompt(language: CityLanguage): string {
+/** What the system prompt calls the meeting. "city council" is the text that every municipality has had. */
+const MEETING_NAME: Record<AuthorityType, string> = { municipality: 'city council', region: 'regional council' };
+
+export function buildSystemPrompt(language: CityLanguage, authorityType: AuthorityType = DEFAULT_AUTHORITY_TYPE): string {
     const config = getLanguageConfig(language);
-    return `You are correcting an automatic transcription (made by ElevenLabs Scribe) of a ${config.promptName} city council meeting. You receive ONE speaker segment: consecutive utterances spoken by the same person, as numbered lines:
+    return `You are correcting an automatic transcription (made by ElevenLabs Scribe) of a ${config.promptName} ${MEETING_NAME[authorityType]} meeting. You receive ONE speaker segment: consecutive utterances spoken by the same person, as numbered lines:
 
 1. <utterance>
 2. <utterance>
@@ -55,12 +59,13 @@ export function buildUserPrompt(
     cityName: string,
     parties: PartyNames,
     agenda: { name: string }[],
-    utterances: string[]
+    utterances: string[],
+    authorityType?: AuthorityType
 ): string {
     const agendaBlock = agenda.length > 0
         ? `Agenda items of this meeting (source for street/project/entity names):\n${agenda.map((s, i) => `${i + 1}. ${s.name}`).join('\n')}\n`
         : '';
-    return `City: ${cityName}
+    return `${authorityTerms(authorityType).en.label}: ${cityName}
 Roster (party — members):
 ${parties.map(p => `${p.name}: ${p.people.map(x => x.name).join(', ')}`).join('\n')}
 ${agendaBlock}Correct the numbered utterances:
@@ -122,7 +127,7 @@ export async function correctTranscript(
 ): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
     // A caller that predates `people` still sends them grouped by party.
     const partiesWithPeople = request.people ? groupPeopleByParty(request.people) : request.partiesWithPeople ?? [];
-    return fixSpeakerSegments(request.transcript, request.cityName, request.cityLanguage, partiesWithPeople, request.agendaItems ?? [], onProgress);
+    return fixSpeakerSegments(request.transcript, request.cityName, request.cityLanguage, request.authorityType, partiesWithPeople, request.agendaItems ?? [], onProgress);
 }
 
 export const fixTranscript: Task<FixTranscriptRequest, FixTranscriptResult> = async (request, onProgress) => {
@@ -157,6 +162,7 @@ async function processSpeakerSegment(
     segment: FixTranscriptRequest['transcript'][0],
     cityName: string,
     cityLanguage: CityLanguage,
+    authorityType: AuthorityType | undefined,
     partiesWithPeople: PartyNames,
     agendaItems: { name: string }[]
 ): Promise<ResultWithUsage<FixTranscriptResult['updateUtterances']>> {
@@ -166,8 +172,8 @@ async function processSpeakerSegment(
     }
 
     const utteranceTexts = segment.utterances.map(u => u.text);
-    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, utteranceTexts);
-    const systemPrompt = buildSystemPrompt(cityLanguage);
+    const userPrompt = buildUserPrompt(cityName, partiesWithPeople, agendaItems, utteranceTexts, authorityType);
+    const systemPrompt = buildSystemPrompt(cityLanguage, authorityType);
 
     let usage = NO_USAGE;
     let structureReminder = "";
@@ -220,6 +226,7 @@ async function fixSpeakerSegments(
     speakerSegments: FixTranscriptRequest['transcript'],
     cityName: string,
     cityLanguage: CityLanguage,
+    authorityType: AuthorityType | undefined,
     partiesWithPeople: PartyNames,
     agendaItems: { name: string }[],
     onProgress: (stage: string, progress: number) => void
@@ -233,7 +240,7 @@ async function fixSpeakerSegments(
     for (let i = 0; i < speakerSegments.length; i += MAX_PARALLEL_API_CALLS) {
         const batch = speakerSegments.slice(i, i + MAX_PARALLEL_API_CALLS);
         const batchPromises = batch.map(segment =>
-            processSpeakerSegment(segment, cityName, cityLanguage, partiesWithPeople, agendaItems)
+            processSpeakerSegment(segment, cityName, cityLanguage, authorityType, partiesWithPeople, agendaItems)
         );
 
         const batchResults = await Promise.all(batchPromises);
