@@ -42,7 +42,7 @@ function voteSentence(text: string): string | null {
  * vote's result: the transcript cannot settle it, since roll-call answers are short utterances
  * diarization often gives to the wrong speaker.
  */
-export default callCheck('summary_states_vote_result', ['batch-processing*', 'subject-merge*', 'contributions*'], call => {
+export default callCheck('summary_states_vote_result', ['batch-processing*', 'subject-merge*', 'contributions*', 'subject-description*'], call => {
     const found = texts(responseJson(call));
     if (!found) return unknown('the response is not a subjects or contributions object');
     const hits = found.flatMap(t => { const s = voteSentence(t); return s ? [s] : []; });
