@@ -10,7 +10,7 @@ const MAX_PARALLEL_API_CALLS = 20;
 // programmatically, and a count mismatch gets a fresh retry
 const MAX_FIX_ATTEMPTS = 3;
 
-function buildSystemPrompt(language: CityLanguage): string {
+export function buildSystemPrompt(language: CityLanguage): string {
     const config = getLanguageConfig(language);
     return `You are correcting an automatic transcription (made by ElevenLabs Scribe) of a ${config.promptName} city council meeting. You receive ONE speaker segment: consecutive utterances spoken by the same person, as numbered lines:
 

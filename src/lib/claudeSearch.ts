@@ -2,22 +2,20 @@ import { CityLanguage, SubjectContext } from '../types.js';
 import { aiChat, ResultWithUsage, NO_USAGE } from './ai.js';
 import { getLanguageConfig, languageDirectiveSuffix } from './language.js';
 
-/**
- * Use Claude's web search capability to find relevant context about a subject
- * discussed in a council meeting.
- */
-export async function getSubjectContextWithClaude(params: {
+export interface SubjectContextParams {
   subjectName: string;
   subjectDescription: string;
   cityName: string;
   cityLanguage?: CityLanguage;
   administrativeBodyName: string;
   date: string;
-}): Promise<ResultWithUsage<SubjectContext>> {
-  try {
-    const { promptName } = getLanguageConfig(params.cityLanguage);
-    const langDirective = languageDirectiveSuffix(params.cityLanguage);
-    const systemPrompt = `You are a helpful assistant that provides background context for citizens reading about municipal council meeting topics.
+}
+
+/** The two prompts of the context search, apart from the call so that a test can read them. */
+export function buildSubjectContextPrompts(params: SubjectContextParams): { systemPrompt: string; userPrompt: string } {
+  const { promptName } = getLanguageConfig(params.cityLanguage);
+  const langDirective = languageDirectiveSuffix(params.cityLanguage);
+  const systemPrompt = `You are a helpful assistant that provides background context for citizens reading about municipal council meeting topics.
 
 Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} that helps ordinary citizens understand the context. Focus on:
 - What the subject is about (technical terms, regulations, policies)
@@ -38,7 +36,7 @@ Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} tha
 **Example format:**
 Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού και την υλικοτεχνική υποδομή. Οι πρόσφατες αλλαγές στην νομοθεσία στοχεύουν στη βελτίωση της ποιότητας των παρεχόμενων υπηρεσιών.${langDirective}`;
 
-    const userPrompt = `Παράθεσε ΕΞΩΤΕΡΙΚΟ πλαίσιο για πολίτες που διαβάζουν για αυτό το θέμα που συζητήθηκε σε συνεδρίαση ${params.administrativeBodyName}.
+  const userPrompt = `Παράθεσε ΕΞΩΤΕΡΙΚΟ πλαίσιο για πολίτες που διαβάζουν για αυτό το θέμα που συζητήθηκε σε συνεδρίαση ${params.administrativeBodyName}.
 
 **Θέμα:** ${params.subjectName}
 **Περιγραφή:** ${params.subjectDescription}
@@ -59,6 +57,16 @@ Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} tha
 
 Ξεκίνα την απάντησή σου ΑΠΕΥΘΕΙΑΣ με το πλαίσιο - ΧΩΡΙΣ μετα-σχόλια.${langDirective}`;
 
+  return { systemPrompt, userPrompt };
+}
+
+/**
+ * Use Claude's web search capability to find relevant context about a subject
+ * discussed in a council meeting.
+ */
+export async function getSubjectContextWithClaude(params: SubjectContextParams): Promise<ResultWithUsage<SubjectContext>> {
+  try {
+    const { systemPrompt, userPrompt } = buildSubjectContextPrompts(params);
 
     const result = await aiChat<string>({
       systemPrompt,
