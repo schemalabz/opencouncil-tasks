@@ -6,6 +6,8 @@
 
 import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
 import { SubjectInProgress, UtteranceStatus } from "./types.js";
+import { authorityTerms } from "../../lib/authority.js";
+import type { AuthorityType } from "../../types.js";
 
 interface MergeOperation {
     keepId: string;
@@ -19,10 +21,10 @@ interface MergeAIResponse {
 }
 
 /** The system prompt of the merge call, apart from the call so that a test can read it. */
-export function getMergeSubjectsSystemPrompt(): string {
+export function getMergeSubjectsSystemPrompt(authorityType?: AuthorityType): string {
     return `You are an expert at analyzing meeting subject lists and identifying duplicates or fragments that should be merged.
 
-You will receive a list of subjects extracted from a municipal council meeting transcript. These subjects were created independently across multiple transcript batches, so there may be:
+You will receive a list of subjects extracted from a ${authorityTerms(authorityType).en.adjective} council meeting transcript. These subjects were created independently across multiple transcript batches, so there may be:
 - Near-duplicate subjects covering the same topic (e.g., 3 separate "parking" subjects)
 - Overly broad subjects in early batches that later batches created specific breakouts for
 - Subjects that are really one topic but got fragmented across batches
@@ -53,7 +55,8 @@ Return a JSON object with a "merges" array. Each merge has:
  */
 export async function mergeSubjects(
     subjects: SubjectInProgress[],
-    allUtteranceStatuses: UtteranceStatus[]
+    allUtteranceStatuses: UtteranceStatus[],
+    authorityType?: AuthorityType
 ): Promise<{
     subjects: SubjectInProgress[];
     allUtteranceStatuses: UtteranceStatus[];
@@ -72,7 +75,7 @@ export async function mergeSubjects(
         return { subjects, allUtteranceStatuses, mergeCount: 0, ...NO_USAGE_STATS };
     }
 
-    const systemPrompt = getMergeSubjectsSystemPrompt();
+    const systemPrompt = getMergeSubjectsSystemPrompt(authorityType);
 
     // Count utterances per subject for context
     const utteranceCounts = new Map<string, number>();

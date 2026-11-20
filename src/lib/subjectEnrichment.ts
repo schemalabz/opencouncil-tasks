@@ -1,7 +1,7 @@
-import { CityLanguage, CountryCode, Subject, SubjectContext, SpeakerContribution } from '../types.js';
+import { AuthorityType, CityLanguage, CountryCode, Subject, SubjectContext, SpeakerContribution } from '../types.js';
 import { geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
-import { getLanguageConfig } from './language.js';
+import { defaultAdministrativeBodyName } from './language.js';
 import { ResultWithUsage, NO_USAGE_STATS, type UsageStats } from './ai.js';
 
 /**
@@ -35,6 +35,8 @@ export interface EnrichmentConfig {
     country?: CountryCode;
     administrativeBodyName?: string;
     date: string;
+    /** The kind of the authority. A config with none is a municipality's. */
+    authorityType?: AuthorityType;
 }
 
 /**
@@ -77,7 +79,8 @@ export async function enrichSubjectData(
             subjectDescription: input.description,
             cityName: config.cityName,
             cityLanguage: config.cityLanguage,
-            administrativeBodyName: config.administrativeBodyName || getLanguageConfig(config.cityLanguage).defaultAdministrativeBodyName,
+            administrativeBodyName: config.administrativeBodyName || defaultAdministrativeBodyName(config.cityLanguage, config.authorityType),
+            authorityType: config.authorityType,
             date: config.date
         });
         context = contextResult.result;

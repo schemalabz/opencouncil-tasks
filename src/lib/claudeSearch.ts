@@ -1,4 +1,5 @@
-import { CityLanguage, SubjectContext } from '../types.js';
+import { AuthorityType, CityLanguage, SubjectContext } from '../types.js';
+import { DEFAULT_AUTHORITY_TYPE, authorityTerms } from './authority.js';
 import { aiChat, ResultWithUsage, NO_USAGE } from './ai.js';
 import { getLanguageConfig, languageDirectiveSuffix } from './language.js';
 
@@ -9,13 +10,26 @@ export interface SubjectContextParams {
   cityLanguage?: CityLanguage;
   administrativeBodyName: string;
   date: string;
+  /** The kind of the authority. Params with none are a municipality's. */
+  authorityType?: AuthorityType;
 }
+
+/**
+ * The example of the output format. It is about a service of the authority, so
+ * each kind of authority gets its own: the model can copy the example's words.
+ */
+const CONTEXT_EXAMPLE: Record<AuthorityType, string> = {
+  municipality: 'Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού και την υλικοτεχνική υποδομή. Οι πρόσφατες αλλαγές στην νομοθεσία στοχεύουν στη βελτίωση της ποιότητας των παρεχόμενων υπηρεσιών.',
+  region: 'Το θέμα αφορά την εφαρμογή του νόμου 4412/2016 που ρυθμίζει τις δημόσιες συμβάσεις έργων, προμηθειών και υπηρεσιών. Η νομοθεσία προβλέπει συγκεκριμένες διαδικασίες ανάθεσης και όρια ποσών για κάθε διαδικασία. Οι πρόσφατες αλλαγές στη νομοθεσία στοχεύουν στην επιτάχυνση των διαγωνισμών.',
+};
 
 /** The two prompts of the context search, apart from the call so that a test can read them. */
 export function buildSubjectContextPrompts(params: SubjectContextParams): { systemPrompt: string; userPrompt: string } {
   const { promptName } = getLanguageConfig(params.cityLanguage);
   const langDirective = languageDirectiveSuffix(params.cityLanguage);
-  const systemPrompt = `You are a helpful assistant that provides background context for citizens reading about municipal council meeting topics.
+  const authorityType = params.authorityType ?? DEFAULT_AUTHORITY_TYPE;
+  const authority = authorityTerms(authorityType);
+  const systemPrompt = `You are a helpful assistant that provides background context for citizens reading about ${authority.en.adjective} council meeting topics.
 
 Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} that helps ordinary citizens understand the context. Focus on:
 - What the subject is about (technical terms, regulations, policies)
@@ -34,13 +48,13 @@ Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} tha
 - Do NOT include a "Πηγές:" or "Sources:" section
 
 **Example format:**
-Το θέμα αφορά την εφαρμογή του νόμου 4555/2018 που ρυθμίζει τη λειτουργία των δημοτικών παιδικών σταθμών. Η νομοθεσία προβλέπει συγκεκριμένες προδιαγραφές για τον αριθμό προσωπικού και την υλικοτεχνική υποδομή. Οι πρόσφατες αλλαγές στην νομοθεσία στοχεύουν στη βελτίωση της ποιότητας των παρεχόμενων υπηρεσιών.${langDirective}`;
+${CONTEXT_EXAMPLE[authorityType]}${langDirective}`;
 
   const userPrompt = `Παράθεσε ΕΞΩΤΕΡΙΚΟ πλαίσιο για πολίτες που διαβάζουν για αυτό το θέμα που συζητήθηκε σε συνεδρίαση ${params.administrativeBodyName}.
 
 **Θέμα:** ${params.subjectName}
 **Περιγραφή:** ${params.subjectDescription}
-**Πόλη:** ${params.cityName}
+**${authority.el.label}:** ${params.cityName}
 **Ημερομηνία:** ${params.date}
 
 Παράθεσε ΣΥΝΤΟΜΗ περίληψη (2-3 παράγραφοι, 150-250 λέξεις MAX) με:
@@ -48,7 +62,7 @@ Provide concise, factual EXTERNAL information IN ${promptName.toUpperCase()} tha
 - Πρόσφατες εξελίξεις
 - Γιατί είναι σημαντικό
 
-Αν υπάρχει σχετικό υλικό στο επίσημο site του δήμου ${params.cityName}, προτίμησέ το.
+Αν υπάρχει σχετικό υλικό στο επίσημο site ${authority.el.ofTheAuthorityBody} ${params.cityName}, προτίμησέ το.
 
 ΜΗΝ αναφέρεις τι είπαν στη συνεδρίαση - μόνο εξωτερικό πλαίσιο.
 Γράψε φυσικό κείμενο - οι πηγές θα προστεθούν αυτόματα από το σύστημα.
