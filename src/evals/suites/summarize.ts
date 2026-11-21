@@ -14,8 +14,10 @@ function summarizeSuite(id: string, labels: string[], slice: Slice, replayLive?:
     });
 }
 
-export const summarizeContributions = summarizeSuite('summarize.contributions', ['contributions:*'], CONTRIBUTIONS, ['contributions:*']);
-export const summarizeContext = summarizeSuite('summarize.context', ['subject-context-search:*'], CONTEXT, ['subject-context-search:*']);
+// The description step is live in both phase suites: its request holds the contributions, so it
+// never matches a recording once they change, and a recording older than the step has no such call.
+export const summarizeContributions = summarizeSuite('summarize.contributions', ['contributions:*'], CONTRIBUTIONS, ['contributions:*', 'subject-description:*']);
+export const summarizeContext = summarizeSuite('summarize.context', ['subject-context-search:*'], CONTEXT, ['subject-context-search:*', 'subject-description:*']);
 /** Every phase live by default (~$1–5 a meeting); pass --replay --live <glob> to pay for one phase. */
 export const summarizeE2e = summarizeSuite('summarize.e2e', ['batch-processing:*', 'subject-merge', 'contributions:*', 'subject-context-search:*'], WHOLE_SUBJECT);
 
