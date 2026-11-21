@@ -173,8 +173,8 @@ ${speakers}
 }
 
 /**
- * New descriptions by subject id, for every primary subject somebody spoke on. A subject nobody
- * spoke on keeps the description Phase 1 gave it, and so does one whose call fails.
+ * New descriptions by subject id, for every primary subject with a contribution. A subject with
+ * none keeps the description Phase 1 gave it, and so does one whose call fails.
  */
 export async function writeSubjectDescriptions(
     subjects: SubjectInProgress[],

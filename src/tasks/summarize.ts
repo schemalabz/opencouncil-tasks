@@ -1,4 +1,5 @@
 import { ResultWithUsage, addUsage, NO_USAGE } from "../lib/ai.js";
+import { throwIfCancelled } from "../lib/taskControl.js";
 import {
     CityLanguage,
     CountryCode,
@@ -133,7 +134,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log(`✅ Speaker contributions complete for ${subjects.length} subjects`);
     logUsage('Phase 2 tokens', phase2Usage);
 
-    // Phase 2.5: the final description of every discussed subject, from the positions of all
+    // Phase 2.5: the final description of every subject with a contribution, from the positions of all
     // its speakers. It runs beside the enrichment, which still reads the Phase 1 description.
     const descriptionsDone = withPhaseSpan('Phase 2.5: Subject Descriptions', () => writeSubjectDescriptions(
         subjects,
@@ -174,11 +175,14 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     logUsage('Phase 3 tokens', phase3Usage);
 
     const written = await descriptionsDone;
+    // The step keeps the Phase 1 text when a call fails, a cancelled call included, and nothing
+    // after it reports progress, so this is the last point that can still see a cancel.
+    throwIfCancelled();
     for (const subject of enrichedSubjects) {
         const description = written.descriptions.get(subject.id);
         if (description) subject.description = description;
     }
-    console.log(`✅ Descriptions written for ${written.descriptions.size} discussed subjects`);
+    console.log(`✅ Descriptions written for ${written.descriptions.size} subjects`);
     logUsage('Phase 2.5 tokens', written.usage);
 
     // Detailed subject logging
