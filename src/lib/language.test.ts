@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getLanguageConfig, DEFAULT_LANGUAGE, LANGUAGES, CUSTOMIZED_LANGUAGES, cityLanguageForScribeCode, isCityLanguage } from "./language.js";
+import { getLanguageConfig, defaultAdministrativeBodyName, DEFAULT_LANGUAGE, LANGUAGES, CUSTOMIZED_LANGUAGES, cityLanguageForScribeCode, isCityLanguage } from "./language.js";
 
 describe("getLanguageConfig", () => {
     it("returns the Greek config for 'el'", () => {
@@ -122,5 +122,21 @@ describe("nonstring content language inputs", () => {
         const language = value as unknown as string;
         expect(isCityLanguage(language)).toBe(false);
         expect(() => getLanguageConfig(language)).toThrow(RangeError);
+    });
+});
+
+describe("defaultAdministrativeBodyName", () => {
+    it.each([
+        ["el", undefined, "Δημοτικό Συμβούλιο"],
+        ["el", "municipality", "Δημοτικό Συμβούλιο"],
+        ["el", "region", "Περιφερειακό Συμβούλιο"],
+        [undefined, "region", "Περιφερειακό Συμβούλιο"],
+        ["fr", "municipality", "Conseil Municipal"],
+    ] as const)("%s, %s → %s", (language, authorityType, expected) => {
+        expect(defaultAdministrativeBodyName(language, authorityType)).toBe(expected);
+    });
+
+    it("gives a region the municipal body of a language that has no body of a region", () => {
+        expect(defaultAdministrativeBodyName("fr", "region")).toBe("Conseil Municipal");
     });
 });

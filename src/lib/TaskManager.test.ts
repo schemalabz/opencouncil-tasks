@@ -386,6 +386,26 @@ describe('serveTask language validation', () => {
         expect(run).toHaveBeenCalledWith(expect.any(Function), body, body.callbackUrl, 'someTask', undefined);
     });
 
+    it.each(['prefecture', '', 'Region', null, 1, {}].map((value): [unknown] => [value]))('rejects the unknown authority type %j before enqueueing', (authorityType) => {
+        const manager = new TaskManager(1);
+        const run = vi.spyOn(manager, 'runTaskWithCallback').mockReturnValue({ taskId: 'unused', completion: Promise.resolve() });
+        const res = buildResponse();
+        manager.serveTask(vi.fn(async () => ({})))(buildRequest({ callbackUrl: 'https://example.com/cb', authorityType }), res);
+        expect(res.statusCode).toBe(400);
+        expect(res.body).toEqual({ error: expect.stringContaining('authority type') });
+        expect(run).not.toHaveBeenCalled();
+    });
+
+    it.each([undefined, 'municipality', 'region'])('accepts the omitted or known authority type %s', (authorityType) => {
+        const manager = new TaskManager(1);
+        const run = vi.spyOn(manager, 'runTaskWithCallback').mockReturnValue({ taskId: 'accepted', completion: Promise.resolve() });
+        const body = { callbackUrl: 'https://example.com/cb', ...(authorityType === undefined ? {} : { authorityType }) };
+        const res = buildResponse();
+        manager.serveTask(vi.fn(async () => ({})))(buildRequest(body), res);
+        expect(res.statusCode).toBe(202);
+        expect(run).toHaveBeenCalledWith(expect.any(Function), body, body.callbackUrl, 'someTask', undefined);
+    });
+
     it('rejects an invalid empty transcript correction before its early success path', async () => {
         const { fixTranscript } = await import('../tasks/fixTranscript.js');
         const manager = new TaskManager(1);

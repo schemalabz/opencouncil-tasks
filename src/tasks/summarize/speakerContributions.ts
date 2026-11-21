@@ -4,7 +4,7 @@
  */
 
 
-import { CityLanguage, DiscussionStatus, SpeakerContribution } from "../../types.js";
+import { AuthorityType, CityLanguage, DiscussionStatus, SpeakerContribution } from "../../types.js";
 import { IdCompressor, formatTime, formatTokenCount } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
 import { batchFirstEnabled } from "../../lib/taskControl.js";
@@ -22,7 +22,8 @@ export async function generateSpeakerContributions(
     transcript: CompressedTranscript,
     idCompressor: IdCompressor,
     administrativeBodyName?: string,
-    cityLanguage?: CityLanguage
+    cityLanguage?: CityLanguage,
+    authorityType?: AuthorityType
 ): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     // Find utterance statuses for this subject
     const relevantStatuses = allUtteranceStatuses.filter(s =>
@@ -60,7 +61,8 @@ export async function generateSpeakerContributions(
         subject,
         idCompressor,
         administrativeBodyName,
-        cityLanguage
+        cityLanguage,
+        authorityType
     );
 }
 
@@ -186,7 +188,8 @@ export async function generateSpeakerContributionsInBatches(
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
     administrativeBodyName?: string,
-    cityLanguage?: CityLanguage
+    cityLanguage?: CityLanguage,
+    authorityType?: AuthorityType
 ): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
     const speakerIds = Object.keys(utterancesBySpeaker);
     const totalSpeakers = speakerIds.length;
@@ -227,7 +230,8 @@ export async function generateSpeakerContributionsInBatches(
                 subject,
                 idCompressor,
                 administrativeBodyName,
-                cityLanguage
+                cityLanguage,
+                authorityType
             );
 
             allContributions.push(...batchResult.contributions);
@@ -319,9 +323,10 @@ export async function generateAllSpeakerContributionsInOneCall(
     subject: SubjectInProgress,
     idCompressor: IdCompressor,
     administrativeBodyName?: string,
-    cityLanguage?: CityLanguage
+    cityLanguage?: CityLanguage,
+    authorityType?: AuthorityType
 ): Promise<{ contributions: SpeakerContribution[] } & UsageStats> {
-    const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName, cityLanguage);
+    const systemPrompt = getSpeakerContributionsSystemPrompt(administrativeBodyName, cityLanguage, authorityType);
 
     // Build a mapping from speaker keys to their display names
     // For name-based keys (name:Παπαδόπουλος), extract the name

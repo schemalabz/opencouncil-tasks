@@ -1,5 +1,6 @@
 import { ResultWithUsage, addUsage, NO_USAGE } from "../lib/ai.js";
 import {
+    AuthorityType,
     CityLanguage,
     CountryCode,
     SummarizeRequest,
@@ -63,7 +64,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log('🔀 PHASE 1.5: Subject Merge');
     onProgress("subject_merge", 0);
     const mergeResult = await withPhaseSpan('Phase 1.5: Subject Merge', () =>
-        mergeSubjects(subjects, allUtteranceStatuses));
+        mergeSubjects(subjects, allUtteranceStatuses, request.authorityType));
     subjects = mergeResult.subjects;
     allUtteranceStatuses = mergeResult.allUtteranceStatuses;
     const phase1_5Usage = mergeResult.usage;
@@ -115,7 +116,8 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
                 compressedRequest.transcript,
                 idCompressor,
                 request.administrativeBodyName,
-                request.cityLanguage
+                request.cityLanguage,
+                request.authorityType
             );
             subject.speakerContributions = result.contributions;
             phase2Usage = addUsage(phase2Usage, result.usage);
@@ -141,7 +143,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     let phase3Batch: boolean | undefined;
     const enrichmentResults = await withPhaseSpan('Phase 3: Enrichment', () => Promise.all(
         subjects.map((s, i) => {
-            return enrichSubject(s, request.cityName, request.cityLanguage, request.country, request.administrativeBodyName, request.date).then(result => {
+            return enrichSubject(s, request.cityName, request.cityLanguage, request.country, request.administrativeBodyName, request.date, request.authorityType).then(result => {
                 console.log(`   Enriched subject ${i + 1}/${subjects.length}: "${result.result.name}"`);
                 onProgress("enrichment", (i + 1) / subjects.length);
                 return result;
@@ -281,7 +283,8 @@ async function enrichSubject(
     cityLanguage: CityLanguage,
     country: CountryCode | undefined,
     administrativeBodyName: string,
-    date: string
+    date: string,
+    authorityType: AuthorityType | undefined
 ): Promise<ResultWithUsage<Subject>> {
     const input: EnrichmentInput = {
         name: subject.name,
@@ -302,6 +305,7 @@ async function enrichSubject(
         cityLanguage,
         country,
         administrativeBodyName,
-        date
+        date,
+        authorityType
     });
 }

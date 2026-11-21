@@ -1,4 +1,4 @@
-import { CityLanguage } from "../../types.js";
+import { AuthorityType, CityLanguage } from "../../types.js";
 import {
     ACTIONABLE_EVIDENCE_KINDS, formatUnlistedLabel, hasActionableEvidence, isActionable, isSpecificUnlistedName, KnownSpeaker, MIN_ACTIONABLE_CONFIDENCE, MIN_UNLISTED_ACTIONABLE_CONFIDENCE,
     parseUnlistedLabel, RosterPerson, sameUnlistedSpeaker, SpeakerEvidenceKind, SpeakerIdentification, SpeakerSegmentInput, SPEAKER_EVIDENCE_KINDS,
@@ -36,7 +36,7 @@ export type MeetingApiRole = {
 
 export type MeetingApiData = {
     meeting: { id: string; cityId: string; dateTime: string; administrativeBodyId?: string | null; administrativeBody?: { name: string } | null };
-    city: { name: string; language?: CityLanguage };
+    city: { name: string; language?: CityLanguage; authorityType?: AuthorityType };
     transcript: {
         startTimestamp: number;
         endTimestamp: number;
@@ -131,6 +131,8 @@ export type BacktestSpeaker = {
 
 export type BacktestInput = {
     cityName: string;
+    /** The kind of the authority. A meeting with none is a municipality's. */
+    authorityType?: AuthorityType;
     administrativeBodyName: string | null;
     language: CityLanguage;
     meetingDate: string;
@@ -257,6 +259,7 @@ export function buildBacktestInput(data: MeetingApiData, opts: { anchor: AnchorM
 
     return {
         cityName: data.city.name,
+        authorityType: data.city.authorityType,
         administrativeBodyName: data.meeting.administrativeBody?.name ?? null,
         language: data.city.language ?? "el",
         meetingDate: meetingDate.toISOString().slice(0, 10),

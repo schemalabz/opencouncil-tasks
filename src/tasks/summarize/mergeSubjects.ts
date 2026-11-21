@@ -6,6 +6,8 @@
 
 import { aiChat, addUsage, NO_USAGE, NO_USAGE_STATS, type UsageStats } from "../../lib/ai.js";
 import { SubjectInProgress, UtteranceStatus } from "./types.js";
+import { authorityTerms } from "../../lib/authority.js";
+import type { AuthorityType } from "../../types.js";
 
 interface MergeOperation {
     keepId: string;
@@ -16,6 +18,30 @@ interface MergeOperation {
 
 interface MergeAIResponse {
     merges: MergeOperation[];
+}
+
+/** The system prompt of the merge call, apart from the call so that a test can read it. */
+export function getMergeSubjectsSystemPrompt(authorityType?: AuthorityType): string {
+    return `You are an expert at analyzing meeting subject lists and identifying duplicates or fragments that should be merged.
+
+You will receive a list of subjects extracted from a ${authorityTerms(authorityType).en.adjective} council meeting transcript. These subjects were created independently across multiple transcript batches, so there may be:
+- Near-duplicate subjects covering the same topic (e.g., 3 separate "parking" subjects)
+- Overly broad subjects in early batches that later batches created specific breakouts for
+- Subjects that are really one topic but got fragmented across batches
+
+MERGE RULES (CRITICAL):
+1. Only subjects with type "BEFORE_AGENDA" can be REMOVED (merged away into another subject).
+2. "IN_AGENDA" and "OUT_OF_AGENDA" subjects are NEVER removed — they can only ABSORB BEFORE_AGENDA subjects.
+3. When merging, the kept subject's type, agendaItemIndex, and introducedByPersonId are preserved automatically.
+4. Update the kept subject's name and description to reflect the combined topic.
+5. Only merge subjects that genuinely cover the same topic. Do NOT merge unrelated subjects.
+6. If no merges are needed, return an empty merges array.
+
+Return a JSON object with a "merges" array. Each merge has:
+- keepId: the ID of the subject to keep
+- removeIds: array of subject IDs to remove (MUST all be BEFORE_AGENDA type)
+- newName: updated name for the kept subject
+- newDescription: updated description reflecting the combined topic`;
 }
 
 /**
@@ -29,7 +55,8 @@ interface MergeAIResponse {
  */
 export async function mergeSubjects(
     subjects: SubjectInProgress[],
-    allUtteranceStatuses: UtteranceStatus[]
+    allUtteranceStatuses: UtteranceStatus[],
+    authorityType?: AuthorityType
 ): Promise<{
     subjects: SubjectInProgress[];
     allUtteranceStatuses: UtteranceStatus[];
@@ -48,26 +75,7 @@ export async function mergeSubjects(
         return { subjects, allUtteranceStatuses, mergeCount: 0, ...NO_USAGE_STATS };
     }
 
-    const systemPrompt = `You are an expert at analyzing meeting subject lists and identifying duplicates or fragments that should be merged.
-
-You will receive a list of subjects extracted from a municipal council meeting transcript. These subjects were created independently across multiple transcript batches, so there may be:
-- Near-duplicate subjects covering the same topic (e.g., 3 separate "parking" subjects)
-- Overly broad subjects in early batches that later batches created specific breakouts for
-- Subjects that are really one topic but got fragmented across batches
-
-MERGE RULES (CRITICAL):
-1. Only subjects with type "BEFORE_AGENDA" can be REMOVED (merged away into another subject).
-2. "IN_AGENDA" and "OUT_OF_AGENDA" subjects are NEVER removed — they can only ABSORB BEFORE_AGENDA subjects.
-3. When merging, the kept subject's type, agendaItemIndex, and introducedByPersonId are preserved automatically.
-4. Update the kept subject's name and description to reflect the combined topic.
-5. Only merge subjects that genuinely cover the same topic. Do NOT merge unrelated subjects.
-6. If no merges are needed, return an empty merges array.
-
-Return a JSON object with a "merges" array. Each merge has:
-- keepId: the ID of the subject to keep
-- removeIds: array of subject IDs to remove (MUST all be BEFORE_AGENDA type)
-- newName: updated name for the kept subject
-- newDescription: updated description reflecting the combined topic`;
+    const systemPrompt = getMergeSubjectsSystemPrompt(authorityType);
 
     // Count utterances per subject for context
     const utteranceCounts = new Map<string, number>();
