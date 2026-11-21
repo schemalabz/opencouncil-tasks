@@ -1,5 +1,6 @@
 import { AuthorityType, CityLanguage, CountryCode, Subject, SubjectContext, SpeakerContribution } from '../types.js';
-import { geocodeLocation } from './geocode.js';
+import { isRegion } from './authority.js';
+import { geocodeInRegion, geocodeLocation } from './geocode.js';
 import { getSubjectContextWithClaude } from './claudeSearch.js';
 import { defaultAdministrativeBodyName } from './language.js';
 import { ResultWithUsage, NO_USAGE_STATS, type UsageStats } from './ai.js';
@@ -58,7 +59,9 @@ export async function enrichSubjectData(
     if (input.locationText) {
         // geocodeLocation never throws — it logs and returns null — so this
         // needs no try/catch. A null here just means the subject has no pin.
-        const locationLatLng = await geocodeLocation(input.locationText + ", " + config.cityName, config.country);
+        const locationLatLng = isRegion(config.authorityType)
+            ? await geocodeInRegion(input.locationText, config.cityName, config.country)
+            : await geocodeLocation(input.locationText + ", " + config.cityName, config.country);
         if (locationLatLng) {
             location = {
                 text: input.locationText,
