@@ -15,7 +15,9 @@ flowchart TD
   C --> |segmentSummaries, subjects, utteranceStatuses| M[Phase 1.5: Subject Merge]
   M --> |deduplicated subjects| D[Phase 2: Speaker Contributions]
   D --> |speakerContributions per subject| E[Phase 3: Enrichment]
+  D --> |positions of every speaker| D2[Phase 2.5: Subject Descriptions]
   E --> |geocoding, web context| F[Phase 4: Validation]
+  D2 --> |final description per discussed subject| F
   F --> G[decompressIds]
   G --> H[SummarizeResult]
 
@@ -52,6 +54,9 @@ Each batch receives the current subject list and a `meetingProgressSummary` (Gre
 
 #### Subject Merge (Phase 1.5)
 After batch processing, subjects created independently across batches may overlap or fragment. `mergeSubjects` uses an LLM call to deduplicate them. Only `BEFORE_AGENDA` subjects can be merged away; `IN_AGENDA` and `OUT_OF_AGENDA` subjects are always preserved. Utterance statuses referencing merged subjects are remapped to the surviving subject.
+
+#### Subject Descriptions (Phase 2.5)
+Phase 1 writes a subject's description batch by batch, and a later batch that discusses the subject does not always rewrite it, so that text can miss whole rounds of a debate. It stays the working description: the batches, the merge and the web context search read it. The description in the result is written once per discussed subject by `writeSubjectDescriptions`, from the contribution of every speaker (which Phase 2 writes from every utterance tagged to the subject) and the order of the speaking turns. It opens with what the subject is, naming nobody, and then gives the positions in the order of the debate. A subject nobody spoke on keeps its Phase 1 description. The step runs beside the enrichment.
 
 #### Joint Discussion (`discussedIn`)
 When multiple agenda items are discussed together, the first is the "primary" (`discussedIn: null`) and others are "secondary" (`discussedIn: primaryId`). All utterance statuses and speaker contributions point to the primary. Secondary subjects get empty `speakerContributions`.
