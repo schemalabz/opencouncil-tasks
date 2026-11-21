@@ -52,3 +52,39 @@ export async function geocodeLocation(location: string, country: string = DEFAUL
         return null;
     }
 }
+
+/** The point that the geocoder gives for the name of a region alone, per `name|country`. */
+const regionPoints = new Map<string, Promise<LatLng | null>>();
+
+function regionPoint(regionName: string, country: string): Promise<LatLng | null> {
+    const key = `${regionName}|${country}`;
+    let point = regionPoints.get(key);
+    if (!point) {
+        point = geocodeLocation(regionName, country);
+        regionPoints.set(key, point);
+        // A failed lookup is not an answer: the next subject asks again.
+        void point.then(found => { if (!found) regionPoints.delete(key); });
+    }
+    return point;
+}
+
+/**
+ * Geocode a place of a region. The query is the place and then the name of the
+ * region, as it is the place and then the name of the city for a municipality.
+ *
+ * When the geocoder cannot match the place, it can answer with the region
+ * itself, as it answers with the country in `geocodeLocation`. That pin is the
+ * centre of the region. It is inside the boundary of the region, so nothing
+ * later can tell it from a real place. The answer for the name of the region
+ * alone shows this fallback: a place that gets the same point gets no pin.
+ */
+export async function geocodeInRegion(place: string, regionName: string, country: string = DEFAULT_COUNTRY): Promise<LatLng | null> {
+    const point = await geocodeLocation(`${place}, ${regionName}`, country);
+    if (!point) return null;
+    const fallback = await regionPoint(regionName, country);
+    if (fallback && fallback.lat === point.lat && fallback.lng === point.lng) {
+        console.warn(`Geocode fell back to the region for "${place}, ${regionName}" (country:${country}) — discarding`);
+        return null;
+    }
+    return point;
+}

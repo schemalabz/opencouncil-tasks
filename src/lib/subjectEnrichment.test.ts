@@ -4,10 +4,11 @@ vi.mock("./geocode.js");
 vi.mock("./claudeSearch.js");
 
 import { enrichSubjectData, type EnrichmentInput } from "./subjectEnrichment.js";
-import { geocodeLocation } from "./geocode.js";
+import { geocodeInRegion, geocodeLocation } from "./geocode.js";
 import { getSubjectContextWithClaude } from "./claudeSearch.js";
 
 const mockedGeocode = vi.mocked(geocodeLocation);
+const mockedGeocodeInRegion = vi.mocked(geocodeInRegion);
 const mockedContext = vi.mocked(getSubjectContextWithClaude);
 
 function input(overrides: Partial<EnrichmentInput> = {}): EnrichmentInput {
@@ -59,6 +60,30 @@ describe("enrichSubjectData", () => {
         });
 
         expect(result.location).toBeNull();
+    });
+
+    it("geocodes the place of a region with the check for the fallback to the region", async () => {
+        mockedGeocodeInRegion.mockResolvedValue({ lat: 39.6390, lng: 22.4191 });
+
+        const { result } = await enrichSubjectData(input({ locationText: "Οδός Κύπρου 12, Λάρισα" }), "abc123", {
+            cityName: "Θεσσαλία",
+            country: "GR",
+            date: "2026-01-01",
+            authorityType: "region",
+        });
+
+        expect(mockedGeocodeInRegion).toHaveBeenCalledWith("Οδός Κύπρου 12, Λάρισα", "Θεσσαλία", "GR");
+        expect(mockedGeocode).not.toHaveBeenCalled();
+        expect(result.location?.coordinates).toEqual([[22.4191, 39.6390]]);
+    });
+
+    it.each([undefined, "municipality"] as const)("geocodes the place of a municipality as before (authorityType %s)", async (authorityType) => {
+        mockedGeocode.mockResolvedValue({ lat: 37.9838, lng: 23.7275 });
+
+        await enrichSubjectData(input(), "abc123", { cityName: "Αθήνα", country: "GR", date: "2026-01-01", authorityType });
+
+        expect(mockedGeocode).toHaveBeenCalledWith("Πλατεία Συντάγματος, Αθήνα", "GR");
+        expect(mockedGeocodeInRegion).not.toHaveBeenCalled();
     });
 
     it("does not geocode when there is no location text", async () => {
