@@ -12,7 +12,7 @@ boundary: >
   reported speech only when a reporting verb with «ότι/πως» precedes the phrase, so attributions
   like «Σύμφωνα με…» remain known false alarms; future verbs outside its phrase list are known
   misses.
-suite: summarize.e2e
+suite: [summarize.e2e, summarize.batches]
 scope: task
 severity: degraded
 impact: visible

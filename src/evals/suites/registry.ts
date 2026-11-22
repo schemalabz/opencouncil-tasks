@@ -5,7 +5,7 @@ import { decisionsMatching } from './decisionsMatching.js';
 import { fixSpeakerId } from './fixSpeakerId.js';
 import { decisionsReading } from './decisionsReading.js';
 import { fixTranscriptSuite } from './fixTranscript.js';
-import { summarizeContext, summarizeContributions, summarizeE2e } from './summarize.js';
+import { summarizeBatches, summarizeContext, summarizeContributions, summarizeE2e } from './summarize.js';
 import type { Suite } from './suite.js';
 
 export const SUITES: Record<string, Suite<any, any>> = {
@@ -16,6 +16,7 @@ export const SUITES: Record<string, Suite<any, any>> = {
     [summarizeContributions.id]: summarizeContributions,
     [summarizeContext.id]: summarizeContext,
     [summarizeE2e.id]: summarizeE2e,
+    [summarizeBatches.id]: summarizeBatches,
     [agendaExtraction.id]: agendaExtraction,
     [agendaContext.id]: agendaContext,
     [agendaMeetingRecord.id]: agendaMeetingRecord,

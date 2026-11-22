@@ -12,7 +12,7 @@ boundary: >
   speaker saying how they intend to vote, as their position («θα ψηφίσουμε κατά γιατί…» is
   a known false alarm when phrased «ψηφίσαμε κατά»); the decisions themselves, which come from
   Diavgeia, not the summary.
-suite: [summarize.e2e, summarize.contributions]
+suite: [summarize.e2e, summarize.contributions, summarize.batches]
 scope: call
 severity: degraded
 impact: visible

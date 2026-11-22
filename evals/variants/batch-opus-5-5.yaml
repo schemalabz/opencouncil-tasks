@@ -1,0 +1,5 @@
+# Phase 1 of summarize on claude-opus-5-5 instead of Opus 4.7, with the prompt as in production.
+name: batch-opus-5-5
+overrides:
+  "batch-processing:*":
+    model: claude-opus-5-5
