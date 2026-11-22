@@ -234,6 +234,7 @@ mark { background:var(--mark); color:inherit; }
 .turn-head { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px; font-size:13px; margin-bottom:2px; }
 .turn-head .dot { align-self:center; }
 .turn .prose { font-size:14px; line-height:1.55; }
+.only { font:600 10px/1.5 ui-monospace, monospace; padding:0 5px; border-radius:3px; border:1px solid var(--muted); color:var(--muted); text-transform:uppercase; }
 .keys { padding:5px 16px; border-top:1px solid var(--line); background:var(--panel); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .muted { color:var(--muted); } .small { font-size:13px; } .mono { font-family:ui-monospace, monospace; }
 
@@ -294,6 +295,8 @@ const CLIENT = String.raw`
     if (note) d.note = note;
     if (state.why[id] && state.why[id].length) d.reasons = state.why[id].slice();
     d.ms = (before && before.ms || 0) + Math.max(0, Date.now() - shownAt);
+    // The last item stays on screen after its answer: a changed answer must add only the time since.
+    shownAt = Date.now();
     state.decisions[id] = d; save(); refresh(); go(idx + 1);
   }
 
@@ -484,12 +487,19 @@ const CLIENT = String.raw`
   function showSpeech(item) {
     var c = castOf(item);
     source.textContent = '';
-    title('What was said · ' + item.evidence.speech.length + ' turn(s), ' + c.list.length + ' speaker(s), ' + c.total.toLocaleString() + ' characters');
+    var oneSided = item.evidence.speech.filter(function (t) { return t.only; }).length;
+    title('What was said · ' + item.evidence.speech.length + ' turn(s), ' + c.list.length + ' speaker(s), ' + c.total.toLocaleString() + ' characters'
+      + (oneSided ? ' · ' + oneSided + ' turn(s) belong to one side only' : ''));
     item.evidence.speech.forEach(function (t) {
       var p = c.by[t.speaker], turn = el('div', null, 'turn'), head = el('div', null, 'turn-head'), dot = el('i', null, 'dot');
       turn.dataset.s = p.index; dot.style.setProperty('--c', p.color);
       head.appendChild(dot); head.appendChild(el('b', t.speaker.split(' - ')[0]));
       head.appendChild(el('span', [t.detail, t.text.length + ' characters'].filter(Boolean).join(' · '), 'muted'));
+      if (t.only) {
+        var only = el('span', t.only.toUpperCase() + ' only', 'only'); only.dataset.side = t.only;
+        only.title = 'Only ' + t.only.toUpperCase() + ' puts this turn under the item: the other text was written without it';
+        head.appendChild(only);
+      }
       turn.appendChild(head); turn.appendChild(el('div', t.text, 'prose'));
       source.appendChild(turn);
     });

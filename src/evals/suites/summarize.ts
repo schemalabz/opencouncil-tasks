@@ -43,5 +43,6 @@ async function batchesOnly(request: SummarizeRequest, extraInstructions?: unknow
 
 export const summarizeBatches = subjectSuite({
     id: 'summarize.batches', task: 'summarize', labels: ['batch-processing:*', 'subject-merge'], slice: WHOLE_SUBJECT,
+    expected: v => ({ ...v, contributions: [], context: null, contextCitationUrls: [] }),
     run: async (c, ctx) => batchesOnly(withCallbackUrl(ctx.request, c.input.meeting, `eval-${c.id}`) as SummarizeRequest, ctx.variant.params?.additionalInstructions),
 });

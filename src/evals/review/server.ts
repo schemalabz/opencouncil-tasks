@@ -34,7 +34,7 @@ export type ReviewServer = { url: string; close(): Promise<void> };
  * Serves one batch's page on loopback, its items' archived sources, and takes the
  * results. Only loopback, since the sources are private archive content.
  */
-export async function serveBatch(store: ArchiveStore, batchId: string, opts: { port?: number; onSubmit?: (b: ReviewBatch) => void } = {}): Promise<ReviewServer> {
+export async function serveBatch(store: ArchiveStore, batchId: string, opts: { port?: number; onSubmit?: (b: ReviewBatch) => void; runs?: ArchiveStore } = {}): Promise<ReviewServer> {
     const page = await loadPage(store, batchId);
     if (!page) throw new Error(`Batch ${batchId} has no page in ${store.url}`);
     await loadBatch(store, batchId);
@@ -52,7 +52,7 @@ export async function serveBatch(store: ArchiveStore, batchId: string, opts: { p
                 const batch = await loadBatch(store, batchId);
                 const item = batch.items.find(i => i.id === decodeURIComponent(source[1]));
                 if (!item) return send(res, 404, 'no such item', 'text/plain');
-                const found = await itemSource(store, item, { blind: isBlind(batch.kind) });
+                const found = await itemSource(store, item, { blind: isBlind(batch.kind), runs: opts.runs });
                 if (!found) return send(res, 404, 'no archived source for this item', 'text/plain');
                 return found.type === 'pdf' ? send(res, 200, found.body, 'application/pdf') : json(res, 200, found.call);
             }

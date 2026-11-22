@@ -102,19 +102,19 @@ export function registerReviewCommands(evalCmd: Command): void {
         .option('--candidate <id>', 'a candidate id (repeatable)', collect, [])
         .option('--suite <suite>', 'every open candidate of this suite')
         .option('--signal <prefix>', 'every open candidate whose signal starts with this')
-        .option('--limit <n>', 'cap on candidates in the batch', parsePositiveIntOption, 30)
+        .option('--limit <n>', 'cap on the items in the batch (default 30; a pairwise --only list is taken whole)', parsePositiveIntOption)
         .option('--name <slug>', 'name in the batch id')
         .option('--run <runId>', 'pairwise: a run of --suite; give two, the baseline first', collect, [])
         .option('--only <file>', 'pairwise: only the items this JSON list names, as [{ caseId, title }]; a subject\'s name is enough for its title')
         .option('--language <code>', 'pairwise: only cases whose recorded request has this cityLanguage (e.g. el)')
         .option('--recordings <archiveUrl>', 'pairwise: the archive that holds the cases\' recorded runs (their requests are the evidence), when it is not this one')
-        .action(async (kind: string, o: { candidate: string[]; suite?: string; signal?: string; limit: number; name?: string; run: string[]; recordings?: string; language?: string; only?: string }) => {
+        .action(async (kind: string, o: { candidate: string[]; suite?: string; signal?: string; limit?: number; name?: string; run: string[]; recordings?: string; language?: string; only?: string }) => {
             const store = openArchive();
             if (!REVIEW_KINDS.includes(kind as ReviewKind)) throw new Error(`Unknown review kind "${kind}" (expected ${REVIEW_KINDS.join(' | ')})`);
             if (kind === 'pairwise') {
                 if (!o.suite || o.run.length !== 2) throw new Error('A pairwise batch needs --suite and two --run ids (baseline first)');
                 const only = o.only ? JSON.parse(fs.readFileSync(o.only, 'utf8')) as Array<{ caseId: string; title: string }> : undefined;
-                const batch = await buildPairwiseBatch(o.suite, [o.run[0], o.run[1]], { store, name: o.name, limit: o.limit, ...(o.recordings && { recordings: openArchive(o.recordings) }), ...(o.language && { language: o.language }), ...(only && { only }) });
+                const batch = await buildPairwiseBatch(o.suite, [o.run[0], o.run[1]], { store, name: o.name, limit: o.limit, note: line => console.log(line), ...(o.recordings && { recordings: openArchive(o.recordings) }), ...(o.language && { language: o.language }), ...(only && { only }) });
                 if (only) console.log(`${batch.items.filter(i => !i.repeatOf).length} of the ${only.length} listed item(s) are in the batch`);
                 await saveBatch(store, batch, renderPage(batch));
                 console.log(`batch ${batch.id}: pairwise, ${batch.items.length} item(s) where ${batch.runs!.baseline.variant} and ${batch.runs!.candidate.variant} differ, status open`);
@@ -130,7 +130,7 @@ export function registerReviewCommands(evalCmd: Command): void {
                     .filter(c => !o.signal || c.signal.startsWith(o.signal))
                     .filter(c => !inBatch.has(c.id));
             }
-            picked = picked.slice(0, o.limit);
+            picked = picked.slice(0, o.limit ?? 30);
             const batch = await buildBatch(kind as ReviewKind, picked, { store, name: o.name });
             const mode = batch.modeId ? loadModes().find(m => m.id === batch.modeId) : undefined;
             await saveBatch(store, batch, renderPage(batch, { mode }));
@@ -156,6 +156,7 @@ export function registerReviewCommands(evalCmd: Command): void {
             let stop = () => {};
             const server = await serveBatch(store, batchId, {
                 port: o.port,
+                ...(batch.recordings && { runs: openArchive(batch.recordings) }),
                 onSubmit: b => {
                     console.log(`results submitted by ${b.history.at(-1)?.by}; next: eval review apply ${b.id}`);
                     if (o.exitOnSubmit) stop();

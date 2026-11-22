@@ -76,6 +76,8 @@ export type ReviewBatch = {
     createdBy: string;
     createdAt: string;
     status: BatchStatus;
+    /** pairwise: the archive the items' recorded runs were read from, when it is not the one the batch is saved in. */
+    recordings?: string;
     /** mode-examples: the mode every item is a proposed occurrence of. */
     modeId?: string;
     /** pairwise: the runs compared, baseline first. */

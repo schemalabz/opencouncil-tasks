@@ -3,7 +3,7 @@ import type { SubjectVerdict, SubjectView } from '../../lib/runs/types.js';
 import type { ArchivedRun } from '../../lib/telemetry/archiveSink.js';
 import { assignSplit } from '../cases/caseStore.js';
 import type { Case, Expected, FieldOutcome } from '../types.js';
-import { subjectSpeech } from '../summarize/descriptionMetrics.js';
+import { discussedUtterances, speechTurns } from '../summarize/descriptionMetrics.js';
 import type { CaseFromRunOptions, ComparedPart, PairwiseView, SourceTurn, Suite, SuiteRunContext } from './suite.js';
 
 /**
@@ -14,6 +14,10 @@ import type { CaseFromRunOptions, ComparedPart, PairwiseView, SourceTurn, Suite,
  * agreeing, `structural` does not.
  */
 export type RecordedRunCaseInput = { meeting: string };
+
+/** A recorded subject as a suite's run can produce it: a suite that runs part of the task expects that part only. */
+type Project = (v: SubjectView) => SubjectView;
+const WHOLE: Project = v => v;
 
 type SubjectOutcome = { field: string; verdict: SubjectVerdict | 'missing'; changes: string[]; view?: SubjectView };
 
@@ -39,8 +43,8 @@ export function expectedSubjects(views: SubjectView[]): Record<string, SubjectVi
  * Each expected subject paired with its counterpart in the output, by the `runs compare`
  * matching; `extra` holds the output's subjects that match none of them.
  */
-function outcomesOf(output: SubjectsResult, c: Case<RecordedRunCaseInput>): { outcomes: SubjectOutcome[]; extra: SubjectView[] } {
-    const baseline = Object.entries(c.expect).filter(([f]) => FIELD.test(f)).map(([field, e]) => ({ field, view: e.value as SubjectView }));
+function outcomesOf(output: SubjectsResult, c: Case<RecordedRunCaseInput>, expected: Project): { outcomes: SubjectOutcome[]; extra: SubjectView[] } {
+    const baseline = Object.entries(c.expect).filter(([f]) => FIELD.test(f)).map(([field, e]) => ({ field, view: expected(e.value as SubjectView) }));
     const fieldOf = new Map(baseline.map(b => [b.view, b.field]));
     const { matched, fromOnly, toOnly } = matchSubjects(baseline.map(b => b.view), toSubjectViews(output));
     return {
@@ -52,22 +56,22 @@ function outcomesOf(output: SubjectsResult, c: Case<RecordedRunCaseInput>): { ou
     };
 }
 
-export function subjectOutcomes(output: SubjectsResult, c: Case<RecordedRunCaseInput>): SubjectOutcome[] {
-    return outcomesOf(output, c).outcomes;
+export function subjectOutcomes(output: SubjectsResult, c: Case<RecordedRunCaseInput>, expected: Project = WHOLE): SubjectOutcome[] {
+    return outcomesOf(output, c, expected).outcomes;
 }
 
 const OUTCOME: Record<SubjectOutcome['verdict'], FieldOutcome> = { identical: 'agree', cosmetic: 'agree', structural: 'disagree', missing: 'missing' };
 
 /** `extra` expects no subject beyond the recorded ones, and is scored only on cases that carry it. */
-export function scoreSubjects(output: SubjectsResult, c: Case<RecordedRunCaseInput>): Record<string, FieldOutcome> {
-    const { outcomes, extra } = outcomesOf(output, c);
+export function scoreSubjects(output: SubjectsResult, c: Case<RecordedRunCaseInput>, expected: Project = WHOLE): Record<string, FieldOutcome> {
+    const { outcomes, extra } = outcomesOf(output, c, expected);
     const out: Record<string, FieldOutcome> = Object.fromEntries(outcomes.map(o => [o.field, OUTCOME[o.verdict]]));
     if (c.expect.extra) out.extra = extra.length ? 'disagree' : 'agree';
     return out;
 }
 
-function detailSubjects(output: SubjectsResult, c: Case<RecordedRunCaseInput>): Record<string, string> {
-    const { outcomes, extra } = outcomesOf(output, c);
+function detailSubjects(output: SubjectsResult, c: Case<RecordedRunCaseInput>, expected: Project): Record<string, string> {
+    const { outcomes, extra } = outcomesOf(output, c, expected);
     const out: Record<string, string> = Object.fromEntries(outcomes.map(o => [o.field, o.changes.length ? `${o.verdict} (${o.changes.join(' ')})` : o.verdict]));
     if (c.expect.extra) out.extra = extra.length ? `extra (${extra.length}): ${extra.map(v => subjectKey(v).slice(0, 50)).join(' | ')}` : 'none';
     return out;
@@ -106,12 +110,12 @@ export function recordedRequest(c: Case, recorded: ArchivedRun | null): unknown 
     return recorded.run.input;
 }
 
-function caseFromRun(suite: string, task: string, recorded: ArchivedRun, opts?: CaseFromRunOptions): Case<RecordedRunCaseInput> {
+function caseFromRun(suite: string, task: string, expected: Project, recorded: ArchivedRun, opts?: CaseFromRunOptions): Case<RecordedRunCaseInput> {
     assertRecordedResult(recorded, task);
     const meeting = recordedMeeting(recorded, opts);
     const expect: Record<string, Expected> = {};
     for (const [field, view] of Object.entries(expectedSubjects(toSubjectViews(recorded.result as SubjectsResult)))) {
-        expect[field] = drafted(view, recorded);
+        expect[field] = drafted(expected(view), recorded);
     }
     expect.extra = drafted([], recorded);
     return recordedRunCase(suite, recorded, meeting, { meeting }, expect);
@@ -120,7 +124,12 @@ function caseFromRun(suite: string, task: string, recorded: ArchivedRun, opts?: 
 export type SlicePart = { title: string; text: string };
 
 /** What a suite compares of a subject, as named parts: a reviewer sees the parts that differ side by side and the rest once. */
-export type Slice = { parts(v: SubjectView): SlicePart[]; sourceLabel?(v: SubjectView): string };
+export type Slice = {
+    parts(v: SubjectView): SlicePart[];
+    sourceLabel?(v: SubjectView): string;
+    /** What a reviewer reads beside the parts: the subject's speech (the default), or the recorded call alone when the parts were not written from the speech. */
+    madeFrom?: 'speech' | 'call';
+};
 
 const asText = (parts: SlicePart[]) => parts.map(p => `${p.title}\n${p.text}`).join('\n\n');
 
@@ -148,24 +157,34 @@ function alignParts(a: SlicePart[], b: SlicePart[]): { changed: ComparedPart[]; 
     return { changed, shared };
 }
 
-/** The speech tagged to the subject, when the recorded request is a meeting's transcript. */
-function speechOf(output: SubjectsResult, subjectId: string, recorded?: ArchivedRun | null): SourceTurn[] | undefined {
+type Tagged = Parameters<typeof discussedUtterances>[0];
+
+/**
+ * The speech either run tags to the subject, when the recorded request is a meeting's transcript.
+ * Two runs of a change to the tagging differ in it, so a turn only one of them tags says which.
+ */
+function speechOf(a: SubjectsResult, b: SubjectsResult, ids: { a: string; b: string }, recorded?: ArchivedRun | null): SourceTurn[] | undefined {
     const request = recorded?.run.input as { transcript?: unknown } | undefined;
-    if (!Array.isArray(request?.transcript) || !Array.isArray(output.utteranceDiscussionStatuses)) return undefined;
-    const turns = subjectSpeech(request as Parameters<typeof subjectSpeech>[0], output as Parameters<typeof subjectSpeech>[1], subjectId);
-    return turns.length ? turns.map(t => ({ speaker: t.speaker, text: t.text, ...((t.party || t.role) && { detail: [t.party, t.role].filter(Boolean).join(' · ') }) })) : undefined;
+    if (!Array.isArray(request?.transcript) || !Array.isArray(a.utteranceDiscussionStatuses) || !Array.isArray(b.utteranceDiscussionStatuses)) return undefined;
+    const [inA, inB] = [discussedUtterances(a as Tagged, ids.a), discussedUtterances(b as Tagged, ids.b)];
+    const turns = speechTurns(request as Parameters<typeof speechTurns>[0], id => (inA.has(id) ? (inB.has(id) ? 'both' : 'a') : inB.has(id) ? 'b' : null));
+    return turns.length ? turns.map(t => ({
+        speaker: t.speaker, text: t.text,
+        ...((t.party || t.role) && { detail: [t.party, t.role].filter(Boolean).join(' · ') }),
+        ...(t.group !== 'both' && { only: t.group }),
+    })) : undefined;
 }
 
-function pairwise(slice: Slice) {
+function pairwise(slice: Slice, expected: Project) {
     return (a: SubjectsResult, b: SubjectsResult, c: Case<RecordedRunCaseInput>, recorded?: ArchivedRun | null): PairwiseView[] => {
-        const inB = new Map(subjectOutcomes(b, c).map(o => [o.field, o.view]));
+        const inB = new Map(subjectOutcomes(b, c, expected).map(o => [o.field, o.view]));
         const out: PairwiseView[] = [];
-        for (const o of subjectOutcomes(a, c)) {
+        for (const o of subjectOutcomes(a, c, expected)) {
             const vb = inB.get(o.field);
             if (!o.view || !vb) continue;
             const { changed, shared } = alignParts(slice.parts(o.view), slice.parts(vb));
             if (changed.length === 0) continue;
-            const speech = speechOf(a, o.view.id, recorded);
+            const speech = slice.madeFrom === 'call' ? undefined : speechOf(a, b, { a: o.view.id, b: vb.id }, recorded);
             out.push({
                 field: o.field, title: o.field.replace(FIELD, '$1'),
                 a: asText(changed.map(p => ({ title: p.title, text: p.a }))), b: asText(changed.map(p => ({ title: p.title, text: p.b }))),
@@ -192,6 +211,8 @@ export const CONTEXT: Slice = {
         ...(v.contextCitationUrls.length ? [{ title: 'Sources', text: v.contextCitationUrls.join('\n') }] : []),
     ],
     sourceLabel: v => `subject-context-search:${v.name.slice(0, 40)}`,
+    // Written from a web search: the speech beside it would read as its source.
+    madeFrom: 'call',
 };
 
 export const WHOLE_SUBJECT: Slice = {
@@ -210,11 +231,17 @@ export type SubjectSuiteSpec<O extends SubjectsResult> = {
     slice: Slice;
     /** Phase suites: the label globs live under replay. */
     replayLive?: string[];
+    /**
+     * For a suite whose run stops before the task does: a recorded subject as that run leaves it.
+     * Cases keep it, and scoring applies it again, so a case made from a whole run still scores.
+     */
+    expected?: Project;
     run(c: Case<RecordedRunCaseInput>, ctx: SuiteRunContext): Promise<O>;
 };
 
 /** A suite scored subject by subject against a recorded run of a task that returns subjects. */
 export function subjectSuite<O extends SubjectsResult>(spec: SubjectSuiteSpec<O>): Suite<RecordedRunCaseInput, O> {
+    const expected = spec.expected ?? WHOLE;
     return {
         id: spec.id,
         task: spec.task,
@@ -222,9 +249,9 @@ export function subjectSuite<O extends SubjectsResult>(spec: SubjectSuiteSpec<O>
         ...(spec.replayLive && { replay: { live: spec.replayLive } }),
         request: recordedRequest,
         run: spec.run,
-        score: scoreSubjects,
-        detail: detailSubjects,
-        caseFromRun: (recorded, opts) => caseFromRun(spec.id, spec.task, recorded, opts),
-        pairwiseItems: pairwise(spec.slice),
+        score: (output, c) => scoreSubjects(output, c, expected),
+        detail: (output, c) => detailSubjects(output, c, expected),
+        caseFromRun: (recorded, opts) => caseFromRun(spec.id, spec.task, expected, recorded, opts),
+        pairwiseItems: pairwise(spec.slice, expected),
     };
 }

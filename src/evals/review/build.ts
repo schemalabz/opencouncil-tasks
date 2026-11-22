@@ -9,6 +9,7 @@ import { getSuite } from '../suites/registry.js';
 import type { Candidate } from '../harvest/candidate.js';
 import { loadModes } from '../registry/registry.js';
 import type { FailureMode } from '../registry/schema.js';
+import type { SourceTurn } from '../suites/suite.js';
 import type { Case, ResultRow } from '../types.js';
 import { batchId, type MinimalCall, type PairwiseRunRef, type ReviewBatch, type ReviewEvidence, type ReviewItem, type ReviewKind } from './batch.js';
 
@@ -149,7 +150,12 @@ export type PairwiseContext = BuildContext & {
     only?: Array<{ caseId: string; title: string }>;
     /** Only cases whose recorded request is in this language (`cityLanguage`), for a reviewer who reads no other. */
     language?: string;
+    /** Told what the batch leaves out and why (a case whose recording cannot be read). */
+    note?(line: string): void;
 };
+
+/** The speech as the other order of the two sides reads it. */
+const swapSpeech = (speech: SourceTurn[]): SourceTurn[] => speech.map(t => (t.only ? { ...t, only: t.only === 'a' ? 'b' as const : 'a' as const } : t));
 
 const REPEATS = 3;
 
@@ -165,6 +171,7 @@ function withRepeats(items: ReviewItem[], salt: string): ReviewItem[] {
         options: item.options && [{ key: 'a', value: item.options[1].value }, { key: 'b', value: item.options[0].value }],
         sides: item.sides && { a: item.sides.b, b: item.sides.a },
         compare: item.compare && { ...item.compare, parts: item.compare.parts.map(p => ({ title: p.title, a: p.b, b: p.a })) },
+        evidence: { ...item.evidence, ...(item.evidence.speech && { speech: swapSpeech(item.evidence.speech) }) },
     }));
     const out = [...items];
     const from = Math.ceil((2 * items.length) / 3);
@@ -196,17 +203,22 @@ export async function buildPairwiseBatch(suiteId: string, runIds: [string, strin
     const id = batchId(ctx.name ?? `${suiteId}-pairwise`, now, runIds.join(','));
 
     const raw: ReviewItem[] = [];
+    const recordings = ctx.recordings ?? ctx.store;
+    const unread: string[] = [];
+    const unknownLanguage: string[] = [];
     // A subject's title is its agenda position and its name, so a list may give the name alone.
     const wanted = (caseId: string, title: string) => !ctx.only || ctx.only.some(o => o.caseId === caseId && (title === o.title || title.endsWith(` ${o.title}`)));
     for (const [caseId, rowA] of firstRepByCase(ra.rows)) {
         const rowB = rowsB.get(caseId);
         const c = cases.get(caseId);
         if (!rowB || !c || (ctx.only && !ctx.only.some(o => o.caseId === caseId))) continue;
-        const recorded = c.replay ? await readArchivedRun(c.replay, ctx.recordings ?? ctx.store).catch(() => null) : null;
+        const recorded = c.replay ? await readArchivedRun(c.replay, recordings).catch(() => null) : null;
+        if (!recorded) unread.push(caseId);
         if (ctx.language) {
             const language = (recorded?.run.input as { cityLanguage?: unknown } | undefined)?.cityLanguage;
-            if (language === undefined) throw new Error(`${caseId}: the recorded request names no cityLanguage to filter on`);
-            if (String(language).toLowerCase() !== ctx.language.toLowerCase()) continue;
+            // One case that cannot be read must not cost the reviewer the rest of the batch.
+            if (typeof language !== 'string') { unknownLanguage.push(caseId); continue; }
+            if (language.toLowerCase() !== ctx.language.toLowerCase()) continue;
         }
         suite.pairwiseItems(rowA.output, rowB.output, c, recorded).forEach((view, n) => {
             if (!wanted(caseId, view.title)) return;
@@ -219,14 +231,27 @@ export async function buildPairwiseBatch(suiteId: string, runIds: [string, strin
                 options: [{ key: 'a', value: first }, { key: 'b', value: second }],
                 sides: flip ? { a: runs.candidate, b: runs.baseline } : { a: runs.baseline, b: runs.candidate },
                 ...(view.parts && { compare: { parts: view.parts.map(p => (flip ? { title: p.title, a: p.b, b: p.a } : p)), shared: view.shared ?? [] } }),
-                evidence: { text: view.title, ...(call && { traceId: c.replay!, callId: call.callId, label: call.label }), ...(view.speech && { speech: view.speech }) },
+                evidence: { text: view.title, ...(call && { traceId: c.replay!, callId: call.callId, label: call.label }), ...(view.speech && { speech: flip ? swapSpeech(view.speech) : view.speech }) },
             });
         });
     }
-    if (raw.length === 0) throw new Error(`Runs ${runIds.join(' and ')} have no differing outputs to compare`);
-    const items = withRepeats(shuffle(raw, id, i => i.id).slice(0, ctx.limit ?? 30), id);
+    const where = recordings === ctx.store ? recordings.url : `${recordings.url} (--recordings)`;
+    if (unknownLanguage.length) ctx.note?.(`left out, language unknown (${unknownLanguage.length} case(s)): ${unknownLanguage.join(', ')}; their recorded request ${unread.length ? `could not be read from ${where} or ` : ''}names no cityLanguage`);
+    const blind = unread.filter(u => !unknownLanguage.includes(u));
+    if (blind.length) ctx.note?.(`no evidence beside the items of ${blind.length} case(s), their recorded run is not in ${where}: ${blind.join(', ')}`);
+    if (raw.length === 0) {
+        throw new Error(unknownLanguage.length
+            ? `No item to compare: --language ${ctx.language} needs each case's recorded request, and ${unknownLanguage.length} case(s) had none readable in ${where}`
+            : `Runs ${runIds.join(' and ')} have no differing outputs to compare${ctx.only || ctx.language ? ' among the cases asked for' : ''}`);
+    }
+    // A list is the batch: a cap would drop listed items at random. The cap is for a sample of everything.
+    const shuffled = shuffle(raw, id, i => i.id);
+    const limit = ctx.limit ?? (ctx.only ? shuffled.length : 30);
+    if (shuffled.length > limit) ctx.note?.(`${limit} of ${shuffled.length} differing item(s) are in the batch (--limit)`);
+    const items = withRepeats(shuffled.slice(0, limit), id);
     return {
         id, kind: 'pairwise', suite: suiteId, createdBy: ctx.createdBy ?? 'agent', createdAt: now.toISOString(), status: 'open', runs,
+        ...(ctx.recordings && { recordings: ctx.recordings.url }),
         title: `${suiteId}: which output is better?`, items,
         history: [{ status: 'open', at: now.toISOString(), by: ctx.createdBy ?? 'agent' }],
     };

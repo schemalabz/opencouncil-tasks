@@ -20,7 +20,11 @@ export type CaseFromRunOptions = {
 export type CallCase = { caseId: string; newCase: NewCase; proposed: Record<string, unknown> };
 
 /** One turn of the material an output was made from (a speaker's turn in a meeting), as a reviewer reads it. */
-export type SourceTurn = { speaker: string; detail?: string; text: string };
+export type SourceTurn = {
+    speaker: string; detail?: string; text: string;
+    /** Pairwise: the turn is the source of one of the two outputs only (the runs disagree on what belongs to the item). */
+    only?: 'a' | 'b';
+};
 
 /** A named part of an output, with its text in each of the two runs. */
 export type ComparedPart = { title: string; a: string; b: string };
@@ -36,7 +40,7 @@ export type PairwiseView = {
     parts?: ComparedPart[];
     /** The parts that are the same in both runs: shown once, never compared. */
     shared?: Array<{ title: string; text: string }>;
-    /** What both outputs were made from, when the request holds it. */
+    /** What the outputs were made from, when the request holds it: the union of the two runs' sources. */
     speech?: SourceTurn[];
     /** Label of the recorded call whose prompt is the source a reviewer reads next to the item. */
     sourceLabel?: string;
