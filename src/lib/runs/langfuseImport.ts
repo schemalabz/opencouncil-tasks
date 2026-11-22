@@ -8,7 +8,7 @@ import { toRunEnv, type PhaseInfo, type RunEnv, type RunState } from '../telemet
 import type { RunOutcome } from '../telemetry/sink.js';
 import { runFileWrites } from '../telemetry/archiveSink.js';
 
-/** The fields of a Langfuse trace (GET /api/public/traces/{id}) the import reads. */
+/** A Langfuse trace as the import reads it: built from the trace's root observation, plus its observations. */
 export type LangfuseTrace = {
     id: string;
     name?: string | null;
@@ -27,6 +27,10 @@ type LangfuseObservation = {
     name?: string | null;
     parentObservationId?: string | null;
     isRootObservation?: boolean;
+    traceId?: string;
+    sessionId?: string | null;
+    version?: string | null;
+    environment?: string | null;
     startTime: string;
     endTime?: string | null;
     level?: string | null;
@@ -139,7 +143,9 @@ export function runFromLangfuseTrace(trace: LangfuseTrace): { state: RunState; o
     const converted = generations.map(o => callFromGeneration(o, traceId, phaseNames));
     const version = tagValue(trace.tags, 'version');
     const output = trace.output as { resultTruncated?: boolean; error?: unknown } | null | undefined;
-    const endedAt = new Date(new Date(trace.timestamp).getTime() + (trace.latency ?? 0) * 1000).toISOString();
+    // An old root span has no end of its own; the run ended when its last observation did.
+    const lastEnd = trace.observations.map(o => o.endTime ?? o.startTime).sort().at(-1);
+    const endedAt = trace.latency ? new Date(new Date(trace.timestamp).getTime() + trace.latency * 1000).toISOString() : lastEnd ?? trace.timestamp;
     return {
         state: {
             run: {
@@ -168,12 +174,61 @@ export function runFromLangfuseTrace(trace: LangfuseTrace): { state: RunState; o
 const TRACE_DEADLINE_MS = 5 * 60_000;
 const OBSERVATION_FIELDS = 'core,basic,time,io,metadata,model,usage';
 
-// v2 returns input and output as raw strings. The input is a JSON message list; the output is
-// kept verbatim, since a structured output's text must survive byte for byte.
-function fromV2Observation(o: LangfuseObservation): LangfuseObservation {
-    if (typeof o.input !== 'string') return o;
-    try { return { ...o, input: JSON.parse(o.input) }; } catch { return o; }
+// v2 returns input, output and (for newer traces) metadata as raw strings. The input is a JSON
+// message list; the output is kept verbatim, since a structured output's text must survive byte
+// for byte.
+function parsed(value: unknown): unknown {
+    if (typeof value !== 'string') return value;
+    try { return JSON.parse(value); } catch { return value; }
 }
+
+function fromV2Observation(o: LangfuseObservation): LangfuseObservation {
+    const metadata = parsed(o.metadata);
+    return { ...o, input: parsed(o.input), metadata: metadata && typeof metadata === 'object' ? metadata as Record<string, unknown> : o.metadata };
+}
+
+/**
+ * The trace a root observation stands for. The traces endpoints are gone, so the run's own
+ * fields come from its root span: the session id is `<task>:<meeting>`, and the root's input
+ * and output are the trace's, JSON-encoded once or twice.
+ */
+export function traceFromRoot(root: LangfuseObservation): LangfuseTrace {
+    const meeting = root.sessionId?.includes(':') ? root.sessionId.slice(root.sessionId.indexOf(':') + 1) : undefined;
+    return {
+        id: root.traceId ?? root.id,
+        name: root.name,
+        timestamp: root.startTime,
+        environment: root.environment,
+        tags: [...(meeting ? [`meeting:${meeting}`] : []), ...(root.version ? [`version:${root.version}`] : [])],
+        input: parsed(parsed(root.input)),
+        output: parsed(parsed(root.output)),
+        latency: root.latency ?? (root.endTime ? (Date.parse(root.endTime) - Date.parse(root.startTime)) / 1000 : null),
+        observations: [],
+    };
+}
+
+const ROOT_FIELDS = 'core,basic,time,io';
+type ObservationsApi = NonNullable<ReturnType<typeof getLangfuseClient>>['api']['observations'];
+
+async function listRoots(api: ObservationsApi, query: Record<string, unknown>, limit?: number): Promise<LangfuseTrace[]> {
+    const traces = new Map<string, LangfuseTrace>();
+    for (let cursor: string | undefined; ;) {
+        const res = await api.getMany(
+            { type: 'SPAN', isRootObservation: true, fields: ROOT_FIELDS, limit: 100, ...query, ...(cursor && { cursor }) },
+            { timeoutInSeconds: 120, maxRetries: 5 },
+        );
+        for (const o of res.data as unknown as LangfuseObservation[]) {
+            const trace = traceFromRoot(o);
+            if (!traces.has(trace.id)) traces.set(trace.id, trace);
+        }
+        cursor = res.meta.cursor;
+        if (!cursor || res.data.length === 0 || (limit && traces.size >= limit)) break;
+    }
+    return [...traces.values()];
+}
+
+/** Trace ids before Langfuse v5 are UUIDs; the archive holds them without dashes. */
+const dashed = (id: string) => /^[0-9a-f]{32}$/.test(id) ? id.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5') : id;
 
 function withDeadline<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
     let timer: NodeJS.Timeout | undefined;
@@ -181,7 +236,7 @@ function withDeadline<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
     return Promise.race([p, deadline]).finally(() => clearTimeout(timer));
 }
 
-export type ImportOptions = { env: RunEnv; sinceDays: number; task?: string; limit?: number; concurrency?: number; onProgress?: (done: number, total: number) => void };
+export type ImportOptions = { env: RunEnv; sinceDays: number; task?: string; traceIds?: string[]; limit?: number; concurrency?: number; onProgress?: (done: number, total: number) => void };
 export type ImportSummary = { listed: number; imported: number; skipped: number; failed: number; calls: number };
 
 /** Copies Langfuse traces into the archive, skipping runs it already holds. */
@@ -189,14 +244,17 @@ export async function importLangfuseRuns(store: ArchiveStore, opts: ImportOption
     const client = getLangfuseClient();
     if (!client) throw new Error('LANGFUSE_PUBLIC_KEY / LANGFUSE_SECRET_KEY are not set');
     const fromTimestamp = new Date(Date.now() - opts.sinceDays * 86_400_000).toISOString();
-    // The traces endpoints allow about 15 requests a minute, so traces are listed with their
-    // input and output (a few pages) and each trace's observations come from the v2
-    // observations endpoint, which Langfuse points high-volume reads to.
+    // Runs are listed by their root span on the v2 observations endpoint (the traces endpoints
+    // were removed), newest first; named traces are looked up one by one, under either id form.
     const traces: LangfuseTrace[] = [];
-    for (let page = 1; ; page++) {
-        const res = await client.api.trace.list({ page, limit: 100, environment: opts.env, fromTimestamp, fields: 'core,io,metrics', ...(opts.task && { name: opts.task }) });
-        traces.push(...res.data.map(t => ({ ...(t as unknown as LangfuseTrace), observations: [] })));
-        if (page >= res.meta.totalPages || (opts.limit && traces.length >= opts.limit)) break;
+    if (opts.traceIds?.length) {
+        for (const id of opts.traceIds) {
+            const found = (await listRoots(client.api.observations, { traceId: id })).concat(dashed(id) === id ? [] : await listRoots(client.api.observations, { traceId: dashed(id) }));
+            if (found.length === 0) console.error(`Langfuse holds no trace ${id}`);
+            traces.push(...found);
+        }
+    } else {
+        traces.push(...await listRoots(client.api.observations, { environment: opts.env, fromStartTime: fromTimestamp, ...(opts.task && { name: opts.task }) }, opts.limit));
     }
     const wanted = opts.limit ? traces.slice(0, opts.limit) : traces;
     const summary: ImportSummary = { listed: wanted.length, imported: 0, skipped: 0, failed: 0, calls: 0 };
