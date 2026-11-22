@@ -32,9 +32,15 @@ export type PreferenceRecord = {
     /** Which run the page showed as A (order is random per item). */
     shownAs: { a: PairwiseRunRef['role']; b: PairwiseRunRef['role'] };
     note?: string;
+    reasons?: string[];
+    ms?: number;
 };
 
-export type ApplyPlan = { cases: CaseWrite[]; detectorCases: DetectorCaseWrite[]; preferences?: PreferenceRecord[]; tally: Partial<Record<ReviewDecision, number>> };
+export type ApplyPlan = {
+    cases: CaseWrite[]; detectorCases: DetectorCaseWrite[]; preferences?: PreferenceRecord[]; tally: Partial<Record<ReviewDecision, number>>;
+    /** pairwise: of the items shown twice, how many got the same preference both times. */
+    repeats?: { consistent: number; total: number };
+};
 
 type Settled = { value: unknown; tier: Tier; reason?: string; corrected: boolean };
 
@@ -124,19 +130,32 @@ function planDetectorCases(batch: ReviewBatch, results: ReviewResults, ctx: Appl
     return out;
 }
 
-function planPreferences(batch: ReviewBatch, results: ReviewResults): PreferenceRecord[] {
+const preferredOf = (item: ReviewItem, r: ReviewResult): PreferenceRecord['preferred'] =>
+    r.decision === 'a' || r.decision === 'b' ? item.sides![r.decision].role : r.decision === 'same' ? 'same' : 'cant-tell';
+
+/** A repeat is a check on the reviewer, not a second preference: it is counted apart and never archived. */
+function planPreferences(batch: ReviewBatch, results: ReviewResults): { preferences: PreferenceRecord[]; repeats?: ApplyPlan['repeats'] } {
     if (!batch.runs) throw new Error(`Batch ${batch.id} names no runs to prefer between`);
     const items = new Map(batch.items.map(i => [i.id, i]));
-    return results.results.map(r => {
+    const byItem = new Map(results.results.map(r => [r.itemId, r]));
+    const again = results.results.filter(r => items.get(r.itemId)!.repeatOf && byItem.has(items.get(r.itemId)!.repeatOf!));
+    const consistent = again.filter(r => {
+        const item = items.get(r.itemId)!;
+        const first = items.get(item.repeatOf!)!;
+        return item.sides && first.sides && preferredOf(item, r) === preferredOf(first, byItem.get(first.id)!);
+    }).length;
+    const preferences = results.results.filter(r => !items.get(r.itemId)!.repeatOf).map((r): PreferenceRecord => {
         const item = items.get(r.itemId)!;
         if (!item.caseId || !item.field || !item.sides) throw new Error(`Item ${item.id} is not a pairwise item`);
-        const preferred = r.decision === 'a' || r.decision === 'b' ? item.sides[r.decision].role : r.decision === 'same' ? 'same' : 'cant-tell';
+        const preferred = preferredOf(item, r);
         return {
             batchId: batch.id, suite: batch.suite, caseId: item.caseId, field: item.field, reviewer: results.reviewer, at: results.submittedAt,
             preferred, baseline: batch.runs!.baseline, candidate: batch.runs!.candidate,
             shownAs: { a: item.sides.a.role, b: item.sides.b.role }, ...(r.note && { note: r.note }),
+            ...(r.reasons?.length && { reasons: r.reasons }), ...(r.ms !== undefined && { ms: r.ms }),
         };
     });
+    return { preferences, ...(again.length && { repeats: { consistent, total: again.length } }) };
 }
 
 export function planApply(batch: ReviewBatch, results: ReviewResults, ctx: ApplyContext = {}): ApplyPlan {
@@ -149,7 +168,7 @@ export function planApply(batch: ReviewBatch, results: ReviewResults, ctx: Apply
         case 'mode-examples':
             return { cases: [], detectorCases: planDetectorCases(batch, results, ctx), tally };
         case 'pairwise':
-            return { cases: [], detectorCases: [], preferences: planPreferences(batch, results), tally };
+            return { cases: [], detectorCases: [], ...planPreferences(batch, results), tally };
         default:
             throw new Error(`Review kind "${batch.kind}" has no apply step yet`);
     }

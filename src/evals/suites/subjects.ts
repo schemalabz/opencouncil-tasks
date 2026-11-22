@@ -3,7 +3,8 @@ import type { SubjectVerdict, SubjectView } from '../../lib/runs/types.js';
 import type { ArchivedRun } from '../../lib/telemetry/archiveSink.js';
 import { assignSplit } from '../cases/caseStore.js';
 import type { Case, Expected, FieldOutcome } from '../types.js';
-import type { CaseFromRunOptions, PairwiseView, Suite, SuiteRunContext } from './suite.js';
+import { subjectSpeech } from '../summarize/descriptionMetrics.js';
+import type { CaseFromRunOptions, ComparedPart, PairwiseView, SourceTurn, Suite, SuiteRunContext } from './suite.js';
 
 /**
  * A case of a subject suite (summarize, processAgenda) is a recorded run: `case.replay`
@@ -116,18 +117,62 @@ function caseFromRun(suite: string, task: string, recorded: ArchivedRun, opts?: 
     return recordedRunCase(suite, recorded, meeting, { meeting }, expect);
 }
 
-export type Slice = { text(v: SubjectView): string; sourceLabel?(v: SubjectView): string };
+export type SlicePart = { title: string; text: string };
+
+/** What a suite compares of a subject, as named parts: a reviewer sees the parts that differ side by side and the rest once. */
+export type Slice = { parts(v: SubjectView): SlicePart[]; sourceLabel?(v: SubjectView): string };
+
+const asText = (parts: SlicePart[]) => parts.map(p => `${p.title}\n${p.text}`).join('\n\n');
+
+/** The parts of two views lined up by title (a title that repeats, by its position among its namesakes). */
+function alignParts(a: SlicePart[], b: SlicePart[]): { changed: ComparedPart[]; shared: SlicePart[] } {
+    const keyed = (parts: SlicePart[]) => {
+        const seen = new Map<string, number>();
+        return parts.map(p => {
+            const n = seen.get(p.title) ?? 0;
+            seen.set(p.title, n + 1);
+            return { key: `${p.title}#${n}`, ...p };
+        });
+    };
+    const [ka, kb] = [keyed(a), keyed(b)];
+    const inB = new Map(kb.map(p => [p.key, p.text]));
+    const inA = new Set(ka.map(p => p.key));
+    const changed: ComparedPart[] = [];
+    const shared: SlicePart[] = [];
+    for (const p of ka) {
+        const other = inB.get(p.key);
+        if (other === p.text) shared.push({ title: p.title, text: p.text });
+        else changed.push({ title: p.title, a: p.text, b: other ?? '' });
+    }
+    for (const p of kb) if (!inA.has(p.key)) changed.push({ title: p.title, a: '', b: p.text });
+    return { changed, shared };
+}
+
+/** The speech tagged to the subject, when the recorded request is a meeting's transcript. */
+function speechOf(output: SubjectsResult, subjectId: string, recorded?: ArchivedRun | null): SourceTurn[] | undefined {
+    const request = recorded?.run.input as { transcript?: unknown } | undefined;
+    if (!Array.isArray(request?.transcript) || !Array.isArray(output.utteranceDiscussionStatuses)) return undefined;
+    const turns = subjectSpeech(request as Parameters<typeof subjectSpeech>[0], output as Parameters<typeof subjectSpeech>[1], subjectId);
+    return turns.length ? turns.map(t => ({ speaker: t.speaker, text: t.text, ...((t.party || t.role) && { detail: [t.party, t.role].filter(Boolean).join(' · ') }) })) : undefined;
+}
 
 function pairwise(slice: Slice) {
-    return (a: SubjectsResult, b: SubjectsResult, c: Case<RecordedRunCaseInput>): PairwiseView[] => {
+    return (a: SubjectsResult, b: SubjectsResult, c: Case<RecordedRunCaseInput>, recorded?: ArchivedRun | null): PairwiseView[] => {
         const inB = new Map(subjectOutcomes(b, c).map(o => [o.field, o.view]));
         const out: PairwiseView[] = [];
         for (const o of subjectOutcomes(a, c)) {
             const vb = inB.get(o.field);
             if (!o.view || !vb) continue;
-            const [ta, tb] = [slice.text(o.view), slice.text(vb)];
-            if (ta === tb) continue;
-            out.push({ field: o.field, title: o.field.replace(FIELD, '$1'), a: ta, b: tb, ...(slice.sourceLabel && { sourceLabel: slice.sourceLabel(o.view) }) });
+            const { changed, shared } = alignParts(slice.parts(o.view), slice.parts(vb));
+            if (changed.length === 0) continue;
+            const speech = speechOf(a, o.view.id, recorded);
+            out.push({
+                field: o.field, title: o.field.replace(FIELD, '$1'),
+                a: asText(changed.map(p => ({ title: p.title, text: p.a }))), b: asText(changed.map(p => ({ title: p.title, text: p.b }))),
+                parts: changed, shared,
+                ...(speech && { speech }),
+                ...(slice.sourceLabel && { sourceLabel: slice.sourceLabel(o.view) }),
+            });
         }
         return out;
     };
@@ -136,18 +181,26 @@ function pairwise(slice: Slice) {
 const stripRefs = (text: string) => text.replace(/\[([^\]]*)\]\(REF:[A-Z]+:[^)]+\)/g, '$1');
 
 export const CONTRIBUTIONS: Slice = {
-    text: v => v.contributions.length ? v.contributions.map(c => `${c.speakerName}\n${stripRefs(c.text)}`).join('\n\n') : '(no contributions)',
+    parts: v => v.contributions.map(c => ({ title: c.speakerName, text: stripRefs(c.text) })),
     // The label production gives the call; its prompt holds the subject's transcript.
     sourceLabel: v => `contributions:${v.name.slice(0, 40)}`,
 };
 
 export const CONTEXT: Slice = {
-    text: v => `${v.context?.trim() || '(no context)'}${v.contextCitationUrls.length ? `\n\nSources:\n${v.contextCitationUrls.join('\n')}` : ''}`,
+    parts: v => [
+        { title: 'Context', text: v.context?.trim() || '(no context)' },
+        ...(v.contextCitationUrls.length ? [{ title: 'Sources', text: v.contextCitationUrls.join('\n') }] : []),
+    ],
     sourceLabel: v => `subject-context-search:${v.name.slice(0, 40)}`,
 };
 
 export const WHOLE_SUBJECT: Slice = {
-    text: v => [`${v.name}${v.withdrawn ? ' (withdrawn)' : ''} · ${v.topic ?? 'no topic'}`, stripRefs(v.description), CONTRIBUTIONS.text(v), CONTEXT.text(v)].join('\n\n'),
+    parts: v => [
+        { title: 'Subject', text: `${v.name}${v.withdrawn ? ' (withdrawn)' : ''} · ${v.topic ?? 'no topic'}` },
+        { title: 'Description', text: stripRefs(v.description) },
+        ...CONTRIBUTIONS.parts(v).map(p => ({ title: `Contribution · ${p.title}`, text: p.text })),
+        ...CONTEXT.parts(v),
+    ],
 };
 
 export type SubjectSuiteSpec<O extends SubjectsResult> = {

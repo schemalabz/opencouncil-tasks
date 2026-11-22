@@ -11,6 +11,6 @@ export const disagreement: KindRenderer = {
     ],
     item: item => `
         <div class="meta">${esc(item.caseId ?? '')} · <b>${esc(item.field ?? '')}</b></div>
-        ${(item.options ?? []).map(o => `<div class="value-row"><span class="tag">${o.key.toUpperCase()}</span><div class="value big">${showValue(o.value)}</div></div>`).join('')}`,
+        <div class="cmp"><div class="side-head" data-side="a">A</div><div class="side-head" data-side="b">B</div>${(item.options ?? []).map(o => `<div class="cell" data-side="${o.key}"><div class="value big">${showValue(o.value)}</div></div>`).join('')}</div>`,
     publicItem: ({ hidden: _h, current: _c, proposed: _p, ...item }) => ({ ...item, evidence: { ...item.evidence, check: undefined, signals: undefined } }),
 };

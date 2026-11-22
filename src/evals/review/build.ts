@@ -141,7 +141,36 @@ function shuffle<T>(xs: T[], seed: string, id: (x: T) => string): T[] {
     return [...xs].sort((a, b) => sha256Hex(seed + id(a)).localeCompare(sha256Hex(seed + id(b))));
 }
 
-export type PairwiseContext = BuildContext & { limit?: number; runsDir?: string };
+export type PairwiseContext = BuildContext & {
+    limit?: number; runsDir?: string;
+    /** Where the cases' recorded runs are read, when that is not the archive the batch is saved in. */
+    recordings?: ArchiveStore;
+    /** Only these items, each named by its case and the title of its field: the same pairs another reading (AI judges) was given. */
+    only?: Array<{ caseId: string; title: string }>;
+    /** Only cases whose recorded request is in this language (`cityLanguage`), for a reviewer who reads no other. */
+    language?: string;
+};
+
+const REPEATS = 3;
+
+/**
+ * Shows a few early items a second time near the end, sides swapped: a reviewer who chooses the
+ * same run both times is consistent. Small batches get none, since the repeat would be remembered.
+ */
+function withRepeats(items: ReviewItem[], salt: string): ReviewItem[] {
+    if (items.length < 4 * REPEATS) return items;
+    const early = shuffle(items.slice(0, Math.floor(items.length / 3)), `${salt}repeat`, i => i.id).slice(0, REPEATS);
+    const again = early.map((item): ReviewItem => ({
+        ...item, id: `${item.id}~2`, repeatOf: item.id,
+        options: item.options && [{ key: 'a', value: item.options[1].value }, { key: 'b', value: item.options[0].value }],
+        sides: item.sides && { a: item.sides.b, b: item.sides.a },
+        compare: item.compare && { ...item.compare, parts: item.compare.parts.map(p => ({ title: p.title, a: p.b, b: p.a })) },
+    }));
+    const out = [...items];
+    const from = Math.ceil((2 * items.length) / 3);
+    again.forEach((item, n) => out.splice(from + Math.floor(((n + 1) * (items.length - from)) / (REPEATS + 1)) + n, 0, item));
+    return out;
+}
 
 /** The first repeat of each case: a pairwise item compares one output with one output. */
 function firstRepByCase(rows: ResultRow[]): Map<string, ResultRow> {
@@ -167,12 +196,20 @@ export async function buildPairwiseBatch(suiteId: string, runIds: [string, strin
     const id = batchId(ctx.name ?? `${suiteId}-pairwise`, now, runIds.join(','));
 
     const raw: ReviewItem[] = [];
+    // A subject's title is its agenda position and its name, so a list may give the name alone.
+    const wanted = (caseId: string, title: string) => !ctx.only || ctx.only.some(o => o.caseId === caseId && (title === o.title || title.endsWith(` ${o.title}`)));
     for (const [caseId, rowA] of firstRepByCase(ra.rows)) {
         const rowB = rowsB.get(caseId);
         const c = cases.get(caseId);
-        if (!rowB || !c) continue;
-        const recorded = c.replay ? await readArchivedRun(c.replay, ctx.store).catch(() => null) : null;
-        suite.pairwiseItems(rowA.output, rowB.output, c).forEach((view, n) => {
+        if (!rowB || !c || (ctx.only && !ctx.only.some(o => o.caseId === caseId))) continue;
+        const recorded = c.replay ? await readArchivedRun(c.replay, ctx.recordings ?? ctx.store).catch(() => null) : null;
+        if (ctx.language) {
+            const language = (recorded?.run.input as { cityLanguage?: unknown } | undefined)?.cityLanguage;
+            if (language === undefined) throw new Error(`${caseId}: the recorded request names no cityLanguage to filter on`);
+            if (String(language).toLowerCase() !== ctx.language.toLowerCase()) continue;
+        }
+        suite.pairwiseItems(rowA.output, rowB.output, c, recorded).forEach((view, n) => {
+            if (!wanted(caseId, view.title)) return;
             const call = view.sourceLabel ? recorded?.calls.find(k => k.label === view.sourceLabel) : undefined;
             const itemId = `${caseId.slice(suiteId.length + 1)}#${n + 1}`;
             const flip = flipFor(id + itemId);
@@ -181,12 +218,13 @@ export async function buildPairwiseBatch(suiteId: string, runIds: [string, strin
                 id: itemId, caseId, field: view.field,
                 options: [{ key: 'a', value: first }, { key: 'b', value: second }],
                 sides: flip ? { a: runs.candidate, b: runs.baseline } : { a: runs.baseline, b: runs.candidate },
-                evidence: { text: view.title, ...(call && { traceId: c.replay!, callId: call.callId, label: call.label }) },
+                ...(view.parts && { compare: { parts: view.parts.map(p => (flip ? { title: p.title, a: p.b, b: p.a } : p)), shared: view.shared ?? [] } }),
+                evidence: { text: view.title, ...(call && { traceId: c.replay!, callId: call.callId, label: call.label }), ...(view.speech && { speech: view.speech }) },
             });
         });
     }
     if (raw.length === 0) throw new Error(`Runs ${runIds.join(' and ')} have no differing outputs to compare`);
-    const items = shuffle(raw, id, i => i.id).slice(0, ctx.limit ?? 30);
+    const items = withRepeats(shuffle(raw, id, i => i.id).slice(0, ctx.limit ?? 30), id);
     return {
         id, kind: 'pairwise', suite: suiteId, createdBy: ctx.createdBy ?? 'agent', createdAt: now.toISOString(), status: 'open', runs,
         title: `${suiteId}: which output is better?`, items,

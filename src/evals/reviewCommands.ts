@@ -105,12 +105,17 @@ export function registerReviewCommands(evalCmd: Command): void {
         .option('--limit <n>', 'cap on candidates in the batch', parsePositiveIntOption, 30)
         .option('--name <slug>', 'name in the batch id')
         .option('--run <runId>', 'pairwise: a run of --suite; give two, the baseline first', collect, [])
-        .action(async (kind: string, o: { candidate: string[]; suite?: string; signal?: string; limit: number; name?: string; run: string[] }) => {
+        .option('--only <file>', 'pairwise: only the items this JSON list names, as [{ caseId, title }]; a subject\'s name is enough for its title')
+        .option('--language <code>', 'pairwise: only cases whose recorded request has this cityLanguage (e.g. el)')
+        .option('--recordings <archiveUrl>', 'pairwise: the archive that holds the cases\' recorded runs (their requests are the evidence), when it is not this one')
+        .action(async (kind: string, o: { candidate: string[]; suite?: string; signal?: string; limit: number; name?: string; run: string[]; recordings?: string; language?: string; only?: string }) => {
             const store = openArchive();
             if (!REVIEW_KINDS.includes(kind as ReviewKind)) throw new Error(`Unknown review kind "${kind}" (expected ${REVIEW_KINDS.join(' | ')})`);
             if (kind === 'pairwise') {
                 if (!o.suite || o.run.length !== 2) throw new Error('A pairwise batch needs --suite and two --run ids (baseline first)');
-                const batch = await buildPairwiseBatch(o.suite, [o.run[0], o.run[1]], { store, name: o.name, limit: o.limit });
+                const only = o.only ? JSON.parse(fs.readFileSync(o.only, 'utf8')) as Array<{ caseId: string; title: string }> : undefined;
+                const batch = await buildPairwiseBatch(o.suite, [o.run[0], o.run[1]], { store, name: o.name, limit: o.limit, ...(o.recordings && { recordings: openArchive(o.recordings) }), ...(o.language && { language: o.language }), ...(only && { only }) });
+                if (only) console.log(`${batch.items.filter(i => !i.repeatOf).length} of the ${only.length} listed item(s) are in the batch`);
                 await saveBatch(store, batch, renderPage(batch));
                 console.log(`batch ${batch.id}: pairwise, ${batch.items.length} item(s) where ${batch.runs!.baseline.variant} and ${batch.runs!.candidate.variant} differ, status open`);
                 console.log(`next: eval review open ${batch.id}`);
@@ -137,12 +142,14 @@ export function registerReviewCommands(evalCmd: Command): void {
         .description('Serve the batch page on localhost with each item\'s archived source; a submit there writes results.json')
         .option('--port <n>', 'port (default: any free one)', parseIntOption, 0)
         .option('--page <file>', 'also write the page to this file, to open or send without the server')
+        .option('--render', 'write the batch\'s page again with the current page code before serving it')
         .option('--exit-on-submit', 'stop serving once results are submitted')
-        .action(async (batchId: string, o: { port: number; page?: string; exitOnSubmit?: boolean }) => {
+        .action(async (batchId: string, o: { port: number; page?: string; render?: boolean; exitOnSubmit?: boolean }) => {
             const store = openArchive();
             const batch = await loadBatch(store, batchId);
+            const mode = batch.modeId ? loadModes().find(m => m.id === batch.modeId) : undefined;
+            if (o.render) await saveBatch(store, batch, renderPage(batch, { mode }));
             if (o.page) {
-                const mode = batch.modeId ? loadModes().find(m => m.id === batch.modeId) : undefined;
                 fs.writeFileSync(o.page, renderPage(batch, { mode }));
                 console.log(`page written to ${o.page}`);
             }
@@ -184,6 +191,12 @@ export function registerReviewCommands(evalCmd: Command): void {
                 const by = (k: string) => out.plan.preferences!.filter(p => p.preferred === k).length;
                 const { baseline, candidate } = out.batch.runs!;
                 console.log(`batch ${batchId}: applied. ${out.plan.preferences.length} preference(s) archived: baseline ${baseline.variant} ${by('baseline')} · candidate ${candidate.variant} ${by('candidate')} · same ${by('same')} · can't tell ${by('cant-tell')}`);
+                const reasons = new Map<string, number>();
+                for (const pref of out.plan.preferences) for (const r of pref.reasons ?? []) reasons.set(r, (reasons.get(r) ?? 0) + 1);
+                if (reasons.size) console.log(`reasons given: ${[...reasons].sort((x, y) => y[1] - x[1]).map(([r, n]) => `${r} ${n}`).join(' · ')}`);
+                const times = out.plan.preferences.flatMap(pref => pref.ms ?? []).sort((x, y) => x - y);
+                if (times.length) console.log(`median time for an item: ${Math.round(times[Math.floor(times.length / 2)] / 1000)}s`);
+                if (out.plan.repeats) console.log(`items shown twice: the same preference both times in ${out.plan.repeats.consistent} of ${out.plan.repeats.total}`);
                 return;
             }
             console.log(`\nbatch ${batchId}: applied. eval lint: cases and registry ok`);

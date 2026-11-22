@@ -17,11 +17,11 @@ export const modeExamples: KindRenderer = {
         { decision: 'cant-tell', key: 't', label: "Can't tell" },
     ],
     header: (_batch, ctx) => ctx.mode ? `
-        <section class="mode">
-          <h2>${esc(ctx.mode.id)} · ${esc(ctx.mode.title)}</h2>
+        <details class="mode" open>
+          <summary>${esc(ctx.mode.id)} · ${esc(ctx.mode.title)}</summary>
           <p><b>Is:</b> ${esc(ctx.mode.definition)}</p>
           ${ctx.mode.boundary ? `<p><b>Is not:</b> ${esc(ctx.mode.boundary)}</p>` : ''}
-        </section>` : '',
+        </details>` : '',
     item: item => `
         <div class="meta">${esc(item.evidence.label ?? '')} · <span class="mono">${esc(item.evidence.traceId ?? '')}</span></div>
         <div class="text">${highlighted(item.evidence.text ?? '', item.evidence.check)}</div>`,

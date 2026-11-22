@@ -1,6 +1,7 @@
 import { archiveKeys, type ArchiveStore } from '../../lib/archive/store.js';
 import { sha256Hex } from '../../lib/llm/cacheKey.js';
 import type { NewCase } from '../harvest/candidate.js';
+import type { ComparedPart, SourceTurn } from '../suites/suite.js';
 import type { Expected } from '../types.js';
 
 export type ReviewKind = 'label-confirm' | 'disagreement' | 'pairwise' | 'mode-examples' | 'open-coding';
@@ -35,6 +36,8 @@ export type ReviewEvidence = {
     /** What the detector or scorer said. */
     check?: string;
     signals?: string[];
+    /** What the judged values were made from, read next to them (a meeting's speech on the subject). */
+    speech?: SourceTurn[];
     /** mode-examples: becomes the detector case. */
     call?: MinimalCall;
 };
@@ -54,6 +57,10 @@ export type ReviewItem = {
     options?: Array<{ key: 'a' | 'b'; value: unknown }>;
     /** disagreement: which option is which. Never rendered into the page. */
     hidden?: Record<'a' | 'b', 'expected' | 'output'>;
+    /** pairwise: the options split into the parts that differ, in the order shown, and the parts both share. */
+    compare?: { parts: ComparedPart[]; shared: Array<{ title: string; text: string }> };
+    /** The item this one shows again with its sides swapped, to measure the reviewer's consistency. Never rendered into the page. */
+    repeatOf?: string;
     /** pairwise: which run each option came from. Never rendered into the page. */
     sides?: Record<'a' | 'b', PairwiseRunRef>;
     evidence: ReviewEvidence;
@@ -79,7 +86,13 @@ export type ReviewBatch = {
 };
 
 export type ReviewDecision = 'confirm' | 'correct' | 'cant-tell' | 'reject' | 'a' | 'b' | 'same';
-export type ReviewResult = { itemId: string; decision: ReviewDecision; value?: unknown; note?: string };
+export type ReviewResult = {
+    itemId: string; decision: ReviewDecision; value?: unknown; note?: string;
+    /** Why, as the page's one-key reasons. */
+    reasons?: string[];
+    /** Time the item was on screen before the decision. */
+    ms?: number;
+};
 /** The file a page downloads or posts. */
 export type ReviewResults = { batchId: string; reviewer: string; submittedAt: string; results: ReviewResult[] };
 
@@ -150,6 +163,8 @@ export function resultsErrors(batch: ReviewBatch, r: unknown): string[] {
         if (!allowed.includes(result.decision)) errors.push(`item ${result.itemId}: decision ${JSON.stringify(result.decision)} is not one of ${allowed.join('|')}`);
         if (result.decision === 'correct' && result.value === undefined) errors.push(`item ${result.itemId}: a correction needs a value`);
         if (result.note !== undefined && typeof result.note !== 'string') errors.push(`item ${result.itemId}: note must be a string`);
+        if (result.reasons !== undefined && !(Array.isArray(result.reasons) && result.reasons.every(r => typeof r === 'string'))) errors.push(`item ${result.itemId}: reasons must be a list of strings`);
+        if (result.ms !== undefined && !(typeof result.ms === 'number' && result.ms >= 0)) errors.push(`item ${result.itemId}: ms must be a number`);
     }
     const undecided = batch.items.filter(i => !seen.has(i.id)).map(i => i.id);
     if (undecided.length) errors.push(`${undecided.length} item(s) undecided: ${undecided.slice(0, 5).join(', ')}${undecided.length > 5 ? ', …' : ''} (use can't tell)`);

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { makeRun, makeSubject } from '../../lib/runs/fixtures.js';
 import type { ArchivedRun } from '../../lib/telemetry/archiveSink.js';
 import type { Subject, SummarizeResult } from '../../types.js';
-import { summarizeContributions } from './summarize.js';
+import { summarizeContributions, summarizeE2e } from './summarize.js';
 
 const said = (speakerName: string, text: string) => ({ speakerId: null, speakerName, text, order: 0 });
 const subjects = (): Subject[] => [
@@ -69,5 +69,15 @@ describe('summarize suites', () => {
         expect(views).toHaveLength(1);
         expect(views[0]).toMatchObject({ field: 'subject[#2 Ηλεκτροφωτισμός πλατείας]', sourceLabel: 'contributions:Ηλεκτροφωτισμός πλατείας' });
         expect(views[0].b).toContain('και το κόστος');
+    });
+
+    it('pairwise splits a subject into the parts that differ and the parts both runs share', () => {
+        const s = subjects();
+        s[1] = { ...s[1], description: 'Νέα περιγραφή.' };
+        const [view] = summarizeE2e.pairwiseItems!(result(subjects()), result(s), c);
+        expect(view.parts!.map(p => p.title)).toEqual(['Description']);
+        expect(view.parts![0].b).toBe('Νέα περιγραφή.');
+        expect(view.shared!.map(p => p.title)).toContain('Subject');
+        expect(view.b).not.toContain(view.shared![0].text);
     });
 });

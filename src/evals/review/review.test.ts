@@ -440,4 +440,17 @@ describe('pairwise review of two summarize.contributions runs', () => {
         const archived = (await store.get(archiveKeys.preferences('summarize.contributions', batch.id)))!.toString('utf8').trim().split('\n').map(l => JSON.parse(l) as PreferenceRecord);
         expect(archived).toEqual([expect.objectContaining({ preferred: 'candidate', reviewer: 'Andreas', field: 'subject[#2 Θέμα δύο]', candidate: expect.objectContaining({ runId: 'run-sonnet' }) })]);
     });
+
+    it('counts an item shown twice as a check on the reviewer, not as a second preference', async () => {
+        const batch = await buildPairwiseBatch('summarize.contributions', ['run-prod', 'run-sonnet'], { store, casesRoot, runsDir, now: new Date('2026-10-11T00:00:00Z') });
+        const [first] = batch.items;
+        const again = { ...first, id: `${first.id}~2`, repeatOf: first.id, sides: { a: first.sides!.b, b: first.sides!.a } };
+        const twice = { ...batch, items: [first, again] };
+        expect(renderPage(twice)).not.toContain('repeatOf');
+        const results = (second: 'a' | 'b') => ({ batchId: batch.id, reviewer: 'Andreas', submittedAt: '2026-10-11T01:00:00Z', results: [{ itemId: first.id, decision: 'a' as const, reasons: ['complete'], ms: 4000 }, { itemId: again.id, decision: second }] });
+        const same = planApply(twice, results('b'));
+        expect(same.preferences).toEqual([expect.objectContaining({ field: first.field, reasons: ['complete'], ms: 4000 })]);
+        expect(same.repeats).toEqual({ consistent: 1, total: 1 });
+        expect(planApply(twice, results('a')).repeats).toEqual({ consistent: 0, total: 1 });
+    });
 });
