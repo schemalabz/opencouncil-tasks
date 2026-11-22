@@ -1,0 +1,20 @@
+{
+  "kind": "must-not-fire",
+  "note": "athens/nov18_2026 batch-processing:6/7 (trace 689b02bc), cut to the subject «Θέση στάσης ξενοδοχείου Eternity Athens» and the 5 utterances tagged to it (116 chars); not returned. Speech this short is a remark or a hand-over",
+  "input": {
+    "label": "batch-processing:6/7",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 128000,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Το απόσπασμα της συνεδρίασης είναι το εξής:\n[\n  {\n    \"speakerName\": \"Δέσποινα Λιμνιωτάκη\",\n    \"speakerParty\": \"Αθήνα Τώρα\",\n    \"utterances\": [\n      {\n        \"text\": \"Θέμα 3.\",\n        \"utteranceId\": \"s4hh87x3\"\n      },\n      {\n        \"text\": \"Κυρία Ευαγγελίδου.\",\n        \"utteranceId\": \"3iwg86lp\"\n      },\n      {\n        \"text\": \"Ως η εισήγηση το 3 και το 4.\",\n        \"utteranceId\": \"xhn7pfce\"\n      },\n      {\n        \"text\": \"Έχουμε κάποια παρατήρηση εδώ;\",\n        \"utteranceId\": \"886ddrc2\"\n      },\n      {\n        \"text\": \"Ο κύριος Σοφιανός έχει παρατήρηση.\",\n        \"utteranceId\": \"nzslr1za\"\n      }\n    ]\n  }\n]\n\nΗ τρέχουσα λίστα subjects:\n[\n  {\n    \"id\": \"4gbgvy02\",\n    \"name\": \"Θέση στάσης ξενοδοχείου Eternity Athens\",\n    \"description\": \"Θα εξεταστεί η παραχώρηση αποκλειστικής χρήσης τμήματος εσοχής 10 μέτρων επί της οδού Μητροπόλεως 62 για το ξενοδοχείο «ETERNITY ATHENS» 70 κλινών, καθώς και η τοποθέτηση σχετικής σήμανσης. Απαιτείται απόλυτη πλειοψηφία.\",\n    \"type\": \"IN_AGENDA\"\n  }\n]\n"
+        }
+      ]
+    },
+    "response": {
+      "text": "{\"subjects\":[],\"utteranceStatuses\":[{\"utteranceId\":\"s4hh87x3\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"4gbgvy02\"},{\"utteranceId\":\"3iwg86lp\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"4gbgvy02\"},{\"utteranceId\":\"xhn7pfce\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"4gbgvy02\"},{\"utteranceId\":\"886ddrc2\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"4gbgvy02\"},{\"utteranceId\":\"nzslr1za\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"4gbgvy02\"}]}"
+    }
+  }
+}

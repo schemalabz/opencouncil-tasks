@@ -1,0 +1,20 @@
+{
+  "kind": "must-fire",
+  "note": "rhodes/nov2_2026 batch-processing:1/1 (trace d40d83fc), cut to the subject «Τροποποίηση επιτροπών Συγκοινωνιών» and the 8 utterances tagged to it (683 chars); returned with the same description",
+  "input": {
+    "label": "batch-processing:1/1",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 128000,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Το απόσπασμα της συνεδρίασης είναι το εξής:\n[\n  {\n    \"speakerName\": \"Κωνσταντίνος Χαλκιάς\",\n    \"speakerParty\": \"ΕΝΑ - Ενωμένοι Αλλάζουμε\",\n    \"utterances\": [\n      {\n        \"text\": \"Τέταρτο θέμα: τροποποίηση επιτροπών διαγωνισμών παραλαβών της Διεύθυνσης Συγκοινωνιών για το έτος 2026.\",\n        \"utteranceId\": \"cdo49293\"\n      },\n      {\n        \"text\": \"Να αναφέρουμε τα ονόματα, φαντάζομαι είναι ομόφωνα στην εισήγηση.\",\n        \"utteranceId\": \"efomuem3\"\n      },\n      {\n        \"text\": \"Ναι, είναι πολλά.\",\n        \"utteranceId\": \"dnqkmck6\"\n      },\n      {\n        \"text\": \"Για τη διεξαγωγή δημοπρασιών Καραμανώλης, Κρητικός, Μπλούτη τα τακτικά, Νικολής, Κοντός, Τσιβρινής τα αναπληρωματικά.\",\n        \"utteranceId\": \"kmw2c5ay\"\n      },\n      {\n        \"text\": \"Για τα οχήματα\",\n        \"utteranceId\": \"9ue5stz6\"\n      },\n      {\n        \"text\": \"Βασιλαράκης, Κοντός, Κανταρτζόγλου τα τακτικά, Νικολής, Κοντός, Ψελλάκης τα αναπληρωματικά.\",\n        \"utteranceId\": \"lbh8gmk6\"\n      },\n      {\n        \"text\": \"Πάλι για την παραλαβή προμηθειών και παροχή υπηρεσιών τακτικά Καραμανώλης, Μπλούτη και Κρητικός, αναπληρωματικά Τσιγκόγια, Κοντός, Ψελλάκης.\",\n        \"utteranceId\": \"capuzkzm\"\n      },\n      {\n        \"text\": \"Και για τα καύσιμα και τα λιπαντικά Κανταρτζόγλου, Κοντός και Βασιλαράκης στα τακτικά, Χριστοφάκης, Κοντός, Ψελλάκης στα αναπληρωματικά.\",\n        \"utteranceId\": \"1ndg8r6b\"\n      }\n    ]\n  }\n]\n\nΗ τρέχουσα λίστα subjects:\n[\n  {\n    \"id\": \"5bwqz7bh\",\n    \"name\": \"Τροποποίηση επιτροπών Συγκοινωνιών\",\n    \"description\": \"Θα εξεταστεί η τροποποίηση των επιτροπών διαγωνισμών και παραλαβών της Διεύθυνσης Συγκοινωνιών για το έτος 2026.\",\n    \"type\": \"IN_AGENDA\"\n  }\n]\n"
+        }
+      ]
+    },
+    "response": {
+      "text": "{\"subjects\":[{\"id\":\"5bwqz7bh\",\"name\":\"Τροποποίηση επιτροπών Συγκοινωνιών\",\"description\":\"Θα εξεταστεί η τροποποίηση των επιτροπών διαγωνισμών και παραλαβών της Διεύθυνσης Συγκοινωνιών για το έτος 2026.\"}],\"utteranceStatuses\":[{\"utteranceId\":\"cdo49293\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"efomuem3\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"dnqkmck6\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"kmw2c5ay\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"9ue5stz6\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"lbh8gmk6\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"capuzkzm\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"},{\"utteranceId\":\"1ndg8r6b\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"5bwqz7bh\"}]}"
+    }
+  }
+}
