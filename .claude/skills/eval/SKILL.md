@@ -16,6 +16,7 @@ Read [docs/evals.md](../../../docs/evals.md) first: tiers, suites, variants, gat
 - Look at per-case holdout outputs while iterating (`compare` hides them; don't pass `--show-holdout` until the final gate).
 - Downgrade a tier without writing why.
 - Judge a change from one run. Compare runs of a suite.
+- Add a script for what the framework should do. Extend the suite or the command.
 
 ## Evaluate a change (model, prompt, code path)
 

@@ -4,6 +4,11 @@ Every LLM call a task makes is recorded, archived, and replayable. Evaluation is
 
 Agents run all of it. People only create truth that a gate relies on, and decide what ships.
 
+## Principles
+
+- **Extend the framework, do not work beside it.** A measure belongs to a suite, a comparison to `eval compare`, a fault to a check, a judgement to a review batch. A script is for exploring; what you use twice moves in.
+- **Every number can be made again.** It comes from a run and a command that anyone can repeat.
+
 ## How it works
 
 Three loops share one archive. The diagrams name the commands; the sections below explain each piece.
