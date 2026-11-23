@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { runFromLangfuseTrace, type LangfuseTrace } from './langfuseImport.js';
+import { runFromLangfuseTrace, traceFromRoot, type LangfuseTrace } from './langfuseImport.js';
 import { cassetteFromCalls } from '../llm/cassette.js';
 
 const trace: LangfuseTrace = {
@@ -59,5 +59,25 @@ describe('runFromLangfuseTrace', () => {
 
     it('is never served by a cassette', () => {
         expect(cassetteFromCalls(state.calls).remaining()).toBe(0);
+    });
+});
+
+describe('traceFromRoot', () => {
+    it('reads the run from a v5 root span: meeting from the session, input and output encoded twice', () => {
+        const trace = traceFromRoot({
+            id: '5dedf3f7d0fec280', traceId: '689b02bc23d64b4583b2aab529b1a9ee', type: 'SPAN', name: 'summarize', isRootObservation: true,
+            startTime: '2026-11-20T08:47:16.975Z', endTime: '2026-11-20T09:49:56.523Z', latency: 3759.548, version: '7', environment: 'production',
+            sessionId: 'summarize:athens/nov18_2026',
+            input: JSON.stringify(JSON.stringify({ transcriptCount: 448 })), output: JSON.stringify(JSON.stringify({ resultTruncated: true })),
+        });
+        expect(trace).toMatchObject({ id: '689b02bc23d64b4583b2aab529b1a9ee', name: 'summarize', input: { transcriptCount: 448 }, output: { resultTruncated: true }, latency: 3759.548 });
+        expect(runFromLangfuseTrace(trace).state.run).toMatchObject({ meeting: 'athens/nov18_2026', taskVersion: 7, env: 'production' });
+    });
+
+    it('takes the end of a run from its last observation when the root span of an old trace has none', () => {
+        const root = traceFromRoot({ id: 't-x', traceId: 'ff39bfaa-ff0c-4cae-9f50-bce2f5adb9e1', type: 'SPAN', name: 'summarize', isRootObservation: true, startTime: '2026-08-24T11:42:54.956Z', sessionId: 'summarize:chania/aug24_2026' });
+        const { state, outcome } = runFromLangfuseTrace({ ...root, observations: [{ id: 'p', type: 'SPAN', name: 'Phase 1', startTime: '2026-08-24T11:42:54.958Z', endTime: '2026-08-24T11:48:57.659Z' }] });
+        expect(state.run).toMatchObject({ meeting: 'chania/aug24_2026', taskVersion: null });
+        expect(outcome.endedAt).toBe('2026-08-24T11:48:57.659Z');
     });
 });

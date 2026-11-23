@@ -19,12 +19,29 @@ export type CaseFromRunOptions = {
 /** A proposed case built from one production call: what a label-confirm batch shows a person. */
 export type CallCase = { caseId: string; newCase: NewCase; proposed: Record<string, unknown> };
 
+/** One turn of the material an output was made from (a speaker's turn in a meeting), as a reviewer reads it. */
+export type SourceTurn = {
+    speaker: string; detail?: string; text: string;
+    /** Pairwise: the turn is the source of one of the two outputs only (the runs disagree on what belongs to the item). */
+    only?: 'a' | 'b';
+};
+
+/** A named part of an output, with its text in each of the two runs. */
+export type ComparedPart = { title: string; a: string; b: string };
+
 /** One field of one case shown side by side for a pairwise review. */
 export type PairwiseView = {
     field: string;
     title: string;
+    /** The parts that differ, as one text per run. */
     a: string;
     b: string;
+    /** The same split by part, so a page can line the two runs up part by part. */
+    parts?: ComparedPart[];
+    /** The parts that are the same in both runs: shown once, never compared. */
+    shared?: Array<{ title: string; text: string }>;
+    /** What the outputs were made from, when the request holds it: the union of the two runs' sources. */
+    speech?: SourceTurn[];
     /** Label of the recorded call whose prompt is the source a reviewer reads next to the item. */
     sourceLabel?: string;
 };
@@ -70,7 +87,7 @@ export interface Suite<I = unknown, O = unknown> {
     /** A case whose input and expectations come from a recorded run (`eval cases from-run`). */
     caseFromRun?(recorded: ArchivedRun, opts?: CaseFromRunOptions): Case<I>;
     /** The fields where two outputs for one case differ, as a reviewer reads them (pairwise batches). */
-    pairwiseItems?(a: O, b: O, c: Case<I>): PairwiseView[];
+    pairwiseItems?(a: O, b: O, c: Case<I>, recorded?: ArchivedRun | null): PairwiseView[];
     /** A suite's own summary of one run, beyond per-field accuracy (`eval report`). */
     report?(rows: ResultRow[], cases: Case<I>[]): string;
 }

@@ -41,7 +41,7 @@ describe('novelty harvest', () => {
         for (const c of [
             readingCase('K1', 'sparta/Δημοτική Επιτροπή', '120/2026'),
             readingCase('K2', 'sparta/Δημοτική Επιτροπή', '7'),
-            ...['summarize.contributions', 'summarize.context', 'summarize.e2e'].map(s => summarizeCase(s, 'zografou')),
+            ...['summarize.contributions', 'summarize.context', 'summarize.e2e', 'summarize.batches'].map(s => summarizeCase(s, 'zografou')),
         ]) writeCase(c, path.join(dir, 'cases'));
     });
     afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
@@ -87,6 +87,6 @@ describe('novelty harvest', () => {
         const summarize = got.filter(c => c.suite.startsWith('summarize.'));
         expect(summarize).toHaveLength(1);
         expect(summarize[0]).toMatchObject({ suite: 'summarize.contributions', signal: 'novelty:new-city' });
-        expect(summarize[0].evidence).toBe('2 runs from chania between 2026-09-01 and 2026-10-05; no case has this city (nor in summarize.context, summarize.e2e)');
+        expect(summarize[0].evidence).toBe('2 runs from chania between 2026-09-01 and 2026-10-05; no case has this city (nor in summarize.context, summarize.e2e, summarize.batches)');
     });
 });

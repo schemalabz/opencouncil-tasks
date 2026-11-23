@@ -1,0 +1,20 @@
+{
+  "kind": "known-miss",
+  "note": "athens/nov18_2026 batch-processing:6/7 (trace 689b02bc), cut to the subject «Κεραία κινητής τηλεφωνίας Άνω Κυψέλη - Άνω Γαλάτσι» and the 5 utterances tagged to it (349 chars); not returned. A drafted reading (an agent, not a person) judged this speech substantial: it adds a new position in under 500 characters, below the detector's threshold",
+  "input": {
+    "label": "batch-processing:6/7",
+    "request": {
+      "model": "claude-opus-4-7",
+      "max_tokens": 128000,
+      "messages": [
+        {
+          "role": "user",
+          "content": "Το απόσπασμα της συνεδρίασης είναι το εξής:\n[\n  {\n    \"speakerName\": \"Χάρης Δούκας\",\n    \"speakerParty\": \"Αθήνα Τώρα\",\n    \"utterances\": [\n      {\n        \"text\": \"Κεραία.\",\n        \"utteranceId\": \"jgc7rlso\"\n      },\n      {\n        \"text\": \"Μίλησα με τον Μαρκόπουλο από το Δήμο Γαλατσίου και μαζί θα στηρίξουμε τους κατοίκους και είμαστε μαζί στην προσπάθειά τους και θα ανακοινωθούν και συγκεκριμένα πράγματα τις επόμενες ημέρες.\",\n        \"utteranceId\": \"177dtl4r\"\n      },\n      {\n        \"text\": \"Νομίζω ήδη κάτι ανακοίνωσε και ο Μαρκόπουλος.\",\n        \"utteranceId\": \"3rdx2h2x\"\n      },\n      {\n        \"text\": \"Αν δεν το έχει ανακοινώσει, περιμένω [...] και μετά θα ακολουθήσω και εγώ.\",\n        \"utteranceId\": \"frw3eqhy\"\n      },\n      {\n        \"text\": \"Το ξέρω το θέμα και το στηρίζουμε.\",\n        \"utteranceId\": \"un1ykfuo\"\n      }\n    ]\n  }\n]\n\nΗ τρέχουσα λίστα subjects:\n[\n  {\n    \"id\": \"1gb7qtrj\",\n    \"name\": \"Κεραία κινητής τηλεφωνίας Άνω Κυψέλη - Άνω Γαλάτσι\",\n    \"description\": \"Ο κ. Σοφιανός και ο κ. Κωνσταντίνου κατήγγειλαν την απόπειρα εγκατάστασης [κεραίας κινητής τηλεφωνίας 9 μέτρων στα σύνορα Άνω Κυψέλης και Άνω Γαλατσίου](REF:UTTERANCE:i0b0ea91), κοντά σε δημοτικό, γυμνάσιο, νηπιαγωγείο και πάρκο. Εκπρόσωπος κίνησης κατοίκων, ο κ. Πολυχρόνης, παρουσίασε το ιστορικό της δικαστικής διαμάχης και [περιστατικά με αστυνομική συνοδεία και προσπάθειες σύλληψης κατοίκων στις 7/11 και 14/11](REF:UTTERANCE:pwdebfec), ζητώντας άμεση παρέμβαση της Πολεοδομίας του Δήμου Αθηναίων, ομόφωνη απόφαση στήριξης και ενδεχόμενη κάλυψη νομικών εξόδων. Στηρίχθηκε από τον αντιδήμαρχο κ. Αποστολόπουλο.\",\n    \"type\": \"BEFORE_AGENDA\"\n  }\n]\n"
+        }
+      ]
+    },
+    "response": {
+      "text": "{\"subjects\":[],\"utteranceStatuses\":[{\"utteranceId\":\"jgc7rlso\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"1gb7qtrj\"},{\"utteranceId\":\"177dtl4r\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"1gb7qtrj\"},{\"utteranceId\":\"3rdx2h2x\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"1gb7qtrj\"},{\"utteranceId\":\"frw3eqhy\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"1gb7qtrj\"},{\"utteranceId\":\"un1ykfuo\",\"status\":\"SUBJECT_DISCUSSION\",\"subjectId\":\"1gb7qtrj\"}]}"
+    }
+  }
+}

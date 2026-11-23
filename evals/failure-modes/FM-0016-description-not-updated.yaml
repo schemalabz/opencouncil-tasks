@@ -1,0 +1,30 @@
+id: FM-0016
+slug: description_not_updated
+title: A batch discusses a subject that already has a description, and the description stays as it was
+definition: >
+  Summarize reads a long meeting in batches. A batch tags speech to a subject it was given
+  (`SUBJECT_DISCUSSION`), but returns that subject with the same description, or does not
+  return it, and then the task keeps the old description. The description shows only what was
+  said before that batch: the speakers of the later round are missing (athens nov18_2026, where
+  batch 5 left 10 of 12 discussed subjects as they were), or an agenda item keeps its agenda
+  text although it was debated. Speaker contributions are not affected: they are written from
+  every tagged utterance.
+boundary: >
+  Not this mode: a batch that tags only a remark, a point of order or a hand-over to the subject
+  (the detector ignores tagged speech under 500 characters, so short speech that does add a
+  position is a known miss); a subject the batch did not tag at all; a description that changed
+  but still leaves a speaker out (a question of content, which this detector does not read);
+  wrong tagging. FM-0003 is one visible result of this mode on agenda items, not a separate cause.
+suite: [summarize.e2e, summarize.batches]
+scope: call
+severity: major
+impact: visible
+status: candidate
+detector:
+  kind: code
+  module: src/evals/checks/descriptionNotUpdated.ts
+related:
+  - type: similar
+    id: FM-0003
+decision: fix
+alert: "any run with a fail: Discord with the run's meeting and the subjects left as they were"

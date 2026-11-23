@@ -167,12 +167,13 @@ export function registerEvalCommands(program: Command): void {
         .option('--env <env>', 'Langfuse environment', parseEnvOption, 'production')
         .option('--since <days>', 'how far back', parseIntOption, 30)
         .option('--task <taskType>', 'only traces of this task')
+        .option('--trace <traceId...>', 'only these traces, whatever their age or environment')
         .option('--limit <n>', 'at most this many traces', parsePositiveIntOption)
         .option('--concurrency <n>', 'traces fetched in parallel', parsePositiveIntOption, 4)
-        .action(async (o: { env: RunEnv; since: number; task?: string; limit?: number; concurrency: number }) => {
+        .action(async (o: { env: RunEnv; since: number; task?: string; trace?: string[]; limit?: number; concurrency: number }) => {
             let last = 0;
             const summary = await importLangfuseRuns(openArchive(), {
-                env: o.env, sinceDays: o.since, task: o.task, limit: o.limit, concurrency: o.concurrency,
+                env: o.env, sinceDays: o.since, task: o.task, traceIds: o.trace, limit: o.limit, concurrency: o.concurrency,
                 onProgress: (done, total) => { if (done - last >= 25 || done === total) { last = done; console.log(`  ${done}/${total}`); } },
             });
             console.log(`langfuse ${o.env}: ${summary.listed} traces · ${summary.imported} imported (${summary.calls} calls) · ${summary.skipped} already archived · ${summary.failed} failed`);

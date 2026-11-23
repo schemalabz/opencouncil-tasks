@@ -370,6 +370,24 @@ describe('disagreement page', () => {
         }
     });
 
+    it('reads the producing call from the archive that holds the runs, when the batch is saved in another', async () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'review-runs-'));
+        const [store, runs] = [fsStore(path.join(dir, 'archive')), fsStore(path.join(dir, 'recordings'))];
+        try {
+            await archiveRun(runs, 'trace-e', [readingCall('trace-e')]);
+            const item = { id: 'c-1:meetingDate', caseId: 'decisions.reading/A', field: 'meetingDate', current: drafted('2026-07-18'), evidence: { traceId: 'trace-e' }, ...blindOptions('seed', '2026-07-18', '2026-07-19') };
+            const batch: ReviewBatch = { id: 'rv-e', kind: 'disagreement', suite: 'decisions.reading', createdBy: 'agent', createdAt: '', status: 'open', history: [], items: [item] };
+            await saveBatch(store, batch, renderPage(batch));
+            const source = `api/items/${encodeURIComponent(item.id)}/source`;
+            const alone = await serveBatch(store, batch.id);
+            try { expect((await fetch(alone.url + source)).status).toBe(404); } finally { await alone.close(); }
+            const server = await serveBatch(store, batch.id, { runs });
+            try { expect((await (await fetch(server.url + source)).json()).request).toBeDefined(); } finally { await server.close(); }
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+
     it('orders a/b from the seed, both ways across seeds', () => {
         expect(blindOptions('s1', 'E', 'O')).toEqual(blindOptions('s1', 'E', 'O'));
         const firsts = new Set(Array.from({ length: 20 }, (_, i) => blindOptions(`s${i}`, 'E', 'O').hidden!.a));
@@ -439,5 +457,100 @@ describe('pairwise review of two summarize.contributions runs', () => {
         expect(out.files).toEqual([]);
         const archived = (await store.get(archiveKeys.preferences('summarize.contributions', batch.id)))!.toString('utf8').trim().split('\n').map(l => JSON.parse(l) as PreferenceRecord);
         expect(archived).toEqual([expect.objectContaining({ preferred: 'candidate', reviewer: 'Andreas', field: 'subject[#2 Θέμα δύο]', candidate: expect.objectContaining({ runId: 'run-sonnet' }) })]);
+    });
+
+    it('counts an item shown twice as a check on the reviewer, not as a second preference', async () => {
+        const batch = await buildPairwiseBatch('summarize.contributions', ['run-prod', 'run-sonnet'], { store, casesRoot, runsDir, now: new Date('2026-10-11T00:00:00Z') });
+        const [first] = batch.items;
+        const again = { ...first, id: `${first.id}~2`, repeatOf: first.id, sides: { a: first.sides!.b, b: first.sides!.a } };
+        const twice = { ...batch, items: [first, again] };
+        expect(renderPage(twice)).not.toContain('repeatOf');
+        const results = (second: 'a' | 'b') => ({ batchId: batch.id, reviewer: 'Andreas', submittedAt: '2026-10-11T01:00:00Z', results: [{ itemId: first.id, decision: 'a' as const, reasons: ['complete'], ms: 4000 }, { itemId: again.id, decision: second }] });
+        const same = planApply(twice, results('b'));
+        expect(same.preferences).toEqual([expect.objectContaining({ field: first.field, reasons: ['complete'], ms: 4000 })]);
+        expect(same.repeats).toEqual({ consistent: 1, total: 1 });
+        expect(planApply(twice, results('a')).repeats).toEqual({ consistent: 0, total: 1 });
+    });
+
+    describe('a batch of many items', () => {
+        const N = 14;
+        const caseId = (meeting: string) => `summarize.contributions/${meeting.replace('/', '-')}`;
+        const transcript = [{ speakerName: 'Δήμαρχος', utterances: [{ utteranceId: 'u1', text: 'Πρώτο.' }, { utteranceId: 'u2', text: 'Δεύτερο.' }] }];
+        // Each subject's contribution differs between the runs; the wider run also tags a second utterance to it.
+        const many = (text: string, wider: boolean) => makeRun('t',
+            Array.from({ length: N }, (_, n) => makeSubject({ id: `m${n}`, name: `Θέμα ${n}`, agendaItemIndex: n + 1, speakerContributions: [said('Δήμαρχος', `Είπε (${text}).`)] })),
+            { utteranceDiscussionStatuses: Array.from({ length: N }, (_, n) => (wider ? ['u1', 'u2'] : ['u1']).map(utteranceId => ({ utteranceId, subjectId: `m${n}`, status: 'SUBJECT_DISCUSSION' }))).flat() as never },
+        ).result;
+
+        async function record(traceId: string, meeting: string, input: Record<string, unknown>) {
+            const run = { traceId, taskType: 'summarize', taskVersion: 6, taskId: 'x', env: 'development' as const, meeting, input, startedAt: '2026-10-10T10:00:00.000Z' };
+            const key = archiveKeys.calls('development', new Date(run.startedAt), 'summarize', traceId);
+            await store.put(key, encodeRunFile({ run, phases: [], calls: [] }, { status: 'success', endedAt: run.startedAt, result: many('recorded', false) }));
+            await store.put(archiveKeys.traceIndex(traceId), key);
+            writeCase(summarizeContributions.caseFromRun!((await readArchivedRun(traceId, store))!), casesRoot);
+        }
+
+        function writeRuns(meetings: string[]) {
+            for (const [runId, text, wider] of [['many-a', 'μία', false], ['many-b', 'άλλη', true]] as const) {
+                const d = path.join(runsDir, 'summarize.contributions', runId);
+                fs.mkdirSync(d, { recursive: true });
+                const manifest: RunManifest = { runId, suite: 'summarize.contributions', variant: { name: 'production', overrides: {} }, split: 'all', reps: 1, cases: meetings.length, caseSetSha: 's', gitRef: 'g', gitDirty: false, startedAt: 't', spentUsd: 0, status: 'complete' };
+                const rows = meetings.map((m): ResultRow => ({ caseId: caseId(m), rep: 0, fields: {}, checks: {}, usage: { input_tokens: 0, output_tokens: 0 }, costUsd: 0, latencyMs: 0, servedModels: [], status: 'ok', traceId: '', output: many(text, wider) }));
+                fs.writeFileSync(path.join(d, 'manifest.json'), JSON.stringify(manifest));
+                fs.writeFileSync(path.join(d, 'results.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+            }
+        }
+        const build = (ctx: Partial<Parameters<typeof buildPairwiseBatch>[2]> = {}) => buildPairwiseBatch('summarize.contributions', ['many-a', 'many-b'], { store, casesRoot, runsDir, now: new Date('2026-10-11T00:00:00Z'), ...ctx });
+
+        it('takes a list of items whole, and caps a sample of everything', async () => {
+            await record('b'.repeat(32), 'chania/nov1_2026', { transcript, cityLanguage: 'el' });
+            writeRuns(['chania/nov1_2026']);
+            const notes: string[] = [];
+            const only = Array.from({ length: N - 1 }, (_, n) => ({ caseId: caseId('chania/nov1_2026'), title: `Θέμα ${n}` }));
+            const listed = await build({ only, note: l => notes.push(l) });
+            expect(listed.items.filter(i => !i.repeatOf)).toHaveLength(N - 1);
+            expect(notes).toEqual([]);
+
+            const sample = await build({ limit: 5, note: l => notes.push(l) });
+            expect(sample.items).toHaveLength(5);
+            expect(notes).toEqual([`5 of ${N} differing item(s) are in the batch (--limit)`]);
+            expect((await build({ only, limit: 4 })).items).toHaveLength(4);
+        });
+
+        it('shows three early items again in the last third, sides swapped in the texts and in the speech', async () => {
+            await record('b'.repeat(32), 'chania/nov1_2026', { transcript, cityLanguage: 'el' });
+            writeRuns(['chania/nov1_2026']);
+            const { items } = await build({ limit: N });
+            const again = items.filter(i => i.repeatOf);
+            expect(again).toHaveLength(3);
+            for (const item of again) {
+                const first = items.find(i => i.id === item.repeatOf)!;
+                expect(items.indexOf(first)).toBeLessThan(N / 3);
+                expect(items.indexOf(item)).toBeGreaterThanOrEqual(Math.ceil((2 * N) / 3));
+                expect(item.options!.map(o => o.value)).toEqual([first.options![1].value, first.options![0].value]);
+                expect(item.sides).toEqual({ a: first.sides!.b, b: first.sides!.a });
+            }
+            // The second utterance is the wider run's alone: on every item it must carry that run's side.
+            for (const item of items) {
+                const [both, one] = item.evidence.speech!;
+                expect(both.only).toBeUndefined();
+                expect(item.sides![one.only!].runId).toBe('many-b');
+            }
+        });
+
+        it('keeps the cases it can read when a language is asked for, and names the ones it left out', async () => {
+            await record('b'.repeat(32), 'chania/nov1_2026', { transcript, cityLanguage: 'el' });
+            await record('c'.repeat(32), 'paris/nov2_2026', { transcript, cityLanguage: 'fr' });
+            await record('d'.repeat(32), 'athens/nov3_2026', { transcript, cityLanguage: 'el' });
+            writeRuns(['chania/nov1_2026', 'paris/nov2_2026', 'athens/nov3_2026']);
+            // The recording of one Greek case is gone from the archive.
+            await store.put(archiveKeys.traceIndex('d'.repeat(32)), 'calls/none');
+            const notes: string[] = [];
+            const batch = await build({ language: 'el', limit: 100, note: l => notes.push(l) });
+            expect(new Set(batch.items.map(i => i.caseId))).toEqual(new Set([caseId('chania/nov1_2026')]));
+            expect(notes).toHaveLength(1);
+            expect(notes[0]).toContain(`left out, language unknown (1 case(s)): ${caseId('athens/nov3_2026')}`);
+            await expect(build({ language: 'el', only: [{ caseId: caseId('athens/nov3_2026'), title: 'Θέμα 1' }] })).rejects.toThrow(/--language el needs each case's recorded request/);
+        });
     });
 });
