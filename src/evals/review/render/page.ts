@@ -277,7 +277,8 @@ const CLIENT = String.raw`
   function say(text, kind) { message.hidden = false; message.textContent = text; message.className = 'message ' + (kind || ''); }
 
   // Time on screen for the current item, without the time the tab was hidden.
-  var shownAt = Date.now(), hiddenAt = 0;
+  // An item left without an answer keeps its time in spent, for the answer that comes later.
+  var shownAt = Date.now(), hiddenAt = 0, spent = {};
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) hiddenAt = Date.now(); else if (hiddenAt) { shownAt += Date.now() - hiddenAt; hiddenAt = 0; }
   });
@@ -294,7 +295,8 @@ const CLIENT = String.raw`
     var note = card.querySelector('.note').value.trim();
     if (note) d.note = note;
     if (state.why[id] && state.why[id].length) d.reasons = state.why[id].slice();
-    d.ms = (before && before.ms || 0) + Math.max(0, Date.now() - shownAt);
+    d.ms = (before && before.ms || 0) + (spent[id] || 0) + Math.max(0, Date.now() - shownAt);
+    spent[id] = 0;
     // The last item stays on screen after its answer: a changed answer must add only the time since.
     shownAt = Date.now();
     state.decisions[id] = d; save(); refresh(); go(idx + 1);
@@ -346,6 +348,8 @@ const CLIENT = String.raw`
 
   function go(idx) {
     if (idx < 0 || idx >= cards.length) { refresh(); return; }
+    var left = cards[current] && cards[current].dataset.item;
+    if (left) spent[left] = (spent[left] || 0) + Math.max(0, Date.now() - shownAt);
     current = idx; shownAt = Date.now(); focus = null; refresh();
     var body = cards[idx].querySelector('.item-body'); if (body) body.scrollTop = 0;
     var item = items[cards[idx].dataset.item];
@@ -427,9 +431,25 @@ const CLIENT = String.raw`
     var c = castOf(item);
     if (!c.list.length) return;
     var namedIn = { a: {}, b: {} };
-    all(card, '.prose').forEach(function (node) {
+    // A name counts for a side when that side's text has it. Text that is the same in both counts for both,
+    // and so does the heading of a part (a contribution's speaker) for each side that has the part.
+    function sidesOf(node) {
       var cell = node.closest && node.closest('.cell');
-      markNames(node, c.list).forEach(function (m) { if (cell && namedIn[cell.dataset.side]) namedIn[cell.dataset.side][m.p.index] = true; });
+      if (cell) return [cell.dataset.side];
+      if (node.closest && node.closest('.shared')) return ['a', 'b'];
+      var has = function (c) { return !c.querySelector('.prose > .muted'); };
+      // The one part that differs has its name in each side's head.
+      var head = node.closest && node.closest('.side-head');
+      if (head) return all(card, '.cell[data-side="' + head.dataset.side + '"]').some(has) ? [head.dataset.side] : [];
+      var out = [];
+      for (var next = node.nextElementSibling; next && next.classList.contains('cell'); next = next.nextElementSibling) {
+        if (has(next)) out.push(next.dataset.side);
+      }
+      return out;
+    }
+    all(card, '.prose, .part-title, .differs').forEach(function (node) {
+      var on = sidesOf(node);
+      markNames(node, c.list).forEach(function (m) { on.forEach(function (s) { if (namedIn[s]) namedIn[s][m.p.index] = true; }); });
     });
     var sides = all(card, '.side-head').length ? ['a', 'b'] : [];
     var meta = card.querySelector('.meta');
