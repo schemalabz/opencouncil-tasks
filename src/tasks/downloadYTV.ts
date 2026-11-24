@@ -19,6 +19,7 @@ import {
     MEDIA_INFO_TEMPLATE, parseMediaInfo, isDirectFile, toSourceInfo, cacheKeyFor,
     classifyMediaError, isPermanentMediaError, mediaErrorMessage, MediaDownloadError, MediaHttpError, type MediaInfo,
 } from "./utils/mediaSource.js";
+import { fetchMedia, mediaProxy } from "./utils/mediaFetch.js";
 import type { InspectMediaResponse, MediaSourceInfo } from "../types.js";
 
 dotenv.config();
@@ -302,7 +303,7 @@ async function lookupMedia(url: string): Promise<MediaInfo> {
     const args = ['-O', MEDIA_INFO_TEMPLATE, '--no-warnings', '--no-playlist', '--playlist-items', '1'];
     // Same proxy as the download itself: the metadata fetch is throttled/blocked on the
     // datacenter IP just like the media fetch.
-    const proxy = process.env.YTDLP_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
+    const proxy = mediaProxy();
     if (proxy) {
         args.push('--proxy', proxy);
     }
@@ -1006,7 +1007,7 @@ const HEADERS = {
 /** The content type when the URL serves a video or audio file, else undefined (a page, an error, no answer). */
 async function mediaFileType(url: string): Promise<string | undefined> {
     try {
-        const res = await fetch(url, { method: 'HEAD', headers: HEADERS, signal: AbortSignal.timeout(15_000) });
+        const res = await fetchMedia(url, { method: 'HEAD', headers: HEADERS, signal: AbortSignal.timeout(15_000) });
         const type = res.headers.get('content-type')?.split(';')[0].trim().toLowerCase();
         return res.ok && type && /^(video|audio)\//.test(type) ? type : undefined;
     } catch {
@@ -1021,7 +1022,7 @@ const downloadUrl = async (url: string, outputPath: string) => {
     const partialPath = `${outputPath}.${randomUUID()}.part`;
     try {
         assertFetchableUrl(url, 'youtubeUrl');
-        const response = await fetch(url, { headers: HEADERS });
+        const response = await fetchMedia(url, { headers: HEADERS });
         if (!response.ok) {
             await response.body?.cancel();
             throw new MediaHttpError(response.status, url, response.statusText);
@@ -1134,7 +1135,7 @@ async function downloadWithYtDlp(
         // we still rely on ffmpeg-static for audio extraction; yt-dlp uses system ffmpeg only if needed
     });
 
-    const proxy = process.env.YTDLP_PROXY || process.env.HTTP_PROXY || process.env.HTTPS_PROXY;
+    const proxy = mediaProxy();
     const outputDir = path.dirname(outputPath);
     const baseName = path.basename(outputPath, path.extname(outputPath));
     const outputTemplate = path.join(outputDir, `${baseName}.%(ext)s`);
