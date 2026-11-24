@@ -5,6 +5,7 @@ import { TaskUpdate } from '../types.js';
 import { MediaDownloadError } from '../tasks/utils/mediaSource.js';
 import chalk from 'chalk';
 import { getLanguageConfig } from './language.js';
+import { parseAuthorityType } from './authority.js';
 import dotenv from 'dotenv';
 import { runWithTaskTrace } from './observability.js';
 import { validateCallbackUrl, extractMeetingId, taskStatusIdFromUrl } from '../utils.js';
@@ -368,8 +369,11 @@ export class TaskManager {
 
             // Validate explicit content language before queueing, including tasks
             // whose empty-input path never needs a language configuration.
+            // Validate the kind of the authority too: a prompt builder reads its
+            // words by this key, and an unknown key fails deep inside the task.
             try {
                 getLanguageConfig((req.body as { cityLanguage?: string }).cityLanguage);
+                parseAuthorityType((req.body as { authorityType?: unknown }).authorityType);
             } catch (error) {
                 if (error instanceof RangeError) {
                     return res.status(400).json({ error: error.message });

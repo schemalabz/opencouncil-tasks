@@ -1,6 +1,7 @@
 import { aiChat, addUsage, NO_USAGE, ResultWithUsage } from "./ai.js";
+import { authorityTerms } from "./authority.js";
 import { getLanguageConfig } from "./language.js";
-import { CityLanguage, RosterPerson, SpeakerEvidenceKind } from "../types.js";
+import { AuthorityType, CityLanguage, RosterPerson, SpeakerEvidenceKind } from "../types.js";
 import { formatTime } from "../utils.js";
 import { isCancellation } from "./taskControl.js";
 
@@ -146,6 +147,8 @@ export type IdentificationEffort = "low" | "medium" | "high" | "xhigh" | "max";
 
 export type IdentifySpeakersArgs = {
     cityName: string;
+    /** The kind of the authority. Args with none are a municipality's. */
+    authorityType?: AuthorityType;
     language: CityLanguage;
     /** ISO date (YYYY-MM-DD) of the meeting; shown to the model for context. */
     meetingDate: string;
@@ -277,24 +280,25 @@ export function sameUnlistedSpeaker(a: UnlistedSpeaker, b: UnlistedSpeaker): boo
  */
 export const rosterKey = (index: number) => `P${index + 1}`;
 
-export function buildSystemPrompt(language: CityLanguage): string {
+export function buildSystemPrompt(language: CityLanguage, authorityType?: AuthorityType): string {
     const { promptName } = getLanguageConfig(language);
-    return `You identify who is speaking in an automatic transcript of a ${promptName} municipal meeting.
+    const authority = authorityTerms(authorityType).en;
+    return `You identify who is speaking in an automatic transcript of a ${promptName} ${authority.adjective} meeting.
 
 The speakers were separated by audio diarization and labelled S1, S2, S3, ... The labels are consistent across the whole meeting: every line marked S3 is the same voice, even in a different part of the transcript. Nothing about the label says who the person is — that is what you determine, from the text alone.
 
-You receive the body that is meeting (a municipality has several: the council, committees, community councils), the roster of the municipality split into members of that body and everyone else (key, name, roles, party), any speakers whose identity is already known, and one contiguous chunk of the transcript as lines "[hh:mm:ss] S<n>: text".
+You receive the body that is meeting (a ${authority.authority} has several: ${authority.bodies}), the roster of the ${authority.authority} split into members of that body and everyone else (key, name, roles, party), any speakers whose identity is already known, and one contiguous chunk of the transcript as lines "[hh:mm:ss] S<n>: text".
 
 EVIDENCE TO USE, strongest first:
 - The chair giving the floor by name right before a label starts speaking ("τον λόγο έχει ο κ. Δημάκης", "la parole est à Madame ...", "реч има ...").
 - Roll calls, where the chair reads a name and the next label answers ("Παρών", "Présent", "Присутан").
 - A speaker introducing themselves, or stating their own role.
-- Being addressed by name or role title in the lines around them ("κύριε Δήμαρχε", "κυρία Πρόεδρε" — resolve the title with the roster).
-- Role behaviour: the person who opens the session, runs the roll call, puts items to a vote and grants the floor chairs THIS body. Resolve that to the head of the body that is meeting, never to the head of another body of the municipality. A vice-chair often presides for a stretch: a second label doing the chair's work is a stand-in, not the chair, unless its own name or title is spoken. The person answering as the executive is usually the mayor or a deputy mayor.
+- Being addressed by name or role title in the lines around them (${authority.headAddress}, "κυρία Πρόεδρε" — resolve the title with the roster).
+- Role behaviour: the person who opens the session, runs the roll call, puts items to a vote and grants the floor chairs THIS body. Resolve that to the head of the body that is meeting, never to the head of another body of the ${authority.authority}. A vice-chair often presides for a stretch: a second label doing the chair's work is a stand-in, not the chair, unless its own name or title is spoken. The person answering as the executive is usually ${authority.headOrDeputy}.
 
-The speech-to-text often misspells names phonetically. Match spoken names to the roster by sound, not by exact spelling. Prefer members of the meeting body, but other people of the municipality (deputy mayors, officials, other councillors) do attend. Several roster names can sound alike; check the whole name before choosing.
+The speech-to-text often misspells names phonetically. Match spoken names to the roster by sound, not by exact spelling. Prefer members of the meeting body, but other people of the ${authority.authority} (${authority.deputies}, officials, other councillors) do attend. Several roster names can sound alike; check the whole name before choosing.
 
-Not everyone who speaks is on the roster: residents, employees of the municipality, representatives of associations and schools, invited experts, lawyers. A name that matches nobody on the roster belongs to such an unlisted speaker — never to the closest roster person. Report an unlisted speaker with person null and their name and capacity as the text gives them (unlistedName, unlistedCapacity), on the same evidence and with the same care: the chair giving them the floor by name, a self-introduction ("είμαι ο Γιώργος Φωτίου, κάτοικος Παγκρατίου"), being addressed. A wrong name on a private person is as serious as one on an official.
+Not everyone who speaks is on the roster: residents, employees of the ${authority.authority}, representatives of associations and schools, invited experts, lawyers. A name that matches nobody on the roster belongs to such an unlisted speaker — never to the closest roster person. Report an unlisted speaker with person null and their name and capacity as the text gives them (unlistedName, unlistedCapacity), on the same evidence and with the same care: the chair giving them the floor by name, a self-introduction ("είμαι ο Γιώργος Φωτίου, κάτοικος Παγκρατίου"), being addressed. A wrong name on a private person is as serious as one on an official.
 
 RULES:
 - Use only evidence in the text. Never guess from the party or the topic, and never because a line continues someone else's argument: diarization starts a new label because the voice changed.
@@ -313,6 +317,7 @@ Answer with JSON only.`;
 
 export function buildUserPrompt(args: {
     cityName: string;
+    authorityType?: AuthorityType;
     administrativeBodyName: string | null;
     meetingDate: string;
     roster: RosterPerson[];
@@ -322,6 +327,7 @@ export function buildUserPrompt(args: {
     segments: SpeakerSegmentInput[];
 }): string {
     const { cityName, administrativeBodyName, meetingDate, roster, knownSpeakers, chunkIndex, chunkCount, segments } = args;
+    const authority = authorityTerms(args.authorityType).en;
     const indexById = new Map(roster.map((p, i) => [p.id, i]));
     const rosterLine = (p: RosterPerson) => {
         // A party head is marked: "the head of the party" is a common way to give the floor.
@@ -332,7 +338,7 @@ export function buildUserPrompt(args: {
     const members = roster.filter(p => p.memberOfMeetingBody);
     const others = roster.filter(p => !p.memberOfMeetingBody);
     const rosterBlock = members.length > 0
-        ? `Members of ${administrativeBodyName ?? "the meeting body"} (key — name (roles, party)):\n${members.map(rosterLine).join("\n")}\n\nOther people of the municipality:\n${others.length > 0 ? others.map(rosterLine).join("\n") : "(none)"}`
+        ? `Members of ${administrativeBodyName ?? "the meeting body"} (key — name (roles, party)):\n${members.map(rosterLine).join("\n")}\n\nOther people of the ${authority.authority}:\n${others.length > 0 ? others.map(rosterLine).join("\n") : "(none)"}`
         : `Roster (key — name (roles, party)):\n${roster.map(rosterLine).join("\n")}`;
     const knownLines = knownSpeakers.map(k => {
         const index = indexById.get(k.personId);
@@ -340,7 +346,7 @@ export function buildUserPrompt(args: {
     });
     const transcriptLines = segments.map(s => `[${formatTime(s.start)}] ${s.speakerLabel}: ${s.text}`);
 
-    return `City: ${cityName}
+    return `${authority.label}: ${cityName}
 Body meeting: ${administrativeBodyName ?? "(unknown)"}
 Meeting date: ${meetingDate}
 
@@ -651,7 +657,7 @@ export type IdentifySpeakersResult = ResultWithUsage<SpeakerIdentification[]> & 
  */
 export async function identifySpeakers(args: IdentifySpeakersArgs): Promise<IdentifySpeakersResult> {
     const {
-        cityName, language, meetingDate, roster, segments,
+        cityName, authorityType, language, meetingDate, roster, segments,
         administrativeBodyName = null,
         knownSpeakers = [],
         model = DEFAULT_IDENTIFICATION_MODEL,
@@ -663,7 +669,7 @@ export async function identifySpeakers(args: IdentifySpeakersArgs): Promise<Iden
 
     const labels = labelsInOrder(segments);
     const chunks = chunkSegments(segments, chunkChars);
-    const systemPrompt = buildSystemPrompt(language);
+    const systemPrompt = buildSystemPrompt(language, authorityType);
     const knownLabels = new Set(knownSpeakers.map(k => k.speakerLabel));
     console.log(`Identifying ${labels.length} speakers (${knownSpeakers.length} known) across ${chunks.length} chunk(s) with ${model} at ${effort} effort`);
 
@@ -673,7 +679,7 @@ export async function identifySpeakers(args: IdentifySpeakersArgs): Promise<Iden
     const failedChunks: ChunkFailure[] = [];
 
     const identifyChunk = async (chunk: SpeakerSegmentInput[], index: number): Promise<ChunkIdentification[]> => {
-        const userPrompt = buildUserPrompt({ cityName, administrativeBodyName, meetingDate, roster, knownSpeakers, chunkIndex: index, chunkCount: chunks.length, segments: chunk });
+        const userPrompt = buildUserPrompt({ cityName, authorityType, administrativeBodyName, meetingDate, roster, knownSpeakers, chunkIndex: index, chunkCount: chunks.length, segments: chunk });
         const result = await aiChat<ChunkResponse>({
             model,
             label: `speaker-identification:${index + 1}/${chunks.length}`,

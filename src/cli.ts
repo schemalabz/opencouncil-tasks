@@ -36,7 +36,8 @@ import { applyDiarization } from './tasks/applyDiarization.js';
 import { getExpressAppWithCallbacks, isUsingMinIO, hasRealSpacesCredentials, extractMeetingId } from './utils.js';
 import { CallbackServer } from './lib/CallbackServer.js';
 import PyannoteDiarizer from './lib/PyannoteDiarize.js';
-import { AdministrativeBodyType, AgendaMeeting, AgendaMeetingRecord, CityLanguage, DiarizeResult, TaskWarning } from './types.js';
+import { AdministrativeBodyType, AgendaMeeting, AgendaMeetingRecord, AuthorityType, CityLanguage, DiarizeResult, TaskWarning } from './types.js';
+import { DEFAULT_AUTHORITY_TYPE, parseAuthorityType } from './lib/authority.js';
 import devRouter from './routes/dev.js';
 import { createMuxAsset, deleteMuxAsset, hasMuxCredentials } from './lib/mux.js';
 import { MAX_TRANSCRIPTION_SEGMENT_DURATION_SECONDS } from './lib/ScribeTranscribe.js';
@@ -1098,15 +1099,17 @@ program
     .option('--body <name>', 'The body that holds the meeting, e.g. "Δημοτικό Συμβούλιο"')
     .option('--body-type <type>', 'council, committee or community (default: read from --body)', parseBodyType)
     .option('--time <HH:MM>', "The meeting's start in the city's time")
+    .option('--region', 'The authority is a region, not a municipality')
     .option('--enrich', 'Also run the enrichment phase (geocoding, web context). Default: extraction only')
     .option('-O, --output-file <file>', 'Save the result JSON (the ProcessAgendaResult shape when --enrich, else the extracted subjects and warnings)')
-    .action(async (agendaUrl: string, options: { city: string; date: string; language: CityLanguage; body?: string; bodyType?: AdministrativeBodyType; time?: string; enrich?: boolean; outputFile?: string }) => {
+    .action(async (agendaUrl: string, options: { city: string; date: string; language: CityLanguage; body?: string; bodyType?: AdministrativeBodyType; time?: string; region?: boolean; enrich?: boolean; outputFile?: string }) => {
         try {
             const request = {
                 agendaUrl,
                 people: [],
                 topicLabels: [],
                 cityName: options.city,
+                authorityType: authorityOption(options.region),
                 cityLanguage: options.language,
                 date: options.date,
                 administrativeBody: bodyOption(options.body, options.bodyType),
@@ -1195,6 +1198,11 @@ function bodyOption(name: string | undefined, type: AdministrativeBodyType | und
     return { name, type: type ?? bodyTypeOfLabel(name) ?? 'council' };
 }
 
+/** The kind of the authority of `--region`. */
+function authorityOption(region: boolean | undefined): AuthorityType {
+    return region ? 'region' : DEFAULT_AUTHORITY_TYPE;
+}
+
 function formatMeetingRecord(record: AgendaMeetingRecord | null): string {
     if (!record) return 'not read';
     const field = (value: unknown, evidence: string | null) => `${value ?? '-'}${evidence ? `  «${evidence}»` : ''}`;
@@ -1213,10 +1221,11 @@ program
     .option('--body <name>', 'The body that holds the meeting, e.g. "Δημοτικό Συμβούλιο"')
     .option('--body-type <type>', 'council, committee or community (default: read from --body)', parseBodyType)
     .option('--time <HH:MM>', "The meeting's start in the city's time")
-    .action(async (agendaUrl: string, options: { date: string; body?: string; bodyType?: AdministrativeBodyType; time?: string }) => {
+    .option('--region', 'The authority is a region, not a municipality')
+    .action(async (agendaUrl: string, options: { date: string; body?: string; bodyType?: AdministrativeBodyType; time?: string; region?: boolean }) => {
         try {
             const body = bodyOption(options.body, options.bodyType);
-            const result = await extractAgendaMeetings(await fetchAgendaDocument(agendaUrl), { body, time: options.time, date: options.date });
+            const result = await extractAgendaMeetings(await fetchAgendaDocument(agendaUrl), { body, time: options.time, date: options.date, authorityType: authorityOption(options.region) });
             console.log(`\nMeetings (${result.meetings.length}):`);
             result.meetings.forEach((m, i) => console.log(`  ${i === result.thisMeeting ? '→' : ' '} #${i} ${m.bodyName ?? '?'}${m.time ? ` ${m.time}` : ''}: ${m.kind ?? '-'}, session ${m.sessionNumber ?? '-'}, ${m.format ?? '-'}`));
             console.log(`\n${formatMeetingRecord(result.record)}`);
@@ -1234,9 +1243,10 @@ interface MeetingRecordRead {
     cityId: string;
     meetingId: string;
     agendaUrl: string;
-    /** The body and time the reading picked this meeting by: a change re-reads it. */
+    /** The body, time and kind of authority the reading was made for: a change re-reads it. A reading with no kind was a municipality's. */
     body?: string | null;
     time?: string | null;
+    authorityType?: AuthorityType;
     record: AgendaMeetingRecord | null;
     meetings: AgendaMeeting[];
     thisMeeting: number | null;
@@ -1266,10 +1276,11 @@ program
                     if (!r.error) done.set(key(r), r);
                 }
             }
-            // A reading counts only for the agenda, body and time it was made for.
+            // A reading counts only for the agenda, body, time and kind of authority it was made for.
             const current = (r: MeetingRecordExportRow) => {
                 const read = done.get(key(r));
-                return read !== undefined && read.agendaUrl === r.agendaUrl && (read.body ?? null) === bodyOf(r) && (read.time ?? null) === (r.time ?? null);
+                return read !== undefined && read.agendaUrl === r.agendaUrl && (read.body ?? null) === bodyOf(r) && (read.time ?? null) === (r.time ?? null)
+                    && parseAuthorityType(read.authorityType) === parseAuthorityType(r.authorityType);
             };
             const pending = rows.filter(r => !current(r));
             console.log(`${rows.length} meetings, ${done.size} already read, ${pending.length} to read`);
@@ -1287,7 +1298,7 @@ program
             const worker = async () => {
                 while (next < pending.length) {
                     const row = pending[next++];
-                    const base = { cityId: row.cityId, meetingId: row.meetingId, agendaUrl: row.agendaUrl, body: bodyOf(row), time: row.time ?? null };
+                    const base = { cityId: row.cityId, meetingId: row.meetingId, agendaUrl: row.agendaUrl, body: bodyOf(row), time: row.time ?? null, authorityType: parseAuthorityType(row.authorityType) };
                     try {
                         const result = await readExportedMeeting(row);
                         input += result.extraction.usage.input_tokens;

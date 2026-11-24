@@ -143,7 +143,7 @@ export function caseFromLabel(label: MeetingRecordLabel, row: MeetingRecordExpor
  * the meetings without the subjects (`read-meeting-records`).
  *
  * processAgenda reads the same record in its own extraction call (Opus, with the subjects,
- * `extractAgenda`), under the same `MEETING_RULES` but a different prompt and model, so
+ * `extractAgenda`), under the same `meetingRules()` but a different prompt and model, so
  * these scores say nothing about it. A variant could select that path with a param
  * (`params: { reader: 'processAgenda' }`) whose `run` calls `extractAgenda`; it needs a full
  * ProcessAgendaRequest (city, people, topic labels), which an export row does not carry.

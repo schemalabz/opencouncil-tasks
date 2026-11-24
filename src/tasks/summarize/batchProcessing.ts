@@ -5,7 +5,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { abortableSleep, batchFirstEnabled, getTaskControl, throwIfCancelled } from '../../lib/taskControl.js';
-import { CityLanguage, DiscussionStatus, TopicLabelInfo } from "../../types.js";
+import { AuthorityType, CityLanguage, DiscussionStatus, TopicLabelInfo } from "../../types.js";
 import { IdCompressor, formatTokenCount, generateSubjectUUID } from "../../utils.js";
 import { aiChat, addUsage, NO_USAGE, classifyTransientError, logToFile, type UsageStats } from "../../lib/ai.js";
 import { getBatchProcessingSystemPrompt } from "./prompts.js";
@@ -37,6 +37,7 @@ export async function processBatchesWithState(
         administrativeBodyName?: string;
         requestedSubjects?: string[];
         additionalInstructions?: string;
+        authorityType?: AuthorityType;
     },
     idCompressor: IdCompressor,
     onProgress: (stage: string, progress: number) => void
@@ -122,7 +123,8 @@ export async function processBatchesWithState(
                         topicLabels: request.topicLabels,
                         administrativeBodyName: request.administrativeBodyName,
                         requestedSubjects: request.requestedSubjects,
-                        additionalInstructions: request.additionalInstructions
+                        additionalInstructions: request.additionalInstructions,
+                        authorityType: request.authorityType
                     },
                     conversationState.meetingProgressSummary
                 );
@@ -551,6 +553,7 @@ export async function processSingleBatch(
         administrativeBodyName?: string;
         requestedSubjects?: string[];
         additionalInstructions?: string;
+        authorityType?: AuthorityType;
     },
     previousMeetingProgressSummary?: string
 ): Promise<{ result: BatchProcessingResult; maxTokens: number } & UsageStats> {

@@ -128,7 +128,7 @@ export const fixSpeakerId: Suite<SpeakerIdInput, SpeakerIdOutput> = {
         const input = buildBacktestInput(c.input.data, { anchor, roster });
         if (input.segments.length === 0) throw new Error(`${c.id}: the meeting has no transcript`);
         const run = await identifySpeakers({
-            cityName: input.cityName, language: input.language, meetingDate: input.meetingDate,
+            cityName: input.cityName, authorityType: input.authorityType, language: input.language, meetingDate: input.meetingDate,
             administrativeBodyName: input.administrativeBodyName, roster: input.roster, segments: input.segments,
             knownSpeakers: input.knownSpeakers, ...(chunkChars && { chunkChars }),
         });

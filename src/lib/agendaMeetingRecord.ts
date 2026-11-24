@@ -3,6 +3,7 @@ import { aiChat, type UsageStats } from "./ai.js";
 import { extractPdfPageSet } from "../tasks/utils/pdfPages.js";
 import { fetchAgendaDocument, type AgendaDocument } from "./documentConversion.js";
 import { bodyTypeOfLabel, sameBody } from "../tasks/utils/decisionPartition.js";
+import { DEFAULT_AUTHORITY_TYPE, type AuthorityType } from "./authority.js";
 import type { AdministrativeBodyType, AgendaMeeting, AgendaMeetingRecord, MeetingFormat, MeetingKind, TaskWarning } from "../types.js";
 
 export type MeetingRecordWarningCode = 'MEETING_RECORD_UNREAD' | 'MULTIPLE_MEETINGS';
@@ -11,27 +12,92 @@ const MEETING_KINDS = ['ordinary', 'special', 'accountability', 'activityReport'
 const MEETING_FORMATS = ['inPerson', 'remote', 'hybrid', 'byCirculation'] as const satisfies readonly MeetingFormat[];
 
 /**
+ * What the meeting rules say differently for each kind of authority.
+ *
+ * The articles and the limits are those of the Code for a municipality. Nobody
+ * has checked the equivalent rules for a regional council, so the rules of a
+ * region give each kind by its purpose only, with no article and with no claim
+ * about which body may hold which kind. This task marks nothing on the kind of
+ * a region meeting. The app asks its admins to review a kind that it writes
+ * from the invitation of a region (schemalabz/opencouncil-tasks#124).
+ */
+const MEETING_RULE_TERMS: Record<AuthorityType, {
+    kindSource: string;
+    articles: { ordinary: string; accountability: string; activityReport: string; budget: string; presidencyElection: string; financialAccounts: string; urgent: string };
+    authorityGenitive: string;
+    committeeGenitive: string;
+    specialExamples: string;
+    /** The bodies that hold ordinary meetings only: a full line, or nothing. */
+    ordinaryOnlyBodies: string;
+    twoInvitations: string;
+    municipalityField: string;
+    bodyNameExamples: string;
+    hallExample: string;
+    venueExamples: string;
+    invitationOf: string;
+}> = {
+    municipality: {
+        kindSource: 'όπως το ορίζει ο Κώδικας (ν. 5314/2026)',
+        articles: {
+            ordinary: ' (άρθρα 123–124)',
+            accountability: ' (άρθρο 150)',
+            activityReport: ' (άρθρο 151)',
+            budget: ' (άρθρο 368 §5)',
+            presidencyElection: ' (άρθρα 118–119)',
+            financialAccounts: ' (άρθρα 515, 518)',
+            urgent: ' (άρθρα 125, 143, 167)',
+        },
+        authorityGenitive: 'δημοτικής αρχής',
+        committeeGenitive: 'Δημοτικής Επιτροπής',
+        specialExamples: 'η έκθεση πεπραγμένων της Δημοτικής Επιτροπής, οι εγγραφές στους παιδικούς σταθμούς, ένα πρόγραμμα δράσης',
+        ordinaryOnlyBodies: '\nΗ Δημοτική Επιτροπή και οι Δημοτικές Κοινότητες συνεδριάζουν μόνο τακτικά, κατεπειγόντως ή όχι: το kind τους είναι "ordinary", και για συνεδρίαση για το σχέδιο του προϋπολογισμού ή για την εκλογή αντιπροέδρου.',
+        twoInvitations: 'Δημοτικού Συμβουλίου και Δημοτικής Επιτροπής',
+        municipalityField: 'ο δήμος που καλεί τη συνεδρίαση, όπως τον γράφει το έγγραφο (π.χ. «ΔΗΜΟΣ ΧΑΛΑΝΔΡΙΟΥ», «Δήμος Ρόδου»)',
+        bodyNameExamples: '«Δημοτικό Συμβούλιο», «Δημοτική Επιτροπή», «1η Δημοτική Κοινότητα»',
+        hallExample: '«αίθουσα Δημοτικού Συμβουλίου»',
+        venueExamples: 'αίθουσα, δημαρχείο, κατάστημα',
+        invitationOf: 'ενός οργάνου ελληνικού δήμου (Δημοτικό Συμβούλιο, Δημοτική Επιτροπή, Δημοτική Κοινότητα)',
+    },
+    region: {
+        kindSource: 'όπως το δείχνει ο σκοπός της',
+        articles: { ordinary: '', accountability: '', activityReport: '', budget: '', presidencyElection: '', financialAccounts: '', urgent: '' },
+        authorityGenitive: 'περιφερειακής αρχής',
+        committeeGenitive: 'Περιφερειακής Επιτροπής',
+        specialExamples: 'η έκθεση πεπραγμένων της Περιφερειακής Επιτροπής, ένα πρόγραμμα δράσης',
+        ordinaryOnlyBodies: '',
+        twoInvitations: 'Περιφερειακού Συμβουλίου και Περιφερειακής Επιτροπής',
+        municipalityField: 'η περιφέρεια που καλεί τη συνεδρίαση, όπως τη γράφει το έγγραφο (π.χ. «ΠΕΡΙΦΕΡΕΙΑ ΘΕΣΣΑΛΙΑΣ», «Περιφέρεια Κρήτης»)',
+        bodyNameExamples: '«Περιφερειακό Συμβούλιο», «Περιφερειακή Επιτροπή»',
+        hallExample: '«αίθουσα Περιφερειακού Συμβουλίου»',
+        venueExamples: 'αίθουσα, κτίριο της περιφέρειας, κατάστημα',
+        invitationOf: 'ενός οργάνου ελληνικής περιφέρειας (Περιφερειακό Συμβούλιο, Περιφερειακή Επιτροπή)',
+    },
+};
+
+/**
  * The kinds of meeting, as the Code of Municipalities defines them
- * (schemalabz/opencouncil#150 holds the table). Its own constant because
+ * (schemalabz/opencouncil#150 holds the table). Its own function because
  * opencouncil will send these definitions as rendered text, the way
  * pollDecisions receives the decision conventions; this is the stand-in.
  */
-export const MEETING_KIND_RULES = `kind: το είδος της συνεδρίασης, όπως το ορίζει ο Κώδικας (ν. 5314/2026).
-- "ordinary": τακτική συνεδρίαση, χωρίς ειδικό σκοπό (άρθρα 123–124). Και όταν η πρόσκληση δεν γράφει είδος και δεν τη λέει ειδική. Και η κατεπείγουσα («έκτακτη») συνεδρίαση χωρίς ειδικό σκοπό: "ordinary" με urgent true.
-- "accountability": Ειδική Συνεδρίαση Λογοδοσίας της δημοτικής αρχής (άρθρο 150).
-- "activityReport": Ειδική Συνεδρίαση Απολογισμού Πεπραγμένων της δημοτικής αρχής (άρθρο 151).
-- "budget": η ειδική συνεδρίαση για την ψήφιση του προϋπολογισμού (άρθρο 368 §5).
-- "presidencyElection": η ειδική συνεδρίαση για την εκλογή του προεδρείου (άρθρα 118–119), συχνά μαζί με την εκλογή των μελών της Δημοτικής Επιτροπής.
-- "financialAccounts": η έγκριση των οικονομικών καταστάσεων της χρήσης: ισολογισμός, αποτελέσματα χρήσης, απολογισμός εσόδων και εξόδων, διαχειριστική έκθεση (άρθρα 515, 518). Οι προσκλήσεις τη γράφουν «ειδική».
-- "special": συνεδρίαση που η πρόσκληση λέει «ειδική» για άλλο σκοπό από τους παραπάνω, π.χ. η έκθεση πεπραγμένων της Δημοτικής Επιτροπής, οι εγγραφές στους παιδικούς σταθμούς, ένα πρόγραμμα δράσης.
+export function meetingKindRules(authorityType: AuthorityType = DEFAULT_AUTHORITY_TYPE): string {
+    const t = MEETING_RULE_TERMS[authorityType];
+    return `kind: το είδος της συνεδρίασης, ${t.kindSource}.
+- "ordinary": τακτική συνεδρίαση, χωρίς ειδικό σκοπό${t.articles.ordinary}. Και όταν η πρόσκληση δεν γράφει είδος και δεν τη λέει ειδική. Και η κατεπείγουσα («έκτακτη») συνεδρίαση χωρίς ειδικό σκοπό: "ordinary" με urgent true.
+- "accountability": Ειδική Συνεδρίαση Λογοδοσίας της ${t.authorityGenitive}${t.articles.accountability}.
+- "activityReport": Ειδική Συνεδρίαση Απολογισμού Πεπραγμένων της ${t.authorityGenitive}${t.articles.activityReport}.
+- "budget": η ειδική συνεδρίαση για την ψήφιση του προϋπολογισμού${t.articles.budget}.
+- "presidencyElection": η ειδική συνεδρίαση για την εκλογή του προεδρείου${t.articles.presidencyElection}, συχνά μαζί με την εκλογή των μελών της ${t.committeeGenitive}.
+- "financialAccounts": η έγκριση των οικονομικών καταστάσεων της χρήσης: ισολογισμός, αποτελέσματα χρήσης, απολογισμός εσόδων και εξόδων, διαχειριστική έκθεση${t.articles.financialAccounts}. Οι προσκλήσεις τη γράφουν «ειδική».
+- "special": συνεδρίαση που η πρόσκληση λέει «ειδική» για άλλο σκοπό από τους παραπάνω, π.χ. ${t.specialExamples}.
 - null: μόνο όταν το έγγραφο δεν είναι πρόσκληση και δεν λέει το είδος.
 Η ειδική συνεδρίαση αναγνωρίζεται από τον σκοπό της, όχι μόνο από τη λέξη «ειδική»: μια «Ειδική Συνεδρίαση» με μοναδικό θέμα την εκλογή προεδρείου είναι "presidencyElection", με μοναδικό θέμα τον προϋπολογισμό είναι "budget". Μια τακτική συνεδρίαση που απλώς έχει τον προϋπολογισμό ή τον ισολογισμό ανάμεσα σε άλλα θέματα μένει "ordinary".
 Όταν η πρόσκληση γράφει και «τακτική» και «ειδική» («σε τακτική, ειδική συνεδρίαση», «σε ειδική τακτική συνεδρίαση»), αποφασίζει το «ειδική»: το είδος δίνεται από τον σκοπό της.
-Ο «απολογισμός» μόνος του δεν λέει το είδος: ο απολογισμός πεπραγμένων της δημοτικής αρχής είναι "activityReport", ο οικονομικός απολογισμός (εσόδων και εξόδων, ισολογισμός) είναι "financialAccounts".
-Η Δημοτική Επιτροπή και οι Δημοτικές Κοινότητες συνεδριάζουν μόνο τακτικά, κατεπειγόντως ή όχι: το kind τους είναι "ordinary", και για συνεδρίαση για το σχέδιο του προϋπολογισμού ή για την εκλογή αντιπροέδρου.
+Ο «απολογισμός» μόνος του δεν λέει το είδος: ο απολογισμός πεπραγμένων της ${t.authorityGenitive} είναι "activityReport", ο οικονομικός απολογισμός (εσόδων και εξόδων, ισολογισμός) είναι "financialAccounts".${t.ordinaryOnlyBodies}
 
-urgent: true όταν η πρόσκληση συγκαλεί τη συνεδρίαση κατεπειγόντως: «κατεπείγουσα», «επείγουσα» ή «έκτακτη» συνεδρίαση (άρθρα 125, 143, 167). Συνήθως η πρόσκληση είναι της ίδιας μέρας και το σώμα ψηφίζει για το κατεπείγον. Η κατεπείγουσα συνεδρίαση μπορεί να είναι οποιουδήποτε είδους, π.χ. κατεπείγουσα ειδική συνεδρίαση προϋπολογισμού: "budget" με urgent true. Αλλιώς false.
+urgent: true όταν η πρόσκληση συγκαλεί τη συνεδρίαση κατεπειγόντως: «κατεπείγουσα», «επείγουσα» ή «έκτακτη» συνεδρίαση${t.articles.urgent}. Συνήθως η πρόσκληση είναι της ίδιας μέρας και το σώμα ψηφίζει για το κατεπείγον. Η κατεπείγουσα συνεδρίαση μπορεί να είναι οποιουδήποτε είδους, π.χ. κατεπείγουσα ειδική συνεδρίαση προϋπολογισμού: "budget" με urgent true. Αλλιώς false.
 ΠΡΟΣΟΧΗ: το «ΕΠΕΙΓΟΝ» ή «ΚΑΤΕΠΕΙΓΟΝ» στην κεφαλίδα του εγγράφου είναι χαρακτηρισμός προτεραιότητας του εγγράφου, όχι της συνεδρίασης. Τα «έκτακτα θέματα» ή τα θέματα «εκτός ημερήσιας διάταξης» μιας τακτικής συνεδρίασης δεν την κάνουν κατεπείγουσα.`;
+}
 
 /**
  * The meetings of an agenda as its invitation states them (schemalabz/opencouncil#150).
@@ -41,15 +107,17 @@ urgent: true όταν η πρόσκληση συγκαλεί τη συνεδρί
  * meetings (`extractAgendaMeetings`). One definition keeps the two readers
  * identical.
  */
-export const MEETING_RULES = `ΚΑΝΟΝΕΣ ΓΙΑ ΤΙΣ ΣΥΝΕΔΡΙΑΣΕΙΣ (meetings):
-Για κάθε συνεδρίαση που καλεί το έγγραφο επιστρέφεις ένα στοιχείο στο meetings, με τη σειρά του εγγράφου. Συνήθως είναι μία. Ένα έγγραφο μπορεί να καλεί περισσότερες: μια Ειδική Συνεδρίαση Λογοδοσίας και μια τακτική συνεδρίαση την ίδια μέρα σε άλλη ώρα, ή δύο προσκλήσεις (π.χ. Δημοτικού Συμβουλίου και Δημοτικής Επιτροπής) σε ένα αρχείο. Μια ανακοίνωση αναβολής ή αλλαγής ημερομηνίας που επαναλαμβάνει την αρχική πρόσκληση αφορά την ίδια συνεδρίαση: ένα στοιχείο.
+export function meetingRules(authorityType: AuthorityType = DEFAULT_AUTHORITY_TYPE): string {
+    const t = MEETING_RULE_TERMS[authorityType];
+    return `ΚΑΝΟΝΕΣ ΓΙΑ ΤΙΣ ΣΥΝΕΔΡΙΑΣΕΙΣ (meetings):
+Για κάθε συνεδρίαση που καλεί το έγγραφο επιστρέφεις ένα στοιχείο στο meetings, με τη σειρά του εγγράφου. Συνήθως είναι μία. Ένα έγγραφο μπορεί να καλεί περισσότερες: μια Ειδική Συνεδρίαση Λογοδοσίας και μια τακτική συνεδρίαση την ίδια μέρα σε άλλη ώρα, ή δύο προσκλήσεις (π.χ. ${t.twoInvitations}) σε ένα αρχείο. Μια ανακοίνωση αναβολής ή αλλαγής ημερομηνίας που επαναλαμβάνει την αρχική πρόσκληση αφορά την ίδια συνεδρίαση: ένα στοιχείο.
 
-municipality: ο δήμος που καλεί τη συνεδρίαση, όπως τον γράφει το έγγραφο (π.χ. «ΔΗΜΟΣ ΧΑΛΑΝΔΡΙΟΥ», «Δήμος Ρόδου»). Κενό "" αν δεν φαίνεται.
-bodyName: το όργανο που συνεδριάζει, όπως το γράφει το έγγραφο (π.χ. «Δημοτικό Συμβούλιο», «Δημοτική Επιτροπή», «1η Δημοτική Κοινότητα»). Η αίθουσα της συνεδρίασης («αίθουσα Δημοτικού Συμβουλίου») και ο τίτλος όποιου υπογράφει δεν είναι το όργανο. Κενό "" αν δεν φαίνεται.
+municipality: ${t.municipalityField}. Κενό "" αν δεν φαίνεται.
+bodyName: το όργανο που συνεδριάζει, όπως το γράφει το έγγραφο (π.χ. ${t.bodyNameExamples}). Η αίθουσα της συνεδρίασης (${t.hallExample}) και ο τίτλος όποιου υπογράφει δεν είναι το όργανο. Κενό "" αν δεν φαίνεται.
 date: η ημερομηνία της συνεδρίασης όπως τη γράφει η πρόσκληση, σε μορφή ΕΕΕΕ-ΜΜ-ΗΗ (π.χ. «την 5η Φεβρουαρίου 2025» → "2025-02-05"). Όχι η ημερομηνία του εγγράφου ή του πρωτοκόλλου. Κενό "" αν δεν γράφεται.
 time: η ώρα έναρξης της συνεδρίασης όπως τη γράφει η πρόσκληση, σε μορφή ΩΩ:ΛΛ (π.χ. «ώρα 19:00» → "19:00", «ώρα 8.30 π.μ.» → "08:30"). Κενό "" αν δεν γράφεται.
 
-${MEETING_KIND_RULES}
+${meetingKindRules(authorityType)}
 
 sessionNumber: ο αριθμός της ΣΥΝΕΔΡΙΑΣΗΣ, όπως είναι τυπωμένος. Παραδείγματα: «στην 15η Συνεδρίαση» → 15, «ΣΥΝΕΔΡΙΑΣΗ: 40» → 40, «Συνεδρίαση : 20η / 2026» → 20, «ΤΑΚΤΙΚΗ ΣΥΝΕΔΡΙΑΣΗ (13η)» → 13, «Για την 12η/2026 Τακτική Συνεδρίαση» → 12, «4η Ειδική Συνεδρίαση Λογοδοσίας» → 4.
 ΠΡΟΣΟΧΗ: ο αριθμός της ΠΡΟΣΚΛΗΣΗΣ δεν είναι αριθμός συνεδρίασης, ακόμα κι αν μοιάζει. «Αριθμός Πρόσκλησης: 45-2026», «ΑΡΙΘ. ΠΡΟΣΚΛΗΣΕΩΣ: 48», «ΠΡΟΣΚΛΗΣΗ (Αριθ.37/2026)», «ΠΡΟΣΚΛΗΣΗ ΜΕ ΑΡΙΘΜΟ 18/2026», «41η ΠΡΟΣΚΛΗΣΗ» → null. Ούτε ο αριθμός πρωτοκόλλου (Α.Π., Αρ. Πρωτ.), ούτε ο αριθμός άρθρου νόμου, ούτε η ημερομηνία. Ο αριθμός μετράει μόνο όταν συνοδεύει τη λέξη «συνεδρίαση». Αν δεν υπάρχει τέτοιος αριθμός, null. Μην τον υπολογίζεις και μην τον μαντεύεις.
@@ -59,10 +127,11 @@ format: ο τρόπος διεξαγωγής.
 - "remote": μόνο με τηλεδιάσκεψη (e:Presence, Zoom, Teams, Webex κ.λπ.).
 - "hybrid": μικτή/μεικτή, ή δια ζώσης και με τηλεδιάσκεψη μαζί.
 - "byCirculation": δια περιφοράς (ψηφοφορία με email/τηλέφωνο, χωρίς συνάντηση).
-- Όταν η πρόσκληση λέει ότι η συνεδρίαση γίνεται σε έναν χώρο (αίθουσα, δημαρχείο, κατάστημα) και δεν αναφέρει τηλεδιάσκεψη για τα μέλη, είναι "inPerson". Η μετάδοση της συνεδρίασης στο κοινό (live, YouTube, ιστοσελίδα) δεν είναι τηλεδιάσκεψη.
+- Όταν η πρόσκληση λέει ότι η συνεδρίαση γίνεται σε έναν χώρο (${t.venueExamples}) και δεν αναφέρει τηλεδιάσκεψη για τα μέλη, είναι "inPerson". Η μετάδοση της συνεδρίασης στο κοινό (live, YouTube, ιστοσελίδα) δεν είναι τηλεδιάσκεψη.
 - null: όταν η πρόσκληση δεν λέει ούτε τρόπο ούτε χώρο.
 
 kindEvidence, urgentEvidence, sessionNumberEvidence, formatEvidence: η φράση του εγγράφου (έως 20 λέξεις, αυτούσια) από την οποία διάβασες την τιμή. Κενό "" όταν η τιμή είναι null ή το urgent false, και για το kind "ordinary" όταν η πρόσκληση δεν γράφει καθόλου είδος.`;
+}
 
 // The API rejects an enum next to `type: ["string", "null"]`.
 const nullableEnum = (values: readonly string[]) => ({ anyOf: [{ type: "string", enum: [...values] }, { type: "null" }] });
@@ -129,9 +198,11 @@ const MEETINGS_ONLY_SCHEMA = {
     additionalProperties: false,
 };
 
-const MEETINGS_ONLY_SYSTEM_PROMPT = `Διαβάζεις την πρόσκληση σε συνεδρίαση ενός οργάνου ελληνικού δήμου (Δημοτικό Συμβούλιο, Δημοτική Επιτροπή, Δημοτική Κοινότητα) και επιστρέφεις τις συνεδριάσεις που καλεί, όπως τις γράφει η πρόσκληση. Δεν εξάγεις θέματα.
+export function meetingsOnlySystemPrompt(authorityType: AuthorityType = DEFAULT_AUTHORITY_TYPE): string {
+    return `Διαβάζεις την πρόσκληση σε συνεδρίαση ${MEETING_RULE_TERMS[authorityType].invitationOf} και επιστρέφεις τις συνεδριάσεις που καλεί, όπως τις γράφει η πρόσκληση. Δεν εξάγεις θέματα.
 
-${MEETING_RULES}`;
+${meetingRules(authorityType)}`;
+}
 
 /** The first pages of a PDF, as base64. A PDF that pdf-lib cannot read goes whole. */
 async function headerPages(base64: string, pages = HEADER_PAGES): Promise<string> {
@@ -161,7 +232,7 @@ export type AgendaMeetingsReading = {
  */
 export async function extractAgendaMeetings(
     document: AgendaDocument,
-    { date, ...meeting }: MeetingOfRequest & { date: string },
+    { date, authorityType, ...meeting }: MeetingOfRequest & { date: string; authorityType?: AuthorityType },
 ): Promise<AgendaMeetingsReading> {
     const html = document.kind === 'html'
         ? `\n\nΗ αρχή του εγγράφου (μετατροπή από αρχείο Word σε HTML):\n\n${document.html.slice(0, HEADER_HTML_CHARS)}\n`
@@ -169,7 +240,7 @@ export async function extractAgendaMeetings(
     const result = await aiChat<{ meetings: RawAgendaMeeting[] }>({
         model: "claude-sonnet-5-5",
         label: "agenda-meetings",
-        systemPrompt: MEETINGS_ONLY_SYSTEM_PROMPT,
+        systemPrompt: meetingsOnlySystemPrompt(authorityType),
         userPrompt: `Το έγγραφο αφορά συνεδρίαση στις ${date.slice(0, 10)}.${html}\n\nΕπίστρεψε κάθε συνεδρίαση που καλεί το έγγραφο.`,
         documentBase64: document.kind === 'pdf' ? await headerPages(document.base64) : undefined,
         maxTokens: 4000,
@@ -193,6 +264,8 @@ export interface MeetingRecordExportRow {
     time?: string;
     agendaUrl: string;
     administrativeBody: { name: string; type: AdministrativeBodyType } | null;
+    /** The kind of the authority. A row with none is a municipality's. */
+    authorityType?: AuthorityType;
 }
 
 /**
@@ -201,7 +274,7 @@ export interface MeetingRecordExportRow {
  */
 export async function readExportedMeeting(row: MeetingRecordExportRow): Promise<AgendaMeetingsReading> {
     const document = await fetchAgendaDocument(row.agendaUrl);
-    return extractAgendaMeetings(document, { body: row.administrativeBody ?? { type: 'council' }, time: row.time, date: row.date });
+    return extractAgendaMeetings(document, { body: row.administrativeBody ?? { type: 'council' }, time: row.time, date: row.date, authorityType: row.authorityType });
 }
 
 /**

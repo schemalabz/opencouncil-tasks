@@ -3,7 +3,8 @@
  * configuration; the entries below preserve customized wording for existing
  * languages. Adding a language does not require another registry entry.
  */
-import { CityLanguage } from "../types.js";
+import { AuthorityType, CityLanguage } from "../types.js";
+import { isRegion } from "./authority.js";
 
 export const DEFAULT_LANGUAGE: CityLanguage = 'el';
 
@@ -20,6 +21,8 @@ export interface LanguageConfig {
     outputDirective: string;
     /** Fallback administrative-body name when the request omits one. */
     defaultAdministrativeBodyName: string;
+    /** The same fallback for a region. Only a language whose country has regions on opencouncil sets it. */
+    regionAdministrativeBodyName?: string;
     /** Failure fallback; customized languages have localized wording. */
     summaryErrorText: string;
     /** Exact localized heading when customized; otherwise the prompt requests a translation. */
@@ -249,6 +252,7 @@ export const LANGUAGES: Record<string, LanguageConfig> = {
         promptName: 'Greek',
         outputDirective: '',
         defaultAdministrativeBodyName: 'Δημοτικό Συμβούλιο',
+        regionAdministrativeBodyName: 'Περιφερειακό Συμβούλιο',
         summaryErrorText: 'Σφάλμα κατά τη δημιουργία περίληψης.',
         mainIssuesHeading: 'Κύρια ζητήματα',
         fixTranscriptNotes: EL_FIX_TRANSCRIPT_NOTES,
@@ -390,6 +394,12 @@ export function isCityLanguage(value: string): value is CityLanguage {
 /** Normalize provider language codes, retaining an unknown provider value for diagnostics. */
 export function cityLanguageForScribeCode(code: string): string {
     return resolveLanguage(code)?.locale.language ?? code;
+}
+
+/** The body that meets when a request names none: the council of the municipality, or of the region. */
+export function defaultAdministrativeBodyName(language: CityLanguage | undefined, authorityType?: AuthorityType): string {
+    const config = getLanguageConfig(language);
+    return (isRegion(authorityType) && config.regionAdministrativeBodyName) || config.defaultAdministrativeBodyName;
 }
 
 const genericConfigs = new Map<string, LanguageConfig>();

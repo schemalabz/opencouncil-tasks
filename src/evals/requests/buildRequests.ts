@@ -1,4 +1,4 @@
-import type { CityLanguage, CountryCode, FixTranscriptRequest, Location, PollDecisionsRequest, ProcessAgendaRequest, RequestOnTranscript, SummarizeRequest, TopicLabelInfo } from '../../types.js';
+import type { AuthorityType, CityLanguage, CountryCode, FixTranscriptRequest, Location, PollDecisionsRequest, ProcessAgendaRequest, RequestOnTranscript, SummarizeRequest, TopicLabelInfo } from '../../types.js';
 import { describePerson, maySpeakAtMeeting, type MeetingApiRole } from '../suites/speakerBacktest.js';
 
 /**
@@ -64,7 +64,7 @@ export type PublicMeetingPayload = {
         administrativeBodyId: string | null;
         administrativeBody: { id: string; name: string; type: string; diavgeiaUnitIds: string[]; decisionConventions?: unknown } | null;
     };
-    city: { name: string; language: CityLanguage; realm: string; timezone: string; diavgeiaUid: string | null };
+    city: { name: string; language: CityLanguage; realm: string; timezone: string; diavgeiaUid: string | null; authorityType: AuthorityType };
     people: PublicPerson[];
     subjects: PublicSubject[];
     transcript: PublicSegment[];
@@ -218,6 +218,7 @@ function requestOnTranscript(data: PublicMeetingPayload, topics: PublicTopic[], 
         }),
         topicLabels: topics.map((t): TopicLabelInfo => ({ name: t.name, description: t.description })),
         cityName: data.city.name,
+        authorityType: data.city.authorityType,
         cityLanguage: data.city.language,
         country: realmCountry(data.city.realm),
         administrativeBodyName: data.meeting.administrativeBody?.name || null,
@@ -286,6 +287,7 @@ export function buildProcessAgendaRequest(data: PublicMeetingPayload, topics: Pu
         people: [...people.values()],
         topicLabels: topics.map(t => ({ name: t.name, description: t.description })),
         cityName: data.city.name,
+        authorityType: data.city.authorityType,
         cityLanguage: data.city.language,
         country: realmCountry(data.city.realm),
     };

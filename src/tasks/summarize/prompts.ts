@@ -4,9 +4,10 @@
  */
 
 import { IMPORTANCE_GUIDELINES } from "../../lib/importanceGuidelines.js";
+import { authorityTerms, locationTextRule } from "../../lib/authority.js";
 import { getLanguageConfig, languageDirectiveSuffix } from "../../lib/language.js";
 import { formatTopicLabels } from "../../lib/promptUtils.js";
-import { CityLanguage, TopicLabelInfo } from "../../types.js";
+import { AuthorityType, CityLanguage, TopicLabelInfo } from "../../types.js";
 
 /**
  * Markdown reference format instructions (used in multiple prompts)
@@ -68,7 +69,9 @@ export function getBatchProcessingSystemPrompt(metadata: {
   topicLabels: TopicLabelInfo[];
   administrativeBodyName?: string;
   additionalInstructions?: string;
+  authorityType?: AuthorityType;
 }): string {
+  const authority = authorityTerms(metadata.authorityType).el;
   const bodyInfo = metadata.administrativeBodyName
     ? `\nΌργανο: ${metadata.administrativeBodyName}`
     : '';
@@ -94,10 +97,10 @@ ${mainIssuesHeading}:
   }
 
   return `
-ΣΤΟΧΟΣ: Μετατρέπεις συνεδριάσεις δημοτικών οργάνων σε δομημένα δεδομένα που επιτρέπουν
+ΣΤΟΧΟΣ: Μετατρέπεις συνεδριάσεις ${authority.bodiesGenitive} σε δομημένα δεδομένα που επιτρέπουν
 στους πολίτες να κατανοήσουν τι συζητήθηκε, ποιος μίλησε, και τι αποφασίστηκε. Βλέπεις ένα batch (κομμάτι) της συζήτησης κάθε φορά.
 
-Πόλη: ${metadata.cityName}${bodyInfo}
+${authority.label}: ${metadata.cityName}${bodyInfo}
 Ημερομηνία: ${metadata.date}
 
 ΕΞΟΔΟΣ JSON (3 πεδία):
@@ -153,7 +156,7 @@ ${formattedTopicLabels}
   * Αν βλέπεις subject με agendaItemIndex: 1, αυτό είναι το ΠΡΩΤΟ θέμα της διάταξης
   * ΜΗΝ νομίζεις ότι λείπει το "item 0" - το 1 είναι το πρώτο
 
-ΔΟΜΗ ΣΥΝΕΔΡΙΑΣΗΣ ΔΗΜΟΤΙΚΟΥ ΣΥΜΒΟΥΛΙΟΥ:
+ΔΟΜΗ ΣΥΝΕΔΡΙΑΣΗΣ ${authority.councilGenitiveUpper}:
 
 Τυπική σειρά θεμάτων σε συνεδριάσεις:
 1. Προ ημερησίας διάταξης (BEFORE_AGENDA) - Ανακοινώσεις, ερωτήματα χωρίς ψηφοφορία
@@ -189,17 +192,17 @@ ${formattedTopicLabels}
 Παραδείγματα:
 
 ΛΑΘΟΣ:
-Πρόεδρος: "Το επόμενο θέμα της ημερησίας διάταξης είναι η έγκριση του προϋπολογισμού. Τον λόγο έχει ο αντιδήμαρχος."
+Πρόεδρος: "Το επόμενο θέμα της ημερησίας διάταξης είναι η έγκριση του προϋπολογισμού. Τον λόγο έχει ο ${authority.deputy}."
 → ΜΗΝ βάλεις τον πρόεδρο ως εισηγητή
 
 ΣΩΣΤΟ:
-Αντιδήμαρχος: "Παρουσιάζω την εισήγηση για τον προϋπολογισμό 2024..."
-→ Ο αντιδήμαρχος είναι ο εισηγητής
+${authority.deputyTitle}: "Παρουσιάζω την εισήγηση για τον προϋπολογισμό 2024..."
+→ Ο ${authority.deputy} είναι ο εισηγητής
 
 Διακρίνεις τον εισηγητή από:
 - Παρουσιάζει λεπτομερώς το θέμα (όχι απλά το ανακοινώνει)
 - Εξηγεί την εισήγηση, τα στοιχεία, την πρόταση
-- Συνήθως αρμόδιος αντιδήμαρχος, επικεφαλής παράταξης, ή γραμματέας
+- Συνήθως αρμόδιος ${authority.deputy}, επικεφαλής παράταξης, ή γραμματέας
 
 ΑΝ ΕΝΗΜΕΡΩΝΕΙΣ υπάρχον IN_AGENDA subject:
 - Το introducedByPersonId προέρχεται από την επίσημη ημερήσια διάταξη
@@ -279,12 +282,10 @@ ${MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS}
 
 locationText:
 - Συμπλήρωσε ΜΟΝΟ αν υπάρχει συγκεκριμένη τοποθεσία
-- Διεύθυνση: «Λεωφόρος Μεσογείων 45», «Rue de la République 12»
-- Γειτονιά: «Εξάρχεια», «Novi Beograd»
-- Επώνυμος δημόσιος χώρος: «Πλατεία Συντάγματος», «Trg republike»
-- Γράψε ΜΟΝΟ το τοπωνύμιο, όπως ακριβώς ειπώθηκε. ΜΗΝ προσθέτεις πόλη, περιοχή ή χώρα — μπαίνουν αυτόματα αργότερα
+${locationTextRule(metadata.authorityType).examples}
+- ${locationTextRule(metadata.authorityType).spoken}
 - ΕΞΑΙΡΕΣΗ ΓΛΩΣΣΑΣ (ισχύει ΜΟΝΟ για το locationText, όχι για τα υπόλοιπα πεδία): κράτα το τοπωνύμιο στη γλώσσα και το αλφάβητο που χρησιμοποιεί το πρακτικό — ΜΗΝ μεταφράζεις και ΜΗΝ μεταγράφεις μεταξύ αλφαβήτων
-- null αν αφορά όλο το δήμο (προϋπολογισμός)
+- null αν αφορά ${authority.wholeAuthority} (προϋπολογισμός)
 
 introducedByPersonId:
 - Το speakerId (compressed ID) του εισηγητή που παρουσιάζει το θέμα
@@ -326,7 +327,7 @@ ${IMPORTANCE_GUIDELINES}
 ΒΗΜΑ 4: ΓΙΑ ΚΑΘΕ utterance, εκχώρησε status και subjectId
 
 ΠΑΡΑΔΕΙΓΜΑ Α - Νέο θέμα προ ημερησίας:
-Βλέπεις: "Ανακοίνωση για κυκλοφοριακό πρόβλημα στη Μεσογείων. Ο δήμαρχος εξηγεί..."
+Βλέπεις: "Ανακοίνωση για κυκλοφοριακό πρόβλημα στη Μεσογείων. Ο ${authority.head} εξηγεί..."
 → ΜΕΡΟΣ 2: δημιούργησε subject {id: "new-001", name: "Κυκλοφοριακό Μεσογείων", type: BEFORE_AGENDA, ...}
 → ΜΕΡΟΣ 3: ταξινόμησε κάθε utterance: {utteranceId: "utt-123", status: "SUBJECT_DISCUSSION", subjectId: "new-001"}
 
@@ -468,7 +469,7 @@ ${metadata.additionalInstructions || ''}
 /**
  * System prompt for generating speaker contributions for a specific subject.
  */
-export function getSpeakerContributionsSystemPrompt(administrativeBodyName?: string, cityLanguage?: CityLanguage): string {
+export function getSpeakerContributionsSystemPrompt(administrativeBodyName?: string, cityLanguage?: CityLanguage, authorityType?: AuthorityType): string {
   const bodyInfo = administrativeBodyName
     ? ` Το όργανο είναι: ${administrativeBodyName}.`
     : '';
@@ -478,7 +479,7 @@ export function getSpeakerContributionsSystemPrompt(administrativeBodyName?: str
   }
 
   return `
-Δημιουργείς περιεκτικές περιλήψεις τοποθετήσεων συμβούλων σε συλλογικά αποφασιστικά όργανα (π.χ. δημοτικά συμβούλια, δημοτικές επιτροπές, δημοτικές κοινότητες).${bodyInfo}
+Δημιουργείς περιεκτικές περιλήψεις τοποθετήσεων συμβούλων σε συλλογικά αποφασιστικά όργανα (π.χ. ${authorityTerms(authorityType).el.bodyExamples}).${bodyInfo}
 
 ═══════════════════════════════════════════════════════════════════════════
 ΣΤΟΧΟΣ

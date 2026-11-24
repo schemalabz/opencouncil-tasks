@@ -1,11 +1,12 @@
 import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
 import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
+import { authorityTerms, locationTextRule } from "../lib/authority.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
 import { fetchAgendaDocument, type AgendaDocument } from "../lib/documentConversion.js";
 import { AGENDA_ITEM_TITLE_RULES, normalizeAgendaItemTitle } from "../lib/agendaItemTitle.js";
-import { MEETING_RULES, MEETING_SCHEMA, markBody, normalizeMeeting, pickMeeting, type MeetingRecordWarningCode, type RawAgendaMeeting } from "../lib/agendaMeetingRecord.js";
-import { AgendaMeeting, AgendaMeetingRecord, CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
+import { meetingRules, MEETING_SCHEMA, markBody, normalizeMeeting, pickMeeting, type MeetingRecordWarningCode, type RawAgendaMeeting } from "../lib/agendaMeetingRecord.js";
+import { AgendaMeeting, AgendaMeetingRecord, AuthorityType, CityLanguage, CountryCode, ProcessAgendaRequest, ProcessAgendaResult, Subject, TaskWarning, TopicLabelInfo } from "../types.js";
 
 export type AgendaWarningCode =
     | MeetingRecordWarningCode
@@ -76,7 +77,7 @@ export const extractAgenda = async (
     const result = await aiChat<{ meetings: RawAgendaMeeting[]; subjects: Omit<ExtractedSubject, "speakerContributions">[] }>({
         model: "claude-opus-4-6",
         label: "agenda-extraction",
-        systemPrompt: getSystemPrompt(request.cityLanguage),
+        systemPrompt: getSystemPrompt(request.cityLanguage, request.authorityType),
         userPrompt: getUserPrompt(agenda, request),
         documentBase64: agenda.kind === 'pdf' ? agenda.base64 : undefined,
         outputFormat: {
@@ -183,7 +184,8 @@ export const processAgenda: Task<ProcessAgendaRequest, ProcessAgendaResult> = as
             request.cityName,
             request.cityLanguage,
             request.country,
-            request.date
+            request.date,
+            request.authorityType
         ).then(r => {
             onProgress("enrichment", (i + 1) / extracted.length);
             return r;
@@ -225,7 +227,8 @@ export const extractedSubjectToApiSubject = async (
     cityName: string,
     cityLanguage: CityLanguage,
     country: CountryCode | undefined,
-    date: string
+    date: string,
+    authorityType?: AuthorityType
 ) => {
     const id = generateSubjectUUID(subject, 36);
 
@@ -250,7 +253,8 @@ export const extractedSubjectToApiSubject = async (
         cityName,
         cityLanguage,
         country,
-        date
+        date,
+        authorityType
     });
 }
 
@@ -533,8 +537,9 @@ export type ExtractedSubject = {
     meetingIndex: number;
 }
 
-export const getSystemPrompt = (cityLanguage: CityLanguage) => {
-    return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις δημοτικών συμβουλίων διαφόρων πόλεων. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένα object με δύο πεδία: meetings, οι συνεδριάσεις που καλεί το έγγραφο (βλ. τους κανόνες για τις συνεδριάσεις παρακάτω), και subjects, ένας πίνακας (array) με objects με το ακόλουθο structure:
+export const getSystemPrompt = (cityLanguage: CityLanguage, authorityType?: AuthorityType) => {
+    const authority = authorityTerms(authorityType).el;
+    return `Είσαι ένα σύστημα που εξάγει θέματα από τις ημερήσιες διατάξεις ${authority.councilsOfAuthoritiesGenitive}. Οι απαντήσεις σου πρέπει να είναι μόνο JSON, και συγκεκριμένα ένα object με δύο πεδία: meetings, οι συνεδριάσεις που καλεί το έγγραφο (βλ. τους κανόνες για τις συνεδριάσεις παρακάτω), και subjects, ένας πίνακας (array) με objects με το ακόλουθο structure:
 
 {
     name: string; // Ένας σύντομος τίτλος για το θέμα (2-6 λέξεις)
@@ -549,9 +554,9 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
     agendaSectionIndex: number | null; // Η σειρά της ενότητας στην οποία ανήκει το θέμα (1 για την πρώτη ενότητα του εγγράφου). null όταν το έγγραφο έχει μία μόνο αριθμημένη λίστα.
     agendaSectionTitle: string | null; // Η επικεφαλίδα της ενότητας ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένη, σε μία γραμμή. null όταν το agendaSectionIndex είναι null.
     locationText:  string | null; // Αν το θέμα αναφέρεται σε κάποια συγκεκριμένη τοποθεσία (π.χ. διεύθυνση, δρόμος, γειτονιά, ή συγκεκριμένη επιχείρηση / δημόσια δομή), η διεύθυνση του θέματος.
-                          // Γράψε ΜΟΝΟ το τοπωνύμιο· ΜΗΝ προσθέτεις πόλη, περιοχή ή χώρα — μπαίνουν αυτόματα αργότερα.
+                          // ${locationTextRule(authorityType).written}
                           // ΕΞΑΙΡΕΣΗ ΓΛΩΣΣΑΣ (ισχύει ΜΟΝΟ για το locationText και το agendaItemTitle, όχι για τα υπόλοιπα πεδία): κράτα το τοπωνύμιο στη γλώσσα και το αλφάβητο που χρησιμοποιεί το έγγραφο — ΜΗΝ μεταφράζεις και ΜΗΝ μεταγράφεις μεταξύ αλφαβήτων.
-                          // Αν το θέμα δεν έχει τοποθεσία, ή αφορά ολόκληρο το δήμο (π.χ. ο προϋπολογισμός του Δήμου), τότε null
+                          // Αν το θέμα δεν έχει τοποθεσία, ή αφορά ${authority.wholeAuthorityWithExample}, τότε null
     introducedByPersonId: string | null; // Το id του εισηγητή του θέματος, αν αναφέρετε σαφώς στη διάταξη
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
     topicImportance: 'doNotNotify' | 'normal' | 'high'; // Η σημασία του θέματος για ειδοποιήσεις
@@ -566,10 +571,10 @@ ${AGENDA_ITEM_TITLE_RULES}
 ΚΑΝΟΝΕΣ ΓΙΑ ΤΗΝ ΑΡΙΘΜΗΣΗ ΚΑΙ ΤΙΣ ΕΝΟΤΗΤΕΣ:
 - Το agendaItemIndex είναι ο αριθμός που είναι τυπωμένος δίπλα στο θέμα. ΜΗΝ αλλάζεις την αρίθμηση και ΜΗΝ συνεχίζεις την αρίθμηση από τη μία ενότητα στην επόμενη. Αν δύο ενότητες ξεκινούν και οι δύο από το 1, τα δύο πρώτα θέματά τους παίρνουν και τα δύο agendaItemIndex 1.
 - Ενότητα είναι μια επικεφαλίδα που ομαδοποιεί αριθμημένα θέματα και κάτω από την οποία η αρίθμηση ξεκινά ξανά, ή που αλλάζει το νόημα των θεμάτων που ακολουθούν. Παραδείγματα: «ΓΕΝΙΚΑ ΘΕΜΑΤΑ» και «ΠΑΡΑΤΑΣΕΙΣ ΩΡΑΡΙΟΥ ΜΟΥΣΙΚΗΣ»· «Α. Θέματα σύμφωνα με την παρ.2» και «Β. Τακτικά θέματα»· μια δεύτερη ΠΡΟΣΚΛΗΣΗ μέσα στο ίδιο έγγραφο με δικά της ΘΕΜΑΤΑ.
-- Το agendaSectionIndex είναι η σειρά της ενότητας μέσα στο έγγραφο, ξεκινώντας από το 1. Το agendaSectionTitle είναι η επικεφαλίδα ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένη στο έγγραφο, σε μία γραμμή, αντιγραμμένη αυτούσια. ΜΗΝ συνθέτεις δικό σου τίτλο, ΜΗΝ συνδυάζεις δύο γραμμές και ΜΗΝ προσθέτεις αριθμό πρόσκλησης, ώρα ή άλλα στοιχεία που δεν βρίσκονται στη γραμμή της επικεφαλίδας. Όταν το έγγραφο περιέχει περισσότερες από μία προσκλήσεις, χρησιμοποίησε τη γραμμή που ονομάζει το όργανο της κάθε πρόσκλησης, π.χ. «ΔΗΜΟΤΙΚΗ ΕΠΙΤΡΟΠΗ».
+- Το agendaSectionIndex είναι η σειρά της ενότητας μέσα στο έγγραφο, ξεκινώντας από το 1. Το agendaSectionTitle είναι η επικεφαλίδα ΟΠΩΣ ΑΚΡΙΒΩΣ είναι γραμμένη στο έγγραφο, σε μία γραμμή, αντιγραμμένη αυτούσια. ΜΗΝ συνθέτεις δικό σου τίτλο, ΜΗΝ συνδυάζεις δύο γραμμές και ΜΗΝ προσθέτεις αριθμό πρόσκλησης, ώρα ή άλλα στοιχεία που δεν βρίσκονται στη γραμμή της επικεφαλίδας. Όταν το έγγραφο περιέχει περισσότερες από μία προσκλήσεις, χρησιμοποίησε τη γραμμή που ονομάζει το όργανο της κάθε πρόσκλησης, π.χ. «${authority.committeeUpper}».
 - Όταν το έγγραφο έχει μία μόνο αριθμημένη λίστα θεμάτων, βάλε null και στα δύο πεδία σε ΟΛΑ τα θέματα. ΜΗΝ επινοείς ενότητα.
 
-${MEETING_RULES}
+${meetingRules(authorityType)}
 
 Όταν το έγγραφο καλεί περισσότερες από μία συνεδριάσεις, εξάγεις τα θέματα ΟΛΩΝ των συνεδριάσεων και δίνεις σε κάθε θέμα το meetingIndex της συνεδρίασής του. Τα θέματα κάθε συνεδρίασης είναι και δική της ενότητα (agendaSectionIndex, agendaSectionTitle), όπως ορίζουν οι κανόνες για τις ενότητες για μια δεύτερη πρόσκληση στο ίδιο έγγραφο: δύο συνεδριάσεις δεν μοιράζονται ποτέ ενότητα.
 
@@ -581,6 +586,7 @@ export const getUserPrompt = (agenda: AgendaDocument, request: Omit<ProcessAgend
     // told to the model: told, it reads only that meeting and drops the items
     // of the others in the same document.
     const { cityName, cityLanguage, date, people, topicLabels } = request;
+    const authority = authorityTerms(request.authorityType).el;
     const formattedTopics = formatTopicLabels(topicLabels);
 
     // A PDF agenda rides along as a document block; a .docx was converted to
@@ -589,7 +595,7 @@ export const getUserPrompt = (agenda: AgendaDocument, request: Omit<ProcessAgend
         ? `\n\nΤο έγγραφο της ημερήσιας διάταξης (μετατροπή από αρχείο Word σε HTML — η δομή του, επικεφαλίδες, λίστες και πίνακες, διατηρείται):\n\n${agenda.html}\n`
         : '';
 
-    return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη της πόλης ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.${convertedDocument}
+    return `Πρέπει να εξάγεις θέματα από την ημερήσια διάταξη ${authority.ofTheAuthority} ${cityName} για τη συνεδρίαση που θα γίνει στις ${date}.${convertedDocument}
 
 ΣΗΜΑΝΤΙΚΟ: Η συνεδρίαση ΔΕΝ έχει γίνει ακόμα - αυτή είναι η ημερήσια διάταξη για μελλοντική συνεδρίαση. Γράψε τις περιγραφές με τρόπο που δείχνει ότι αυτά είναι θέματα ΠΡΟΣ συζήτηση, όχι θέματα που συζητούνται αυτή τη στιγμή.
 
@@ -597,8 +603,8 @@ export const getUserPrompt = (agenda: AgendaDocument, request: Omit<ProcessAgend
 ${JSON.stringify(people, null, 2)}
 
 ΣΗΜΑΝΤΙΚΟ - Αντιστοίχιση εισηγητών:
-- Η ημερήσια διάταξη συχνά αναφέρει εισηγητές με ΡΟΛΟ (π.χ. "ΕΙΣΗΓΗΤΗΣ: ΔΗΜΑΡΧΟΣ", "ΕΙΣΗΓΗΤΗΣ: ΑΝΤΙΔΗΜΑΡΧΟΣ")
-- Βρες το άτομο στη λίστα με το αντίστοιχο role (case-insensitive: "ΔΗΜΑΡΧΟΣ" = "Δήμαρχος")
+- Η ημερήσια διάταξη συχνά αναφέρει εισηγητές με ΡΟΛΟ (π.χ. "ΕΙΣΗΓΗΤΗΣ: ${authority.headUpper}", "ΕΙΣΗΓΗΤΗΣ: ${authority.deputyUpper}")
+- Βρες το άτομο στη λίστα με το αντίστοιχο role (case-insensitive: "${authority.headUpper}" = "${authority.headTitle}")
 - Χρησιμοποίησε το id του ατόμου, όχι το όνομα του ρόλου
 - Αν δεν βρίσκεις αντιστοίχιση, βάλε null
 
