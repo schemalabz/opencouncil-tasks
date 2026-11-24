@@ -375,7 +375,7 @@ export interface ProcessAgendaResult {
 /*
  * Transcript
  * The shape follows Gladia's v2 response format, which downstream consumers
- * (opencouncil) depend on. Transcription now runs on ElevenLabs Scribe v2 —
+ * (opencouncil) depend on. Transcription now runs on ElevenLabs Scribe v3 —
  * src/lib/ScribeTranscribe.ts maps Scribe responses into this shape.
  */
 

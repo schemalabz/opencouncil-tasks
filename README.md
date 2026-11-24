@@ -187,7 +187,7 @@ The service uses environment variables for configuration. Not all variables are 
 
 ### External Services
 - `ANTHROPIC_API_KEY` - Required for summarization and content generation
-- `ELEVENLABS_API_KEY` - Required for transcription (ElevenLabs Scribe v2; the key needs the `speech_to_text` permission)
+- `ELEVENLABS_API_KEY` - Required for transcription (ElevenLabs Scribe v3; the key needs the `speech_to_text` permission)
 - `PERPLEXITY_API_KEY` - Required for agenda processing
 - `MUX_TOKEN_ID` and `MUX_TOKEN_SECRET` - Required for video processing
 - `GOOGLE_API_KEY` - Required for geocoding

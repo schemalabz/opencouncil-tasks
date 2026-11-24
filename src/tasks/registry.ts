@@ -29,7 +29,8 @@ export const TASKS = {
             // existing mean confidence, all derived from Scribe's per-word logprobs
             // v5: provider language codes are normalized for every recognized language.
             // v6: accepts yt-dlp sources; results carry source metadata and source errors carry mediaFailure.
-            version: 6,
+            // v7: transcription uses the Scribe v3 model (was v2); the transcript text changes.
+            version: 7,
         },
     },
     summarize: {

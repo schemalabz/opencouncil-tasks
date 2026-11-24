@@ -326,7 +326,7 @@ class ScribeTranscriber {
         const apiKey = getScribeKey();
 
         const form = new FormData();
-        form.append("model_id", "scribe_v2");
+        form.append("model_id", "scribe_v3");
         form.append("language_code", languageCode);
         // Strips fillers and false starts, matching how transcript correctors write the record
         form.append("no_verbatim", "true");
