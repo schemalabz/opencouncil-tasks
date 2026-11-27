@@ -15,6 +15,8 @@ flowchart TD
   C --> |segmentSummaries, subjects, utteranceStatuses| M[Phase 1.5: Subject Merge]
   M --> |deduplicated subjects| D[Phase 2: Speaker Contributions]
   D --> |speakerContributions per subject| E[Phase 3: Enrichment]
+  D --> |all the speech of each discussed subject| W[Phase 2.5: Subject Descriptions]
+  W --> |description, importance| F
   E --> |geocoding, web context| F[Phase 4: Validation]
   F --> G[decompressIds]
   G --> H[SummarizeResult]
@@ -52,6 +54,11 @@ Each batch receives the current subject list and a `meetingProgressSummary` (Gre
 
 #### Subject Merge (Phase 1.5)
 After batch processing, subjects created independently across batches may overlap or fragment. `mergeSubjects` uses an LLM call to deduplicate them. Only `BEFORE_AGENDA` subjects can be merged away; `IN_AGENDA` and `OUT_OF_AGENDA` subjects are always preserved. Utterance statuses referencing merged subjects are remapped to the surviving subject.
+
+#### Subject Descriptions and Importance (Phase 2.5)
+The batch step reads the meeting in parts, so its description of a subject can miss whole rounds of the debate, and it cannot tell a debated subject from one that passed without a word. `writeSubjectDescriptions` makes one call for each primary subject somebody spoke on. The call gets all the speech tagged to the subject, its agenda place, who raised it, each speaker with role and party, its location and, for an agenda item, the text the agenda task wrote. It returns the description and the two notification values (`topicImportance`, `proximityImportance`) with a one-sentence reason that stays in the run record.
+
+The description rules are one text (`descriptionRules`), shared with the batch step, which still writes a description to tell subjects apart across batches. The batch step does not judge importance. A subject nobody spoke on is not announced after the meeting and keeps the radius the agenda gave it; a subject discussed under another takes that one's importance. The step runs beside the enrichment, and a call that fails leaves the batch step's description in place.
 
 #### Joint Discussion (`discussedIn`)
 When multiple agenda items are discussed together, the first is the "primary" (`discussedIn: null`) and others are "secondary" (`discussedIn: primaryId`). All utterance statuses and speaker contributions point to the primary. Secondary subjects get empty `speakerContributions`.

@@ -1,6 +1,6 @@
 import { aiChat, addUsage, NO_USAGE, type UsageStats } from "../lib/ai.js";
 import { enrichSubjectData, type EnrichmentInput } from "../lib/subjectEnrichment.js";
-import { IMPORTANCE_GUIDELINES } from "../lib/importanceGuidelines.js";
+import { importanceGuidelines } from "../lib/importanceGuidelines.js";
 import { languageDirectiveSuffix } from "../lib/language.js";
 import { fetchAgendaDocument, type AgendaDocument } from "../lib/documentConversion.js";
 import { AGENDA_ITEM_TITLE_RULES, normalizeAgendaItemTitle } from "../lib/agendaItemTitle.js";
@@ -559,7 +559,7 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
     meetingIndex: number | null; // Η θέση (από 0) στο meetings της συνεδρίασης στην οποία ανήκει το θέμα. Όταν το έγγραφο καλεί μία συνεδρίαση, 0 σε όλα τα θέματα.
 };
 
-${IMPORTANCE_GUIDELINES}
+${importanceGuidelines('agenda')}
 
 ${AGENDA_ITEM_TITLE_RULES}
 

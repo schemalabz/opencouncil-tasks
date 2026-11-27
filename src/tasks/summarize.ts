@@ -16,6 +16,7 @@ import { logUsage, logMultiPhaseUsage } from "../lib/usageLogging.js";
 import { withPhaseSpan } from "../lib/observability.js";
 import { processBatchesWithState } from "./summarize/batchProcessing.js";
 import { generateSpeakerContributions } from "./summarize/speakerContributions.js";
+import { applyWrittenSubjects, writeSubjectDescriptions } from "./summarize/subjectDescriptions.js";
 import { mergeSubjects } from "./summarize/mergeSubjects.js";
 import { SubjectInProgress } from "./summarize/types.js";
 dotenv.config();
@@ -132,6 +133,18 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
     console.log(`✅ Speaker contributions complete for ${subjects.length} subjects`);
     logUsage('Phase 2 tokens', phase2Usage);
 
+    // Phase 2.5: the description and the notification importance of every discussed subject, from
+    // all its speech. It runs beside the enrichment, which still reads the Phase 1 description.
+    const descriptionsDone = withPhaseSpan('Phase 2.5: Subject Descriptions', () => writeSubjectDescriptions(
+        subjects,
+        allUtteranceStatuses,
+        compressedRequest.transcript,
+        new Map((request.people ?? []).map(p => [idCompressor.addLongId(p.id), p])),
+        new Map(compressedRequest.existingSubjects.filter(s => s.description).map(s => [s.id, s.description])),
+        request.administrativeBodyName,
+        request.cityLanguage
+    ));
+
     // Phase 3: Enrichment (geocode, context, final summary, importance)
     console.log('');
     console.log('🔍 PHASE 3: Enrichment (geocoding, context, summaries)');
@@ -161,6 +174,11 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
 
     console.log(`✅ Enrichment complete for ${enrichedSubjects.length} subjects`);
     logUsage('Phase 3 tokens', phase3Usage);
+
+    const descriptions = await descriptionsDone;
+    applyWrittenSubjects(enrichedSubjects, subjects, descriptions.written);
+    console.log(`✅ Descriptions and importance written for ${descriptions.written.size} discussed subjects`);
+    logUsage('Phase 2.5 tokens', descriptions.usage);
 
     // Detailed subject logging
     console.log('');
@@ -262,6 +280,7 @@ export const summarize: Task<SummarizeRequest, SummarizeResult> = async (request
         { label: 'Phase 1 (Batch Processing)', usage: phase1Usage, resolvedModel: phase1Model, batchMode: phase1Batch },
         { label: 'Phase 1.5 (Subject Merge)', usage: phase1_5Usage, resolvedModel: phase1_5Model, batchMode: phase1_5Batch },
         { label: 'Phase 2 (Speaker Contributions)', usage: phase2Usage, resolvedModel: phase2Model, batchMode: phase2Batch },
+        { label: 'Phase 2.5 (Subject Descriptions)', usage: descriptions.usage, resolvedModel: descriptions.resolvedModel, batchMode: descriptions.batchMode },
         { label: 'Phase 3 (Enrichment)', usage: phase3Usage, resolvedModel: phase3Model, batchMode: phase3Batch }
     ]);
     console.log(`✅ SUMMARIZE TASK COMPLETED [${meetingId}]`);

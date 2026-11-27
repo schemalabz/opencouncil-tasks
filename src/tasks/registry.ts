@@ -39,7 +39,8 @@ export const TASKS = {
             description: 'Generate a summary of transcript content with subject extraction',
             // v6: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
             // v7: summaries no longer state vote results
-            version: 7,
+            // v8: a later step writes the description and the notification importance of a discussed subject, from all its speech
+            version: 8,
         },
     },
     splitMediaFile: {

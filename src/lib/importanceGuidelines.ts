@@ -1,25 +1,41 @@
 /**
- * Shared importance determination guidelines for subject classification.
- * Used in both processAgenda.ts and summarize.ts system prompts to ensure
- * consistent importance determination across all tasks.
+ * How a subject's importance for notifications is judged. One text, read at two moments:
+ *
+ * - `agenda`: before the meeting, by the agenda task, from the agenda alone.
+ * - `debate`: after the meeting, by the step that writes a subject's description, from the whole
+ *   debate of that subject. There "normal" needs a reason and is not the default, the two values
+ *   are judged apart (a subject that matters only around its place is "doNotNotify" with a
+ *   radius), and there is no limit of "high" for a meeting, because one call sees one subject.
  */
-export const IMPORTANCE_GUIDELINES = `**topicImportance - ΠΡΟΣΟΧΗ: Μη χρησιμοποιείς "high" εύκολα!**
+export function importanceGuidelines(when: 'agenda' | 'debate'): string {
+    const debate = when === 'debate';
+    return `${debate ? `ΣΗΜΑΣΙΑ ΓΙΑ ΤΙΣ ΕΙΔΟΠΟΙΗΣΕΙΣ:
+Μετά τη συνεδρίαση στέλνεται ειδοποίηση στους δημότες. Κρίνε από ΟΛΗ τη συζήτηση του θέματος.
+Οι δύο τιμές κρίνονται χωριστά. Το topicImportance αφορά δημότες σε όλη την πόλη, όπου κι αν μένουν. Το proximityImportance αφορά όσους μένουν κοντά στην τοποθεσία του θέματος.
+Ένα θέμα μπορεί να μην ενδιαφέρει την πόλη και να ενδιαφέρει τη γειτονιά του.
+
+` : ''}**topicImportance - ΠΡΟΣΟΧΗ: Μη χρησιμοποιείς "high" εύκολα!**
 
 "doNotNotify" - ΔΕΝ στέλνεται ειδοποίηση:
 ✓ Έγκριση πρακτικών προηγούμενης συνεδρίασης
 ✓ Διορισμοί επιτροπών
 ✓ Τυπικές διαδικαστικές εγκρίσεις
-✓ Ανακοινώσεις χωρίς απόφαση
+✓ Ανακοινώσεις χωρίς απόφαση${debate ? `
+✓ Θέμα που πέρασε χωρίς ουσιαστική συζήτηση και δεν αλλάζει κάτι για τους δημότες
+✓ Θέμα που ενδιαφέρει μόνο όσους μένουν κοντά στην τοποθεσία του ΚΑΙ δεν ισχύει κανένα από τα κριτήρια του "normal": εδώ "doNotNotify", και παρακάτω "near" αν αφορά ένα σημείο (μία ράμπα, μία άδεια, ένας δρόμος) ή "wide" αν αφορά ευρύτερη περιοχή` : ''}
 
-"normal" - Κανονική ειδοποίηση (ΠΡΟΕΠΙΛΟΓΗ):
+${debate ? `"normal" - Κανονική ειδοποίηση, όταν ισχύει τουλάχιστον ένα (ακόμα κι αν το θέμα έχει τοποθεσία):
+✓ Αλλάζει κάτι για δημότες σε όλη την πόλη ή σε μεγάλο μέρος της: μια υπηρεσία, ένα τέλος, έναν κανόνα
+✓ Υπήρξε πραγματική διαφωνία
+✓ Μίλησαν κάτοικοι ή φορείς` : `"normal" - Κανονική ειδοποίηση (ΠΡΟΕΠΙΛΟΓΗ):
 ✓ Άδειες οικοδομής
 ✓ Συντήρηση πάρκων
 ✓ Τοπικές υποδομές
 ✓ Προμήθειες εξοπλισμού
 ✓ Χρηματοδότηση τμημάτων
-✓ Τα περισσότερα συνηθισμένα θέματα
+✓ Τα περισσότερα συνηθισμένα θέματα`}
 
-"high" - Υψηλή σημασία (ΣΠΑΝΙΟ - μόνο 1-2 ανά συνεδρίαση):
+"high" - Υψηλή σημασία (ΣΠΑΝΙΟ${debate ? '' : ' - μόνο 1-2 ανά συνεδρίαση'}):
 ✓ Δημοτικός προϋπολογισμός
 ✓ Φορολογία (αύξηση/μείωση)
 ✓ Μεγάλες υποδομές (μετρό, αυτοκινητόδρομοι)
@@ -37,17 +53,21 @@ export const IMPORTANCE_GUIDELINES = `**topicImportance - ΠΡΟΣΟΧΗ: Μη �
 ✓ Προϋπολογισμός
 ✓ City-wide πολιτικές
 ✓ Διοικητικά θέματα
-✓ Οτιδήποτε χωρίς locationText
+✓ Οτιδήποτε χωρίς ${debate ? 'τοποθεσία' : 'locationText'}
 
-"near" - 250m ακτίνα (ΠΡΟΕΠΙΛΟΓΗ αν υπάρχει τοποθεσία):
+"near" - ${debate ? 'Η άμεση γειτονιά' : '250m ακτίνα'} (ΠΡΟΕΠΙΛΟΓΗ αν υπάρχει τοποθεσία):
 ✓ Μεμονωμένη άδεια οικοδομής
 ✓ Μία επιχείρηση
 ✓ Επισκευή συγκεκριμένου δρόμου
 ✓ Τοπικό πάρκο
 
-"wide" - 1000m ακτίνα:
+"wide" - ${debate ? 'Η ευρύτερη περιοχή' : '1000m ακτίνα'}:
 ✓ Πολυώροφο κτίριο (>6 ορόφους)
 ✓ Αυτοκινητόδρομος/μεγάλος δρόμος
 ✓ Χώρος εκδηλώσεων με όχληση (γήπεδο, συναυλιακός χώρος)
 ✓ Εργοστάσιο/βιομηχανική εγκατάσταση
-✓ Δίκτυο (π.χ. "ποδηλατόδρομοι σε 5 συνοικίες")`;
+✓ Δίκτυο (π.χ. "ποδηλατόδρομοι σε 5 συνοικίες")${debate ? `
+✓ Χώρος που χρησιμοποιεί ολόκληρη περιοχή (μεγάλο πάρκο, κεντρική πλατεία)
+
+importanceReason: μία σύντομη πρόταση που λέει γιατί έδωσες αυτές τις τιμές.` : ''}`;
+}
