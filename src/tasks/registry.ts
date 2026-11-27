@@ -4,6 +4,7 @@ import { pipeline } from './pipeline.js';
 import { summarize } from './summarize.js';
 import { splitMediaFile } from './splitMediaFile.js';
 import { fixTranscript } from './fixTranscript.js';
+import { fixFromMinutes } from './fixFromMinutes.js';
 import { processAgenda } from './processAgenda.js';
 import { generateVoiceprint } from './generateVoiceprint.js';
 import { generateHighlight } from './generateHighlight.js';
@@ -60,6 +61,14 @@ export const TASKS = {
             // v4: the result also carries unlistedSpeakerHints — speakers the transcript names
             // who are not on the roster, each with a label for the speaker tag
             version: 4,
+        },
+    },
+    fixFromMinutes: {
+        task: fixFromMinutes,
+        metadata: {
+            summary: 'Correct a transcript from the municipal minutes',
+            description: "Reads the municipality's verbatim minutes, aligns their speaker turns with the transcript, corrects misheard words from them and names the speakers from their labels (schemalabz/opencouncil#876)",
+            version: 1,
         },
     },
     processAgenda: {

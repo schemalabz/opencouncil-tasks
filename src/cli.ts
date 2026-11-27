@@ -15,6 +15,13 @@ import { extractAgenda, processAgenda } from './tasks/processAgenda.js';
 import { extractAgendaMeetings, readExportedMeeting, type MeetingRecordExportRow } from './lib/agendaMeetingRecord.js';
 import { fetchAgendaDocument } from './lib/documentConversion.js';
 import { isCityLanguage } from './lib/language.js';
+import { checkNotGenerated, checkTextLayer, describeSection, fetchMinutesPages, pickSection, readPages, splitSections, type MinutesPage } from './lib/municipalMinutes/read.js';
+import { coverage, cutTurns, parseTurns, COVERAGE_FLOOR } from './lib/municipalMinutes/turns.js';
+import { checkTurns, DEFAULT_CHECK_MODEL } from './lib/municipalMinutes/check.js';
+import { parsePagedText } from './lib/municipalMinutes/pagedText.js';
+import { fixFromMinutesWith } from './tasks/fixFromMinutes.js';
+import { buildMinutesRequest, formatMinutesBacktest, scoreCorrections, scoreSpeakers, type MinutesMeetingApiData } from './tasks/utils/minutesBacktest.js';
+import type { MeetingApiData } from './evals/suites/speakerBacktest.js';
 import { extractDecisionFromPdf, adaToPdfUrl, allowLocalPdfFiles, AgendaItemRef } from './tasks/utils/decisionPdfExtraction.js';
 import { readDecisionDocument } from './tasks/utils/readDecisionDocument.js';
 import { bodyTypeOfLabel } from './tasks/utils/decisionPartition.js';
@@ -930,6 +937,139 @@ runsCommand
             console.log(`HTML: ${htmlPath} — open in a browser to review.`);
         } catch (error) {
             console.error('Error comparing runs:', error instanceof Error ? error.message : error);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+/** The pages of a minutes document: a local file by path, or a URL through the task's own reader. */
+async function readMinutesSource(source: string): Promise<MinutesPage[]> {
+    if (!fs.existsSync(source)) return fetchMinutesPages(source);
+    const bytes = fs.readFileSync(source);
+    if (!source.endsWith('.txt')) return readPages(bytes);
+    const pages = parsePagedText(bytes.toString('utf-8'));
+    checkTextLayer(pages);
+    checkNotGenerated(pages);
+    return pages;
+}
+
+/** A meeting from opencouncil's public meeting endpoint, with its reviewed transcript. */
+async function fetchMeeting<T extends MeetingApiData>(baseUrl: string, cityId: string, meetingId: string): Promise<{ source: string; data: T }> {
+    const source = `${baseUrl.replace(/\/$/, '')}/api/cities/${encodeURIComponent(cityId)}/meetings/${encodeURIComponent(meetingId)}`;
+    const response = await fetch(source);
+    if (!response.ok) throw new Error(`${source} responded ${response.status}`);
+    const data = await response.json() as T & { transcriptHiddenForReview?: boolean };
+    if (data.transcriptHiddenForReview) throw new Error('The transcript of this meeting is hidden for review; the public endpoint returns it empty');
+    return { source, data };
+}
+
+program
+    .command('minutes-turns <source>')
+    .description("Cut a municipality's minutes document into speaker turns the way fixFromMinutes does, and print the labels, the coverage and what the model check changes. Source: PDF/DOCX URL or local file path. See docs/minutes-correction.md")
+    .option('--date <yyyy-mm-dd>', 'pick the section of this meeting date in a document that holds several meetings')
+    .option('--session <n>', 'pick the section of this session number')
+    .option('--check', 'run the model check of the turns after the parser (costs cents)')
+    .option('--model <model>', 'model of the check', DEFAULT_CHECK_MODEL)
+    .option('--show <n>', 'print the first n turns', '0')
+    .option('-O, --output-file <file>', 'write the turns as JSON')
+    .action(async (source: string, options: { date?: string; session?: string; check?: boolean; model: string; show: string; outputFile?: string }) => {
+        try {
+            const pages = await readMinutesSource(source);
+            const sections = splitSections(pages);
+            console.log(`${pages.length} page(s), ${sections.length} section(s): ${sections.map(describeSection).join('; ')}`);
+            const section = options.date || options.session
+                ? pickSection(sections, options.date ?? null, options.session ? parseInt(options.session, 10) : null)
+                : sections[0];
+            if (sections.length > 1 && !options.date && !options.session) console.log('Several sections: reading the first; pass --date or --session to pick another');
+            console.log(`${section.stripped} running lines stripped from the section`);
+
+            const parsed = parseTurns(section.lines, []);
+            const describeTurns = (turns: ReturnType<typeof cutTurns>, title: string) => {
+                const labels = new Map<string, { label: string; count: number }>();
+                for (const t of turns) labels.set(t.key, { label: labels.get(t.key)?.label ?? t.label, count: (labels.get(t.key)?.count ?? 0) + 1 });
+                const stage = turns.reduce((n, t) => n + t.stageDirections, 0);
+                console.log(`\n${title}: ${turns.length} turns, ${labels.size} labels, coverage ${(coverage(parsed.section, turns) * 100).toFixed(1)}% (floor ${COVERAGE_FLOOR * 100}%), ${stage} stage directions removed`);
+                console.log([...labels.values()].sort((a, b) => b.count - a.count).map(({ label, count }) => `${label} ×${count}`).join(', '));
+            };
+            describeTurns(parsed.turns, 'Parser');
+            if (parsed.rejectedLabels.length > 0) console.log(`Rejected candidate labels: ${parsed.rejectedLabels.join(' | ')}`);
+
+            let turns = parsed.turns;
+            if (options.check) {
+                const checked = await checkTurns(parsed.section, parsed.boundaries, { model: options.model, onChunkDone: (done, total) => console.log(`check chunk ${done}/${total} done`) });
+                turns = cutTurns(parsed.section, checked.result.boundaries);
+                describeTurns(turns, 'After the check');
+                const added = turns.filter(t => !parsed.boundaries.some(b => b.offset === t.offset));
+                const removed = parsed.turns.filter(t => !checked.result.boundaries.some(b => b.offset === t.offset));
+                console.log(`Check: ${checked.result.added} turn starts added, ${checked.result.removed} labels removed, ${checked.result.dropped} answers dropped, ${checked.result.failedChunks} chunk(s) failed; usage ${formatUsage(checked.usage)}`);
+                if (added.length > 0) console.log(`  added: ${added.map(t => `[p${t.page}] ${t.label}: ${t.text.slice(0, 40).replace(/\n/g, ' ')}`).join(' | ')}`);
+                if (removed.length > 0) console.log(`  removed: ${removed.map(t => `[p${t.page}] ${t.label}: ${t.text.slice(0, 40).replace(/\n/g, ' ')}`).join(' | ')}`);
+            }
+            const show = parseInt(options.show, 10);
+            for (const t of turns.slice(0, show)) console.log(`\n[p${t.page} #${t.index}] ${t.label}: ${t.text}`);
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify({ source, section: { page: section.page, pages: section.pages, date: section.date, sessionNumber: section.sessionNumber }, rejectedLabels: parsed.rejectedLabels, turns }, null, 2));
+                console.log(`\nTurns -> ${options.outputFile}`);
+            }
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
+            process.exitCode = 1;
+        } finally {
+            server.close();
+        }
+    });
+
+program
+    .command('backtest-minutes-correction <pairs...>')
+    .description("Run fixFromMinutes on reviewed meetings and score it against the reviewed transcript: word error rate before and after, every changed utterance, speaker opinions against the record. Each pair is cityId/meetingId=<minutes URL or file>. See docs/minutes-correction.md")
+    .option('--base-url <url>', 'opencouncil base URL', 'https://opencouncil.gr')
+    .option('--input <file>', 'JSON of utterance id to text as fixTranscript left it; without it the task runs on the reviewed text')
+    .option('--no-check', 'skip the model check of the turns')
+    .option('--model <model>', 'model of the check', DEFAULT_CHECK_MODEL)
+    .option('--max-changed <n>', 'changed utterances to print per meeting', '40')
+    .option('-O, --output-file <file>', 'write the requests, results and scores of every meeting as JSON')
+    .action(async (pairs: string[], options: { baseUrl: string; input?: string; check: boolean; model: string; maxChanged: string; outputFile?: string }) => {
+        try {
+            const inputTexts: Record<string, string> = options.input ? JSON.parse(fs.readFileSync(options.input, 'utf-8')) : {};
+            const results: unknown[] = [];
+            const failures: { meeting: string; error: string }[] = [];
+            for (const pair of pairs) {
+                const match = pair.match(/^([^/=]+)\/([^=]+)=(.+)$/);
+                if (!match) throw new Error(`Expected cityId/meetingId=<minutes URL or file>, got "${pair}"`);
+                const [, cityId, meetingId, minutes] = match;
+                const meeting = `${cityId}/${meetingId}`;
+                console.log(`\n===== ${meeting} =====`);
+                try {
+                    const { data } = await fetchMeeting<MinutesMeetingApiData>(options.baseUrl, cityId, meetingId);
+                    const request = buildMinutesRequest(data, minutes, inputTexts);
+                    console.log(`${data.city.name}, ${request.administrativeBodyName}, ${request.meetingDate}, session ${request.sessionNumber ?? '?'}: ${request.transcript.length} segments, ${request.transcript.reduce((n, s) => n + s.utterances.length, 0)} utterances, roster of ${request.people?.length ?? 0}`);
+                    const pages = fs.existsSync(minutes) ? await readMinutesSource(minutes) : undefined;
+                    const result = await fixFromMinutesWith(request, (stage, progress) => console.log(`  ${stage} (${Math.round(progress * 100)}%)`), { pages, skipCheck: !options.check, checkModel: options.model });
+                    const reviewed = new Map<string, string>();
+                    for (const segment of data.transcript) for (const u of segment.utterances) reviewed.set(u.id, u.text);
+                    const corrections = scoreCorrections(request, result, reviewed);
+                    const speakers = scoreSpeakers(data, result);
+                    const names = new Map(data.people.map(p => [p.id, p.name]));
+                    console.log('\n' + formatMinutesBacktest(meeting, result, corrections, speakers, names, { maxChanged: parseInt(options.maxChanged, 10) }));
+                    results.push({ meeting, request: { municipalMinutesUrl: minutes, meetingDate: request.meetingDate, sessionNumber: request.sessionNumber }, result, corrections, speakers });
+                } catch (e) {
+                    const error = e instanceof Error ? e.message : String(e);
+                    console.error(`${meeting}: ${error}`);
+                    failures.push({ meeting, error });
+                }
+            }
+            if (failures.length > 0) {
+                console.error(`\n${failures.length} meeting(s) failed:`);
+                for (const f of failures) console.error(`  ${f.meeting}: ${f.error}`);
+                process.exitCode = 1;
+            }
+            if (options.outputFile) {
+                fs.writeFileSync(options.outputFile, JSON.stringify({ meetings: results, failures }, null, 2));
+                console.log(`\nResults -> ${options.outputFile}`);
+            }
+        } catch (e) {
+            console.error(e instanceof Error ? e.message : e);
             process.exitCode = 1;
         } finally {
             server.close();
