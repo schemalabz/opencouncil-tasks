@@ -52,10 +52,10 @@ function batchResponse(subjects: SubjectInProgress[]) {
     return { result, usage: {}, maxTokens: 128000, resolvedModel: 'test-model', batchMode: false } as never;
 }
 
-describe('processBatchesWithState importance across batches', () => {
+describe('processBatchesWithState and importance', () => {
     beforeEach(() => mockAiChat.mockReset());
 
-    it('keeps the importance the model gave a subject that a later batch leaves out', async () => {
+    it('announces no subject and keeps the radius of the agenda through the batches', async () => {
         const ids = new IdCompressor();
         const a = ids.addLongId('subject-a');
         const b = ids.addLongId('subject-b');
@@ -97,12 +97,12 @@ describe('processBatchesWithState importance across batches', () => {
         expect(mockAiChat).toHaveBeenCalledTimes(3);
         const importance = Object.fromEntries(subjects.map(s => [s.name, [s.topicImportance, s.proximityImportance]]));
         expect(importance).toEqual({
-            A: ['normal', 'near'],                      // last value the model gave, in batch 2
-            B: ['high', 'none'],                        // returned in batch 2 only
-            C: ['normal', 'none'],                      // returned in the last batch
-            D: ['doNotNotify', 'none'],                 // never returned: the agenda value does not carry through
-            E: ['normal', 'near'],                      // kept through batch 2, then the model's batch-3 value
-            Announcements: ['normal', 'none'],          // created in batch 1 under a temporary id
+            A: ['doNotNotify', 'none'],                 // what a batch returns for importance is not read
+            B: ['doNotNotify', 'none'],
+            C: ['doNotNotify', 'none'],
+            D: ['doNotNotify', 'wide'],                 // never returned: the radius of the agenda stays
+            E: ['doNotNotify', 'none'],
+            Announcements: ['doNotNotify', 'none'],     // created in batch 1 under a temporary id
         });
     });
 });

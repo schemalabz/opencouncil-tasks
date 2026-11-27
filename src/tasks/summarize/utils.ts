@@ -77,7 +77,9 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
         agendaItemIndex: s.agendaItemIndex, // Keep as-is (number | "BEFORE_AGENDA" | "OUT_OF_AGENDA")
         name: s.name,
         description: s.description,
-        topicImportance: s.topicImportance || 'normal',
+        // The agenda's importance is for the notice before the meeting. After it, the description
+        // step decides who hears of a subject; only the agenda's radius is kept until then.
+        topicImportance: 'doNotNotify' as const,
         proximityImportance: s.proximityImportance || 'none',
         introducedByPersonId: s.introducedByPersonId,
         locationText: s.locationText,
@@ -89,19 +91,27 @@ export function initializeSubjectsFromExisting(existingSubjects: any[]): Subject
 }
 
 /**
+ * The batch step does not judge importance: the step that writes a subject's description does,
+ * once the whole debate is known. Until then a subject is not announced, and it has the radius
+ * that the agenda gave it, so a subject nobody speaks on still reaches its neighbours.
+ */
+export function carryImportance(returned: SubjectInProgress[], previous: ReadonlyArray<SubjectInProgress>): void {
+    const radius = new Map(previous.map(s => [s.id, s.proximityImportance]));
+    for (const subject of returned) {
+        subject.topicImportance = 'doNotNotify';
+        subject.proximityImportance = radius.get(subject.id) ?? 'none';
+    }
+}
+
+/**
  * The subjects a batch's response left out, to carry into the next batch.
  *
  * A batch returns only the subjects its part of the transcript touches, so a
- * subject it leaves out may well have been discussed in an earlier batch. A
- * subject that some batch returned keeps the importance that the model gave
- * it: the after-meeting notification reads that importance, and resetting it
- * here dropped discussed subjects from it. A subject that no batch has
- * returned so far gets no notification, whatever the agenda gave it.
+ * subject it leaves out may well have been discussed in an earlier batch.
  */
 export function subjectsOmittedFromBatch(
     previous: SubjectInProgress[],
-    returned: SubjectInProgress[],
-    returnedByModel: ReadonlySet<string>
+    returned: SubjectInProgress[]
 ): SubjectInProgress[] {
     const returnedIds = new Set(returned.map(s => s.id));
     return previous
@@ -109,11 +119,7 @@ export function subjectsOmittedFromBatch(
         .map(s => ({
             ...s,
             discussedIn: s.discussedIn || null,
-            speakerContributions: [],
-            ...(returnedByModel.has(s.id) ? {} : {
-                topicImportance: 'doNotNotify' as const,
-                proximityImportance: 'none' as const
-            })
+            speakerContributions: []
         }));
 }
 

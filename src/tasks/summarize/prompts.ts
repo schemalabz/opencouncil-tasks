@@ -3,7 +3,7 @@
  * Extracted from summarize.ts for better organization and maintainability.
  */
 
-import { IMPORTANCE_GUIDELINES } from "../../lib/importanceGuidelines.js";
+import { importanceGuidelines } from "../../lib/importanceGuidelines.js";
 import { getLanguageConfig, languageDirectiveSuffix } from "../../lib/language.js";
 import { formatTopicLabels } from "../../lib/promptUtils.js";
 import { CityLanguage, TopicLabelInfo } from "../../types.js";
@@ -58,6 +58,75 @@ export const MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS = `
 `;
 
 /**
+ * What a subject description is: its purpose, style, structure, when it carries references, and
+ * examples. One text for every step that writes a description, so the steps cannot drift apart.
+ * Only the step whose descriptions tell one subject from another across batches says so.
+ */
+export function descriptionRules(cityLanguage?: CityLanguage, keepsSubjectsApart = false): string {
+  const { mainIssuesHeading, promptName } = getLanguageConfig(cityLanguage);
+  const issuesSection = mainIssuesHeading
+    ? `Για πολύπλοκα θέματα μόνο, πρόσθεσε μια σύντομη ενότητα με επικεφαλίδα «${mainIssuesHeading}», γραμμένη ακριβώς έτσι (μέχρι 3 ζητήματα). Κάθε γραμμή είναι μία πρόταση που ξεκινά από το ζήτημα και μετά λέει τις διαφορετικές απόψεις, χωρίς ετικέτα και άνω κάτω τελεία στην αρχή:
+${mainIssuesHeading}:
+- ...
+- ...
+Παράδειγμα γραμμής:
+- Για την επίπτωση στα καταστήματα, η κα. Αθανασίου ζητά μελέτη πριν την εφαρμογή, ενώ ο κ. Βασιλείου θεωρεί ότι αρκεί η διαβούλευση με τους εμπόρους.
+Όταν γράφεις αυτή την ενότητα, το κείμενο πριν από αυτήν λέει μόνο τι είναι το θέμα. Οι θέσεις μπαίνουν στην ενότητα και δεν επαναλαμβάνονται.`
+    : `For complex subjects only, add a short section with a localized heading meaning "Main issues" in ${promptName}. Use at most three bullet points describing the issues and positions, also in ${promptName}. Do not copy the English heading literally.`;
+
+  return `description (2-3 προτάσεις, σύντομη επισκόπηση με λίγα references${mainIssuesHeading ? `· η ενότητα «${mainIssuesHeading}», όπου υπάρχει, είναι επιπλέον` : ''}):
+
+ΣΚΟΠΟΣ DESCRIPTION:
+Η description λέει σε κάποιον που δεν ήταν στη συνεδρίαση: τι προτείνεται ή τι ζητείται, ποιες διαφορετικές θέσεις ακούστηκαν (και από κατοίκους ή φορείς, αν μίλησαν), και τι απάντησε η διοίκηση, αν απάντησε.
+ΜΗΝ μπαίνεις σε λεπτομέρειες - δώσε μια γενική εικόνα.${keepsSubjectsApart ? '\nΑυτό είναι κρίσιμο γιατί χρησιμοποιείται αργότερα για αποφυγή διπλών θεμάτων.' : ''}
+
+ΣΤΥΛ:
+- Φυσική αφηγηματική ροή, όχι λίστες${mainIssuesHeading ? ` (εκτός από την ενότητα «${mainIssuesHeading}»)` : ''}
+- Η πρώτη πρόταση ξεκινά με το τι είναι το θέμα: "Έγκριση...", "Ερώτημα για...", "Ενημέρωση για...". ΟΧΙ με ομιλητή, ΟΧΙ "Το θέμα αφορά...".
+- Όταν αναφέρεις κάποιον, γράψε "κ./κα." και επώνυμο: "ο κ. Παπαδόπουλος ρωτάει...", "η κα. Κωνσταντίνου ανέφερε..."
+- ΜΗΝ γράφεις σκέτο επώνυμο χωρίς προσφώνηση: "Ο Παπαδόπουλος...", "Η Κωνσταντίνου..."
+- ΜΗΝ γράφεις: "Σύμβουλος θέτει εκτενείς ερωτήσεις σχετικά με..."
+- ΜΗΝ γράφεις: "Ο αρμόδιος ανέφερε...", "Η αρμόδια παρουσίασε..."
+- ΜΗΝ: "Καταγραφή:", "Στοιχεία:", "Αναφέρθηκαν:"
+- ΜΗΝ βάζεις reference σε κάθε πρόταση, αλλά μόνο όπου εκφράζονται σημαντικά σημεία.
+- Μην αναφέρεις αποτελέσματα ψηφοφορίας (έγκριση/απόρριψη, αριθμό ψήφων, ποιος ψήφισε τι). Από το transcript δεν προκύπτουν αξιόπιστα.
+- Ό,τι είπε η διοίκηση ότι θα κάνει, γράψ' το με τα δικά της λόγια ("θα…"), όχι ως δέσμευση.
+- Ουδέτερη γλώσσα, χωρίς δικά σου αξιολογικά επιρρήματα όπως "μόνο" ή "μόλις"
+
+ΔΟΜΗ:
+1. Τι είναι το θέμα και τι καλύπτει (χωρίς reference)
+2. Ποια ήταν η κύρια συζήτηση/αντιπαράθεση - σύντομα (1 reference max)
+
+${issuesSection}
+
+REFERENCES - Πότε:
+- Συγκεκριμένα νούμερα: [το κόστος είναι 300 χιλιάδες ευρώ](REF:UTTERANCE:xxx)
+- Αμφιλεγόμενες δηλώσεις: [τα πορίσματα είναι εμπιστευτικά](REF:UTTERANCE:xxx)
+
+ΜΗΝ:
+- Γενικές περιγραφές ("το θέμα αφορά...")
+- Προφανή πράγματα ("ο πρόεδρος εισηγήθηκε")
+- Μετα-πληροφορίες ("το Συμβούλιο είναι διαδικαστικού χαρακτήρα")
+- Διαδικαστικά άλλων θεμάτων ("η 8η αναμόρφωση εγκρίθηκε πριν")
+- Προτάσεις για το πώς εξελίχθηκε η συζήτηση ("η συζήτηση οξύνθηκε", "πέρασε γρήγορα σε αντιπαράθεση", "έγινε εκτενής συζήτηση"). Γράψε τι υποστήριξε ο καθένας. Αν η ίδια η αντιπαράθεση είναι μέρος του θέματος, πες ποιος είπε τι.
+- ΜΗΝ γράφεις ότι κάποιος δεν απάντησε ή ότι δεν καταγράφεται απάντηση. Αν ένας ομιλητής λέει ότι δεν πήρε απάντηση, γράψε το ως δική του θέση.
+
+Παραδείγματα καλών descriptions:
+
+ΑΠΛΟ ΘΕΜΑ:
+"Προμήθεια θρανίων και διαδραστικών πινάκων για τρία δημοτικά σχολεία."
+
+ΠΡΟ ΗΜΕΡΗΣΙΑΣ ΘΕΜΑ:
+"Ερώτημα για τις καθυστερήσεις στα οδικά έργα της Λ. Αλεξάνδρας. Η εργολαβία είναι σε φάση παράδοσης."`;
+}
+
+/** Tone and forms of address, for every summary and description. */
+export const TONE_RULES = `- Απόφυγε αμφιλεγόμενες ή φορτισμένες εκφράσεις (π.χ. αναφορές σε "ειρωνία", "προκλητικός", "σκανδαλώδης") εκτός αν είναι απολύτως απαραίτητες για την κατανόηση.
+- Χρησιμοποίησε ουδέτερη, περιγραφική γλώσσα.
+- Μετέφερε τα γεγονότα και τις θέσεις χωρίς χαρακτηρισμούς.
+- Χρησιμοποίησε ΠΑΝΤΑ "κ./κα." πριν τα επώνυμα: "ο κ. Παπαδόπουλος", "η κα. Κωνσταντίνου". ΟΧΙ σκέτο επώνυμο.`;
+
+/**
  * System prompt for batch processing of transcripts.
  * Generates segment summaries, discussion ranges, and subject extraction.
  */
@@ -73,21 +142,6 @@ export function getBatchProcessingSystemPrompt(metadata: {
     ? `\nΌργανο: ${metadata.administrativeBodyName}`
     : '';
   const formattedTopicLabels = formatTopicLabels(metadata.topicLabels);
-  const { mainIssuesHeading, promptName } = getLanguageConfig(metadata.cityLanguage);
-  const issuesSection = mainIssuesHeading
-    ? `Για πολύπλοκα θέματα μόνο, πρόσθεσε μια σύντομη ενότητα με επικεφαλίδα «${mainIssuesHeading}», γραμμένη ακριβώς έτσι (μέχρι 3 ζητήματα):
-${mainIssuesHeading}:
-- Ζήτημα 1: σύντομη περιγραφή με τις διάφορες απόψεις
-- Ζήτημα 2: σύντομη περιγραφή με τις διάφορες απόψεις`
-    : `For complex subjects only, add a short section with a localized heading meaning "Main issues" in ${promptName}. Use at most three bullet points describing the issues and positions, also in ${promptName}. Do not copy the English heading literally.`;
-
-  const complexExample = mainIssuesHeading
-    ? `"Πεζοδρόμηση της οδού Ερμού και μονοδρομήσεις γύρω από τις πλατείες.
-
-${mainIssuesHeading}:
-- Η κα. Αθανασίου ζητά μελέτη επίπτωσης στα τοπικά καταστήματα
-- Ο κ. Βασιλείου θέτει ζήτημα διαβούλευσης με τους εμπόρους πριν την εφαρμογή"`
-    : `For a complex subject, describe the proposal briefly and follow it with the localized issues section described above. Write the entire description in ${promptName}.`;
 
   if (!metadata.administrativeBodyName) {
     console.warn('⚠️  WARNING: administrativeBodyName not provided in batch processing prompt. Using generic description.');
@@ -230,50 +284,7 @@ name (2-8 λέξεις, απλή γλώσσα):
 - ΜΗΝ χρησιμοποιείς πολύ τεχνικούς/νομικούς όρους
 - Παραδείγματα: "Αντιπλημμυρικά έργα", "Προϋπολογισμός 2024", "Άδεια οικοδομής Λ. Μεσογείων 45"
 
-description (2-3 προτάσεις, σύντομη επισκόπηση με λίγα references):
-
-ΣΚΟΠΟΣ DESCRIPTION:
-Η description πρέπει να δίνει μια ΣΥΝΤΟΜΗ ΕΠΙΣΚΟΠΗΣΗ του θέματος: τι συζητήθηκε και ποια ήταν η κύρια αντιπαράθεση/συζήτηση.
-ΜΗΝ μπαίνεις σε λεπτομέρειες - δώσε μια γενική εικόνα.
-Αυτό είναι κρίσιμο γιατί χρησιμοποιείται αργότερα για αποφυγή διπλών θεμάτων.
-
-ΣΤΥΛ:
-- Φυσική αφηγηματική ροή, όχι λίστες
-- ΧΡΗΣΙΜΟΠΟΙΗΣΕ ΟΝΟΜΑΤΑ με "κ./κα.": "Ο κ. Παπαδόπουλος ρωτάει...", "Η κα. Κωνσταντίνου ανέφερε..."
-- ΜΗΝ γράφεις σκέτο επώνυμο χωρίς προσφώνηση: "Ο Παπαδόπουλος...", "Η Κωνσταντίνου..."
-- ΜΗΝ γράφεις: "Σύμβουλος θέτει εκτενείς ερωτήσεις σχετικά με..."
-- ΜΗΝ γράφεις: "Ο αρμόδιος ανέφερε...", "Η αρμόδια παρουσίασε..."
-- ΜΗΝ: "Καταγραφή:", "Στοιχεία:", "Αναφέρθηκαν:"
-- ΜΗΝ βάζεις reference σε κάθε πρόταση, αλλά μόνο όπου εκφράζονται σημαντικά σημεία.
-- Μην αναφέρεις αποτελέσματα ψηφοφορίας (έγκριση/απόρριψη, αριθμό ψήφων, ποιος ψήφισε τι). Από το transcript δεν προκύπτουν αξιόπιστα.
-- Ουδέτερη γλώσσα, χωρίς δικά σου αξιολογικά επιρρήματα όπως "μόνο" ή "μόλις"
-
-ΔΟΜΗ:
-1. Τι είναι το θέμα και τι καλύπτει (χωρίς reference)
-2. Ποια ήταν η κύρια συζήτηση/αντιπαράθεση - σύντομα (1 reference max)
-
-${issuesSection}
-
-REFERENCES - Πότε:
-- Συγκεκριμένα νούμερα: [το κόστος είναι 300 χιλιάδες ευρώ](REF:UTTERANCE:xxx)
-- Αμφιλεγόμενες δηλώσεις: [τα πορίσματα είναι εμπιστευτικά](REF:UTTERANCE:xxx)
-
-ΜΗΝ:
-- Γενικές περιγραφές ("το θέμα αφορά...")
-- Προφανή πράγματα ("ο πρόεδρος εισηγήθηκε")
-- Μετα-πληροφορίες ("το Συμβούλιο είναι διαδικαστικού χαρακτήρα")
-- Διαδικαστικά άλλων θεμάτων ("η 8η αναμόρφωση εγκρίθηκε πριν")
-
-Παραδείγματα καλών descriptions:
-
-ΑΠΛΟ ΘΕΜΑ:
-"Προμήθεια θρανίων και διαδραστικών πινάκων για τρία δημοτικά σχολεία."
-
-ΠΡΟ ΗΜΕΡΗΣΙΑΣ ΘΕΜΑ:
-"Ερώτημα για τις καθυστερήσεις στα οδικά έργα της Λ. Αλεξάνδρας. Η εργολαβία είναι σε φάση παράδοσης."
-
-ΠΟΛΥΠΛΟΚΟ:
-${complexExample}
+${descriptionRules(metadata.cityLanguage, true)}
 
 ${MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS}
 
@@ -306,8 +317,6 @@ discussedIn:
 Αν λένε "Θέματα X έως Y μαζί": το πρώτο (X) έχει discussedIn: null με όλη τη συζήτηση,
 τα υπόλοιπα (X+1 έως Y) έχουν discussedIn: <ID του X> και speakerContributions: [].
 ΣΗΜΑΝΤΙΚΟ: Όλα τα ranges (SUBJECT_DISCUSSION, VOTE) δείχνουν μόνο στο πρώτο (X), ΟΧΙ στα υπόλοιπα.
-
-${IMPORTANCE_GUIDELINES}
 
 ═══════════════════════════════════════════════════════════════════════════
 ΜΕΡΟΣ 3: UTTERANCE TAGGING (Ταξινόμηση Utterances)
@@ -441,10 +450,7 @@ MEETING PROGRESS SUMMARY (ΝΕΟ ΠΕΔΙΟ):
 ═══════════════════════════════════════════════════════════════════════════
 
 ΥΦΟΣ ΚΑΙ ΓΛΩΣΣΑ (ισχύει για ΟΛΑ τα summaries και descriptions):
-- Απόφυγε αμφιλεγόμενες ή φορτισμένες εκφράσεις (π.χ. αναφορές σε "ειρωνία", "προκλητικός", "σκανδαλώδης") εκτός αν είναι απολύτως απαραίτητες για την κατανόηση.
-- Χρησιμοποίησε ουδέτερη, περιγραφική γλώσσα.
-- Μετέφερε τα γεγονότα και τις θέσεις χωρίς χαρακτηρισμούς.
-- Χρησιμοποίησε ΠΑΝΤΑ "κ./κα." πριν τα επώνυμα: "ο κ. Παπαδόπουλος", "η κα. Κωνσταντίνου". ΟΧΙ σκέτο επώνυμο.
+${TONE_RULES}
 
 Βεβαιώσου ότι:
 - Δεν υπάρχουν διπλότυπα ή πολύ παρόμοια subjects (παρόμοια θέματα με διαφορετικά IDs)
@@ -601,5 +607,31 @@ ${MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS}
 - **ΑΝ ο Πρόεδρος έχει και διαδικαστικά ΚΑΙ ουσιαστική τοποθέτηση:**
   * Περίλαβε ΜΟΝΟ την ουσιαστική τοποθέτηση
   * Αγνόησε τα διαδικαστικά μέρη${languageDirectiveSuffix(cityLanguage)}
+`;
+}
+
+/**
+ * System prompt for the description and the notification importance of one subject, written once
+ * from all the speech tagged to it. The description rules are the ones the batch step follows;
+ * only the input differs.
+ */
+export function getSubjectDescriptionSystemPrompt(administrativeBodyName?: string, cityLanguage?: CityLanguage): string {
+  const bodyInfo = administrativeBodyName
+    ? ` Όργανο: ${administrativeBodyName}.`
+    : '';
+
+  return `Γράφεις την περιγραφή (description) ενός θέματος μιας συνεδρίασης και κρίνεις πόσο σημαντικό είναι για τις ειδοποιήσεις προς τους δημότες.${bodyInfo}
+
+Σου δίνονται: ο τίτλος του θέματος, η θέση του στη συνεδρίαση (εντός, προ ή εκτός ημερήσιας διάταξης), ποιος το εισηγήθηκε ή το έθεσε, όσοι μίλησαν με τον ρόλο και την παράταξή τους, και ΟΛΗ η συζήτηση του θέματος με τη σειρά που έγινε.
+Για ένα θέμα της ημερήσιας διάταξης σου δίνεται και η περιγραφή του όπως γράφτηκε από την ημερήσια διάταξη, πριν από τη συνεδρίαση. Εξηγεί τι είναι το θέμα. Η description λέει τι ειπώθηκε στη συνεδρίαση.
+
+${descriptionRules(cityLanguage)}
+
+${importanceGuidelines('debate')}
+
+${MARKDOWN_REFERENCE_FORMAT_INSTRUCTIONS}
+
+ΥΦΟΣ ΚΑΙ ΓΛΩΣΣΑ:
+${TONE_RULES}${languageDirectiveSuffix(cityLanguage)}
 `;
 }

@@ -26,6 +26,8 @@ trace: summarize                          ← one per task run, under the run's 
 ├─ span: Phase 2: Speaker Contributions
 │   ├─ generation: contributions:<subject name>
 │   └─ ... (one per primary subject)
+├─ span: Phase 2.5: Subject Descriptions
+│   └─ generation: subject-description:<subject name> (one per discussed primary subject)
 └─ span: Phase 3: Enrichment
     └─ generation: subject-context-search (per subject)
 ```

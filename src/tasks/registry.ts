@@ -39,7 +39,8 @@ export const TASKS = {
             description: 'Generate a summary of transcript content with subject extraction',
             // v6: subject location coordinates are emitted as GeoJSON [lng, lat] (were [lat, lng])
             // v7: summaries no longer state vote results
-            version: 7,
+            // v8: a later step writes the description and the notification importance of a discussed subject, from all its speech
+            version: 8,
         },
     },
     splitMediaFile: {
@@ -71,7 +72,8 @@ export const TASKS = {
             // v5: agendaItemTitle, the item as written on the agenda (schemalabz/opencouncil#616)
             // v6: agendaSection per item, and agendaItemIndex is now the printed number, which repeats across sections (schemalabz/opencouncil#366)
             // v7: meetingRecord, the kind, session number and format that the invitation states (schemalabz/opencouncil#150)
-            version: 7,
+            // v8: importance by the rules the summarize task uses: normal needs a reason, and a subject that matters only around its place reaches its neighbours alone
+            version: 8,
         },
     },
     generateVoiceprint: {

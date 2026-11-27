@@ -303,6 +303,16 @@ export async function generateSpeakerContributionsInBatches(
     return { contributions: deduplicatedContributions, usage: totalUsage, resolvedModel, batchMode };
 }
 
+/** The speech of a subject in the order it was said: speaker, time, text and utterance id on each line. */
+export function formatDiscussion(utterances: ExtractedUtterances['allSubjectUtterances']): string {
+    return utterances
+        .map((u, idx) => {
+            const speakerLabel = u.speakerName || (u.speakerId ? u.speakerId : 'Unknown');
+            return `${idx + 1}. [${speakerLabel}] (${formatTime(u.timestamp)}): "${u.text}" [${u.utteranceId}]`;
+        })
+        .join('\n');
+}
+
 /**
  * Generate contributions for all speakers in a single AI call.
  * Used by the batching function to process speaker subsets.
@@ -341,12 +351,7 @@ ${utterances.map(u => `- [${u.utteranceId}] "${u.text}"`).join('\n')}
 `).join('\n\n');
 
     // Format the full subject discussion for context
-    const fullDiscussion = allSubjectUtterances
-        .map((u, idx) => {
-            const speakerLabel = u.speakerName || (u.speakerId ? u.speakerId : 'Unknown');
-            return `${idx + 1}. [${speakerLabel}] (${formatTime(u.timestamp)}): "${u.text}" [${u.utteranceId}]`;
-        })
-        .join('\n');
+    const fullDiscussion = formatDiscussion(allSubjectUtterances);
 
     const userPrompt = `
 Θέμα: ${subject.name}

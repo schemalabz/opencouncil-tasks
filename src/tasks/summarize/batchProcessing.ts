@@ -18,6 +18,7 @@ import {
 import {
     splitTranscript,
     initializeSubjectsFromExisting,
+    carryImportance,
     subjectsOmittedFromBatch,
     getStatusEmoji
 } from "./utils.js";
@@ -64,9 +65,6 @@ export async function processBatchesWithState(
     const BATCH_RETRY_DELAY_MS = 5 * 60 * 1000; // 5 minutes
 
     console.log(`Processing ${batches.length} batches...`);
-
-    // Subjects that the model has returned in some batch, with an importance of its own
-    const returnedByModel = new Set<string>();
 
     for (let i = 0; i < batches.length; i++) {
         onProgress("batch_processing", i / batches.length);
@@ -184,6 +182,7 @@ export async function processBatchesWithState(
         }
 
         allSummaries.push(...batchResult.segmentSummaries);
+        carryImportance(batchResult.subjects, conversationState.subjects);
 
         // Register any new subject IDs from the LLM in the IdCompressor
         // This is critical for subjects created dynamically during batch processing
@@ -485,13 +484,12 @@ export async function processBatchesWithState(
         // VALIDATION: Ensure all existing subjects are preserved, even if this batch left them out
         // Bug fix: Undiscussed agenda items were being dropped
         console.log(`\n   📋 Checking for subjects this batch left out...`);
-        batchResult.subjects.forEach(s => returnedByModel.add(s.id));
-        const omittedSubjects = subjectsOmittedFromBatch(conversationState.subjects, batchResult.subjects, returnedByModel);
+        const omittedSubjects = subjectsOmittedFromBatch(conversationState.subjects, batchResult.subjects);
 
         if (omittedSubjects.length > 0) {
-            console.log(`      Found ${omittedSubjects.length} subjects this batch left out - preserving (importance kept only if a batch returned them):`);
+            console.log(`      Found ${omittedSubjects.length} subjects this batch left out - preserving:`);
             for (const subject of omittedSubjects) {
-                console.log(`         • "${subject.name}" (ID: ${subject.id}) [${subject.topicImportance}/${subject.proximityImportance}]`);
+                console.log(`         • "${subject.name}" (ID: ${subject.id})`);
                 batchResult.subjects.push(subject);
             }
         }
@@ -637,8 +635,6 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 agendaItemIndex: { type: ["number", "string"] },
                                 name: { type: "string" },
                                 description: { type: "string" },
-                                topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
-                                proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
                                 introducedByPersonId: { type: ["string", "null"] },
                                 locationText: { type: ["string", "null"] },
                                 topicLabel: { type: ["string", "null"] },
@@ -646,7 +642,7 @@ ${JSON.stringify(conversationState.subjects.map(s => ({
                                 withdrawn: { type: "boolean" }
                                 // speakerContributions is generated in Phase 2; including it here wasted tokens and triggered degenerate output.
                             },
-                            required: ["id", "type", "agendaItemIndex", "name", "description", "topicImportance", "proximityImportance", "introducedByPersonId", "locationText", "topicLabel", "discussedIn"],
+                            required: ["id", "type", "agendaItemIndex", "name", "description", "introducedByPersonId", "locationText", "topicLabel", "discussedIn"],
                             additionalProperties: false
                         }
                     },
