@@ -318,8 +318,6 @@ discussedIn:
 τα υπόλοιπα (X+1 έως Y) έχουν discussedIn: <ID του X> και speakerContributions: [].
 ΣΗΜΑΝΤΙΚΟ: Όλα τα ranges (SUBJECT_DISCUSSION, VOTE) δείχνουν μόνο στο πρώτο (X), ΟΧΙ στα υπόλοιπα.
 
-${importanceGuidelines('agenda')}
-
 ═══════════════════════════════════════════════════════════════════════════
 ΜΕΡΟΣ 3: UTTERANCE TAGGING (Ταξινόμηση Utterances)
 ═══════════════════════════════════════════════════════════════════════════
