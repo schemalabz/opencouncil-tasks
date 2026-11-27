@@ -33,9 +33,10 @@ const SUBJECT_SCHEMA = {
         topicLabel: { type: ["string", "null"] },
         topicImportance: { type: "string", enum: ["doNotNotify", "normal", "high"] },
         proximityImportance: { type: "string", enum: ["none", "near", "wide"] },
+        importanceReason: { type: "string" },
         meetingIndex: { type: "integer" },
     },
-    required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "agendaSectionIndex", "agendaSectionTitle", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance", "meetingIndex"],
+    required: ["name", "description", "agendaItemTitle", "agendaItemIndex", "agendaSectionIndex", "agendaSectionTitle", "locationText", "introducedByPersonId", "topicLabel", "topicImportance", "proximityImportance", "importanceReason", "meetingIndex"],
     additionalProperties: false
 };
 
@@ -529,6 +530,8 @@ export type ExtractedSubject = {
     topicLabel: string | null;
     topicImportance: 'doNotNotify' | 'normal' | 'high';
     proximityImportance: 'none' | 'near' | 'wide';
+    /** One sentence from the model on the two importance values. It stays in the run record. */
+    importanceReason?: string;
     /** The meeting of the agenda this item is on, as a position in its meetings. */
     meetingIndex: number;
 }
@@ -556,6 +559,7 @@ export const getSystemPrompt = (cityLanguage: CityLanguage) => {
     topicLabel: string | null; // Το label θέματος που ταιριάζει καλύτερα στο θέμα
     topicImportance: 'doNotNotify' | 'normal' | 'high'; // Η σημασία του θέματος για ειδοποιήσεις
     proximityImportance: 'none' | 'near' | 'wide'; // Η γεωγραφική ακτίνα επιρροής του θέματος
+    importanceReason: string; // Μία σύντομη πρόταση που λέει γιατί έδωσες αυτές τις δύο τιμές
     meetingIndex: number | null; // Η θέση (από 0) στο meetings της συνεδρίασης στην οποία ανήκει το θέμα. Όταν το έγγραφο καλεί μία συνεδρίαση, 0 σε όλα τα θέματα.
 };
 

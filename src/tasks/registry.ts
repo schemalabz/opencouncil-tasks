@@ -72,7 +72,8 @@ export const TASKS = {
             // v5: agendaItemTitle, the item as written on the agenda (schemalabz/opencouncil#616)
             // v6: agendaSection per item, and agendaItemIndex is now the printed number, which repeats across sections (schemalabz/opencouncil#366)
             // v7: meetingRecord, the kind, session number and format that the invitation states (schemalabz/opencouncil#150)
-            version: 7,
+            // v8: importance by the rules the summarize task uses: normal needs a reason, and a subject that matters only around its place reaches its neighbours alone
+            version: 8,
         },
     },
     generateVoiceprint: {
